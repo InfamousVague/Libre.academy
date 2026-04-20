@@ -1,0 +1,52 @@
+.kata-editor {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
+}
+
+.kata-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: var(--color-surface, rgba(20, 22, 28, 0.5));
+  border-bottom: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
+}
+
+.kata-editor-language {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--color-text-muted, rgba(230, 230, 230, 0.55));
+}
+
+.kata-editor-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.kata-editor-button {
+  padding: 3px 10px;
+  background: transparent;
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.14));
+  border-radius: 4px;
+  color: var(--color-text, #e6e6e6);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.kata-editor-button:hover {
+  background: var(--color-surface-hover, rgba(255, 255, 255, 0.06));
+}
+
+.kata-editor-run {
+  background: var(--color-accent, rgba(255, 255, 255, 0.12));
+  border-color: var(--color-accent, rgba(255, 255, 255, 0.18));
+}
+
+.kata-editor-host {
+  flex: 1;
+  min-height: 0;
+}
