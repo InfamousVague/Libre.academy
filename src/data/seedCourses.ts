@@ -83,6 +83,59 @@ test("returns a number, not a string", () => {
   },
 
   {
+    id: "python-warmup",
+    title: "Python Warmup",
+    author: "Kata Team",
+    description: "Pyodide-powered Python in the browser. Your first function.",
+    language: "python",
+    chapters: [
+      {
+        id: "intro",
+        title: "Warmup",
+        lessons: [
+          {
+            id: "py-add",
+            kind: "exercise",
+            title: "Your first Python function",
+            language: "python",
+            body: `# Your first Python function
+
+Implement \`add\` so that \`add(2, 3)\` returns \`5\`.
+
+The first run takes a few seconds because Python is loading into the browser
+(via Pyodide). Subsequent runs are instant.`,
+            starter: `def add(a, b):
+    # your code here
+    pass
+
+print("add(2, 3) =", add(2, 3))
+`,
+            solution: `def add(a, b):
+    return a + b
+
+print("add(2, 3) =", add(2, 3))
+`,
+            tests: `from user import add
+
+def _pos():
+    expect(add(2, 3)).to_be(5)
+test("adds two positive numbers", _pos)
+
+def _neg():
+    expect(add(-1, 10)).to_be(9)
+test("adds with a negative", _neg)
+
+def _type():
+    expect(type(add(1, 2)).__name__).to_be("int")
+test("returns an int", _type)
+`,
+          },
+        ],
+      },
+    ],
+  },
+
+  {
     id: "rust-taste",
     title: "A Taste of Rust",
     author: "Kata Team",

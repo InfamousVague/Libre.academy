@@ -1,5 +1,6 @@
 import type { LanguageId } from "../data/types";
 import { runJavaScript, runTypeScript } from "./javascript";
+import { runPython } from "./python";
 import type { RunResult } from "./types";
 
 export type { RunResult, LogLine, TestResult } from "./types";
@@ -19,6 +20,7 @@ export async function runCode(
     case "typescript":
       return runTypeScript(code, testCode);
     case "python":
+      return runPython(code, testCode);
     case "rust":
     case "swift":
       return {
