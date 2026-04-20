@@ -20,7 +20,11 @@ use crate::settings::SettingsState;
 const ANTHROPIC_API: &str = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION: &str = "2023-06-01";
 const MODEL: &str = "claude-sonnet-4-5";
-const MAX_TOKENS: u32 = 8192;
+// Sonnet 4.5 supports up to 64k output tokens. 16k comfortably holds a full
+// exercise lesson (prose + starter + solution + tests) with room to spare;
+// if we hit this ceiling we bump it again. Under-sizing leads to truncated
+// JSON and unparseable responses, so we err on the high side.
+const MAX_TOKENS: u32 = 16384;
 
 #[derive(Debug, Serialize)]
 struct AnthropicRequest<'a> {
@@ -39,6 +43,10 @@ struct Msg<'a> {
 #[derive(Debug, Deserialize)]
 struct AnthropicResponse {
     content: Vec<ContentBlock>,
+    /// "end_turn" = normal. "max_tokens" = we capped it and the text is truncated
+    /// — we need to surface that as a clear error instead of handing a
+    /// half-written JSON string to serde.
+    stop_reason: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -234,6 +242,17 @@ async fn call_llm(
         .json()
         .await
         .map_err(|e| format!("bad response json: {e}"))?;
+
+    if parsed.stop_reason.as_deref() == Some("max_tokens") {
+        // Bail early with a descriptive error. The frontend retry_exercise
+        // path would just re-submit the truncated text, so clearer to force
+        // the caller to raise max_tokens or split the prompt.
+        return Err(format!(
+            "Claude hit the {MAX_TOKENS}-token output cap before finishing — \
+             response was truncated. Raise MAX_TOKENS in llm.rs or split the \
+             prompt into smaller chunks."
+        ));
+    }
 
     let text: String = parsed
         .content

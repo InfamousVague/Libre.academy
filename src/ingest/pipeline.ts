@@ -123,18 +123,36 @@ export async function runPipeline(opts: PipelineOptions): Promise<Course> {
         `${stub.title} (${stub.kind})`,
       );
 
-      let rawLesson = await cacheRead(bookId, cacheKey);
-      if (!rawLesson) {
-        rawLesson = await invoke<string>("generate_lesson", {
+      // Try cache first. If the cached value no longer parses (e.g. truncated
+      // from a previous run before MAX_TOKENS was raised), invalidate and
+      // re-request.
+      const cached = await cacheRead(bookId, cacheKey);
+      let lesson: Lesson;
+      if (cached) {
+        try {
+          lesson = parseJson<Lesson>(cached, `lesson ${stub.id} (cached)`);
+        } catch {
+          // Bad cache entry — drop it and fall through to regeneration.
+          lesson = await regenerateLesson();
+        }
+      } else {
+        lesson = await regenerateLesson();
+      }
+
+      // Inline helper closes over the stable locals we need to re-call the LLM.
+      async function regenerateLesson(): Promise<Lesson> {
+        const raw = await invoke<string>("generate_lesson", {
           chapterTitle: ch.title,
           cleanedMarkdown: cleaned[ci].markdown,
           language,
           stub: JSON.stringify(stub),
           priorSolution: priorSolution ?? null,
         });
-        await cacheWrite(bookId, cacheKey, rawLesson);
+        const parsed = parseJson<Lesson>(raw, `lesson ${stub.id}`);
+        // Only cache the raw text AFTER we're sure it parses.
+        await cacheWrite(bookId, cacheKey, raw);
+        return parsed;
       }
-      let lesson = parseJson<Lesson>(rawLesson, `lesson ${stub.id}`);
 
       // Stage 4: validate exercises
       if (lesson.kind === "exercise" || lesson.kind === "mixed") {
@@ -203,7 +221,8 @@ async function validateExerciseWithRetry(
       return demoteToReading(current, failure);
     }
 
-    // Ask the LLM to fix it.
+    // Ask the LLM to fix it. Parse the response BEFORE caching so a truncated
+    // or malformed retry doesn't become a permanent bad cache entry.
     const retryKey = `lessons/chapter-${pad(ctx.chapterIndex + 1)}/${slug(
       ctx.stubId,
     )}.retry-${attempt + 1}.json`;
@@ -211,8 +230,8 @@ async function validateExerciseWithRetry(
       originalLesson: JSON.stringify(current),
       failureReason: failure,
     });
-    await cacheWrite(ctx.bookId, retryKey, rawFixed);
     current = parseJson<ExerciseLesson>(rawFixed, `${current.id} retry ${attempt + 1}`);
+    await cacheWrite(ctx.bookId, retryKey, rawFixed);
   }
 
   return current;
