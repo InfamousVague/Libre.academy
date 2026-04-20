@@ -1,7 +1,7 @@
 /* Floating sidebar — direct port of Stash's .stash__sidebar styling so Kata
    feels like part of the same family. */
 .kata__sidebar {
-  width: 240px;
+  width: 260px;
   margin: 10px 0 10px 10px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
@@ -13,7 +13,7 @@
 }
 
 .kata__sidebar-brand {
-  padding: 20px 16px 12px;
+  padding: 18px 16px 10px;
 }
 
 .kata__brand-text {
@@ -56,12 +56,12 @@
 
 .kata__nav-item:hover {
   color: var(--color-text-primary);
-  background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.04));
+  background: var(--color-bg-tertiary);
 }
 
 .kata__nav-item--active {
   color: var(--color-text-primary);
-  background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.06));
+  background: var(--color-bg-tertiary);
 }
 
 .kata__nav-icon {
@@ -74,7 +74,7 @@
 .kata__course {
   display: flex;
   flex-direction: column;
-  margin-top: 2px;
+  margin-top: 4px;
 }
 
 .kata__course-title {
@@ -86,14 +86,50 @@
   font-size: 10px;
   width: 12px;
   opacity: 0.55;
+  flex-shrink: 0;
+}
+
+.kata__course-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kata__course-progress {
+  font-size: 10.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+/* Thin progress bar shown under an expanded course title. */
+.kata__course-progress-bar {
+  margin: 2px 16px 6px 32px;
+  height: 3px;
+  background: var(--color-bg-tertiary);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.kata__course-progress-fill {
+  height: 100%;
+  background: var(--color-text-primary);
+  opacity: 0.85;
+  transition: width 0.3s ease;
 }
 
 .kata__chapter {
-  padding: 2px 0 4px 8px;
+  padding: 2px 0 4px 6px;
 }
 
 .kata__chapter-title {
-  padding: 6px 12px 3px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px 3px 18px;
   color: var(--color-text-tertiary);
   font-size: 10px;
   font-weight: 600;
@@ -101,17 +137,17 @@
   letter-spacing: 0.6px;
 }
 
-.kata__lesson-item {
-  padding-left: 20px;
-  font-weight: 500;
+.kata__chapter-progress {
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.9;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
-.kata__lesson-kind {
-  font-size: 9px;
-  opacity: 0.65;
-  width: 12px;
-  display: inline-block;
-  text-align: center;
+.kata__lesson-item {
+  padding-left: 14px;
+  font-weight: 500;
 }
 
 .kata__lesson-name {
@@ -121,15 +157,48 @@
   white-space: nowrap;
 }
 
+/* Progress dot — hollow, active (ring), or filled with ✓. */
+.kata__dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.kata__dot--pending {
+  border: 1.5px solid var(--color-border-default);
+  background: transparent;
+  color: transparent;
+}
+
+.kata__dot--active {
+  border: 1.5px solid var(--color-text-secondary);
+  background: transparent;
+  color: transparent;
+  box-shadow: 0 0 0 3px var(--color-bg-tertiary);
+}
+
+.kata__dot--done {
+  border: 1.5px solid var(--color-text-primary);
+  background: var(--color-text-primary);
+  color: var(--color-bg-primary);
+}
+
 .kata__nav-item--browse {
-  margin-top: 8px;
+  margin-top: 10px;
   color: var(--color-text-tertiary);
   border: 1px dashed var(--color-border-default);
 }
 
 .kata__nav-item--browse:hover {
   color: var(--color-text-primary);
-  border-color: var(--color-border-strong, var(--color-border-default));
 }
 
 .kata__sidebar-footer {

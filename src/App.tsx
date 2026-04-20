@@ -2,7 +2,7 @@ import { useState } from "react";
 import { seedCourses } from "./data/seedCourses";
 import { Course, Lesson, isExerciseKind } from "./data/types";
 import Sidebar from "./components/Sidebar/Sidebar";
-import TabBar from "./components/TabBar/TabBar";
+import TopBar from "./components/TopBar/TopBar";
 import LessonReader from "./components/Lesson/LessonReader";
 import EditorPane from "./components/Editor/EditorPane";
 import OutputPane from "./components/Output/OutputPane";
@@ -20,6 +20,21 @@ export default function App() {
     { courseId: courses[0].id, lessonId: courses[0].chapters[0].lessons[0].id },
   ]);
   const [activeTabIndex, setActiveTabIndex] = useState(0);
+
+  /// Keys are `${courseId}:${lessonId}`. When a lesson's tests pass (later) or
+  /// it's a reading lesson the user scrolls through, it lands here and the
+  /// sidebar dot fills in.
+  const [completed, setCompleted] = useState<Set<string>>(new Set());
+
+  function markCompleted(courseId: string, lessonId: string) {
+    const key = `${courseId}:${lessonId}`;
+    setCompleted((prev) => {
+      if (prev.has(key)) return prev;
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
+  }
 
   const activeTab = openTabs[activeTabIndex];
   const activeCourse = courses.find((c) => c.id === activeTab?.courseId) ?? null;
@@ -48,46 +63,60 @@ export default function App() {
     }
   }
 
+  const tabs = openTabs.map((t) => {
+    const c = courses.find((x) => x.id === t.courseId);
+    return {
+      id: t.courseId,
+      label: c?.title ?? t.courseId,
+      language: c?.language ?? "javascript",
+    };
+  });
+
   return (
     <div className="kata">
-      <Sidebar
-        courses={courses}
-        activeCourseId={activeCourse?.id}
-        activeLessonId={activeLesson?.id}
-        onSelectLesson={selectLesson}
+      <TopBar
+        tabs={tabs}
+        activeIndex={activeTabIndex}
+        onActivate={setActiveTabIndex}
+        onClose={closeTab}
+        onBrowse={() => {
+          console.info("TODO: open library/browse view");
+        }}
       />
 
-      <main className="kata__main">
-        <TabBar
-          tabs={openTabs.map((t) => {
-            const c = courses.find((x) => x.id === t.courseId);
-            return {
-              id: t.courseId,
-              label: c?.title ?? t.courseId,
-              language: c?.language ?? "javascript",
-            };
-          })}
-          activeIndex={activeTabIndex}
-          onActivate={setActiveTabIndex}
-          onClose={closeTab}
-          onBrowse={() => {
-            console.info("TODO: open library/browse view");
-          }}
+      <div className="kata__body">
+        <Sidebar
+          courses={courses}
+          activeCourseId={activeCourse?.id}
+          activeLessonId={activeLesson?.id}
+          completed={completed}
+          onSelectLesson={selectLesson}
         />
 
-        {activeLesson ? (
-          <LessonView lesson={activeLesson} />
-        ) : (
-          <div className="kata__empty">
-            <p>Pick a lesson from the sidebar to get started.</p>
-          </div>
-        )}
-      </main>
+        <main className="kata__main">
+          {activeLesson && activeCourse ? (
+            <LessonView
+              lesson={activeLesson}
+              onComplete={() => markCompleted(activeCourse.id, activeLesson.id)}
+            />
+          ) : (
+            <div className="kata__empty">
+              <p>Pick a lesson from the sidebar to get started.</p>
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 }
 
-function LessonView({ lesson }: { lesson: Lesson }) {
+function LessonView({
+  lesson,
+  onComplete,
+}: {
+  lesson: Lesson;
+  onComplete: () => void;
+}) {
   const hasExercise = isExerciseKind(lesson);
   const [code, setCode] = useState(hasExercise ? lesson.starter : "");
   const [output, setOutput] = useState<string>("");
@@ -103,6 +132,9 @@ function LessonView({ lesson }: { lesson: Lesson }) {
             onChange={setCode}
             onRun={() => {
               setOutput(`[stub] would run ${lesson.language} code here`);
+              // Temporary: mark complete on any run. Real completion comes
+              // from unit-test pass/fail once Step 5+6 land.
+              onComplete();
             }}
           />
           <OutputPane text={output} />

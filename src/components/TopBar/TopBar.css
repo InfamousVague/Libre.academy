@@ -1,0 +1,113 @@
+/* The custom top bar replaces the system title bar while keeping the macOS
+   traffic lights visible via `titleBarStyle: "Overlay"`. The whole bar is a
+   drag region; clickable children intercept events. */
+
+.kata__topbar {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  flex-shrink: 0;
+  background: var(--color-bg-primary);
+  border-bottom: 1px solid var(--color-border-default);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Reserve 72px on the left for macOS traffic lights (close/min/zoom).
+   On Windows/Linux the OS window controls live on the right, so this empty
+   leader just acts as a small gutter. */
+.kata__topbar-window-controls {
+  width: 72px;
+  flex-shrink: 0;
+  height: 100%;
+}
+
+.kata__topbar-tabs {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  overflow-x: auto;
+  height: 100%;
+  align-items: center;
+  padding: 0 8px;
+  scrollbar-width: none;
+}
+
+.kata__topbar-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.kata__topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  height: 100%;
+}
+
+/* Tab pills */
+.kata__tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: var(--color-text-secondary);
+  font-size: 12.5px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.kata__tab:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-secondary);
+}
+
+.kata__tab--active {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-default);
+}
+
+.kata__tab-lang {
+  display: inline-block;
+  padding: 1px 6px;
+  background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.08));
+  border-radius: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--color-text-secondary);
+}
+
+.kata__tab-close {
+  opacity: 0.5;
+  padding: 0 2px;
+  margin-left: 2px;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.kata__tab-close:hover {
+  opacity: 1;
+}
+
+.kata__topbar-browse {
+  padding: 5px 12px;
+  background: transparent;
+  border: 1px dashed var(--color-border-default);
+  border-radius: 7px;
+  color: var(--color-text-tertiary);
+  font-size: 11.5px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.kata__topbar-browse:hover {
+  color: var(--color-text-primary);
+}

@@ -1,24 +1,23 @@
 import { useState } from "react";
-import type { Course } from "../../data/types";
+import type { Course, Chapter, Lesson } from "../../data/types";
 import "./Sidebar.css";
 
 interface Props {
   courses: Course[];
   activeCourseId?: string;
   activeLessonId?: string;
+  completed: Set<string>;
   onSelectLesson: (courseId: string, lessonId: string) => void;
 }
 
-/// Floating left rail. Mirrors Stash's `.stash__sidebar` pattern — a card that
-/// floats inside 10px of padding, rounded corners, 1px border, and sits on
-/// `--color-bg-secondary`.
-///
-/// Stash uses a flat nav list; Kata has nested course ▸ chapter ▸ lesson, so we
-/// reuse the same nav-item chrome but allow each course to collapse/expand.
+/// Floating left rail. Completion dots fill in as lessons get marked done
+/// (unit test passes, mark-read, etc.). The chapter header shows `x / y`
+/// lessons complete so users see progress at a glance.
 export default function Sidebar({
   courses,
   activeCourseId,
   activeLessonId,
+  completed,
   onSelectLesson,
 }: Props) {
   return (
@@ -34,6 +33,7 @@ export default function Sidebar({
             course={course}
             isActiveCourse={course.id === activeCourseId}
             activeLessonId={activeLessonId}
+            completed={completed}
             onSelectLesson={onSelectLesson}
           />
         ))}
@@ -61,14 +61,23 @@ function CourseGroup({
   course,
   isActiveCourse,
   activeLessonId,
+  completed,
   onSelectLesson,
 }: {
   course: Course;
   isActiveCourse: boolean;
   activeLessonId?: string;
+  completed: Set<string>;
   onSelectLesson: (courseId: string, lessonId: string) => void;
 }) {
   const [expanded, setExpanded] = useState(isActiveCourse);
+
+  const totalLessons = course.chapters.reduce((n, ch) => n + ch.lessons.length, 0);
+  const doneLessons = course.chapters.reduce(
+    (n, ch) => n + ch.lessons.filter((l) => completed.has(`${course.id}:${l.id}`)).length,
+    0
+  );
+  const pct = totalLessons > 0 ? doneLessons / totalLessons : 0;
 
   return (
     <div className="kata__course">
@@ -77,38 +86,103 @@ function CourseGroup({
         onClick={() => setExpanded(!expanded)}
       >
         <span className="kata__course-caret">{expanded ? "▾" : "▸"}</span>
-        <span>{course.title}</span>
+        <span className="kata__course-name">{course.title}</span>
+        <span className="kata__course-progress">
+          {doneLessons}/{totalLessons}
+        </span>
       </button>
 
-      {expanded &&
-        course.chapters.map((chapter) => (
-          <div key={chapter.id} className="kata__chapter">
-            <div className="kata__chapter-title">{chapter.title}</div>
-            {chapter.lessons.map((lesson) => (
-              <button
-                key={lesson.id}
-                className={`kata__nav-item kata__lesson-item ${
-                  lesson.id === activeLessonId && isActiveCourse ? "kata__nav-item--active" : ""
-                }`}
-                onClick={() => onSelectLesson(course.id, lesson.id)}
-              >
-                <span className="kata__lesson-kind">{lessonGlyph(lesson.kind)}</span>
-                <span className="kata__lesson-name">{lesson.title}</span>
-              </button>
-            ))}
+      {expanded && (
+        <>
+          <div className="kata__course-progress-bar">
+            <div
+              className="kata__course-progress-fill"
+              style={{ width: `${pct * 100}%` }}
+            />
           </div>
-        ))}
+          {course.chapters.map((chapter) => (
+            <ChapterBlock
+              key={chapter.id}
+              chapter={chapter}
+              courseId={course.id}
+              activeLessonId={isActiveCourse ? activeLessonId : undefined}
+              completed={completed}
+              onSelectLesson={onSelectLesson}
+            />
+          ))}
+        </>
+      )}
     </div>
   );
 }
 
-function lessonGlyph(kind: "reading" | "exercise" | "mixed"): string {
-  switch (kind) {
-    case "reading":
-      return "◌";
-    case "exercise":
-      return "●";
-    case "mixed":
-      return "◐";
-  }
+function ChapterBlock({
+  chapter,
+  courseId,
+  activeLessonId,
+  completed,
+  onSelectLesson,
+}: {
+  chapter: Chapter;
+  courseId: string;
+  activeLessonId?: string;
+  completed: Set<string>;
+  onSelectLesson: (courseId: string, lessonId: string) => void;
+}) {
+  const done = chapter.lessons.filter((l) => completed.has(`${courseId}:${l.id}`)).length;
+  const total = chapter.lessons.length;
+
+  return (
+    <div className="kata__chapter">
+      <div className="kata__chapter-title">
+        <span>{chapter.title}</span>
+        <span className="kata__chapter-progress">
+          {done}/{total}
+        </span>
+      </div>
+      {chapter.lessons.map((lesson) => (
+        <LessonRow
+          key={lesson.id}
+          lesson={lesson}
+          isCompleted={completed.has(`${courseId}:${lesson.id}`)}
+          isActive={lesson.id === activeLessonId}
+          onSelect={() => onSelectLesson(courseId, lesson.id)}
+        />
+      ))}
+    </div>
+  );
+}
+
+function LessonRow({
+  lesson,
+  isCompleted,
+  isActive,
+  onSelect,
+}: {
+  lesson: Lesson;
+  isCompleted: boolean;
+  isActive: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      className={`kata__nav-item kata__lesson-item ${isActive ? "kata__nav-item--active" : ""}`}
+      onClick={onSelect}
+    >
+      <ProgressDot completed={isCompleted} active={isActive} />
+      <span className="kata__lesson-name">{lesson.title}</span>
+    </button>
+  );
+}
+
+/**
+ * Codecademy-style completion dot: hollow → ringed (active) → filled (done).
+ */
+function ProgressDot({ completed, active }: { completed: boolean; active: boolean }) {
+  const state = completed ? "done" : active ? "active" : "pending";
+  return (
+    <span className={`kata__dot kata__dot--${state}`} aria-hidden>
+      {completed ? "✓" : ""}
+    </span>
+  );
 }
