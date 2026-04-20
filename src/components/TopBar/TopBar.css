@@ -13,11 +13,14 @@
   -webkit-user-select: none;
 }
 
-/* Reserve 72px on the left for macOS traffic lights (close/min/zoom).
+/* Reserve space for the macOS traffic lights (close/min/zoom) plus matching
+   breathing room to the right of them before the tabs begin. Traffic lights
+   are anchored at x=18; this gutter is 18 (left pad) + 52 (lights) + 18
+   (right pad) = ~88px.
    On Windows/Linux the OS window controls live on the right, so this empty
    leader just acts as a small gutter. */
 .kata__topbar-window-controls {
-  width: 72px;
+  width: 88px;
   flex-shrink: 0;
   height: 100%;
 }
