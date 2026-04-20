@@ -7,6 +7,7 @@ import LessonReader from "./components/Lesson/LessonReader";
 import EditorPane from "./components/Editor/EditorPane";
 import OutputPane from "./components/Output/OutputPane";
 import { runCode, isPassing, type RunResult } from "./runtimes";
+import { useProgress } from "./hooks/useProgress";
 import "./App.css";
 
 interface OpenCourse {
@@ -22,20 +23,9 @@ export default function App() {
   ]);
   const [activeTabIndex, setActiveTabIndex] = useState(0);
 
-  /// Keys are `${courseId}:${lessonId}`. When a lesson's tests pass (later) or
-  /// it's a reading lesson the user scrolls through, it lands here and the
-  /// sidebar dot fills in.
-  const [completed, setCompleted] = useState<Set<string>>(new Set());
-
-  function markCompleted(courseId: string, lessonId: string) {
-    const key = `${courseId}:${lessonId}`;
-    setCompleted((prev) => {
-      if (prev.has(key)) return prev;
-      const next = new Set(prev);
-      next.add(key);
-      return next;
-    });
-  }
+  /// Completion state lives in SQLite; the hook loads on mount and writes
+  /// through on markCompleted. Keys are `${courseId}:${lessonId}`.
+  const { completed, markCompleted } = useProgress();
 
   const activeTab = openTabs[activeTabIndex];
   const activeCourse = courses.find((c) => c.id === activeTab?.courseId) ?? null;

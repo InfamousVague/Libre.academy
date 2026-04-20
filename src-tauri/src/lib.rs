@@ -4,13 +4,17 @@
 //!   - `run_swift` — writes user code to a temp file and execs the system
 //!     `swift` toolchain against it. Fallback for a language we can't run
 //!     in-browser.
-//!   - (future) `run_cargo_local`, `course_fs`, `progress_db`.
+//!   - `progress_db` — SQLite-backed lesson-completion store.
+//!   - (future) `run_cargo_local`, `course_fs`.
+
+mod progress_db;
 
 use std::io::Write;
 use std::process::Command;
 use std::time::Instant;
 
 use serde::Serialize;
+use tauri::Manager;
 
 #[derive(Debug, Serialize)]
 pub struct SubprocessResult {
@@ -72,7 +76,18 @@ async fn run_swift(code: String) -> SubprocessResult {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![run_swift])
+        .setup(|app| {
+            let db_path = progress_db::resolve_path(app.handle())?;
+            let db = progress_db::open(db_path)?;
+            app.manage(db);
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            run_swift,
+            progress_db::list_completions,
+            progress_db::mark_completion,
+            progress_db::clear_completions,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
