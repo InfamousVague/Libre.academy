@@ -211,4 +211,42 @@ fn is_commutative() {
       },
     ],
   },
+
+  {
+    id: "swift-warmup",
+    title: "Swift Warmup",
+    author: "Kata Team",
+    description: "Runs your local swift toolchain via a Tauri subprocess. (xcode-select --install required.)",
+    language: "swift",
+    chapters: [
+      {
+        id: "intro",
+        title: "Warmup",
+        lessons: [
+          {
+            id: "swift-hello",
+            kind: "exercise",
+            title: "Hello from Swift",
+            language: "swift",
+            body: `# Hello from Swift
+
+Swift runs on your local toolchain. If \`swift --version\` doesn't work in your
+terminal, run \`xcode-select --install\` first.
+
+Print the sum of 2 and 3. For V1 this is a run-only lesson — Swift test
+harness support lands in a later step.`,
+            starter: `let a = 2
+let b = 3
+print("sum =", a + b)
+`,
+            solution: `let a = 2
+let b = 3
+print("sum =", a + b)
+`,
+            tests: "",
+          },
+        ],
+      },
+    ],
+  },
 ];

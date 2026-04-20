@@ -2,6 +2,7 @@ import type { LanguageId } from "../data/types";
 import { runJavaScript, runTypeScript } from "./javascript";
 import { runPython } from "./python";
 import { runRust } from "./rust";
+import { runSwift } from "./swift";
 import type { RunResult } from "./types";
 
 export type { RunResult, LogLine, TestResult } from "./types";
@@ -25,10 +26,6 @@ export async function runCode(
     case "rust":
       return runRust(code, testCode);
     case "swift":
-      return {
-        logs: [],
-        error: "swift runtime not implemented yet — coming in a later step",
-        durationMs: 0,
-      };
+      return runSwift(code, testCode);
   }
 }
