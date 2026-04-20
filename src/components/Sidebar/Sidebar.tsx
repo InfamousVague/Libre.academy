@@ -9,8 +9,12 @@ interface Props {
   onSelectLesson: (courseId: string, lessonId: string) => void;
 }
 
-/// Left rail: list of courses, each expandable to show chapters → lessons.
-/// Purely presentational for V1 — no progress or streak yet.
+/// Floating left rail. Mirrors Stash's `.stash__sidebar` pattern — a card that
+/// floats inside 10px of padding, rounded corners, 1px border, and sits on
+/// `--color-bg-secondary`.
+///
+/// Stash uses a flat nav list; Kata has nested course ▸ chapter ▸ lesson, so we
+/// reuse the same nav-item chrome but allow each course to collapse/expand.
 export default function Sidebar({
   courses,
   activeCourseId,
@@ -18,12 +22,12 @@ export default function Sidebar({
   onSelectLesson,
 }: Props) {
   return (
-    <aside className="kata-sidebar">
-      <div className="kata-sidebar-header">
-        <span className="kata-logo">kata</span>
+    <aside className="kata__sidebar">
+      <div className="kata__sidebar-brand">
+        <span className="kata__brand-text">kata</span>
       </div>
 
-      <nav className="kata-sidebar-nav">
+      <nav className="kata__nav">
         {courses.map((course) => (
           <CourseGroup
             key={course.id}
@@ -35,15 +39,19 @@ export default function Sidebar({
         ))}
 
         <button
-          className="kata-sidebar-browse"
+          className="kata__nav-item kata__nav-item--browse"
           onClick={() => console.info("TODO: open library browse view")}
         >
-          + browse courses
+          <span className="kata__nav-icon">+</span>
+          <span>browse courses</span>
         </button>
       </nav>
 
-      <div className="kata-sidebar-footer">
-        <button className="kata-sidebar-settings">settings</button>
+      <div className="kata__sidebar-footer">
+        <button className="kata__nav-item">
+          <span className="kata__nav-icon">⚙</span>
+          <span>settings</span>
+        </button>
       </div>
     </aside>
   );
@@ -63,29 +71,29 @@ function CourseGroup({
   const [expanded, setExpanded] = useState(isActiveCourse);
 
   return (
-    <div className="kata-course">
+    <div className="kata__course">
       <button
-        className={`kata-course-title ${isActiveCourse ? "active" : ""}`}
+        className={`kata__nav-item kata__course-title ${isActiveCourse ? "kata__nav-item--active" : ""}`}
         onClick={() => setExpanded(!expanded)}
       >
-        <span className="kata-course-caret">{expanded ? "▾" : "▸"}</span>
-        <span className="kata-course-name">{course.title}</span>
+        <span className="kata__course-caret">{expanded ? "▾" : "▸"}</span>
+        <span>{course.title}</span>
       </button>
 
       {expanded &&
         course.chapters.map((chapter) => (
-          <div key={chapter.id} className="kata-chapter">
-            <div className="kata-chapter-title">{chapter.title}</div>
+          <div key={chapter.id} className="kata__chapter">
+            <div className="kata__chapter-title">{chapter.title}</div>
             {chapter.lessons.map((lesson) => (
               <button
                 key={lesson.id}
-                className={`kata-lesson-item ${
-                  lesson.id === activeLessonId && isActiveCourse ? "active" : ""
+                className={`kata__nav-item kata__lesson-item ${
+                  lesson.id === activeLessonId && isActiveCourse ? "kata__nav-item--active" : ""
                 }`}
                 onClick={() => onSelectLesson(course.id, lesson.id)}
               >
-                <span className="kata-lesson-kind">{lessonGlyph(lesson.kind)}</span>
-                <span className="kata-lesson-name">{lesson.title}</span>
+                <span className="kata__lesson-kind">{lessonGlyph(lesson.kind)}</span>
+                <span className="kata__lesson-name">{lesson.title}</span>
               </button>
             ))}
           </div>

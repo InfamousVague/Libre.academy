@@ -1,148 +1,139 @@
-.kata-sidebar {
+/* Floating sidebar — direct port of Stash's .stash__sidebar styling so Kata
+   feels like part of the same family. */
+.kata__sidebar {
+  width: 240px;
+  margin: 10px 0 10px 10px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
-  background: var(--color-surface, rgba(20, 22, 28, 0.6));
-  min-width: 0;
+  flex-shrink: 0;
+  overflow: hidden;
 }
 
-.kata-sidebar-header {
-  padding: 14px 16px 10px;
-  border-bottom: 1px solid var(--color-border, rgba(255, 255, 255, 0.06));
+.kata__sidebar-brand {
+  padding: 20px 16px 12px;
 }
 
-.kata-logo {
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  color: var(--color-text, #e6e6e6);
+.kata__brand-text {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.3px;
   text-transform: lowercase;
 }
 
-.kata-sidebar-nav {
-  flex: 1;
-  overflow-y: auto;
-  padding: 8px 0;
-}
-
-.kata-course {
+.kata__nav {
   display: flex;
   flex-direction: column;
+  gap: 2px;
+  padding: 4px 8px 0;
+  position: relative;
+  flex: 1;
+  overflow-y: auto;
 }
 
-.kata-course-title {
+.kata__nav-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  background: transparent;
-  border: 0;
-  color: var(--color-text, #e6e6e6);
-  font-size: 12px;
+  gap: 10px;
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  padding: 8px 12px;
+  border-radius: var(--radius-md, 8px);
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  transition: color 0.2s ease, background 0.15s ease;
+  width: 100%;
+}
+
+.kata__nav-item:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.04));
+}
+
+.kata__nav-item--active {
+  color: var(--color-text-primary);
+  background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.06));
+}
+
+.kata__nav-icon {
+  display: inline-block;
+  width: 14px;
+  text-align: center;
+  color: var(--color-text-tertiary);
+}
+
+.kata__course {
+  display: flex;
+  flex-direction: column;
+  margin-top: 2px;
+}
+
+.kata__course-title {
   font-weight: 600;
   letter-spacing: 0.1px;
-  text-align: left;
-  cursor: pointer;
-  text-transform: none;
 }
 
-.kata-course-title:hover {
-  background: var(--color-surface-hover, rgba(255, 255, 255, 0.04));
-}
-
-.kata-course-title.active {
-  color: var(--color-accent, #e6e6e6);
-}
-
-.kata-course-caret {
-  font-size: 9px;
+.kata__course-caret {
+  font-size: 10px;
+  width: 12px;
   opacity: 0.55;
-  width: 10px;
 }
 
-.kata-chapter {
-  padding: 2px 0 6px;
+.kata__chapter {
+  padding: 2px 0 4px 8px;
 }
 
-.kata-chapter-title {
-  padding: 4px 16px 2px 30px;
-  color: var(--color-text-muted, rgba(230, 230, 230, 0.45));
+.kata__chapter-title {
+  padding: 6px 12px 3px 16px;
+  color: var(--color-text-tertiary);
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
 }
 
-.kata-lesson-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 16px 6px 30px;
-  width: 100%;
-  background: transparent;
-  border: 0;
-  color: var(--color-text, rgba(230, 230, 230, 0.82));
-  font-size: 12px;
-  text-align: left;
-  cursor: pointer;
+.kata__lesson-item {
+  padding-left: 20px;
+  font-weight: 500;
 }
 
-.kata-lesson-item:hover {
-  background: var(--color-surface-hover, rgba(255, 255, 255, 0.04));
-  color: var(--color-text, #e6e6e6);
-}
-
-.kata-lesson-item.active {
-  background: var(--color-surface-active, rgba(255, 255, 255, 0.07));
-  color: var(--color-text, #ffffff);
-}
-
-.kata-lesson-kind {
-  font-size: 10px;
-  opacity: 0.6;
+.kata__lesson-kind {
+  font-size: 9px;
+  opacity: 0.65;
   width: 12px;
   display: inline-block;
+  text-align: center;
 }
 
-.kata-lesson-name {
+.kata__lesson-name {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.kata-sidebar-browse {
-  margin: 10px 14px;
-  padding: 8px 10px;
-  background: transparent;
-  border: 1px dashed var(--color-border, rgba(255, 255, 255, 0.14));
-  border-radius: 6px;
-  color: var(--color-text-muted, rgba(230, 230, 230, 0.55));
-  font-size: 11px;
-  cursor: pointer;
+.kata__nav-item--browse {
+  margin-top: 8px;
+  color: var(--color-text-tertiary);
+  border: 1px dashed var(--color-border-default);
 }
 
-.kata-sidebar-browse:hover {
-  background: var(--color-surface-hover, rgba(255, 255, 255, 0.04));
-  color: var(--color-text, #e6e6e6);
+.kata__nav-item--browse:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-border-strong, var(--color-border-default));
 }
 
-.kata-sidebar-footer {
-  padding: 10px 14px;
-  border-top: 1px solid var(--color-border, rgba(255, 255, 255, 0.06));
-}
-
-.kata-sidebar-settings {
-  width: 100%;
-  padding: 6px;
-  background: transparent;
-  border: 0;
-  color: var(--color-text-muted, rgba(230, 230, 230, 0.55));
-  font-size: 11px;
-  text-align: left;
-  cursor: pointer;
-}
-
-.kata-sidebar-settings:hover {
-  color: var(--color-text, #e6e6e6);
+.kata__sidebar-footer {
+  margin-top: auto;
+  padding: 8px;
+  border-top: 1px solid var(--color-border-default);
 }

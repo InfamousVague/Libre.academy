@@ -1,55 +1,69 @@
+/* Pull in base kit design tokens (colors, radius, typography). */
 @import "@mattmattmattmatt/base/site/styles/tokens.css";
 
-/* Base kit already provides color tokens + glass styling. We just lay out
-   the three regions: sidebar / tab bar + content split. */
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-* {
-  box-sizing: border-box;
-}
-
-html,
-body,
-#root {
-  margin: 0;
+html, body, #root {
   height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
-  color: var(--color-text, #e6e6e6);
-  background: var(--color-bg, #0e1116);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
 }
 
-.kata-app {
-  display: grid;
-  grid-template-columns: 260px 1fr;
+button {
+  transition: opacity 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+/* Root layout: floating sidebar + main content column.
+   Mirrors Stash's .stash shell — the sidebar floats inside 10px margins
+   giving the UI a card-on-backdrop feel. */
+.kata {
+  display: flex;
   height: 100vh;
+  overflow: hidden;
+  background: var(--color-bg-primary);
+  border-top: 1px solid var(--color-border-default);
 }
 
-.kata-main {
+.kata__main {
+  flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
+  overflow: hidden;
+  margin-left: 10px;
 }
 
-.kata-lesson {
+/* Lesson content pane (reading on top, exercise workbench below). */
+.kata__lesson {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
+  margin: 10px 10px 10px 0;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 12px;
+  overflow: hidden;
 }
 
-/* When a lesson has an exercise, the bottom half is the workbench. */
-.kata-workbench {
+/* Workbench = editor + output, stacked at the bottom of a lesson that has one. */
+.kata__workbench {
   display: grid;
   grid-template-columns: 1fr 1fr;
   min-height: 320px;
   max-height: 45%;
-  border-top: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
+  border-top: 1px solid var(--color-border-default);
 }
 
-.kata-empty {
+.kata__empty {
   flex: 1;
   display: grid;
   place-items: center;
-  color: var(--color-text-muted, rgba(230, 230, 230, 0.55));
+  color: var(--color-text-tertiary, rgba(230, 230, 230, 0.5));
   font-size: 14px;
 }

@@ -14,11 +14,8 @@ interface OpenCourse {
 }
 
 export default function App() {
-  // For V1 we keep all courses in memory via the seed. Real loading lands in
-  // Step 11 (course library + filesystem scan).
   const courses = seedCourses;
 
-  // Multiple courses can be open as tabs; activeTab points at one of them.
   const [openTabs, setOpenTabs] = useState<OpenCourse[]>([
     { courseId: courses[0].id, lessonId: courses[0].chapters[0].lessons[0].id },
   ]);
@@ -52,7 +49,7 @@ export default function App() {
   }
 
   return (
-    <div className="kata-app">
+    <div className="kata">
       <Sidebar
         courses={courses}
         activeCourseId={activeCourse?.id}
@@ -60,7 +57,7 @@ export default function App() {
         onSelectLesson={selectLesson}
       />
 
-      <main className="kata-main">
+      <main className="kata__main">
         <TabBar
           tabs={openTabs.map((t) => {
             const c = courses.find((x) => x.id === t.courseId);
@@ -74,7 +71,6 @@ export default function App() {
           onActivate={setActiveTabIndex}
           onClose={closeTab}
           onBrowse={() => {
-            // Library view lands in Step 11
             console.info("TODO: open library/browse view");
           }}
         />
@@ -82,7 +78,9 @@ export default function App() {
         {activeLesson ? (
           <LessonView lesson={activeLesson} />
         ) : (
-          <EmptyState />
+          <div className="kata__empty">
+            <p>Pick a lesson from the sidebar to get started.</p>
+          </div>
         )}
       </main>
     </div>
@@ -95,30 +93,21 @@ function LessonView({ lesson }: { lesson: Lesson }) {
   const [output, setOutput] = useState<string>("");
 
   return (
-    <div className="kata-lesson">
+    <div className="kata__lesson">
       <LessonReader lesson={lesson} />
       {hasExercise && (
-        <div className="kata-workbench">
+        <div className="kata__workbench">
           <EditorPane
             language={lesson.language}
             value={code}
             onChange={setCode}
             onRun={() => {
-              // Real execution lands in Step 5 (JS runtime). For now, echo.
               setOutput(`[stub] would run ${lesson.language} code here`);
             }}
           />
           <OutputPane text={output} />
         </div>
       )}
-    </div>
-  );
-}
-
-function EmptyState() {
-  return (
-    <div className="kata-empty">
-      <p>Pick a lesson from the sidebar to get started.</p>
     </div>
   );
 }
