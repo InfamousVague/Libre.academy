@@ -12,23 +12,11 @@
   overflow: hidden;
 }
 
-.kata__sidebar-brand {
-  padding: 18px 16px 10px;
-}
-
-.kata__brand-text {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  letter-spacing: -0.3px;
-  text-transform: lowercase;
-}
-
 .kata__nav {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 4px 8px 0;
+  padding: 12px 8px 0;
   position: relative;
   flex: 1;
   overflow-y: auto;

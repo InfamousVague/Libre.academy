@@ -26,10 +26,6 @@ export default function Sidebar({
 }: Props) {
   return (
     <aside className="kata__sidebar">
-      <div className="kata__sidebar-brand">
-        <span className="kata__brand-text">kata</span>
-      </div>
-
       <nav className="kata__nav">
         {courses.map((course) => (
           <CourseGroup
