@@ -20,6 +20,7 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, extname, basename, resolve as resolvePath, join as joinPath } from "node:path";
+import { parsePdf, type RawChapter as PdfChapter } from "./pdf-parser.js";
 
 interface CliArgs {
   input: string;
@@ -74,6 +75,11 @@ async function main() {
   const ext = extname(args.input).toLowerCase();
   let chapters: RawChapter[];
   switch (ext) {
+    case ".pdf": {
+      const pdfChapters = await parsePdf(args.input);
+      chapters = pdfChapters.map(flattenPdfChapter);
+      break;
+    }
     case ".epub":
       chapters = await parseEpub(args.input);
       break;
@@ -81,8 +87,6 @@ async function main() {
     case ".markdown":
       chapters = await parseMarkdown(args.input);
       break;
-    case ".pdf":
-      throw new Error("PDF ingest not implemented yet — convert to EPUB first");
     default:
       throw new Error(`unsupported extension ${ext}`);
   }
@@ -125,6 +129,18 @@ async function parseEpub(_path: string): Promise<RawChapter[]> {
   // Placeholder: real impl uses the `epub2` package. Will be fleshed out
   // when the actual book arrives so we can tune against its exact structure.
   throw new Error("EPUB parsing stub — implement once we have the book in hand");
+}
+
+/// Flatten the PDF parser's chapter+sections structure into the CLI's
+/// simpler RawChapter shape, preserving the section breaks as `## heading`
+/// markers in the body so the LLM step can distinguish them later.
+function flattenPdfChapter(c: PdfChapter): RawChapter {
+  const parts: string[] = [];
+  if (c.intro) parts.push(c.intro);
+  for (const s of c.sections) {
+    parts.push(`## ${s.title}\n\n${s.body}`);
+  }
+  return { title: c.title, body: parts.join("\n\n") };
 }
 
 async function parseMarkdown(path: string): Promise<RawChapter[]> {
@@ -178,22 +194,58 @@ async function structureChapters(
     if (useLLM) {
       out.push(await structureWithClaude(ch, i, language));
     } else {
-      // No key → deterministic fallback: one reading lesson per chapter.
+      // No key → deterministic fallback: split body on `## Heading` markers
+      // (emitted by the PDF parser) into one reading lesson per section.
       out.push({
         id: slug(ch.title, i),
         title: ch.title,
-        lessons: [
-          {
-            id: `${slug(ch.title, i)}-reading`,
-            kind: "reading",
-            title: ch.title,
-            body: ch.body.trim(),
-          },
-        ],
+        lessons: splitBodyIntoLessons(ch.body, ch.title, i),
       });
     }
   }
   return out;
+}
+
+function splitBodyIntoLessons(body: string, chapterTitle: string, chIndex: number): LessonSpec[] {
+  const lines = body.split("\n");
+  const lessons: LessonSpec[] = [];
+  let currentTitle = `${chapterTitle} — Overview`;
+  let buffer: string[] = [];
+
+  const flush = () => {
+    const content = buffer.join("\n").trim();
+    if (!content) { buffer = []; return; }
+    lessons.push({
+      id: slug(currentTitle, `${chIndex}-${lessons.length}`),
+      kind: "reading",
+      title: currentTitle,
+      body: content,
+    });
+    buffer = [];
+  };
+
+  for (const line of lines) {
+    const m = /^##\s+(.+)$/.exec(line);
+    if (m) {
+      flush();
+      currentTitle = m[1].trim();
+    } else {
+      buffer.push(line);
+    }
+  }
+  flush();
+
+  // If the PDF had no ## markers (e.g. TOC wasn't detected), fall back to one
+  // reading lesson containing the whole chapter.
+  if (lessons.length === 0) {
+    lessons.push({
+      id: slug(chapterTitle, chIndex),
+      kind: "reading",
+      title: chapterTitle,
+      body: body.trim(),
+    });
+  }
+  return lessons;
 }
 
 async function structureWithClaude(
