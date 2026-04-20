@@ -49,6 +49,24 @@ struct AnthropicResponse {
     /// — we need to surface that as a clear error instead of handing a
     /// half-written JSON string to serde.
     stop_reason: Option<String>,
+    usage: Option<AnthropicUsage>,
+}
+
+#[derive(Debug, Deserialize)]
+struct AnthropicUsage {
+    input_tokens: u64,
+    output_tokens: u64,
+}
+
+/// Structured return from every LLM command. Carries the generated text plus
+/// accounting metadata the frontend uses to render live progress stats
+/// (tokens, cost, elapsed, etc.).
+#[derive(Debug, Serialize)]
+pub struct LlmResponse {
+    pub text: String,
+    pub input_tokens: u64,
+    pub output_tokens: u64,
+    pub elapsed_ms: u64,
 }
 
 #[derive(Debug, Deserialize)]
@@ -65,7 +83,7 @@ pub async fn clean_code(
     settings: State<'_, SettingsState>,
     chapter_title: String,
     raw_text: String,
-) -> Result<String, String> {
+) -> Result<LlmResponse, String> {
     let system = r#"You are a PDF-to-Markdown repair tool. Given the raw text of one chapter of a programming book, return a clean Markdown version where:
 
   - Every code sample is wrapped in a ```lang fenced block with the correct language.
@@ -92,7 +110,7 @@ pub async fn outline_chapter(
     chapter_title: String,
     cleaned_markdown: String,
     language: String,
-) -> Result<String, String> {
+) -> Result<LlmResponse, String> {
     let system = r#"You plan Codecademy-style interactive lessons from technical-book chapters. Given a cleaned Markdown version of one chapter, return a JSON array of lesson stubs that together cover the chapter. Aim for 8–14 stubs.
 
 Each stub is:
@@ -124,7 +142,7 @@ pub async fn generate_lesson(
     language: String,
     stub: String,                    // JSON string: { id, kind, title, intent }
     prior_solution: Option<String>,  // if section-progressive and this is a continuation
-) -> Result<String, String> {
+) -> Result<LlmResponse, String> {
     let system = r#"You author one Codecademy-style lesson at a time for the Kata app. Given the chapter's cleaned Markdown as reference, the target language, and a lesson stub (id, kind, title, intent), return a single JSON object matching one of these shapes depending on kind:
 
 READING:
@@ -186,7 +204,7 @@ pub async fn retry_exercise(
     settings: State<'_, SettingsState>,
     original_lesson: String, // JSON string of the previous attempt
     failure_reason: String,  // human-readable description of what went wrong
-) -> Result<String, String> {
+) -> Result<LlmResponse, String> {
     let system = r#"You are fixing a Kata exercise lesson that failed automated validation. The user will send you the original lesson JSON and a description of the failure. Return a corrected lesson JSON matching the same schema.
 
 Common failures:
@@ -214,7 +232,7 @@ async fn call_llm(
     settings: &State<'_, SettingsState>,
     system: &str,
     user: &str,
-) -> Result<String, String> {
+) -> Result<LlmResponse, String> {
     let (api_key, model) = {
         let s = settings.0.lock();
         (s.anthropic_api_key.clone(), s.anthropic_model.clone())
@@ -230,6 +248,7 @@ async fn call_llm(
     };
 
     let client = reqwest::Client::new();
+    let start = std::time::Instant::now();
 
     for attempt in 0..=MAX_RETRIES {
         let resp = client
@@ -244,8 +263,6 @@ async fn call_llm(
         let resp = match resp {
             Ok(r) => r,
             Err(e) => {
-                // Network-level failures (DNS, connection reset, timeout) are
-                // also worth retrying a few times before giving up.
                 if attempt < MAX_RETRIES {
                     sleep_backoff(attempt).await;
                     continue;
@@ -275,7 +292,16 @@ async fn call_llm(
                 .filter_map(|b| b.text)
                 .collect::<Vec<_>>()
                 .join("");
-            return Ok(extract_body(&text));
+            let (input_tokens, output_tokens) = parsed
+                .usage
+                .map(|u| (u.input_tokens, u.output_tokens))
+                .unwrap_or((0, 0));
+            return Ok(LlmResponse {
+                text: extract_body(&text),
+                input_tokens,
+                output_tokens,
+                elapsed_ms: start.elapsed().as_millis() as u64,
+            });
         }
 
         // Retriable: 429 (rate limit), 529 (overloaded), 5xx. Non-retriable:
@@ -342,10 +368,8 @@ pub async fn structure_with_llm(
     section_title: String,
     section_text: String,
     language: String,
-) -> Result<String, String> {
-    // Short-path fallback: just outline+generate through the old one-shot
-    // prompt. The specialist chain is the preferred path; frontend should
-    // call clean_code / outline_chapter / generate_lesson directly.
+) -> Result<LlmResponse, String> {
+    // Legacy single-pass entry point; runPipeline is the preferred path.
     let legacy_system = r#"You are a single-pass legacy adapter. Return a JSON array of lessons for the Kata app given a chapter of raw text and a target language. Each lesson is either reading or exercise with the schema described in the generate_lesson system prompt. Keep it simple — 6 to 10 lessons."#;
     let prompt = format!("Language: {language}\nSection: {section_title}\n\n{section_text}");
     call_llm(&settings, legacy_system, &prompt).await

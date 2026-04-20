@@ -2,8 +2,9 @@ import { useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { textToCourse } from "../../ingest/pdfParser";
-import { runPipeline, IngestAborted, type IngestEvent } from "../../ingest/pipeline";
+import { runPipeline, IngestAborted, type IngestEvent, type PipelineStats } from "../../ingest/pipeline";
 import CoursePreview from "./CoursePreview";
+import StatsBar from "./StatsBar";
 import type { Course, LanguageId } from "../../data/types";
 import "./ImportDialog.css";
 
@@ -29,6 +30,7 @@ export default function ImportDialog({ onDismiss, onImported }: Props) {
   const [runningLabel, setRunningLabel] = useState("");
   const [runningDetail, setRunningDetail] = useState("");
   const [events, setEvents] = useState<IngestEvent[]>([]);
+  const [stats, setStats] = useState<PipelineStats | null>(null);
   const [previewCourse, setPreviewCourse] = useState<Course | null>(null);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -57,6 +59,7 @@ export default function ImportDialog({ onDismiss, onImported }: Props) {
     setError(null);
     setPreviewCourse(null);
     setEvents([]);
+    setStats(null);
     const controller = new AbortController();
     abortRef.current = controller;
     try {
@@ -84,6 +87,7 @@ export default function ImportDialog({ onDismiss, onImported }: Props) {
               return next;
             });
           },
+          onStats: (s) => setStats(s),
         });
       } else {
         // Deterministic-only path: pdftotext → section splits → reading lessons.
@@ -225,6 +229,8 @@ export default function ImportDialog({ onDismiss, onImported }: Props) {
 
           {step === "running" && (
             <>
+              <StatsBar stats={stats} />
+
               <div className="kata-import-running-panel">
                 <div className="kata-import-spinner" />
                 <div className="kata-import-running-body">

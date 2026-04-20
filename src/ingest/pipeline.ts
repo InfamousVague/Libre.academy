@@ -43,6 +43,8 @@ export interface PipelineOptions {
   onProgress: (stage: string, detail?: string) => void;
   /** Optional fine-grained event stream for the verbose log panel. */
   onEvent?: (event: IngestEvent) => void;
+  /** Cumulative stats snapshot pushed after each material update. */
+  onStats?: (stats: PipelineStats) => void;
   /**
    * When aborted, the pipeline throws at the next cancel checkpoint (between
    * stages / API calls). The per-stage cache means the user can re-run and
@@ -60,6 +62,40 @@ export interface IngestEvent {
   message: string;
 }
 
+/// Rolling counters rendered as a stats bar above the running progress row.
+/// Frontend caches the latest value and re-renders it whenever onStats fires.
+export interface PipelineStats {
+  startedAt: number;        // Date.now() at pipeline start
+  elapsedMs: number;
+  totalChapters: number;
+  chaptersDone: number;
+  lessonsTotal: number;     // sum of all outlined stubs across planned chapters
+  lessonsDone: number;      // lessons fully generated (and for exercises, validated)
+  lessonsByKind: Record<string, number>;
+  apiCalls: number;         // Anthropic calls this run (cache hits don't count)
+  cacheHits: number;
+  validationAttempts: number;
+  validationFailures: number; // non-final failures (pre-retry)
+  demotedExercises: number;   // exercises that used up all retries → reading
+  inputTokens: number;
+  outputTokens: number;
+  /// Per-million-token cost at the selected model. Unit: USD.
+  estimatedCostUsd: number;
+  model: string;
+}
+
+// Pricing in USD per 1M tokens. Update if Anthropic's prices change.
+const MODEL_PRICING: Record<string, { input: number; output: number }> = {
+  "claude-sonnet-4-5": { input: 3, output: 15 },
+  "claude-opus-4-5":   { input: 15, output: 75 },
+  "claude-haiku-4-5":  { input: 1, output: 5 },
+};
+
+function costFor(model: string, inputTokens: number, outputTokens: number): number {
+  const p = MODEL_PRICING[model] ?? MODEL_PRICING["claude-sonnet-4-5"];
+  return (inputTokens / 1_000_000) * p.input + (outputTokens / 1_000_000) * p.output;
+}
+
 export class IngestAborted extends Error {
   constructor() {
     super("ingest aborted by user");
@@ -67,8 +103,48 @@ export class IngestAborted extends Error {
   }
 }
 
+/// A single Anthropic reply as returned from every LLM command in llm.rs.
+interface LlmResponseTS {
+  text: string;
+  input_tokens: number;
+  output_tokens: number;
+  elapsed_ms: number;
+}
+
 export async function runPipeline(opts: PipelineOptions): Promise<Course> {
-  const { pdfPath, bookId, title, author, language, onProgress, onEvent, signal } = opts;
+  const { pdfPath, bookId, title, author, language, onProgress, onEvent, onStats, signal } = opts;
+
+  // Detect the model we're currently running under so stats can cost it out.
+  let currentModel = "claude-sonnet-4-5";
+  try {
+    const s = await invoke<{ anthropic_model?: string }>("load_settings");
+    if (s.anthropic_model) currentModel = s.anthropic_model;
+  } catch { /* not in Tauri — keep default */ }
+
+  const stats: PipelineStats = {
+    startedAt: Date.now(),
+    elapsedMs: 0,
+    totalChapters: 0,
+    chaptersDone: 0,
+    lessonsTotal: 0,
+    lessonsDone: 0,
+    lessonsByKind: {},
+    apiCalls: 0,
+    cacheHits: 0,
+    validationAttempts: 0,
+    validationFailures: 0,
+    demotedExercises: 0,
+    inputTokens: 0,
+    outputTokens: 0,
+    estimatedCostUsd: 0,
+    model: currentModel,
+  };
+
+  const pushStats = () => {
+    stats.elapsedMs = Date.now() - stats.startedAt;
+    stats.estimatedCostUsd = costFor(stats.model, stats.inputTokens, stats.outputTokens);
+    onStats?.({ ...stats, lessonsByKind: { ...stats.lessonsByKind } });
+  };
 
   // Local helpers that know about the abort signal + event sink.
   const emit = (e: Omit<IngestEvent, "timestamp">) => {
@@ -77,6 +153,9 @@ export async function runPipeline(opts: PipelineOptions): Promise<Course> {
   const checkAbort = () => {
     if (signal?.aborted) throw new IngestAborted();
   };
+
+  /// Raw Tauri invoke wrapper with cancel checkpoint + event logging. Use for
+  /// non-LLM commands (extract_pdf_text, cache_*). LLM commands use `callLlm`.
   const timedInvoke = async <T,>(
     cmd: string,
     args: Record<string, unknown>,
@@ -96,13 +175,39 @@ export async function runPipeline(opts: PipelineOptions): Promise<Course> {
     return result;
   };
 
-  emit({ level: "info", stage: "meta", message: `book=${bookId} lang=${language}` });
+  /// Invoke an LLM command and accumulate its token usage into `stats`.
+  const callLlm = async (
+    cmd: string,
+    args: Record<string, unknown>,
+    label: string,
+    ctx: { stage: IngestEvent["stage"]; chapter?: number; lesson?: string },
+  ): Promise<string> => {
+    checkAbort();
+    emit({ level: "info", ...ctx, message: `→ ${label}` });
+    const resp = await invoke<LlmResponseTS>(cmd, args);
+    stats.apiCalls += 1;
+    stats.inputTokens += resp.input_tokens;
+    stats.outputTokens += resp.output_tokens;
+    emit({
+      level: "info",
+      ...ctx,
+      message: `✓ ${label} (${resp.elapsed_ms}ms · ${resp.input_tokens} in / ${resp.output_tokens} out)`,
+    });
+    pushStats();
+    checkAbort();
+    return resp.text;
+  };
+
+  emit({ level: "info", stage: "meta", message: `book=${bookId} lang=${language} model=${currentModel}` });
+  pushStats();
 
   // ---- Stage 0: extract raw text -----------------------------------------
   onProgress("Extracting text from PDF…");
   let rawText = await cacheRead(bookId, "raw.txt");
   if (rawText) {
     emit({ level: "cache", stage: "extract", message: "hit — skipping pdftotext" });
+    stats.cacheHits += 1;
+    pushStats();
   } else {
     const res = await timedInvoke<{ text: string; error: string | null }>(
       "extract_pdf_text",
@@ -120,6 +225,8 @@ export async function runPipeline(opts: PipelineOptions): Promise<Course> {
   if (rawChapters.length === 0) throw new Error("No chapters detected in PDF.");
   onProgress(`Found ${rawChapters.length} chapter(s).`);
   emit({ level: "info", stage: "meta", message: `detected ${rawChapters.length} chapters` });
+  stats.totalChapters = rawChapters.length;
+  pushStats();
 
   const cleaned: Array<{ title: string; markdown: string }> = [];
   for (let i = 0; i < rawChapters.length; i++) {
@@ -137,8 +244,10 @@ export async function runPipeline(opts: PipelineOptions): Promise<Course> {
         chapter: i + 1,
         message: `hit — skip clean for "${ch.title}"`,
       });
+      stats.cacheHits += 1;
+      pushStats();
     } else {
-      md = await timedInvoke<string>(
+      md = await callLlm(
         "clean_code",
         { chapterTitle: ch.title, rawText: ch.body },
         `clean_code ${ch.title}`,
@@ -166,8 +275,10 @@ export async function runPipeline(opts: PipelineOptions): Promise<Course> {
         chapter: i + 1,
         message: `hit — skip outline for "${ch.title}"`,
       });
+      stats.cacheHits += 1;
+      pushStats();
     } else {
-      raw = await timedInvoke<string>(
+      raw = await callLlm(
         "outline_chapter",
         {
           chapterTitle: ch.title,
@@ -187,6 +298,8 @@ export async function runPipeline(opts: PipelineOptions): Promise<Course> {
       message: `planned ${stubs.length} lessons (${stubs.map((s) => s.kind).join(", ")})`,
     });
     outlines.push({ title: ch.title, stubs });
+    stats.lessonsTotal += stubs.length;
+    pushStats();
   }
 
   // ---- Stage 3: generate each lesson, Stage 4 validate exercises ---------
@@ -216,17 +329,24 @@ export async function runPipeline(opts: PipelineOptions): Promise<Course> {
       if (cached) {
         try {
           lesson = parseJson<Lesson>(cached, `lesson ${stub.id} (cached)`);
+          emit({
+            level: "cache",
+            stage: "generate",
+            chapter: ci + 1,
+            lesson: stub.id,
+            message: `hit — skip generate for "${stub.title}"`,
+          });
+          stats.cacheHits += 1;
+          pushStats();
         } catch {
-          // Bad cache entry — drop it and fall through to regeneration.
           lesson = await regenerateLesson();
         }
       } else {
         lesson = await regenerateLesson();
       }
 
-      // Inline helper closes over the stable locals we need to re-call the LLM.
       async function regenerateLesson(): Promise<Lesson> {
-        const raw = await timedInvoke<string>(
+        const raw = await callLlm(
           "generate_lesson",
           {
             chapterTitle: ch.title,
@@ -239,7 +359,6 @@ export async function runPipeline(opts: PipelineOptions): Promise<Course> {
           { stage: "generate", chapter: ci + 1, lesson: stub.id },
         );
         const parsed = parseJson<Lesson>(raw, `lesson ${stub.id}`);
-        // Only cache the raw text AFTER we're sure it parses.
         await cacheWrite(bookId, cacheKey, raw);
         return parsed;
       }
@@ -255,6 +374,9 @@ export async function runPipeline(opts: PipelineOptions): Promise<Course> {
             onProgress,
             emit,
             checkAbort,
+            stats,
+            pushStats,
+            callLlm,
           },
         );
         lesson = validated;
@@ -269,9 +391,14 @@ export async function runPipeline(opts: PipelineOptions): Promise<Course> {
         message: `✓ lesson "${lesson.title}" (${lesson.kind})`,
       });
       lessons.push(lesson);
+      stats.lessonsDone += 1;
+      stats.lessonsByKind[lesson.kind] = (stats.lessonsByKind[lesson.kind] ?? 0) + 1;
+      pushStats();
     }
 
     chapters.push({ id: slug(ch.title), title: ch.title, lessons });
+    stats.chaptersDone += 1;
+    pushStats();
   }
 
   // ---- Assemble final course --------------------------------------------
@@ -298,12 +425,22 @@ async function validateExerciseWithRetry(
     onProgress: PipelineOptions["onProgress"];
     emit: (e: Omit<IngestEvent, "timestamp">) => void;
     checkAbort: () => void;
+    stats: PipelineStats;
+    pushStats: () => void;
+    callLlm: (
+      cmd: string,
+      args: Record<string, unknown>,
+      label: string,
+      ectx: { stage: IngestEvent["stage"]; chapter?: number; lesson?: string },
+    ) => Promise<string>;
   },
 ): Promise<Lesson> {
   let current = lesson;
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     ctx.checkAbort();
+    ctx.stats.validationAttempts += 1;
+    ctx.pushStats();
     ctx.onProgress(
       `Validating exercise (attempt ${attempt + 1}/${MAX_RETRIES + 1})`,
       current.title,
@@ -321,6 +458,8 @@ async function validateExerciseWithRetry(
       return current;
     }
 
+    ctx.stats.validationFailures += 1;
+    ctx.pushStats();
     ctx.emit({
       level: "warn",
       stage: "validate",
@@ -334,6 +473,8 @@ async function validateExerciseWithRetry(
         `⚠️  Exercise couldn't be validated, demoting to reading`,
         current.title,
       );
+      ctx.stats.demotedExercises += 1;
+      ctx.pushStats();
       ctx.emit({
         level: "error",
         stage: "validate",
@@ -344,30 +485,20 @@ async function validateExerciseWithRetry(
       return demoteToReading(current, failure);
     }
 
-    // Ask the LLM to fix it. Parse the response BEFORE caching so a truncated
-    // or malformed retry doesn't become a permanent bad cache entry.
+    // Ask the LLM to fix it. Parse BEFORE caching so a truncated or malformed
+    // retry doesn't become a permanent bad cache entry.
     const retryKey = `lessons/chapter-${pad(ctx.chapterIndex + 1)}/${slug(
       ctx.stubId,
     )}.retry-${attempt + 1}.json`;
-    ctx.emit({
-      level: "info",
-      stage: "retry",
-      chapter: ctx.chapterIndex + 1,
-      lesson: ctx.stubId,
-      message: `→ retry_exercise attempt ${attempt + 1}`,
-    });
-    const t0 = Date.now();
-    const rawFixed = await invoke<string>("retry_exercise", {
-      originalLesson: JSON.stringify(current),
-      failureReason: failure,
-    });
-    ctx.emit({
-      level: "info",
-      stage: "retry",
-      chapter: ctx.chapterIndex + 1,
-      lesson: ctx.stubId,
-      message: `✓ retry returned (${Date.now() - t0}ms)`,
-    });
+    const rawFixed = await ctx.callLlm(
+      "retry_exercise",
+      {
+        originalLesson: JSON.stringify(current),
+        failureReason: failure,
+      },
+      `retry_exercise attempt ${attempt + 1}`,
+      { stage: "retry", chapter: ctx.chapterIndex + 1, lesson: ctx.stubId },
+    );
     current = parseJson<ExerciseLesson>(rawFixed, `${current.id} retry ${attempt + 1}`);
     await cacheWrite(ctx.bookId, retryKey, rawFixed);
   }
