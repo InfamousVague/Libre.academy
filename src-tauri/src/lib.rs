@@ -8,6 +8,7 @@
 //!   - (future) `run_cargo_local`, `course_fs`.
 
 mod courses;
+mod ingest;
 mod progress_db;
 
 use std::io::Write;
@@ -77,6 +78,7 @@ async fn run_swift(code: String) -> SubprocessResult {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let db_path = progress_db::resolve_path(app.handle())?;
             let db = progress_db::open(db_path)?;
@@ -95,6 +97,7 @@ pub fn run() {
             courses::delete_course,
             courses::export_course,
             courses::import_course,
+            ingest::extract_pdf_text,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

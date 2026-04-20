@@ -24,7 +24,7 @@ export function useCourses() {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function refresh() {
+  async function refresh(): Promise<Course[]> {
     try {
       let entries = await invoke<CourseEntry[]>("list_courses");
       if (entries.length === 0) {
@@ -41,11 +41,13 @@ export function useCourses() {
       );
       setCourses(full);
       setError(null);
+      return full;
     } catch (e) {
       // Not in Tauri, or backend failed. Use the bundled seed so the UI at
       // least renders something.
       setCourses(seedCourses);
       setError(e instanceof Error ? e.message : String(e));
+      return seedCourses;
     } finally {
       setLoaded(true);
     }

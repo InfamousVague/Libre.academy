@@ -1,0 +1,177 @@
+.kata-import-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 100;
+  backdrop-filter: blur(4px);
+}
+
+.kata-import-panel {
+  width: min(560px, 90vw);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.kata-import-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.kata-import-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.kata-import-close {
+  background: none;
+  border: 0;
+  color: var(--color-text-tertiary);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.kata-import-close:hover {
+  color: var(--color-text-primary);
+}
+
+.kata-import-body {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.kata-import-blurb {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+
+.kata-import-primary,
+.kata-import-secondary {
+  align-self: flex-start;
+  padding: 8px 14px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.kata-import-primary {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+}
+
+.kata-import-primary:hover:not(:disabled) {
+  opacity: 0.92;
+}
+
+.kata-import-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.kata-import-secondary {
+  background: transparent;
+  color: var(--color-text-secondary);
+  border-color: var(--color-border-default);
+}
+
+.kata-import-secondary:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-tertiary);
+}
+
+.kata-import-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.kata-import-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.kata-import-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--color-text-tertiary);
+}
+
+.kata-import-input {
+  padding: 8px 10px;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 6px;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.kata-import-input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.kata-import-path {
+  font-family: "SF Mono", ui-monospace, Menlo, monospace;
+  font-size: 11.5px;
+  color: var(--color-text-tertiary);
+  background: var(--color-bg-primary);
+  padding: 6px 8px;
+  border-radius: 4px;
+  overflow-wrap: anywhere;
+  display: block;
+}
+
+.kata-import-running {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  padding: 16px 0;
+}
+
+.kata-import-spinner {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: kata-spin 0.9s linear infinite;
+}
+
+@keyframes kata-spin {
+  to { transform: rotate(360deg); }
+}
+
+.kata-import-error {
+  padding: 10px 12px;
+  background: rgba(239, 111, 111, 0.08);
+  border: 1px solid rgba(239, 111, 111, 0.35);
+  border-radius: 6px;
+  color: #f1b5b5;
+  font-size: 12px;
+  white-space: pre-wrap;
+}

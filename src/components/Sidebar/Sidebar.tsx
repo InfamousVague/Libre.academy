@@ -12,6 +12,7 @@ interface Props {
   activeLessonId?: string;
   completed: Set<string>;
   onSelectLesson: (courseId: string, lessonId: string) => void;
+  onBrowse: () => void;
 }
 
 /// Floating left rail. Completion dots fill in as lessons get marked done
@@ -23,6 +24,7 @@ export default function Sidebar({
   activeLessonId,
   completed,
   onSelectLesson,
+  onBrowse,
 }: Props) {
   return (
     <aside className="kata__sidebar">
@@ -40,10 +42,10 @@ export default function Sidebar({
 
         <button
           className="kata__nav-item kata__nav-item--browse"
-          onClick={() => console.info("TODO: open library browse view")}
+          onClick={onBrowse}
         >
           <span className="kata__nav-icon">+</span>
-          <span>browse courses</span>
+          <span>import course</span>
         </button>
       </nav>
 

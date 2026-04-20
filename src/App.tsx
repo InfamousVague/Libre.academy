@@ -5,6 +5,7 @@ import TopBar from "./components/TopBar/TopBar";
 import LessonReader from "./components/Lesson/LessonReader";
 import EditorPane from "./components/Editor/EditorPane";
 import OutputPane from "./components/Output/OutputPane";
+import ImportDialog from "./components/ImportDialog/ImportDialog";
 import { runCode, isPassing, type RunResult } from "./runtimes";
 import { useProgress } from "./hooks/useProgress";
 import { useCourses } from "./hooks/useCourses";
@@ -16,10 +17,11 @@ interface OpenCourse {
 }
 
 export default function App() {
-  const { courses, loaded: coursesLoaded } = useCourses();
+  const { courses, loaded: coursesLoaded, refresh: refreshCourses } = useCourses();
 
   const [openTabs, setOpenTabs] = useState<OpenCourse[]>([]);
   const [activeTabIndex, setActiveTabIndex] = useState(0);
+  const [importOpen, setImportOpen] = useState(false);
 
   /// Completion state lives in SQLite; the hook loads on mount and writes
   /// through on markCompleted. Keys are `${courseId}:${lessonId}`.
@@ -78,9 +80,7 @@ export default function App() {
         activeIndex={activeTabIndex}
         onActivate={setActiveTabIndex}
         onClose={closeTab}
-        onBrowse={() => {
-          console.info("TODO: open library/browse view");
-        }}
+        onBrowse={() => setImportOpen(true)}
       />
 
       <div className="kata__body">
@@ -90,6 +90,7 @@ export default function App() {
           activeLessonId={activeLesson?.id}
           completed={completed}
           onSelectLesson={selectLesson}
+          onBrowse={() => setImportOpen(true)}
         />
 
         <main className="kata__main">
@@ -105,6 +106,26 @@ export default function App() {
           )}
         </main>
       </div>
+
+      {importOpen && (
+        <ImportDialog
+          onDismiss={() => setImportOpen(false)}
+          onImported={async (courseId) => {
+            setImportOpen(false);
+            const fresh = await refreshCourses();
+            const imported = fresh.find((c) => c.id === courseId);
+            if (!imported || imported.chapters.length === 0) return;
+            const firstLessonId = imported.chapters[0].lessons[0]?.id;
+            if (!firstLessonId) return;
+            setOpenTabs((prev) => {
+              const without = prev.filter((t) => t.courseId !== courseId);
+              const next = [...without, { courseId, lessonId: firstLessonId }];
+              setActiveTabIndex(next.length - 1);
+              return next;
+            });
+          }}
+        />
+      )}
     </div>
   );
 }
