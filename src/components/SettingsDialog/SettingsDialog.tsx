@@ -17,6 +17,9 @@ export default function SettingsDialog({ onDismiss }: Props) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [clearingCourses, setClearingCourses] = useState(false);
+  const [clearingCache, setClearingCache] = useState(false);
+  const [confirmClearCourses, setConfirmClearCourses] = useState(false);
 
   useEffect(() => {
     invoke<Settings>("load_settings")
@@ -38,6 +41,35 @@ export default function SettingsDialog({ onDismiss }: Props) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function clearAllCourses() {
+    setClearingCourses(true);
+    setError(null);
+    try {
+      // list_courses + delete_course each (delete_course prunes progress too).
+      const entries = await invoke<Array<{ id: string }>>("list_courses");
+      for (const e of entries) {
+        await invoke("delete_course", { courseId: e.id });
+      }
+      // Reload to reflect the empty state.
+      window.location.reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setClearingCourses(false);
+    }
+  }
+
+  async function clearIngestCache() {
+    setClearingCache(true);
+    setError(null);
+    try {
+      await invoke("cache_clear", { bookId: "" });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setClearingCache(false);
     }
   }
 
@@ -73,6 +105,61 @@ export default function SettingsDialog({ onDismiss }: Props) {
               Stored at <code>&lt;app_data_dir&gt;/settings.json</code>. Never leaves your machine
               except in requests to api.anthropic.com.
             </p>
+          </section>
+
+          <section>
+            <h3 className="kata-settings-section">Data</h3>
+            <p className="kata-settings-blurb">
+              Clears local content. Your API key and preferences stay.
+            </p>
+            <div className="kata-settings-data-row">
+              <div>
+                <div className="kata-settings-data-label">Ingest cache</div>
+                <div className="kata-settings-data-hint">
+                  Clearing forces the next AI import to re-call Claude for every stage.
+                </div>
+              </div>
+              <button
+                className="kata-settings-danger"
+                onClick={clearIngestCache}
+                disabled={clearingCache}
+              >
+                {clearingCache ? "…" : "Clear cache"}
+              </button>
+            </div>
+            <div className="kata-settings-data-row">
+              <div>
+                <div className="kata-settings-data-label">All courses + progress</div>
+                <div className="kata-settings-data-hint">
+                  Deletes every course from disk and resets lesson completion. Cannot be undone.
+                </div>
+              </div>
+              {confirmClearCourses ? (
+                <div className="kata-settings-confirm">
+                  <button
+                    className="kata-settings-secondary"
+                    onClick={() => setConfirmClearCourses(false)}
+                    disabled={clearingCourses}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="kata-settings-danger"
+                    onClick={clearAllCourses}
+                    disabled={clearingCourses}
+                  >
+                    {clearingCourses ? "Clearing…" : "Really clear"}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  className="kata-settings-danger"
+                  onClick={() => setConfirmClearCourses(true)}
+                >
+                  Clear all courses
+                </button>
+              )}
+            </div>
           </section>
 
           {error && <div className="kata-settings-error">{error}</div>}

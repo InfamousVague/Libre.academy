@@ -145,6 +145,77 @@
   cursor: not-allowed;
 }
 
+.kata-settings-data-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.kata-settings-data-row:last-child {
+  border-bottom: 0;
+}
+
+.kata-settings-data-label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.kata-settings-data-hint {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  max-width: 320px;
+  line-height: 1.45;
+}
+
+.kata-settings-danger {
+  padding: 6px 12px;
+  background: transparent;
+  color: #ef6f6f;
+  border: 1px solid rgba(239, 111, 111, 0.5);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.kata-settings-danger:hover:not(:disabled) {
+  background: rgba(239, 111, 111, 0.08);
+  border-color: rgba(239, 111, 111, 0.8);
+}
+
+.kata-settings-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.kata-settings-secondary {
+  padding: 6px 12px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.kata-settings-secondary:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-tertiary);
+}
+
+.kata-settings-confirm {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
 .kata-settings-error {
   padding: 10px 12px;
   background: rgba(239, 111, 111, 0.08);
