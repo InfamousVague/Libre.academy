@@ -24,31 +24,31 @@ export default function CoursePreview({ course, onSave, onDiscard }: Props) {
     null;
 
   return (
-    <div className="kata-preview">
-      <div className="kata-preview-header">
+    <div className="fishbones-preview">
+      <div className="fishbones-preview-header">
         <div>
-          <div className="kata-preview-title">{course.title}</div>
-          <div className="kata-preview-subtitle">
+          <div className="fishbones-preview-title">{course.title}</div>
+          <div className="fishbones-preview-subtitle">
             {course.chapters.length} chapter{course.chapters.length === 1 ? "" : "s"} ·{" "}
             {totalLessons(course)} lessons ({countByKind(course)})
           </div>
         </div>
-        <div className="kata-preview-actions">
-          <button className="kata-preview-secondary" onClick={onDiscard}>
+        <div className="fishbones-preview-actions">
+          <button className="fishbones-preview-secondary" onClick={onDiscard}>
             Discard
           </button>
-          <button className="kata-preview-primary" onClick={onSave}>
+          <button className="fishbones-preview-primary" onClick={onSave}>
             Save course
           </button>
         </div>
       </div>
 
-      <div className="kata-preview-body">
-        <aside className="kata-preview-tree">
+      <div className="fishbones-preview-body">
+        <aside className="fishbones-preview-tree">
           {course.chapters.map((ch, ci) => (
-            <div key={ch.id} className="kata-preview-chapter">
+            <div key={ch.id} className="fishbones-preview-chapter">
               <button
-                className={`kata-preview-chapter-title ${
+                className={`fishbones-preview-chapter-title ${
                   ci === activeChapter ? "is-active" : ""
                 }`}
                 onClick={() => {
@@ -56,14 +56,14 @@ export default function CoursePreview({ course, onSave, onDiscard }: Props) {
                   setActiveLessonId(ch.lessons[0]?.id ?? "");
                 }}
               >
-                <span className="kata-preview-ch-index">{ci + 1}</span>
+                <span className="fishbones-preview-ch-index">{ci + 1}</span>
                 {ch.title}
               </button>
               {ci === activeChapter &&
                 ch.lessons.map((l) => (
                   <button
                     key={l.id}
-                    className={`kata-preview-lesson ${
+                    className={`fishbones-preview-lesson ${
                       l.id === activeLessonId ? "is-active" : ""
                     }`}
                     onClick={() => setActiveLessonId(l.id)}
@@ -76,11 +76,11 @@ export default function CoursePreview({ course, onSave, onDiscard }: Props) {
           ))}
         </aside>
 
-        <section className="kata-preview-pane">
+        <section className="fishbones-preview-pane">
           {activeLesson ? (
             <LessonPreview lesson={activeLesson} />
           ) : (
-            <div className="kata-preview-empty">No lesson selected.</div>
+            <div className="fishbones-preview-empty">No lesson selected.</div>
           )}
         </section>
       </div>
@@ -90,25 +90,25 @@ export default function CoursePreview({ course, onSave, onDiscard }: Props) {
 
 function LessonPreview({ lesson }: { lesson: Lesson }) {
   return (
-    <div className="kata-preview-lesson-pane">
-      <div className="kata-preview-lesson-header">
-        <span className="kata-preview-kind-chip">{lesson.kind}</span>
-        <span className="kata-preview-lesson-title">{lesson.title}</span>
+    <div className="fishbones-preview-lesson-pane">
+      <div className="fishbones-preview-lesson-header">
+        <span className="fishbones-preview-kind-chip">{lesson.kind}</span>
+        <span className="fishbones-preview-lesson-title">{lesson.title}</span>
       </div>
 
       <LessonReader lesson={lesson} />
 
       {lesson.kind === "exercise" && (
-        <div className="kata-preview-code">
-          <div className="kata-preview-code-section">
+        <div className="fishbones-preview-code">
+          <div className="fishbones-preview-code-section">
             <h4>Starter</h4>
             <pre>{lesson.starter}</pre>
           </div>
-          <div className="kata-preview-code-section">
+          <div className="fishbones-preview-code-section">
             <h4>Solution</h4>
             <pre>{lesson.solution}</pre>
           </div>
-          <div className="kata-preview-code-section">
+          <div className="fishbones-preview-code-section">
             <h4>Tests</h4>
             <pre>{lesson.tests}</pre>
           </div>
@@ -116,14 +116,14 @@ function LessonPreview({ lesson }: { lesson: Lesson }) {
       )}
 
       {lesson.kind === "quiz" && (
-        <div className="kata-preview-quiz">
+        <div className="fishbones-preview-quiz">
           {lesson.questions.map((q, i) => (
-            <div key={i} className="kata-preview-question">
-              <div className="kata-preview-q-num">{i + 1}</div>
+            <div key={i} className="fishbones-preview-question">
+              <div className="fishbones-preview-q-num">{i + 1}</div>
               <div>
-                <div className="kata-preview-q-prompt">{q.prompt}</div>
+                <div className="fishbones-preview-q-prompt">{q.prompt}</div>
                 {q.kind === "mcq" ? (
-                  <ul className="kata-preview-q-options">
+                  <ul className="fishbones-preview-q-options">
                     {q.options.map((opt, j) => (
                       <li
                         key={j}
@@ -135,12 +135,12 @@ function LessonPreview({ lesson }: { lesson: Lesson }) {
                     ))}
                   </ul>
                 ) : (
-                  <div className="kata-preview-q-short">
+                  <div className="fishbones-preview-q-short">
                     Accepts: {q.accept.map((a) => `"${a}"`).join(", ")}
                   </div>
                 )}
                 {q.explanation && (
-                  <div className="kata-preview-q-explanation">{q.explanation}</div>
+                  <div className="fishbones-preview-q-explanation">{q.explanation}</div>
                 )}
               </div>
             </div>
@@ -158,7 +158,7 @@ function LessonKindGlyph({ kind }: { kind: Lesson["kind"] }) {
     mixed: "◐",
     quiz: "?",
   };
-  return <span className="kata-preview-lesson-glyph">{chars[kind] ?? "•"}</span>;
+  return <span className="fishbones-preview-lesson-glyph">{chars[kind] ?? "•"}</span>;
 }
 
 function totalLessons(c: Course): number {

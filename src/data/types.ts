@@ -5,7 +5,46 @@
 /// On disk this is a mix of JSON (structure) and Markdown (prose). At runtime
 /// we load everything into these types.
 
-export type LanguageId = "javascript" | "typescript" | "python" | "rust" | "swift";
+export type LanguageId =
+  | "javascript"
+  | "typescript"
+  | "python"
+  | "rust"
+  | "swift"
+  | "go";
+
+/// Difficulty tier for challenge-pack exercises. Courses' exercises don't
+/// set this — it's specific to the kata-style challenge packs that group
+/// problems by how hard they are. Optional on both exercise kinds so
+/// existing course lessons deserialize without a migration.
+export type Difficulty = "easy" | "medium" | "hard";
+
+/// A file in an exercise's workbench. Multi-file exercises list their files
+/// here (e.g. index.html + style.css + script.js, or lib.rs + main.rs). For
+/// legacy single-file exercises we synthesize one of these at runtime from
+/// the `starter` field so the workbench UI always deals in file arrays.
+///
+/// `fileLanguage` is broader than the lesson's primary `language` because
+/// individual files can be HTML or CSS even in a "javascript" lesson (web
+/// projects). The primary language is still what picks the runtime.
+export type FileLanguage = LanguageId | "html" | "css" | "json" | "plaintext";
+
+export interface WorkbenchFile {
+  /// Filename including extension — used by the UI as the tab label and by
+  /// the test runner when the harness imports relative to the user module.
+  name: string;
+  /// Monaco language id for syntax highlighting. Also drives how we
+  /// concatenate the file when running (e.g. CSS isn't executable JS, so
+  /// it's ignored when building the JS test bundle).
+  language: FileLanguage;
+  /// Starter content shown when the exercise first opens, or current
+  /// content in solutionFiles.
+  content: string;
+  /// When true, the user can't edit this file — useful for a reference
+  /// library they should use but not modify. Still shown in tabs so the
+  /// learner can read it.
+  readOnly?: boolean;
+}
 
 export interface Course {
   id: string;
@@ -14,6 +53,14 @@ export interface Course {
   description?: string;
   language: LanguageId;
   chapters: Chapter[];
+  /// Distinguishes book-derived linear courses from kata-style challenge
+  /// packs. Missing OR "course" means it's a linear course (default for
+  /// everything imported before this field was added). "challenges" means
+  /// the chapters are difficulty tiers and lessons carry `topic` tags.
+  /// Shapes are identical so the same UI, persistence, and progress
+  /// tracking apply — the flag is purely a classification for the
+  /// sidebar, library, and profile views.
+  packType?: "course" | "challenges";
 }
 
 export interface Chapter {
@@ -29,6 +76,68 @@ interface LessonBase {
   title: string;
   /** Markdown body shown in the reading pane. Code fences are highlighted via Shiki. */
   body: string;
+  /**
+   * 3-5 short bullets that say what the learner will know after this lesson.
+   * Rendered as a "You'll learn" card above the body. Optional so older
+   * lessons (or very short ones) can skip it — the reader just hides the
+   * card when the array is missing or empty.
+   */
+  objectives?: string[];
+  /**
+   * Auto-generated reading aids for this lesson. Populated at ingest time
+   * (see `generate_lesson` + the one-off `enrich_lesson` command) so
+   * rendering costs nothing at read time. Everything inside is optional:
+   * the reader degrades gracefully when `enrichment` is missing.
+   */
+  enrichment?: LessonEnrichment;
+}
+
+/**
+ * Glossary / symbol reference data cached alongside the lesson's body.
+ * Kept separately so the reader can compute first-use wrapping without
+ * re-parsing the markdown, and so a future "lint the lesson" step can
+ * validate every referenced term exists.
+ */
+export interface LessonEnrichment {
+  /**
+   * Every term-of-art introduced in this lesson (e.g. "closure", "borrow",
+   * "generator"). Used for two UI pieces:
+   *   - dotted underline on the FIRST occurrence of each term in the body
+   *   - the collapsible Glossary side panel
+   */
+  glossary?: GlossaryEntry[];
+  /**
+   * Mapping from inline-code tokens (as they appear in backticks) to a
+   * short signature + 1-line description + official doc URL. Drives the
+   * hoverable popover on inline `code` spans and the "View full docs →"
+   * link inside it.
+   */
+  symbols?: SymbolEntry[];
+}
+
+export interface GlossaryEntry {
+  /** The term as it appears in the prose. Case-sensitive first-match. */
+  term: string;
+  /** One-sentence plain-language definition. Kept tight for popovers. */
+  definition: string;
+}
+
+export interface SymbolEntry {
+  /**
+   * The string as it appears inside backticks, e.g. "Array.prototype.map"
+   * or "Vec::new". Matched exactly against the text inside `<code>`.
+   */
+  pattern: string;
+  /** Optional one-line signature shown above the description. */
+  signature?: string;
+  /** One-sentence description of what the symbol does. */
+  description?: string;
+  /**
+   * Canonical docs URL — MDN for JS/TS, doc.rust-lang.org for Rust,
+   * pkg.go.dev for Go, docs.python.org for Python. Click opens in the
+   * default browser via Tauri's opener plugin.
+   */
+  docUrl?: string;
 }
 
 export interface ReadingLesson extends LessonBase {
@@ -38,12 +147,33 @@ export interface ReadingLesson extends LessonBase {
 export interface ExerciseLesson extends LessonBase {
   kind: "exercise";
   language: LanguageId;
-  /** Code the user sees in the editor on first open. */
+  /** Legacy single-file starter. For multi-file exercises, see `files`. */
   starter: string;
-  /** Hidden reference solution. Not shown to the user. */
+  /** Hidden reference solution for the single-file flow. See also `solutionFiles`. */
   solution: string;
   /** Hidden test file the evaluator runs against the user's code. */
   tests: string;
+  /**
+   * Progressive hints. The UI reveals them one at a time (click 1 shows hint
+   * 0, click 2 shows hints 0–1, etc) so learners can escalate help as needed.
+   * Optional — legacy lessons without hints just disable the Hint button.
+   */
+  hints?: string[];
+  /**
+   * Multi-file workbench. When present, takes precedence over `starter`. Each
+   * file becomes a tab in the editor. The runnable files (matching the
+   * lesson's primary language) are concatenated in order before running.
+   */
+  files?: WorkbenchFile[];
+  /** Reference solution for a multi-file exercise. Mirrors `files` shape. */
+  solutionFiles?: WorkbenchFile[];
+  /**
+   * Challenge-pack metadata (ignored when the parent course's packType is
+   * "course"). Drives difficulty-dot coloring in the sidebar and the
+   * topic bucket counts in the Profile view.
+   */
+  difficulty?: Difficulty;
+  topic?: string;
 }
 
 /**
@@ -56,6 +186,11 @@ export interface MixedLesson extends LessonBase {
   starter: string;
   solution: string;
   tests: string;
+  hints?: string[];
+  files?: WorkbenchFile[];
+  solutionFiles?: WorkbenchFile[];
+  difficulty?: Difficulty;
+  topic?: string;
 }
 
 /**
@@ -98,6 +233,13 @@ export function isExerciseKind(lesson: Lesson): lesson is ExerciseLesson | Mixed
 
 export function isQuiz(lesson: Lesson): lesson is QuizLesson {
   return lesson.kind === "quiz";
+}
+
+/// Challenge packs and courses share the same shape — this is the single
+/// source of truth for which is which. Missing `packType` (legacy courses
+/// on disk) counts as "course" so nothing changes for existing data.
+export function isChallengePack(course: Course): boolean {
+  return course.packType === "challenges";
 }
 
 /** Canonicalize a user or accepted-answer string for short-answer matching. */

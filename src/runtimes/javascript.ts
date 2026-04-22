@@ -1,3 +1,4 @@
+import { transform as sucraseTransform } from "sucrase";
 import type { RunResult, LogLine, TestResult } from "./types";
 
 /// In-browser JavaScript / TypeScript runtime.
@@ -18,7 +19,45 @@ export async function runJavaScript(code: string, testCode?: string): Promise<Ru
 }
 
 export async function runTypeScript(code: string, testCode?: string): Promise<RunResult> {
-  return runInWorker(stripTypeAnnotations(code), testCode ? stripTypeAnnotations(testCode) : undefined);
+  const compiledCode = compileTypeScript(code);
+  if ("error" in compiledCode) return compiledCode.error;
+  const compiledTests = testCode ? compileTypeScript(testCode) : null;
+  if (compiledTests && "error" in compiledTests) return compiledTests.error;
+  return runInWorker(
+    compiledCode.js,
+    compiledTests ? compiledTests.js : undefined,
+  );
+}
+
+/// Run sucrase with the `typescript` transform to strip type annotations,
+/// generics, interfaces, enums, and other TS-only syntax. Returns either
+/// the compiled JS or a RunResult-shaped error so the caller can surface
+/// a friendly "your TypeScript didn't compile" message instead of letting
+/// the worker hit `new AsyncFunction(...)` with unstripped TS tokens and
+/// die with an opaque `SyntaxError: AsyncFunction@[native code]`.
+function compileTypeScript(
+  source: string,
+): { js: string } | { error: RunResult } {
+  try {
+    // `disableESTransforms: true` preserves modern ES syntax — we're
+    // running in the same webview as the app, so `const`, arrow funcs,
+    // async/await, optional chaining, etc. all work natively and don't
+    // need down-leveling. We only want TS syntax removed.
+    const { code } = sucraseTransform(source, {
+      transforms: ["typescript"],
+      disableESTransforms: true,
+    });
+    return { js: code };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return {
+      error: {
+        logs: [],
+        error: `TypeScript compile error: ${msg}`,
+        durationMs: 0,
+      },
+    };
+  }
 }
 
 function runInWorker(code: string, testCode: string | undefined): Promise<RunResult> {
@@ -205,9 +244,21 @@ function runInWorker(code: string, testCode: string | undefined): Promise<RunRes
     worker.onerror = (e: ErrorEvent) => {
       clearTimeout(timeout);
       cleanup();
+      // `e.message` is sometimes empty when the worker throws from a
+      // `new Function` / `new AsyncFunction` parse failure (the browser
+      // surfaces it as "AsyncFunction@[native code]" instead of a real
+      // message). Falling back to filename + line/col gives the learner
+      // at least a pointer to where the problem lives.
+      const locHint =
+        e.filename || e.lineno
+          ? ` (${e.filename ?? "worker"}:${e.lineno ?? "?"}:${e.colno ?? "?"})`
+          : "";
       resolve({
         logs: [] as LogLine[],
-        error: e.message || "worker error",
+        error:
+          (e.message && e.message.trim())
+            ? e.message
+            : `worker crashed — likely a syntax error in your code${locHint}`,
         durationMs: 0,
       });
     };
@@ -216,11 +267,3 @@ function runInWorker(code: string, testCode: string | undefined): Promise<RunRes
   });
 }
 
-/// Very narrow type-annotation stripper for V1. Handles the simple shapes
-/// our exercise starters use: `: string`, `: number`, `: boolean`, and
-/// `as Type` casts. A real implementation would use sucrase / esbuild-wasm.
-function stripTypeAnnotations(source: string): string {
-  return source
-    .replace(/\bas\s+[A-Za-z_$][\w$]*\b/g, "") // `as Foo`
-    .replace(/:\s*[A-Za-z_$][\w$]*(\[\])?(?=\s*[,)=;]|\s*$)/gm, "");
-}

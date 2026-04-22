@@ -1,4 +1,4 @@
-.kata-settings-backdrop {
+.fishbones-settings-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
@@ -8,16 +8,130 @@
   backdrop-filter: blur(4px);
 }
 
-.kata-settings-panel {
-  width: min(540px, 90vw);
+.fishbones-settings-panel {
+  /* Wider to fit the sidebar, capped at 85vh so long sections scroll inside
+     rather than growing the dialog off-screen. Column flex so the header +
+     columns row + footer stack with the columns taking the remaining space
+     and flowing into their own overflow. */
+  width: min(760px, 92vw);
+  max-height: 85vh;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
-.kata-settings-header {
+/* Two-column interior: left nav rail + right content pane. */
+.fishbones-settings-columns {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.fishbones-settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 10px;
+  width: 200px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--color-border-default);
+  /* Match the panel background so hover/active (bg-tertiary) contrasts
+     clearly. On the primary surface the tertiary-only lift was only a few
+     lightness steps in Fishbones Dark and effectively invisible. */
+  background: var(--color-bg-secondary);
+  overflow-y: auto;
+}
+
+.fishbones-settings-nav-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 9px 12px;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.fishbones-settings-nav-item:hover {
+  /* Uses white-alpha instead of bg-tertiary so the lift is visible on every
+     theme — Fishbones Dark's bg-tertiary is only ~10 lightness above secondary,
+     while a translucent white reads clearly regardless of base. */
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-text-primary);
+}
+
+.fishbones-settings-nav-item--active,
+.fishbones-settings-nav-item--active:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-primary);
+}
+
+/* Left accent stripe on the active tab — color-agnostic (uses text-primary
+   which always contrasts the bg), so the active state is unmistakable
+   regardless of how close the hover/active bg alphas are to the panel. */
+.fishbones-settings-nav-item--active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--color-text-primary);
+}
+
+/* Light themes invert the alpha so we don't get a washed-out lift. */
+[data-theme="light"] .fishbones-settings-nav-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .fishbones-settings-nav-item--active,
+[data-theme="light"] .fishbones-settings-nav-item--active:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.fishbones-settings-nav-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.fishbones-settings-nav-hint {
+  font-size: 10.5px;
+  color: var(--color-text-tertiary);
+  letter-spacing: 0.2px;
+}
+
+.fishbones-settings-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--color-border-default);
+  background: var(--color-bg-secondary);
+  flex-shrink: 0;
+}
+
+.fishbones-settings-footer-hint {
+  font-size: 11.5px;
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}
+
+.fishbones-settings-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -25,13 +139,13 @@
   border-bottom: 1px solid var(--color-border-default);
 }
 
-.kata-settings-title {
+.fishbones-settings-title {
   font-size: 14px;
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
-.kata-settings-close {
+.fishbones-settings-close {
   background: none;
   border: 0;
   color: var(--color-text-tertiary);
@@ -41,18 +155,22 @@
   padding: 4px 8px;
 }
 
-.kata-settings-close:hover {
+.fishbones-settings-close:hover {
   color: var(--color-text-primary);
 }
 
-.kata-settings-body {
-  padding: 18px;
+.fishbones-settings-body {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  padding: 20px 22px;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
 
-.kata-settings-section {
+.fishbones-settings-section {
   margin: 0 0 6px;
   font-size: 12px;
   font-weight: 600;
@@ -61,20 +179,20 @@
   color: var(--color-text-tertiary);
 }
 
-.kata-settings-blurb {
+.fishbones-settings-blurb {
   margin: 0 0 10px;
   font-size: 13px;
   line-height: 1.55;
   color: var(--color-text-secondary);
 }
 
-.kata-settings-field {
+.fishbones-settings-field {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.kata-settings-label {
+.fishbones-settings-label {
   font-size: 10.5px;
   font-weight: 600;
   text-transform: uppercase;
@@ -82,7 +200,7 @@
   color: var(--color-text-tertiary);
 }
 
-.kata-settings-input {
+.fishbones-settings-input {
   padding: 8px 10px;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
@@ -92,19 +210,19 @@
   font-size: 12.5px;
 }
 
-.kata-settings-input:focus {
+.fishbones-settings-input:focus {
   outline: none;
   border-color: rgba(255, 255, 255, 0.4);
 }
 
-.kata-settings-note {
+.fishbones-settings-note {
   margin: 6px 0 0;
   font-size: 11.5px;
   color: var(--color-text-tertiary);
   line-height: 1.5;
 }
 
-.kata-settings-note code {
+.fishbones-settings-note code {
   font-family: "SF Mono", ui-monospace, Menlo, monospace;
   font-size: 10.5px;
   background: var(--color-bg-tertiary);
@@ -112,20 +230,20 @@
   border-radius: 3px;
 }
 
-.kata-settings-actions {
+.fishbones-settings-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
 }
 
-.kata-settings-saved {
+.fishbones-settings-saved {
   color: #7cd97c;
   font-size: 12px;
   font-weight: 500;
 }
 
-.kata-settings-primary {
+.fishbones-settings-primary {
   padding: 8px 16px;
   background: #ffffff;
   color: #000000;
@@ -136,22 +254,32 @@
   cursor: pointer;
 }
 
-.kata-settings-primary:hover:not(:disabled) {
+.fishbones-settings-primary:hover:not(:disabled) {
   opacity: 0.92;
 }
 
-.kata-settings-primary:disabled {
+.fishbones-settings-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.kata-settings-model-group {
+.fishbones-settings-model-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.kata-settings-model {
+/* Scrollable variant — used for the theme picker now that the list has 11+
+   entries. Bounds the section's height so long lists don't force the whole
+   settings body to scroll, and adds a bit of padding on the right so the
+   scrollbar doesn't overlap the card borders. */
+.fishbones-settings-model-group--scroll {
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.fishbones-settings-model {
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -162,29 +290,29 @@
   cursor: pointer;
 }
 
-.kata-settings-model.is-active {
+.fishbones-settings-model.is-active {
   border-color: rgba(255, 255, 255, 0.4);
   background: var(--color-bg-tertiary);
 }
 
-.kata-settings-model input[type="radio"] {
+.fishbones-settings-model input[type="radio"] {
   margin-top: 3px;
 }
 
-.kata-settings-model-label {
+.fishbones-settings-model-label {
   font-size: 12.5px;
   font-weight: 500;
   color: var(--color-text-primary);
 }
 
-.kata-settings-model-hint {
+.fishbones-settings-model-hint {
   margin-top: 2px;
   font-size: 11px;
   color: var(--color-text-tertiary);
   line-height: 1.45;
 }
 
-.kata-settings-data-row {
+.fishbones-settings-data-row {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -193,17 +321,17 @@
   border-bottom: 1px solid var(--color-border-default);
 }
 
-.kata-settings-data-row:last-child {
+.fishbones-settings-data-row:last-child {
   border-bottom: 0;
 }
 
-.kata-settings-data-label {
+.fishbones-settings-data-label {
   font-size: 12.5px;
   font-weight: 500;
   color: var(--color-text-primary);
 }
 
-.kata-settings-data-hint {
+.fishbones-settings-data-hint {
   margin-top: 2px;
   font-size: 11px;
   color: var(--color-text-tertiary);
@@ -211,7 +339,7 @@
   line-height: 1.45;
 }
 
-.kata-settings-danger {
+.fishbones-settings-danger {
   padding: 6px 12px;
   background: transparent;
   color: #ef6f6f;
@@ -224,17 +352,17 @@
   white-space: nowrap;
 }
 
-.kata-settings-danger:hover:not(:disabled) {
+.fishbones-settings-danger:hover:not(:disabled) {
   background: rgba(239, 111, 111, 0.08);
   border-color: rgba(239, 111, 111, 0.8);
 }
 
-.kata-settings-danger:disabled {
+.fishbones-settings-danger:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.kata-settings-secondary {
+.fishbones-settings-secondary {
   padding: 6px 12px;
   background: transparent;
   color: var(--color-text-secondary);
@@ -244,18 +372,18 @@
   cursor: pointer;
 }
 
-.kata-settings-secondary:hover {
+.fishbones-settings-secondary:hover {
   color: var(--color-text-primary);
   background: var(--color-bg-tertiary);
 }
 
-.kata-settings-confirm {
+.fishbones-settings-confirm {
   display: flex;
   gap: 6px;
   flex-shrink: 0;
 }
 
-.kata-settings-error {
+.fishbones-settings-error {
   padding: 10px 12px;
   background: rgba(239, 111, 111, 0.08);
   border: 1px solid rgba(239, 111, 111, 0.35);

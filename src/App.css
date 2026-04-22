@@ -20,7 +20,7 @@ button {
 /* Root layout: custom top bar (houses tabs + traffic lights) across the top,
    floating sidebar + main content column underneath. The sidebar floats
    inside 10px margins for a card-on-backdrop feel. */
-.kata {
+.fishbones {
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -28,14 +28,14 @@ button {
   background: var(--color-bg-primary);
 }
 
-.kata__body {
+.fishbones__body {
   display: flex;
   flex: 1;
   min-height: 0;
   overflow: hidden;
 }
 
-.kata__main {
+.fishbones__main {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -46,63 +46,213 @@ button {
 
 /* Lesson content pane. When a lesson has an exercise, reader sits on the left
    and the workbench (editor above, console below) sits on the right. Reading-
-   only lessons fill the whole pane. */
-.kata__lesson {
+   only lessons fill the whole pane.
+   The lesson pane itself is NOT a card — the prose flows on the app's base
+   surface so reading feels like reading, not like inspecting a document.
+   The workbench picks up its own card treatment in Workbench.css. */
+.fishbones__lesson {
   flex: 1;
   display: flex;
   flex-direction: row;
   min-height: 0;
   overflow: hidden;
   margin: 10px 10px 10px 0;
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border-default);
-  border-radius: 12px;
 }
 
-.kata__lesson .kata-reader {
+.fishbones__lesson .fishbones-reader {
   flex: 1;
   min-width: 0;
 }
 
 /* Quiz + reading-only long lessons: stack the reader and a scrollable body
-   vertically instead of the row/workbench layout exercises use. */
-.kata__lesson--column {
+   vertically instead of the row/workbench layout exercises use.
+   In this single-column layout we left-align the content and cap width
+   at a comfortable reading measure. The 680px cap keeps quiz questions
+   from stretching across the full pane on wide windows while still
+   leaving natural negative space on the right. */
+.fishbones__lesson--column .fishbones-reader-inner,
+.fishbones__lesson--column .fishbones-quiz,
+.fishbones__lesson--column .fishbones__lesson-nav-wrap {
+  max-width: 680px;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.fishbones__lesson--column {
   flex-direction: column;
 }
 
-.kata__lesson-scroll {
+.fishbones__lesson-scroll {
   flex: 1;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
 
-.kata__lesson-scroll .kata-reader {
-  overflow-y: visible;
+/* In quiz/reading-only column mode the outer `.fishbones__lesson-scroll`
+   owns scrolling, so the reader's own scroll container + pinned progress
+   rail would duplicate chrome. Short quiz intros don't need a "min to
+   read" meta row either. Flatten the reader: drop its progress rail
+   and meta row, let the body flow inside the outer scroll. */
+.fishbones__lesson-scroll .fishbones-reader {
+  overflow: visible;
+  flex: 0 0 auto;
+}
+.fishbones__lesson-scroll .fishbones-reader-scroll {
+  overflow: visible;
+  flex: 0 0 auto;
+  padding: 32px 16px 0;
+}
+.fishbones__lesson-scroll .fishbones-reader-progress,
+.fishbones__lesson-scroll .fishbones-reader-meta {
+  display: none;
 }
 
-/* Workbench = editor + console/output, stacked vertically on the right side. */
-.kata__workbench {
+/* Workbench (.fishbones-workbench) is self-styled — see Workbench.css. */
+
+/* When the workbench is popped out, the inline editor column goes away
+   entirely so the reader can fill the whole pane. A compact pill is
+   floated in the top-right corner so the learner has an obvious, out-of-
+   the-way way to bring the workbench back. */
+.fishbones__lesson {
+  position: relative; /* anchor for the bring-back pill */
+}
+
+.fishbones__workbench-popped-pill {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 999px;
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.fishbones__workbench-popped-pill:hover {
+  background: var(--color-text-primary);
+  color: var(--color-bg-primary);
+  border-color: var(--color-text-primary);
+}
+
+.fishbones__workbench-popped-pill-icon {
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* Wraps the Prev/Next nav when it's rendered inside the quiz's shared scroll
+   column (LessonReader already centers its own inner container, so the nav
+   there inherits those bounds — only the quiz path needs this wrapper). */
+.fishbones__lesson-nav-wrap {
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 16px 28px;
+}
+
+/* First-run welcome. Shown when the learner has zero courses on disk. We
+   center the whole pane and size for readability on larger windows. */
+.fishbones__welcome {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  background: var(--color-bg-secondary);
+  margin: 10px 10px 10px 0;
+  border: 1px solid var(--color-border-default);
+  border-radius: 12px;
+}
+
+.fishbones__welcome-inner {
+  max-width: 480px;
+  text-align: center;
   display: flex;
   flex-direction: column;
-  width: 48%;
-  min-width: 380px;
-  border-left: 1px solid var(--color-border-default);
-  background: var(--color-bg-primary);
+  align-items: center;
+  gap: 14px;
 }
 
-.kata__workbench .kata-editor {
-  flex: 1 1 auto;
-  min-height: 0;
-  border-bottom: 1px solid var(--color-border-default);
+.fishbones__welcome-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2px;
+  color: #e8c46b;
 }
 
-.kata__workbench .kata-output {
-  flex: 0 0 38%;
-  min-height: 140px;
+.fishbones__welcome-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary);
 }
 
-.kata__empty {
+.fishbones__welcome-blurb {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+.fishbones__welcome-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.fishbones__welcome-primary {
+  padding: 10px 18px;
+  background: var(--color-text-primary);
+  color: var(--color-bg-primary);
+  border: 0;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.fishbones__welcome-primary:hover {
+  opacity: 0.9;
+}
+
+.fishbones__welcome-secondary {
+  padding: 10px 16px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.fishbones__welcome-secondary:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-tertiary);
+}
+
+.fishbones__welcome-hint {
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  color: var(--color-text-tertiary);
+  line-height: 1.5;
+  max-width: 420px;
+}
+
+.fishbones__empty {
   flex: 1;
   display: grid;
   place-items: center;

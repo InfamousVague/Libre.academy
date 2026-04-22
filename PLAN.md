@@ -1,11 +1,11 @@
-# Kata
+# Fishbones
 
 A desktop app for learning to code through books and guided exercises.
 Mac + Windows V1 (Tauri). Phone + Watch companions planned for later.
 
 ## What it is
 
-Kata turns technical books into interactive courses. You read prose, you try code,
+Fishbones turns technical books into interactive courses. You read prose, you try code,
 the editor runs it, unit tests grade it, you level up. Multi-language out of the
 gate (JavaScript, TypeScript, Python, Rust, Swift) so a learner can work through
 *The Rust Programming Language* one week and SICP the next.
@@ -18,7 +18,7 @@ scaffolded exercises with hidden tests.
 
 | Area | Choice |
 |---|---|
-| **Name** | Kata |
+| **Name** | Fishbones |
 | **Platforms V1** | Mac + Windows (Tauri) |
 | **Platforms later** | iPhone, Apple Watch companions |
 | **Languages V1** | JavaScript / TypeScript, Python, Rust, Swift |
@@ -38,7 +38,7 @@ scaffolded exercises with hidden tests.
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────┐
-│ Kata                                          streak:7  xp:420      [acct]│
+│ Fishbones                                          streak:7  xp:420      [acct]│
 ├─────────────────┬─────────────────────────────────────────────────────────┤
 │ ▸ Rust Book     │  ◇ Tabs: [Rust Book] [SICP]  [+ browse]                 │
 │   Ch 4 · Owner..│ ┌─────────────────────────────────────────────────────┐ │
@@ -86,7 +86,7 @@ Mirrors Stash exactly, minus what we don't need:
 ## Project layout
 
 ```
-kata/
+fishbones/
 ├── src/                      # React frontend
 │   ├── App.tsx
 │   ├── main.tsx

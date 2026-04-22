@@ -1,12 +1,12 @@
 [package]
-name = "kata"
+name = "fishbones"
 version = "0.1.0"
 description = "Learn to code through books and guided exercises"
 edition = "2021"
-default-run = "kata"
+default-run = "fishbones"
 
 [lib]
-name = "kata_lib"
+name = "fishbones_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
@@ -28,7 +28,7 @@ walkdir = "2"
 reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
 parking_lot = "0.12"
 rand = "0.8"
-tokio = { version = "1", features = ["time"] }
+tokio = { version = "1", features = ["time", "sync", "macros"] }
 
 [profile.release]
 opt-level = 3

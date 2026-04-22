@@ -1,16 +1,321 @@
-.kata-reader {
+/* Reading/exercise prose column. Horizontal padding + max-width match
+   `.fishbones-quiz` and `.fishbones__lesson-nav-wrap` so the content gutter is
+   uniform across reading, quiz, and exercise lessons.
+   No background — the reader sits directly on the app base surface so
+   prose is the figure, not an object in a frame. Code blocks and quiz
+   cards still get their own bordered containers for visual weight.
+
+   The reader now owns two vertical pieces: a pinned hairline progress
+   rail at the top, and the scrollable content underneath. The rail is
+   pulled out of the scroll container so it doesn't drift away as the
+   learner scrolls through a long lesson. */
+.fishbones-reader {
   flex: 1;
-  overflow-y: auto;
-  padding: 32px 40px 24px;
-  background: var(--color-bg-secondary);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: transparent;
+  position: relative;
 }
 
-.kata-reader-inner {
-  max-width: 740px;
+.fishbones-reader-progress {
+  flex-shrink: 0;
+  height: 2px;
+  width: 100%;
+  background: transparent;
+}
+
+.fishbones-reader-progress-fill {
+  height: 100%;
+  background: var(--color-text-primary);
+  opacity: 0.85;
+  transition: width 0.12s linear;
+}
+
+.fishbones-reader-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 32px 16px 24px;
+}
+
+.fishbones-reader-inner {
+  max-width: 860px;
   margin: 0 auto;
 }
 
-.kata-reader-body h1 {
+/* Meta row — time-to-read chip on the left, glossary toggle on the right. */
+.fishbones-reader-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.fishbones-reader-meta-time {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.fishbones-reader-meta-glossary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid var(--color-border-default);
+  border-radius: 999px;
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.fishbones-reader-meta-glossary:hover {
+  color: var(--color-text-primary);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.fishbones-reader-meta-glossary--open,
+.fishbones-reader-meta-glossary--open:hover {
+  color: var(--color-bg-primary);
+  background: var(--color-text-primary);
+  border-color: var(--color-text-primary);
+}
+
+.fishbones-reader-meta-glossary-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+}
+
+.fishbones-reader-meta-glossary-count {
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-tertiary);
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.fishbones-reader-meta-glossary--open .fishbones-reader-meta-glossary-count {
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--color-bg-primary);
+}
+
+/* Objectives card — small "You'll learn" box above the body. */
+.fishbones-reader-objectives {
+  margin: 0 0 24px;
+  padding: 12px 16px;
+  background: rgba(124, 193, 217, 0.06);
+  border: 1px solid rgba(124, 193, 217, 0.3);
+  border-left: 3px solid #7cc1d9;
+  border-radius: 6px;
+}
+
+.fishbones-reader-objectives-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #7cc1d9;
+  margin-bottom: 6px;
+}
+
+.fishbones-reader-objectives-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--color-text-primary);
+}
+
+.fishbones-reader-objectives-list li {
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 3px 0;
+}
+
+/* Glossary side panel — slides in from the right edge of the reader,
+   sits above the prose with a subtle backdrop. Docked rather than
+   modal so the learner can keep reading while the panel is open. */
+.fishbones-reader-glossary {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(340px, 85%);
+  background: var(--color-bg-secondary);
+  border-left: 1px solid var(--color-border-default);
+  display: flex;
+  flex-direction: column;
+  z-index: 60;
+  box-shadow: -10px 0 28px rgba(0, 0, 0, 0.32);
+  animation: fishbones-glossary-enter 0.2s ease-out;
+}
+
+@keyframes fishbones-glossary-enter {
+  from { transform: translateX(20px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+.fishbones-reader-glossary-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border-default);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+.fishbones-reader-glossary-close {
+  background: none;
+  border: 0;
+  color: var(--color-text-tertiary);
+  padding: 2px 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fishbones-reader-glossary-close:hover {
+  color: var(--color-text-primary);
+}
+
+.fishbones-reader-glossary-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fishbones-reader-glossary-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fishbones-reader-glossary-term {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.fishbones-reader-glossary-def {
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+
+/* ---- Callouts ---- */
+
+.fishbones-callout {
+  margin: 16px 0;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border-default);
+  border-left-width: 3px;
+  border-radius: 6px;
+  background: var(--color-bg-secondary);
+}
+
+.fishbones-callout-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.fishbones-callout-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 11px;
+  font-family: "SF Mono", ui-monospace, Menlo, monospace;
+}
+
+/* Four semantic colorings — concept-coded so each callout kind reads
+   at a glance. */
+.fishbones-callout--note {
+  border-left-color: #7cc1d9;
+  background: rgba(124, 193, 217, 0.06);
+}
+.fishbones-callout--note .fishbones-callout-head { color: #7cc1d9; }
+.fishbones-callout--note .fishbones-callout-glyph {
+  background: rgba(124, 193, 217, 0.18);
+  color: #7cc1d9;
+}
+
+.fishbones-callout--warning {
+  border-left-color: #e8c46b;
+  background: rgba(232, 196, 107, 0.06);
+}
+.fishbones-callout--warning .fishbones-callout-head { color: #e8c46b; }
+.fishbones-callout--warning .fishbones-callout-glyph {
+  background: rgba(232, 196, 107, 0.18);
+  color: #e8c46b;
+}
+
+.fishbones-callout--tip {
+  border-left-color: #7cd97c;
+  background: rgba(124, 217, 124, 0.06);
+}
+.fishbones-callout--tip .fishbones-callout-head { color: #7cd97c; }
+.fishbones-callout--tip .fishbones-callout-glyph {
+  background: rgba(124, 217, 124, 0.18);
+  color: #7cd97c;
+}
+
+.fishbones-callout--example {
+  border-left-color: #c79bff;
+  background: rgba(199, 155, 255, 0.06);
+}
+.fishbones-callout--example .fishbones-callout-head { color: #c79bff; }
+.fishbones-callout--example .fishbones-callout-glyph {
+  background: rgba(199, 155, 255, 0.18);
+  color: #c79bff;
+}
+
+.fishbones-callout-body {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+
+.fishbones-callout-body > :first-child { margin-top: 0; }
+.fishbones-callout-body > :last-child { margin-bottom: 0; }
+.fishbones-callout-body p {
+  margin: 4px 0;
+}
+.fishbones-callout-body code {
+  /* Slightly tighter than the default reader-body code treatment so
+     callouts don't feel stuffed with chips. */
+  padding: 1px 4px;
+}
+
+.fishbones-reader-body h1 {
   font-size: 26px;
   font-weight: 700;
   margin: 0 0 16px;
@@ -18,28 +323,28 @@
   color: var(--color-text-primary);
 }
 
-.kata-reader-body h2 {
+.fishbones-reader-body h2 {
   font-size: 20px;
   font-weight: 600;
   margin: 28px 0 12px;
   color: var(--color-text-primary);
 }
 
-.kata-reader-body h3 {
+.fishbones-reader-body h3 {
   font-size: 16px;
   font-weight: 600;
   margin: 22px 0 8px;
   color: var(--color-text-primary);
 }
 
-.kata-reader-body p {
+.fishbones-reader-body p {
   font-size: 14px;
   line-height: 1.65;
   color: var(--color-text-secondary);
   margin: 0 0 14px;
 }
 
-.kata-reader-body code {
+.fishbones-reader-body code {
   padding: 1px 5px;
   background: var(--color-bg-tertiary);
   border-radius: 3px;
@@ -48,17 +353,21 @@
   color: var(--color-text-primary);
 }
 
-.kata-code-block {
+.fishbones-code-block {
   margin: 16px 0;
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid var(--color-border-default);
 }
 
-.kata-code-block pre,
-.kata-code-plain {
+.fishbones-code-block pre,
+.fishbones-code-plain {
   margin: 0;
-  padding: 14px 16px;
+  /* Tighter vertical padding so the block hugs its code — prior 14px
+     left a visible empty strip above the first line + below the last
+     when the snippet was only 2-4 lines. 10px reads as a comfortable
+     gutter without wasting vertical space. */
+  padding: 10px 16px;
   font-family: "SF Mono", ui-monospace, Menlo, monospace;
   font-size: 12.5px;
   line-height: 1.55;
@@ -66,8 +375,120 @@
   background: var(--color-bg-primary) !important;
 }
 
-.kata-code-plain {
+/* Shiki emits per-token <span style="background-color: ..."> for some
+   themes (e.g. to mark comments or string literals). The result is ugly
+   gray rectangles behind inline tokens. Strip every inner-span background
+   so only the foreground syntax colors survive. !important beats Shiki's
+   inline style because inline without !important loses to external with
+   !important. */
+.fishbones-code-block pre *,
+.fishbones-code-block code,
+.fishbones-code-block code * {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.fishbones-code-plain {
   color: var(--color-text-primary);
   border-radius: 8px;
   border: 1px solid var(--color-border-default);
+}
+
+/* GFM tables: subtle borders, tight padding, sticky-free. Markdown-it emits
+   a standard <table><thead><tbody> structure that we style directly. */
+.fishbones-reader-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 13px;
+}
+
+.fishbones-reader-body thead {
+  background: var(--color-bg-tertiary);
+}
+
+.fishbones-reader-body th,
+.fishbones-reader-body td {
+  border: 1px solid var(--color-border-default);
+  padding: 7px 10px;
+  text-align: left;
+  vertical-align: top;
+  color: var(--color-text-primary);
+}
+
+.fishbones-reader-body th {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.fishbones-reader-body td {
+  color: var(--color-text-secondary);
+}
+
+.fishbones-reader-body tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Lists: tighten the default margins, keep markers aligned with the prose
+   column rather than hanging off to the left. */
+.fishbones-reader-body ul,
+.fishbones-reader-body ol {
+  margin: 12px 0;
+  padding-left: 24px;
+  color: var(--color-text-secondary);
+}
+
+.fishbones-reader-body li {
+  margin: 4px 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.fishbones-reader-body li > p {
+  margin: 0;
+}
+
+.fishbones-reader-body li::marker {
+  color: var(--color-text-tertiary);
+}
+
+/* Blockquotes — small left accent stripe + dimmed text to read as "aside". */
+.fishbones-reader-body blockquote {
+  margin: 16px 0;
+  padding: 4px 14px;
+  border-left: 3px solid var(--color-border-default);
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}
+
+.fishbones-reader-body blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+/* Inline links. Underline-only so they don't compete with the accent colors
+   used for buttons / active state elsewhere. */
+.fishbones-reader-body a {
+  color: var(--color-text-primary);
+  text-decoration: underline;
+  text-decoration-color: var(--color-text-tertiary);
+  text-underline-offset: 2px;
+}
+
+.fishbones-reader-body a:hover {
+  text-decoration-color: var(--color-text-primary);
+}
+
+/* Horizontal rule — a subtle divider between major sections. */
+.fishbones-reader-body hr {
+  margin: 24px 0;
+  border: 0;
+  height: 1px;
+  background: var(--color-border-default);
+}
+
+/* Inline bold / italic nested inside paragraphs kept the same visual
+   weight as the default `inline(...)` helper used before. */
+.fishbones-reader-body strong {
+  color: var(--color-text-primary);
+  font-weight: 600;
 }

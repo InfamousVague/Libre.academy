@@ -1,0 +1,126 @@
+/* Inline sandbox block — reads as a sibling of the regular code block
+   but with a small header strip + Run button so it's obviously
+   interactive. Sized conservatively so it doesn't dominate the prose. */
+
+.fishbones-inline-sandbox-root {
+  margin: 16px 0;
+  border: 1px solid var(--color-border-default);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--color-bg-primary);
+}
+
+.fishbones-inline-sandbox-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.fishbones-inline-sandbox-lang {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  font-family: "SF Mono", ui-monospace, Menlo, monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.fishbones-inline-sandbox-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-tertiary);
+}
+
+.fishbones-inline-sandbox-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
+
+.fishbones-inline-sandbox-btn {
+  padding: 3px 10px;
+  background: transparent;
+  border: 1px solid var(--color-border-default);
+  border-radius: 4px;
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.fishbones-inline-sandbox-btn:hover:not(:disabled) {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.fishbones-inline-sandbox-btn--run {
+  background: var(--color-text-primary);
+  color: var(--color-bg-primary);
+  border-color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.fishbones-inline-sandbox-btn--run:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.fishbones-inline-sandbox-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Editor shell — height is controlled inline so small snippets don't
+   get an oversized container. overflow clips the Monaco viewport to
+   the rounded border-radius at the top. */
+.fishbones-inline-sandbox-editor {
+  background: var(--color-bg-primary);
+}
+
+/* Output strip — mono font, dim backdrop, tight padding. Renders below
+   the editor the first time the learner clicks Run. */
+.fishbones-inline-sandbox-output {
+  padding: 8px 12px;
+  background: var(--color-bg-primary);
+  border-top: 1px solid var(--color-border-default);
+  font-family: "SF Mono", ui-monospace, Menlo, monospace;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.fishbones-inline-sandbox-out-hint {
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}
+
+.fishbones-inline-sandbox-out-line {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.fishbones-inline-sandbox-out-line--warn { color: #d9a800; }
+.fishbones-inline-sandbox-out-line--error { color: #ef6f6f; }
+
+.fishbones-inline-sandbox-out-error {
+  margin: 4px 0;
+  padding: 6px 8px;
+  background: rgba(239, 111, 111, 0.08);
+  border-left: 2px solid rgba(239, 111, 111, 0.5);
+  border-radius: 3px;
+  color: #f1b5b5;
+  white-space: pre-wrap;
+}

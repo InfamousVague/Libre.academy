@@ -1,0 +1,53 @@
+/* Styles moved out of TopBar.css so the ring can live on its own and be
+   reused by the Profile hero. The rules below are identical to the
+   originals — just scoped to a shared stylesheet now. */
+
+.fishbones__progress-ring {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.fishbones__progress-ring-track {
+  stroke: rgba(255, 255, 255, 0.12);
+}
+
+.fishbones__progress-ring-fill {
+  stroke: var(--color-text-primary);
+  transition: stroke-dashoffset 0.4s ease;
+}
+
+.fishbones__progress-ring-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-family: inherit;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+  font-size: 11px;
+  letter-spacing: -0.02em;
+}
+
+.fishbones__progress-ring-sublabel {
+  margin-top: 2px;
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--color-text-tertiary);
+}
+
+/* Light-theme track needs more contrast against the lighter surface
+   since a white-on-white-ish track would disappear. */
+[data-theme-name="default-light"] .fishbones__progress-ring-track,
+[data-theme-name="ayu-light"] .fishbones__progress-ring-track,
+[data-theme-name="catppuccin-latte"] .fishbones__progress-ring-track {
+  stroke: rgba(0, 0, 0, 0.1);
+}

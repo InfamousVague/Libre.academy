@@ -15,7 +15,7 @@ interface CourseEntry {
 /// First-launch seeding: if the app data dir has no courses, we serialize the
 /// built-in `seedCourses` to disk via `save_course` so the same storage path
 /// works whether the course came from the bundled seed, an ingested book, or
-/// an imported `.kata` file.
+/// an imported `.fishbones` / `.kata` archive.
 ///
 /// Outside Tauri (plain `vite dev` or unit tests) we fall back to the seed
 /// set so components render.

@@ -1,4 +1,4 @@
-.kata-import-backdrop {
+.fishbones-import-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
@@ -8,7 +8,7 @@
   backdrop-filter: blur(4px);
 }
 
-.kata-import-panel {
+.fishbones-import-panel {
   width: min(560px, 90vw);
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
@@ -17,7 +17,7 @@
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
 }
 
-.kata-import-header {
+.fishbones-import-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -25,13 +25,13 @@
   border-bottom: 1px solid var(--color-border-default);
 }
 
-.kata-import-title {
+.fishbones-import-title {
   font-size: 14px;
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
-.kata-import-close {
+.fishbones-import-close {
   background: none;
   border: 0;
   color: var(--color-text-tertiary);
@@ -41,26 +41,26 @@
   padding: 4px 8px;
 }
 
-.kata-import-close:hover {
+.fishbones-import-close:hover {
   color: var(--color-text-primary);
 }
 
-.kata-import-body {
+.fishbones-import-body {
   padding: 18px;
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-.kata-import-blurb {
+.fishbones-import-blurb {
   margin: 0;
   font-size: 13px;
   line-height: 1.55;
   color: var(--color-text-secondary);
 }
 
-.kata-import-primary,
-.kata-import-secondary {
+.fishbones-import-primary,
+.fishbones-import-secondary {
   align-self: flex-start;
   padding: 8px 14px;
   border-radius: 7px;
@@ -71,46 +71,46 @@
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-.kata-import-primary {
+.fishbones-import-primary {
   background: #ffffff;
   color: #000000;
   border-color: #ffffff;
 }
 
-.kata-import-primary:hover:not(:disabled) {
+.fishbones-import-primary:hover:not(:disabled) {
   opacity: 0.92;
 }
 
-.kata-import-primary:disabled {
+.fishbones-import-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.kata-import-secondary {
+.fishbones-import-secondary {
   background: transparent;
   color: var(--color-text-secondary);
   border-color: var(--color-border-default);
 }
 
-.kata-import-secondary:hover {
+.fishbones-import-secondary:hover {
   color: var(--color-text-primary);
   background: var(--color-bg-tertiary);
 }
 
-.kata-import-actions {
+.fishbones-import-actions {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
   margin-top: 4px;
 }
 
-.kata-import-field {
+.fishbones-import-field {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.kata-import-label {
+.fishbones-import-label {
   font-size: 10.5px;
   font-weight: 600;
   text-transform: uppercase;
@@ -118,7 +118,7 @@
   color: var(--color-text-tertiary);
 }
 
-.kata-import-input {
+.fishbones-import-input {
   padding: 8px 10px;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
@@ -128,12 +128,12 @@
   font-family: inherit;
 }
 
-.kata-import-input:focus {
+.fishbones-import-input:focus {
   outline: none;
   border-color: rgba(255, 255, 255, 0.4);
 }
 
-.kata-import-path {
+.fishbones-import-path {
   font-family: "SF Mono", ui-monospace, Menlo, monospace;
   font-size: 11.5px;
   color: var(--color-text-tertiary);
@@ -144,7 +144,7 @@
   display: block;
 }
 
-.kata-import-running {
+.fishbones-import-running {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -153,14 +153,14 @@
   padding: 16px 0;
 }
 
-.kata-import-running-panel {
+.fishbones-import-running-panel {
   display: flex;
   align-items: flex-start;
   gap: 12px;
   padding: 16px 0;
 }
 
-.kata-import-running-body {
+.fishbones-import-running-body {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -168,13 +168,13 @@
   flex: 1;
 }
 
-.kata-import-running-stage {
+.fishbones-import-running-stage {
   color: var(--color-text-primary);
   font-size: 13px;
   font-weight: 500;
 }
 
-.kata-import-running-detail {
+.fishbones-import-running-detail {
   color: var(--color-text-tertiary);
   font-size: 11.5px;
   font-family: "SF Mono", ui-monospace, Menlo, monospace;
@@ -183,7 +183,7 @@
   white-space: nowrap;
 }
 
-.kata-import-running-waiting {
+.fishbones-import-running-waiting {
   margin-top: 2px;
   font-size: 10.5px;
   color: var(--color-text-tertiary);
@@ -191,20 +191,20 @@
   font-variant-numeric: tabular-nums;
 }
 
-.kata-import-spinner {
+.fishbones-import-spinner {
   width: 14px;
   height: 14px;
   border: 1.5px solid rgba(255, 255, 255, 0.15);
   border-top-color: #ffffff;
   border-radius: 50%;
-  animation: kata-spin 0.9s linear infinite;
+  animation: fishbones-spin 0.9s linear infinite;
 }
 
-@keyframes kata-spin {
+@keyframes fishbones-spin {
   to { transform: rotate(360deg); }
 }
 
-.kata-import-checkbox {
+.fishbones-import-checkbox {
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -217,18 +217,18 @@
   cursor: pointer;
 }
 
-.kata-import-checkbox input[type="checkbox"] {
+.fishbones-import-checkbox input[type="checkbox"] {
   margin-top: 2px;
 }
 
-.kata-import-hint {
+.fishbones-import-hint {
   font-size: 11px;
   color: var(--color-text-tertiary);
   margin-top: 2px;
   line-height: 1.45;
 }
 
-.kata-import-running-controls {
+.fishbones-import-running-controls {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -236,7 +236,7 @@
   border-top: 1px solid var(--color-border-default);
 }
 
-.kata-import-verbose-toggle {
+.fishbones-import-verbose-toggle {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -245,7 +245,7 @@
   cursor: pointer;
 }
 
-.kata-import-log {
+.fishbones-import-log {
   max-height: 260px;
   overflow-y: auto;
   margin-top: 10px;
@@ -259,23 +259,23 @@
   color: var(--color-text-secondary);
 }
 
-.kata-import-log-empty {
+.fishbones-import-log-empty {
   color: var(--color-text-tertiary);
   font-style: italic;
 }
 
-.kata-import-log-line {
+.fishbones-import-log-line {
   display: grid;
   grid-template-columns: 60px auto auto 1fr;
   gap: 8px;
   padding: 1px 0;
 }
 
-.kata-import-log-line--warn { color: #d9a800; }
-.kata-import-log-line--error { color: #ef6f6f; }
-.kata-import-log-line--cache { color: #7cc1d9; }
+.fishbones-import-log-line--warn { color: #d9a800; }
+.fishbones-import-log-line--error { color: #ef6f6f; }
+.fishbones-import-log-line--cache { color: #7cc1d9; }
 
-.kata-import-log-stage {
+.fishbones-import-log-stage {
   color: var(--color-text-tertiary);
   text-transform: uppercase;
   font-size: 9.5px;
@@ -283,18 +283,18 @@
   padding-top: 1px;
 }
 
-.kata-import-log-loc {
+.fishbones-import-log-loc {
   color: var(--color-text-tertiary);
   font-size: 10.5px;
 }
 
-.kata-import-log-msg {
+.fishbones-import-log-msg {
   white-space: pre-wrap;
   word-break: break-word;
   min-width: 0;
 }
 
-.kata-import-error {
+.fishbones-import-error {
   padding: 10px 12px;
   background: rgba(239, 111, 111, 0.08);
   border: 1px solid rgba(239, 111, 111, 0.35);
@@ -302,4 +302,39 @@
   color: #f1b5b5;
   font-size: 12px;
   white-space: pre-wrap;
+}
+
+/* Metadata auto-detection status — non-blocking hint that sits above the
+   form fields while the detector runs, then disappears on success or
+   flips to an error variant if it couldn't identify the book. */
+.fishbones-import-detecting {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 6px;
+  color: var(--color-text-secondary);
+  font-size: 11.5px;
+}
+
+.fishbones-import-detecting--error {
+  background: rgba(217, 168, 0, 0.08);
+  border-color: rgba(217, 168, 0, 0.35);
+  color: #d9a800;
+}
+
+.fishbones-import-detecting-spinner {
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  border-top-color: var(--color-text-primary);
+  border-radius: 50%;
+  animation: fishbones-import-spin 0.9s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes fishbones-import-spin {
+  to { transform: rotate(360deg); }
 }

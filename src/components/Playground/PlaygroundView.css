@@ -1,0 +1,74 @@
+/* Root: takes the full main pane. Stacks a small header bar on top of
+   the workbench (editor + output). No reading column — the playground
+   is purely free-form code. */
+.fishbones-playground {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  margin: 10px 10px 10px 0;
+}
+
+.fishbones-playground-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 4px 10px;
+}
+
+.fishbones-playground-lang-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fishbones-playground-lang-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+.fishbones-playground-lang-select {
+  padding: 4px 10px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 7px;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.fishbones-playground-lang-select:focus-visible {
+  outline: 2px solid var(--color-text-secondary);
+  outline-offset: 1px;
+}
+
+.fishbones-playground-spacer {
+  flex: 1;
+}
+
+.fishbones-playground-hint {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}
+
+/* The workbench card takes the full remaining height. Workbench's own
+   styles provide the 12px rounded border + subtle shadow; we just need
+   to override its lesson-pane width (48%) so it spans the whole pane. */
+.fishbones-playground-workbench {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.fishbones-playground-workbench > .fishbones-workbench {
+  width: 100%;
+  min-width: 0;
+  margin: 0; /* parent pane supplies the 10px margins */
+}

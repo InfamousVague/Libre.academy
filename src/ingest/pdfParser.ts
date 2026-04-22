@@ -48,26 +48,130 @@ export function splitChapters(text: string): RawChapter[] {
   const lines = text.split("\n");
   const tocSections = parseTocSections(lines);
 
-  // Chapter openings: a line starting with `\fChapter N. Title`. Form-feeds
-  // mark page breaks in pdftotext output — real chapter openings always sit
-  // on a fresh page, so they have a `\f` prefix.
-  const chapterHits: Array<{ title: string; lineIndex: number }> = [];
+  // Chapter openings come in two flavors we've seen in the wild:
+  //   A) Older layout: a line beginning with a form-feed, like
+  //      `\fChapter 4. Inside Reconciliation`
+  //   B) Modern O'Reilly layout (Fluent React, etc): a right-aligned
+  //      standalone marker `   CHAPTER 1` with the title on a later line.
+  // We probe both patterns; the title-gathering logic is the same once we
+  // know where the chapter starts.
+  // We track the chapter number alongside the line index so we can dedupe
+  // after the scan — books whose ToC wraps mid-numbering can produce a
+  // false-positive Pattern-C match inside the ToC itself (a `\fN` at a page
+  // break). We keep whichever hit has the highest line index, which is
+  // always the body-text opening (ToC sits at the front of the document).
+  const chapterHits: Array<{ n: number; title: string; lineIndex: number }> = [];
   for (let i = 0; i < lines.length; i++) {
-    const m = /^\fChapter\s+(\d+)\.\s+(.+?)$/.exec(lines[i]);
-    if (!m) continue;
+    const line = lines[i];
 
-    let title = m[2].trim();
-    for (let j = i + 1; j < lines.length; j++) {
-      const next = lines[j].trim();
-      if (!next) break;
-      if (next.length > 60) break;
-      if (/[.,:;]$/.test(next)) break;
-      title += " " + next;
-      if (title.length > 80) break;
+    // Pattern A: `\fChapter N. Title` — title starts inline on the same line.
+    let m = /^\fChapter\s+(\d+)\.\s+(.+?)$/.exec(line);
+    if (m) {
+      const n = parseInt(m[1], 10);
+      let title = m[2].trim();
+      for (let j = i + 1; j < lines.length; j++) {
+        const next = lines[j].trim();
+        if (!next) break;
+        if (next.length > 60) break;
+        if (/[.,:;]$/.test(next)) break;
+        title += " " + next;
+        if (title.length > 80) break;
+      }
+      chapterHits.push({ n, title, lineIndex: i });
+      continue;
     }
 
-    chapterHits.push({ title, lineIndex: i });
+    // Pattern B: a line containing ONLY "CHAPTER N" (with arbitrary leading
+    // whitespace because O'Reilly right-aligns it). The actual chapter
+    // title is typically the next non-empty short line. We anchor the regex
+    // to the whole line to avoid matching prose like "Chapter 4 is…".
+    m = /^\s*CHAPTER\s+(\d+)\s*$/.exec(line);
+    if (m) {
+      const n = parseInt(m[1], 10);
+      let title = "";
+      // Scan forward for the title. Skip blank lines. Break on long lines
+      // (prose, not a heading) or lines ending in punctuation.
+      for (let j = i + 1; j < Math.min(lines.length, i + 12); j++) {
+        const cand = lines[j].trim();
+        if (!cand) continue;
+        if (cand.length > 80) break;
+        if (/[.:;,]$/.test(cand)) break;
+        title = cand;
+        // Gather continuation lines for multi-word titles that wrapped.
+        for (let k = j + 1; k < Math.min(lines.length, j + 3); k++) {
+          const cont = lines[k].trim();
+          if (!cont) break;
+          if (cont.length > 60) break;
+          if (/[.,:;]$/.test(cont)) break;
+          title += " " + cont;
+          if (title.length > 100) break;
+        }
+        break;
+      }
+      if (title) {
+        chapterHits.push({ n, title, lineIndex: i });
+      }
+      continue;
+    }
+
+    // Pattern C: No Starch Press body-chapter layout. Each chapter opens
+    // on a new page with the structure:
+    //   \f                            7
+    //     PACKAGES, CRATES, AND MODULES
+    //   <blank lines>
+    //   <prose>
+    // The leading `\f` is pdftotext's page-break marker and is critical for
+    // disambiguating body chapter openings from the ToC — ToC entries also
+    // have standalone digit+ALL-CAPS lines but lack the form-feed prefix.
+    // Anchoring on `\f` gives us body chapters without ToC false positives.
+    m = /^\f\s*(\d{1,2})\s*$/.exec(line);
+    if (m) {
+      const n = parseInt(m[1], 10);
+      if (n < 1 || n > 99) continue;
+      // Scan forward for the title. The title line may have leading
+      // whitespace from indentation on the chapter title page layout.
+      let title = "";
+      let titleLine = -1;
+      for (let j = i + 1; j < Math.min(lines.length, i + 6); j++) {
+        const cand = lines[j].trim();
+        if (!cand) continue;
+        // Must be all-caps (no lowercase letters) and of heading-like length.
+        if (cand.length < 4 || cand.length > 80) break;
+        if (/[a-z]/.test(cand)) break;
+        title = cand;
+        titleLine = j;
+        break;
+      }
+      if (!title || titleLine < 0) continue;
+      // Gather continuation lines (also all-caps, short).
+      for (let k = titleLine + 1; k < Math.min(lines.length, titleLine + 3); k++) {
+        const cont = lines[k].trim();
+        if (!cont) break;
+        if (cont.length > 60) break;
+        if (/[a-z]/.test(cont)) break;
+        title += " " + cont;
+        if (title.length > 120) break;
+      }
+      // Normalize to Title Case so the sidebar reads nicely (PACKAGES,
+      // CRATES, AND MODULES → Packages, Crates, and Modules).
+      chapterHits.push({ n, title: toTitleCase(title), lineIndex: i });
+      continue;
+    }
   }
+
+  // Dedupe: when the same chapter number appears multiple times (e.g. a
+  // ToC false positive + the real body opening), keep the later line index.
+  // Body chapters always sit after the ToC, so "later = more correct".
+  const bestByN = new Map<number, { n: number; title: string; lineIndex: number }>();
+  for (const hit of chapterHits) {
+    const prev = bestByN.get(hit.n);
+    if (!prev || hit.lineIndex > prev.lineIndex) bestByN.set(hit.n, hit);
+  }
+  // Re-materialize as a sorted-by-line array so downstream slicing logic
+  // (which assumes increasing lineIndex) still works.
+  chapterHits.length = 0;
+  for (const hit of bestByN.values()) chapterHits.push(hit);
+  chapterHits.sort((a, b) => a.lineIndex - b.lineIndex);
 
   if (chapterHits.length === 0) {
     return [
@@ -213,4 +317,29 @@ function slug(s: string, fallback: number | string = "x"): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
   return cleaned || `chapter-${fallback}`;
+}
+
+/// Convert an ALL-CAPS title to Title Case (used on No Starch chapter
+/// headings like "PACKAGES, CRATES, AND MODULES" → "Packages, Crates, and
+/// Modules"). Small function words stay lowercase except when they're the
+/// first word.
+const SMALL_WORDS = new Set([
+  "a", "an", "and", "as", "at", "but", "by", "for", "in", "of", "on", "or",
+  "the", "to", "vs", "via", "with",
+]);
+function toTitleCase(s: string): string {
+  return s
+    .toLowerCase()
+    .split(/\s+/)
+    .map((word, i) => {
+      // Preserve acronyms/capitalized words we'd want to keep caps on —
+      // heuristic: if the word matches a known programming acronym, keep
+      // it uppercase. Rare enough we can add exceptions over time.
+      if (/^(i\/o|api|ui|cli|json|yaml|xml|html|css|js|ts)$/i.test(word)) {
+        return word.toUpperCase();
+      }
+      if (i > 0 && SMALL_WORDS.has(word)) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(" ");
 }

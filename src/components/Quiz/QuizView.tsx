@@ -39,16 +39,16 @@ export default function QuizView({ lesson, onComplete }: Props) {
   }
 
   return (
-    <div className="kata-quiz">
-      <div className="kata-quiz-progress">
+    <div className="fishbones-quiz">
+      <div className="fishbones-quiz-progress">
         {lesson.questions.map((_, i) => (
           <span
             key={i}
-            className={`kata-quiz-pip kata-quiz-pip--${state[i].status}`}
+            className={`fishbones-quiz-pip fishbones-quiz-pip--${state[i].status}`}
             aria-hidden
           />
         ))}
-        <span className="kata-quiz-progress-label">
+        <span className="fishbones-quiz-progress-label">
           {state.filter((s) => s.status === "correct").length} / {lesson.questions.length}
         </span>
       </div>
@@ -64,7 +64,7 @@ export default function QuizView({ lesson, onComplete }: Props) {
       ))}
 
       {allCorrect && (
-        <div className="kata-quiz-done">nice — checkpoint cleared</div>
+        <div className="fishbones-quiz-done">nice — checkpoint cleared</div>
       )}
     </div>
   );
@@ -82,17 +82,17 @@ function QuestionCard({
   onResult: (status: "correct" | "wrong") => void;
 }) {
   return (
-    <div className={`kata-quiz-card kata-quiz-card--${state.status}`}>
-      <div className="kata-quiz-num">{index + 1}</div>
-      <div className="kata-quiz-q-body">
-        <div className="kata-quiz-prompt">{question.prompt}</div>
+    <div className={`fishbones-quiz-card fishbones-quiz-card--${state.status}`}>
+      <div className="fishbones-quiz-num">{index + 1}</div>
+      <div className="fishbones-quiz-q-body">
+        <div className="fishbones-quiz-prompt">{question.prompt}</div>
         {question.kind === "mcq" ? (
           <McqAnswer question={question} state={state} onResult={onResult} />
         ) : (
           <ShortAnswer question={question} state={state} onResult={onResult} />
         )}
         {state.status !== "unanswered" && question.explanation && (
-          <div className="kata-quiz-explanation">{question.explanation}</div>
+          <div className="fishbones-quiz-explanation">{question.explanation}</div>
         )}
       </div>
     </div>
@@ -118,14 +118,14 @@ function McqAnswer({
   }
 
   return (
-    <div className="kata-quiz-options">
+    <div className="fishbones-quiz-options">
       {question.options.map((opt, i) => {
         const isPicked = i === picked;
         const isCorrect = i === question.correctIndex;
         const classes = [
-          "kata-quiz-option",
-          committed && isCorrect ? "kata-quiz-option--correct" : "",
-          committed && isPicked && !isCorrect ? "kata-quiz-option--wrong" : "",
+          "fishbones-quiz-option",
+          committed && isCorrect ? "fishbones-quiz-option--correct" : "",
+          committed && isPicked && !isCorrect ? "fishbones-quiz-option--wrong" : "",
         ].join(" ");
         return (
           <button
@@ -134,7 +134,7 @@ function McqAnswer({
             onClick={() => submit(i)}
             disabled={committed && state.status === "correct"}
           >
-            <span className="kata-quiz-option-letter">{String.fromCharCode(65 + i)}</span>
+            <span className="fishbones-quiz-option-letter">{String.fromCharCode(65 + i)}</span>
             <span>{opt}</span>
           </button>
         );
@@ -163,9 +163,9 @@ function ShortAnswer({
   }
 
   return (
-    <div className="kata-quiz-short">
+    <div className="fishbones-quiz-short">
       <input
-        className="kata-quiz-short-input"
+        className="fishbones-quiz-short-input"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => {
@@ -175,7 +175,7 @@ function ShortAnswer({
         disabled={committed}
       />
       <button
-        className="kata-quiz-short-submit"
+        className="fishbones-quiz-short-submit"
         onClick={submit}
         disabled={committed || !value.trim()}
       >

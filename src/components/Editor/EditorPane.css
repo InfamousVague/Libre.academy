@@ -1,11 +1,11 @@
-.kata-editor {
+.fishbones-editor {
   display: flex;
   flex-direction: column;
   min-height: 0;
   background: var(--color-bg-primary);
 }
 
-.kata-editor-header {
+.fishbones-editor-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -14,7 +14,7 @@
   border-bottom: 1px solid var(--color-border-default);
 }
 
-.kata-editor-language {
+.fishbones-editor-language {
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
@@ -22,12 +22,12 @@
   color: var(--color-text-tertiary);
 }
 
-.kata-editor-actions {
+.fishbones-editor-actions {
   display: flex;
   gap: 6px;
 }
 
-.kata-editor-button {
+.fishbones-editor-button {
   padding: 3px 10px;
   background: transparent;
   border: 1px solid var(--color-border-default);
@@ -37,15 +37,272 @@
   cursor: pointer;
 }
 
-.kata-editor-button:hover {
+.fishbones-editor-button:hover:not(:disabled) {
   background: var(--color-bg-tertiary);
 }
 
-.kata-editor-run {
-  background: var(--color-bg-tertiary);
+.fishbones-editor-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
-.kata-editor-host {
+.fishbones-editor-run {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+  font-weight: 600;
+}
+
+.fishbones-editor-run:hover:not(:disabled) {
+  opacity: 0.9;
+  background: #ffffff;
+}
+
+.fishbones-editor-button--danger {
+  border-color: rgba(239, 111, 111, 0.5);
+  color: #ef6f6f;
+}
+
+.fishbones-editor-button--danger:hover:not(:disabled) {
+  background: rgba(239, 111, 111, 0.1);
+  border-color: rgba(239, 111, 111, 0.8);
+}
+
+/* File tabs row — only rendered when the workbench has more than one file.
+   VSCode-style: monospace filename, slim pill background on active. Scrolls
+   horizontally if the learner adds many files. */
+.fishbones-editor-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 4px 8px 0;
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border-default);
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  /* Hide the horizontal scrollbar — otherwise it overlaps the active tab's
+     underline and the last tab's filename. Scroll still works via trackpad
+     swipe / shift-scroll. */
+  scrollbar-width: none;
+}
+
+.fishbones-editor-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.fishbones-editor-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 6px 6px 0 0;
+  color: var(--color-text-tertiary);
+  font-family: "SF Mono", ui-monospace, Menlo, monospace;
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.fishbones-editor-tab:hover {
+  color: var(--color-text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.fishbones-editor-tab--active {
+  color: var(--color-text-primary);
+  background: var(--color-bg-primary);
+  border-bottom-color: var(--color-text-primary);
+}
+
+.fishbones-editor-tab--active:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-primary);
+}
+
+.fishbones-editor-tab--readonly .fishbones-editor-tab-name {
+  font-style: italic;
+}
+
+.fishbones-editor-tab-name {
+  display: inline-block;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.fishbones-editor-tab-badge {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+.fishbones-editor-host {
   flex: 1;
   min-height: 0;
+}
+
+/* Paginated hint panel rendered between the toolbar and Monaco. Shows ONE
+   hint at a time; the learner steps through already-revealed hints with
+   prev/next and unlocks new ones via the primary Hint toolbar button (which
+   also paginates to the fresh one). Close X hides without resetting
+   progress, so clicking Hint again reopens in place. */
+.fishbones-editor-hints {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 14px 12px;
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border-default);
+  max-height: 45%;
+  overflow-y: auto;
+}
+
+.fishbones-editor-hints-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.fishbones-editor-hints-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+.fishbones-editor-hints-locked {
+  color: var(--color-text-tertiary);
+  opacity: 0.7;
+  font-weight: 500;
+}
+
+.fishbones-editor-hints-close {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: 0;
+  color: var(--color-text-tertiary);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.fishbones-editor-hints-close:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-tertiary);
+}
+
+.fishbones-editor-hints-body {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--color-text-primary);
+  padding: 2px 0;
+}
+
+.fishbones-editor-hints-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border-default);
+}
+
+.fishbones-editor-hints-nav-btn {
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid var(--color-border-default);
+  border-radius: 4px;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.fishbones-editor-hints-nav-btn:hover:not(:disabled) {
+  color: var(--color-text-primary);
+  background: var(--color-bg-tertiary);
+}
+
+.fishbones-editor-hints-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.fishbones-editor-hints-pips {
+  display: flex;
+  gap: 5px;
+}
+
+.fishbones-editor-hints-pip {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-border-default);
+}
+
+.fishbones-editor-hints-pip--current {
+  background: var(--color-text-primary);
+}
+
+.fishbones-editor-hints-pip--locked {
+  background: transparent;
+  border: 1px dashed var(--color-border-default);
+}
+
+/* Confirmation modal for "reveal solution". Scoped to the editor pane so it
+   doesn't cover the reading column — learners can still reference the prompt
+   while deciding whether to give up. */
+.fishbones-editor-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 20;
+  backdrop-filter: blur(3px);
+}
+
+.fishbones-editor-modal {
+  width: min(380px, 90%);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 10px;
+  padding: 18px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.fishbones-editor-modal-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--color-text-primary);
+}
+
+.fishbones-editor-modal-body {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  margin: 0 0 14px;
+}
+
+.fishbones-editor-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Editor host needs a positioning context so the modal backdrop fills just
+   the workbench rather than the whole viewport. */
+.fishbones-editor {
+  position: relative;
 }

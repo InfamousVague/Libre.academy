@@ -1,6 +1,6 @@
-/* Floating sidebar — direct port of Stash's .stash__sidebar styling so Kata
+/* Floating sidebar — direct port of Stash's .stash__sidebar styling so Fishbones
    feels like part of the same family. */
-.kata__sidebar {
+.fishbones__sidebar {
   width: 260px;
   margin: 10px 0 10px 10px;
   background: var(--color-bg-secondary);
@@ -12,17 +12,17 @@
   overflow: hidden;
 }
 
-.kata__nav {
+.fishbones__nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 12px 8px 0;
+  gap: 4px;
+  padding: 12px 10px 0;
   position: relative;
   flex: 1;
   overflow-y: auto;
 }
 
-.kata__nav-item {
+.fishbones__nav-item {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -42,37 +42,153 @@
   width: 100%;
 }
 
-.kata__nav-item:hover {
+.fishbones__nav-item:hover {
   color: var(--color-text-primary);
   background: var(--color-bg-tertiary);
 }
 
-.kata__nav-item--active {
+.fishbones__nav-item--active {
   color: var(--color-text-primary);
   background: var(--color-bg-tertiary);
 }
 
-.kata__nav-icon {
+.fishbones__nav-icon {
   display: inline-block;
   width: 14px;
   text-align: center;
   color: var(--color-text-tertiary);
 }
 
-.kata__course {
+/* Top-level course container. Two treatments depending on whether this
+   is the course the learner is actively working in:
+   - `.fishbones__course--active`  → full card + always-expanded tree. One
+     dominant chunk per sidebar so the eye lands on it first.
+   - `.fishbones__course--compact` → one-line row matching the top nav-item
+     pattern. Collapsed by default, click to peek at chapters inline.
+   The contrast (dense card vs. quiet row) is the "which course am I in"
+   cue — density answers the question without needing extra chrome.
+*/
+.fishbones__course {
   display: flex;
   flex-direction: column;
-  margin-top: 4px;
 }
 
-.kata__course-title {
+.fishbones__course--active {
+  margin-bottom: 12px;
+}
+
+.fishbones__course--compact {
+  margin-bottom: 2px;
+}
+
+/* Static version of the title strip used only inside the active card.
+   We removed the expand button — the active card is ALWAYS expanded —
+   so the row is a div now and doesn't need the cursor/hover treatment
+   from the original .fishbones__course-title button. */
+.fishbones__course-title--static {
+  cursor: default;
+}
+
+/* Tiny dot next to the active course's name — the visual equivalent of
+   "you are here". Matches the size of the status dots in the lesson
+   tree so the whole sidebar shares the same vocabulary. */
+.fishbones__course-active-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-text-primary);
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+}
+
+/* Compact row for inactive courses. Mirrors .fishbones__sidebar-nav-item
+   visually so the whole sidebar feels like one consistent list. */
+.fishbones__course-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.fishbones__course-row:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+.fishbones__course-row-caret {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  color: var(--color-text-tertiary);
+}
+
+.fishbones__course-row-progress {
+  font-size: 10.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+/* Course header card. Slightly elevated surface with a border so the
+   header feels like a distinct module, not just another row in the tree.
+   Hover + active state use the next surface up. */
+.fishbones__course-card {
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 0.2s ease, background 0.15s ease;
+}
+
+.fishbones__course-card--expanded {
+  background: var(--color-bg-tertiary);
+}
+
+.fishbones__course-card--active {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.fishbones__course-card:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.fishbones__course-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: 0;
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.1px;
+  text-align: left;
+  cursor: pointer;
 }
 
 /* Solid white pill next to course titles, chevron drawn black inside.
-   Sized to match the completion dots (.kata__dot) so the tree lines up. */
-.kata__course-caret {
+   Sized to match the completion dots (.fishbones__dot) so the tree lines up. */
+.fishbones__course-caret {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -85,18 +201,18 @@
   transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
-.kata__course-title:hover .kata__course-caret {
+.fishbones__course-title:hover .fishbones__course-caret {
   opacity: 0.92;
 }
 
-.kata__course-name {
+.fishbones__course-name {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.kata__course-progress {
+.fishbones__course-progress {
   font-size: 10.5px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
@@ -105,31 +221,70 @@
   margin-left: 8px;
 }
 
-/* Thin progress bar shown under an expanded course title. */
-.kata__course-progress-bar {
-  margin: 2px 16px 6px 32px;
+/* Thin progress bar inside the course card. Inset from the card's rounded
+   edges with a small margin so the card's border-radius doesn't clip the
+   bar's ends (previously the bar butted up against the curve and looked
+   cropped). Rounding the bar itself keeps the pill shape consistent. */
+.fishbones__course-progress-bar {
   height: 3px;
-  background: var(--color-bg-tertiary);
-  border-radius: 2px;
+  margin: 0 8px 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
   overflow: hidden;
 }
 
-.kata__course-progress-fill {
+.fishbones__course-card--expanded .fishbones__course-progress-bar {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* Fishbones Dark specifically needs more contrast on the bar background — its
+   bg-tertiary (#19191D) is only a few lightness steps off from the card's
+   bg-primary (#09090B) and the bar effectively disappears. A bumped
+   rgba-white makes the track visible at any lightness. */
+[data-theme-name="default-dark"] .fishbones__course-progress-bar {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+[data-theme-name="default-dark"] .fishbones__course-card--expanded .fishbones__course-progress-bar {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* Light themes want a dark-on-light track instead. */
+[data-theme="light"] .fishbones__course-progress-bar,
+[data-theme-name="default-light"] .fishbones__course-progress-bar,
+[data-theme-name="ayu-light"] .fishbones__course-progress-bar,
+[data-theme-name="catppuccin-latte"] .fishbones__course-progress-bar {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.fishbones__course-progress-fill {
   height: 100%;
   background: var(--color-text-primary);
   opacity: 0.85;
   transition: width 0.3s ease;
 }
 
-.kata__chapter {
-  padding: 2px 0 4px 6px;
+/* Expanded body: chapters + export button. Indented slightly so visually
+   it reads as "contents of the card above". */
+.fishbones__course-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 0 4px 6px;
 }
 
-.kata__chapter-title {
+.fishbones__chapter {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 2px 0 4px 0;
+}
+
+.fishbones__chapter-title {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px 3px 18px;
+  padding: 6px 12px 4px 14px;
   color: var(--color-text-tertiary);
   font-size: 10px;
   font-weight: 600;
@@ -137,7 +292,7 @@
   letter-spacing: 0.6px;
 }
 
-.kata__chapter-progress {
+.fishbones__chapter-progress {
   font-size: 10px;
   font-variant-numeric: tabular-nums;
   opacity: 0.9;
@@ -145,64 +300,287 @@
   letter-spacing: 0;
 }
 
-.kata__lesson-item {
-  padding-left: 14px;
+.fishbones__lesson-item {
+  padding: 7px 12px 7px 14px;
   font-weight: 500;
+  gap: 8px;
 }
 
-.kata__lesson-name {
+.fishbones__lesson-name {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* Progress dot — hollow, active (ring), or filled with ✓. */
-.kata__dot {
+/* Unified lesson status slot: a circle that houses the lesson-kind icon
+   (book / code / help-circle). The icon is always shown; only the circle's
+   fill and icon color change between states. Same 16x16 footprint across
+   states so the title column stays aligned. */
+.fishbones__lesson-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.15s ease,
+    box-shadow 0.2s ease;
+}
+
+/* Pending: hollow ring with a barely-there kind icon. The icon color sits
+   just above the border color so it registers as a hint rather than a
+   focal point — the circle is the main element, the glyph is a whisper. */
+.fishbones__lesson-status--pending {
+  border: 1.5px solid var(--color-border-default);
+  background: transparent;
+  color: var(--color-text-disabled, rgba(255, 255, 255, 0.22));
+}
+
+.fishbones__lesson-item:hover .fishbones__lesson-status--pending {
+  border-color: var(--color-text-tertiary);
+  color: var(--color-text-tertiary);
+}
+
+/* Active: brighter ring + halo + the icon turns up one notch toward
+   visible (but still not the full-contrast treatment that "done" gets). */
+.fishbones__lesson-status--active {
+  border: 1.5px solid var(--color-text-secondary);
+  background: transparent;
+  color: var(--color-text-secondary);
+  box-shadow: 0 0 0 3px var(--color-bg-tertiary);
+}
+
+/* Done: filled white circle with a black kind icon inside — inverted
+   colors flag completion at a glance without losing the what-kind cue. */
+.fishbones__lesson-status--done {
+  background: var(--color-text-primary);
+  border: 1.5px solid var(--color-text-primary);
+  color: var(--color-bg-primary);
+}
+
+/* Difficulty tints for challenge-pack lessons. Override the border and
+   icon color on pending + active; completed state is intentionally left
+   alone — once you've solved it, difficulty is history. Hover gets a
+   slightly brighter version via border-opacity. */
+.fishbones__lesson-status--diff-easy.fishbones__lesson-status--pending {
+  border-color: rgba(124, 217, 124, 0.55); /* success green */
+  color: rgba(124, 217, 124, 0.7);
+}
+.fishbones__lesson-item:hover .fishbones__lesson-status--diff-easy.fishbones__lesson-status--pending {
+  border-color: rgba(124, 217, 124, 0.9);
+  color: rgba(124, 217, 124, 1);
+}
+.fishbones__lesson-status--diff-easy.fishbones__lesson-status--active {
+  border-color: #7cd97c;
+  color: #7cd97c;
+}
+
+.fishbones__lesson-status--diff-medium.fishbones__lesson-status--pending {
+  border-color: rgba(232, 196, 107, 0.55); /* warm gold, matches XP accent */
+  color: rgba(232, 196, 107, 0.7);
+}
+.fishbones__lesson-item:hover .fishbones__lesson-status--diff-medium.fishbones__lesson-status--pending {
+  border-color: rgba(232, 196, 107, 0.9);
+  color: rgba(232, 196, 107, 1);
+}
+.fishbones__lesson-status--diff-medium.fishbones__lesson-status--active {
+  border-color: #e8c46b;
+  color: #e8c46b;
+}
+
+.fishbones__lesson-status--diff-hard.fishbones__lesson-status--pending {
+  border-color: rgba(239, 111, 111, 0.55); /* error red */
+  color: rgba(239, 111, 111, 0.7);
+}
+.fishbones__lesson-item:hover .fishbones__lesson-status--diff-hard.fishbones__lesson-status--pending {
+  border-color: rgba(239, 111, 111, 0.9);
+  color: rgba(239, 111, 111, 1);
+}
+.fishbones__lesson-status--diff-hard.fishbones__lesson-status--active {
+  border-color: #ef6f6f;
+  color: #ef6f6f;
+}
+
+/* Primary nav — vertical list of icon + label rows at the top of the
+   sidebar. Claude-Code pattern: one row per destination, instantly
+   legible, no guesswork about what each icon means. Persistent-view
+   chips (Profile, Playground) get the --active fill so the learner can
+   see which main-pane route is live at a glance. One-shot actions
+   (Library, Import, Settings) stay in the neutral hover treatment. */
+.fishbones__sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 8px 10px;
+  border-bottom: 1px solid var(--color-border-default);
+  flex-shrink: 0;
+}
+
+.fishbones__sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.fishbones__sidebar-nav-item:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+.fishbones__sidebar-nav-item--active,
+.fishbones__sidebar-nav-item--active:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-primary);
+}
+
+/* Light themes need a darker-on-light active surface since the
+   rgba-white pill above disappears against a pale sidebar. */
+[data-theme-name="default-light"] .fishbones__sidebar-nav-item--active,
+[data-theme-name="default-light"] .fishbones__sidebar-nav-item--active:hover,
+[data-theme-name="ayu-light"] .fishbones__sidebar-nav-item--active,
+[data-theme-name="ayu-light"] .fishbones__sidebar-nav-item--active:hover,
+[data-theme-name="catppuccin-latte"] .fishbones__sidebar-nav-item--active,
+[data-theme-name="catppuccin-latte"] .fishbones__sidebar-nav-item--active:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.fishbones__sidebar-nav-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 16px;
   height: 16px;
-  border-radius: 50%;
-  font-size: 10px;
-  line-height: 1;
-  font-weight: 700;
   flex-shrink: 0;
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
-.kata__dot--pending {
-  border: 1.5px solid var(--color-border-default);
-  background: transparent;
-  color: transparent;
+.fishbones__sidebar-nav-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.kata__dot--active {
-  border: 1.5px solid var(--color-text-secondary);
-  background: transparent;
-  color: transparent;
-  box-shadow: 0 0 0 3px var(--color-bg-tertiary);
-}
-
-.kata__dot--done {
-  border: 1.5px solid var(--color-text-primary);
-  background: var(--color-text-primary);
-  color: var(--color-bg-primary);
-}
-
-.kata__nav-item--browse {
-  margin-top: 10px;
+/* Section label above a run of course cards (Courses vs Challenge packs).
+   Small uppercase heading, similar weight to the nav dividers elsewhere
+   in the app. Only renders when BOTH kinds are present — see Sidebar.tsx.
+*/
+.fishbones__nav-section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
   color: var(--color-text-tertiary);
-  border: 1px dashed var(--color-border-default);
 }
 
-.kata__nav-item--browse:hover {
+.fishbones__nav-section--packs {
+  color: #c79bff; /* matches the profile "longest streak" accent — both are "you did this" trophies */
+}
+
+.fishbones__nav-section-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+}
+
+/* Right-click context menu for a course card. Fixed-positioned at the
+   cursor, dismissed by any outside click or the Escape key (see Sidebar.tsx
+   for the listeners). A small affordance header labels which course the
+   menu applies to — handy when you right-click one card and the menu
+   opens near another due to screen-edge clamping. */
+.fishbones__context-menu {
+  position: fixed;
+  z-index: 50;
+  min-width: 180px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.fishbones__context-menu-label {
+  padding: 6px 10px 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 240px;
+}
+
+.fishbones__context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  background: transparent;
+  border: 0;
+  border-radius: 5px;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fishbones__context-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.fishbones__context-menu-icon {
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+}
+
+.fishbones__context-menu-item:hover .fishbones__context-menu-icon {
   color: var(--color-text-primary);
 }
 
-.kata__sidebar-footer {
-  margin-top: auto;
-  padding: 8px;
-  border-top: 1px solid var(--color-border-default);
+/* Thin separator between benign and destructive actions. */
+.fishbones__context-menu-sep {
+  height: 1px;
+  margin: 3px 4px;
+  background: var(--color-border-default);
+}
+
+/* Destructive item: red on hover so there's unmistakable feedback before
+   the confirm dialog fires. Idle state still matches the normal rows so
+   the menu doesn't look alarming by default. */
+.fishbones__context-menu-item--danger:hover {
+  background: rgba(239, 111, 111, 0.12);
+  color: #ef6f6f;
+}
+
+.fishbones__context-menu-item--danger:hover .fishbones__context-menu-icon {
+  color: #ef6f6f;
 }

@@ -1,0 +1,128 @@
+/* Sits at the bottom of every lesson's scroll column. Two-button row with
+   Prev on the left and Next on the right. Lesson title subtitle helps users
+   see where they're heading before committing to the click. */
+.fishbones-lesson-nav {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 28px 0 8px;
+  padding-top: 18px;
+  border-top: 1px solid var(--color-border-default);
+}
+
+.fishbones-lesson-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* flex-basis 0 + flex-grow 1 + flex-shrink 1 + min-width: 0 together
+     force the button to respect its column width. Without min-width:0 a
+     flex item defaults to min-width:auto (its intrinsic content width),
+     which lets a long lesson title push the button past the column edge
+     and off-screen. We also drop the old max-width:300 because when the
+     reader column is narrow (exercise lessons) two 300px buttons + gap
+     overflow the column. */
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  padding: 10px 14px;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 8px;
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.fishbones-lesson-nav-btn:hover:not(:disabled) {
+  color: var(--color-text-primary);
+  background: var(--color-bg-tertiary);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.fishbones-lesson-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.fishbones-lesson-nav-btn--next {
+  justify-content: flex-end;
+  text-align: right;
+  /* Slight emphasis so the forward action reads as the default affordance. */
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+.fishbones-lesson-nav-btn--next:hover:not(:disabled) {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+}
+
+.fishbones-lesson-nav-arrow {
+  font-size: 14px;
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+}
+
+.fishbones-lesson-nav-btn:hover:not(:disabled) .fishbones-lesson-nav-arrow {
+  color: inherit;
+}
+
+.fishbones-lesson-nav-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.fishbones-lesson-nav-text--right {
+  align-items: flex-end;
+}
+
+.fishbones-lesson-nav-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--color-text-tertiary);
+}
+
+.fishbones-lesson-nav-btn--next .fishbones-lesson-nav-label {
+  color: inherit;
+  opacity: 0.75;
+}
+
+/* Middle-ellipsis pattern: a flex row where the head shrinks (picking up the
+   ellipsis) while the tail stays pinned. Result reads "Constructors a… Keyword"
+   when space is tight, and the full title when it fits. */
+.fishbones-lesson-nav-title {
+  display: flex;
+  align-items: baseline;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.fishbones-lesson-nav-text--right .fishbones-lesson-nav-title {
+  justify-content: flex-end;
+}
+
+.fishbones-lesson-nav-title-head {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fishbones-lesson-nav-title-tail {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}

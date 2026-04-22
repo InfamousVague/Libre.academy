@@ -11,8 +11,9 @@
 //! Lessons are inlined in the JSON for V1 (no separate .md files yet). A
 //! future step will split prose out into sibling .md files.
 //!
-//! Share/export uses a `.kata` archive — a zip of the course folder. Import
-//! unpacks the archive into `<app_data_dir>/courses/<course-id>/`.
+//! Share/export uses a `.fishbones` archive — a zip of the course folder.
+//! Legacy `.kata` archives are still accepted on import for backwards compat.
+//! Import unpacks the archive into `<app_data_dir>/courses/<course-id>/`.
 
 use std::fs;
 use std::io::{Read, Write};
@@ -40,12 +41,143 @@ pub fn courses_dir(app: &tauri::AppHandle) -> anyhow::Result<PathBuf> {
     Ok(courses)
 }
 
-/// If the courses dir is empty (first launch), seed it with the defaults
-/// bundled by the ingest CLI / the repo's `courses/` folder (copied at build
-/// time into resources). For V1 this is a no-op — the frontend still has
-/// `seedCourses` and will write them out on first run via `save_course`.
-pub fn ensure_seed(_app: &tauri::AppHandle) -> anyhow::Result<()> {
+/// Import any `.fishbones` / `.kata` archives bundled under
+/// `resources/bundled-packs/` into the user's courses dir on first launch.
+/// Idempotent — never overwrites an existing course, and records every id
+/// we've seeded into `<app-data>/seeded-packs.json` so a user-deleted pack
+/// stays deleted instead of getting resurrected on the next run.
+///
+/// This is the entry point that ships the default Rust / TypeScript / Go
+/// challenge packs along with Fishbones. Drop a `.fishbones` (or legacy
+/// `.kata`) file in `src-tauri/resources/bundled-packs/`, commit it, and
+/// new installs pick it up automatically.
+pub fn ensure_seed(app: &tauri::AppHandle) -> anyhow::Result<()> {
+    let resource_dir = match app.path().resource_dir() {
+        Ok(p) => p.join("resources").join("bundled-packs"),
+        Err(_) => return Ok(()), // no resource dir (rare) — nothing to seed
+    };
+    if !resource_dir.exists() {
+        return Ok(()); // no bundled packs shipped in this build
+    }
+
+    let courses_root = courses_dir(app)?;
+    let marker = marker_path(app)?;
+    let mut seeded_ids = load_seeded_ids(&marker).unwrap_or_default();
+
+    let mut imported_this_run = 0u32;
+    for entry in fs::read_dir(&resource_dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        if !path.is_file() {
+            continue;
+        }
+        match path.extension().and_then(|s| s.to_str()) {
+            Some("fishbones") | Some("kata") => {}
+            _ => continue,
+        }
+
+        // Peek at the course id in the archive so we can decide BEFORE
+        // doing any extraction work.
+        let id = match peek_archive_id(&path) {
+            Ok(id) => id,
+            Err(e) => {
+                eprintln!("[fishbones:seed] could not read id from {:?}: {}", path, e);
+                continue;
+            }
+        };
+        if id.is_empty() {
+            continue;
+        }
+
+        // User already has this pack — leave their copy alone (could be
+        // edited / completed lessons etc).
+        if courses_root.join(&id).join("course.json").exists() {
+            // Make sure the marker knows we've effectively seeded this id
+            // so the user can delete it later and we won't re-import.
+            if !seeded_ids.contains(&id) {
+                seeded_ids.push(id.clone());
+            }
+            continue;
+        }
+
+        // User previously had it + deleted — respect that decision.
+        if seeded_ids.contains(&id) {
+            continue;
+        }
+
+        // Fresh seed — extract into the courses dir.
+        if let Err(e) = unzip_to(&path, &courses_root) {
+            eprintln!("[fishbones:seed] unzip failed for {:?}: {}", path, e);
+            continue;
+        }
+        seeded_ids.push(id);
+        imported_this_run += 1;
+    }
+
+    if imported_this_run > 0 {
+        eprintln!(
+            "[fishbones:seed] imported {} bundled pack(s) from {:?}",
+            imported_this_run, resource_dir
+        );
+    }
+    save_seeded_ids(&marker, &seeded_ids)?;
     Ok(())
+}
+
+/// `<app-data>/seeded-packs.json` — a flat `{ "seedIds": [...] }` JSON.
+/// Tracks every pack id we've ever auto-imported on this machine. If the
+/// user deletes one, we keep the id here forever so we never resurrect
+/// it on a subsequent launch. Cheap + resilient — losing the file just
+/// means we seed once more, which is still a no-op if the course dir
+/// already has the pack.
+fn marker_path(app: &tauri::AppHandle) -> anyhow::Result<PathBuf> {
+    let dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| anyhow::anyhow!("app_data_dir: {e}"))?;
+    fs::create_dir_all(&dir)?;
+    Ok(dir.join("seeded-packs.json"))
+}
+
+#[derive(Default, Serialize, Deserialize)]
+struct SeededPacks {
+    #[serde(default, rename = "seedIds")]
+    seed_ids: Vec<String>,
+}
+
+fn load_seeded_ids(path: &Path) -> anyhow::Result<Vec<String>> {
+    if !path.exists() {
+        return Ok(Vec::new());
+    }
+    let bytes = fs::read(path)?;
+    let parsed: SeededPacks = serde_json::from_slice(&bytes).unwrap_or_default();
+    Ok(parsed.seed_ids)
+}
+
+fn save_seeded_ids(path: &Path, ids: &[String]) -> anyhow::Result<()> {
+    let payload = SeededPacks {
+        seed_ids: ids.to_vec(),
+    };
+    let bytes = serde_json::to_vec_pretty(&payload)?;
+    fs::write(path, bytes)?;
+    Ok(())
+}
+
+/// Read ONLY the course id out of a .fishbones/.kata archive without
+/// extracting anything. Used by the seed routine to decide whether to skip.
+fn peek_archive_id(archive: &Path) -> anyhow::Result<String> {
+    let file = fs::File::open(archive)?;
+    let mut zip = zip::ZipArchive::new(file)?;
+    for i in 0..zip.len() {
+        let mut entry = zip.by_index(i)?;
+        if entry.name().ends_with("course.json") && !entry.is_dir() {
+            let mut buf = String::new();
+            entry.read_to_string(&mut buf)?;
+            let v: CourseJson = serde_json::from_str(&buf)?;
+            return Ok(str_field(&v, "id"));
+        }
+    }
+    anyhow::bail!("course.json not found in archive");
 }
 
 // ---- Commands ---------------------------------------------------------------
@@ -125,7 +257,7 @@ pub fn delete_course(
     Ok(())
 }
 
-/// Export a course as a `.kata` zip archive at the chosen destination path.
+/// Export a course as a `.fishbones` zip archive at the chosen destination path.
 #[tauri::command]
 pub fn export_course(
     app: tauri::AppHandle,
@@ -141,8 +273,8 @@ pub fn export_course(
     Ok(())
 }
 
-/// Import a `.kata` archive, extracting it into app_data_dir/courses/<id>/.
-/// The archive's course.json determines the id.
+/// Import a `.fishbones` / `.kata` archive, extracting it into
+/// app_data_dir/courses/<id>/. The archive's course.json determines the id.
 #[tauri::command]
 pub fn import_course(app: tauri::AppHandle, archive_path: String) -> Result<String, String> {
     let dir = courses_dir(&app).map_err(|e| e.to_string())?;
@@ -183,7 +315,7 @@ fn zip_dir(src: &Path, dst: &Path) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Extract the .kata file into `courses_dir`. Returns the course id (read
+/// Extract the archive file into `courses_dir`. Returns the course id (read
 /// from the archive's course.json) so the frontend can navigate to it.
 fn unzip_to(archive: &Path, courses_dir: &Path) -> anyhow::Result<String> {
     let file = fs::File::open(archive)?;
@@ -236,7 +368,7 @@ fn unzip_to(archive: &Path, courses_dir: &Path) -> anyhow::Result<String> {
 
 fn strip_top_level(path: &str) -> String {
     // If the zip contains a single top-level folder wrapping course.json, skip
-    // it. Otherwise return as-is. This lets people share `my-course.kata`
+    // it. Otherwise return as-is. This lets people share `my-course.fishbones`
     // created from a folder OR from its contents.
     let trimmed = path.trim_end_matches('/');
     let parts: Vec<&str> = trimmed.split('/').collect();

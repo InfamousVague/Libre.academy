@@ -26,7 +26,7 @@ export default function StatsBar({ stats }: Props) {
   const tokens = stats ? stats.inputTokens + stats.outputTokens : 0;
 
   return (
-    <div className="kata-stats">
+    <div className="fishbones-stats">
       <Cell label="elapsed" value={stats ? formatElapsed(elapsedMs) : "–"} />
       <Cell
         label="chapters"
@@ -77,10 +77,10 @@ function Cell({
   tone?: "normal" | "warn";
 }) {
   return (
-    <div className={`kata-stats-cell kata-stats-cell--${tone}`}>
-      <div className="kata-stats-label">{label}</div>
-      <div className="kata-stats-value">{value}</div>
-      {hint && <div className="kata-stats-hint">{hint}</div>}
+    <div className={`fishbones-stats-cell fishbones-stats-cell--${tone}`}>
+      <div className="fishbones-stats-label">{label}</div>
+      <div className="fishbones-stats-value">{value}</div>
+      {hint && <div className="fishbones-stats-hint">{hint}</div>}
     </div>
   );
 }

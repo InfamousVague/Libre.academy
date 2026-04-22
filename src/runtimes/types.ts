@@ -8,6 +8,11 @@ export interface RunResult {
   error?: string;
   tests?: TestResult[];
   durationMs: number;
+  /// For web-runtime results: the assembled HTML document ready to render
+  /// in a sandboxed iframe (CSS inlined in <style>, user JS inlined in
+  /// <script>). OutputPane renders this in a preview panel instead of, or
+  /// alongside, the console log list.
+  html?: string;
 }
 
 export interface LogLine {

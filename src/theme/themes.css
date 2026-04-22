@@ -1,0 +1,373 @@
+/* Per-theme overrides of the base kit's CSS custom properties. Everything
+   in the Fishbones UI reads from these variables (--color-bg-primary etc), so
+   just swapping the values cascades to sidebar, reader, quiz cards, nav,
+   workbench, and so on. Monaco's own theme is controlled via the
+   `monacoTheme` field in themes.ts.
+
+   Border rule of thumb: borders are neutral — a slightly lighter shade of
+   the theme's own grayscale, NOT the accent color. Accent-tinted borders
+   look hot and make the whole UI feel stained. Instead we keep borders at
+   low-alpha neutral values that let the accent pop in the foreground. */
+
+/* ---- Synesthesia Synthwave --------------------------------------------- */
+[data-theme-name="synthwave"] {
+  --color-bg-primary: #1a1427;
+  --color-bg-secondary: #241b2f;
+  --color-bg-tertiary: #342a40;
+  --color-border-default: rgba(255, 255, 255, 0.07);
+  --color-text-primary: #f9f1ff;
+  --color-text-secondary: #c9a5d8;
+  --color-text-tertiary: #8c7a98;
+}
+
+[data-theme-name="synthwave"] .fishbones-editor-run,
+[data-theme-name="synthwave"] .fishbones-lesson-nav-btn--next:hover:not(:disabled) {
+  background: #ff7edb !important;
+  color: #1a1427 !important;
+  border-color: #ff7edb !important;
+}
+
+[data-theme-name="synthwave"] .fishbones__dot--done {
+  border-color: #36f9f6;
+  background: #36f9f6;
+  color: #1a1427;
+}
+
+[data-theme-name="synthwave"] .fishbones__dot--active {
+  border-color: #ff7edb;
+  box-shadow: 0 0 0 3px rgba(255, 126, 219, 0.15);
+}
+
+[data-theme-name="synthwave"] .fishbones-import-primary,
+[data-theme-name="synthwave"] .fishbones-settings-primary {
+  background: #ff7edb;
+  color: #1a1427;
+  border-color: #ff7edb;
+}
+
+/* ---- Claude Code Dark -------------------------------------------------- */
+[data-theme-name="claude-code-dark"] {
+  --color-bg-primary: #14110d;
+  --color-bg-secondary: #1c1814;
+  --color-bg-tertiary: #2a241c;
+  --color-border-default: rgba(255, 245, 230, 0.07);
+  --color-text-primary: #f5ebdc;
+  --color-text-secondary: #c9b299;
+  --color-text-tertiary: #8a7560;
+}
+
+[data-theme-name="claude-code-dark"] .fishbones-editor-run,
+[data-theme-name="claude-code-dark"] .fishbones-lesson-nav-btn--next:hover:not(:disabled) {
+  background: #d97757 !important;
+  color: #14110d !important;
+  border-color: #d97757 !important;
+}
+
+[data-theme-name="claude-code-dark"] .fishbones__dot--done {
+  border-color: #d97757;
+  background: #d97757;
+  color: #14110d;
+}
+
+[data-theme-name="claude-code-dark"] .fishbones__dot--active {
+  border-color: #e6c097;
+  box-shadow: 0 0 0 3px rgba(230, 192, 151, 0.15);
+}
+
+[data-theme-name="claude-code-dark"] .fishbones-import-primary,
+[data-theme-name="claude-code-dark"] .fishbones-settings-primary {
+  background: #d97757;
+  color: #14110d;
+  border-color: #d97757;
+}
+
+/* ---- Ayu Mirage --------------------------------------------------------- */
+/* From ayu-theme/vscode-ayu. Mirage is the middle-dark variant: softer than
+   Ayu Dark, higher contrast than Ayu Light. Signature is the dusty
+   blue-gray base with warm orange (#FFA759) for keywords and teal-cyan
+   (#95E6CB) for punctuation. Border uses the theme's own editorGroup
+   border color (#171B24) but lifted to #2D3340 for visibility on our
+   secondary surface. */
+[data-theme-name="ayu-mirage"] {
+  --color-bg-primary: #1f2430;
+  --color-bg-secondary: #191e2a;
+  --color-bg-tertiary: #242a3a;
+  --color-border-default: #2d3340;
+  --color-text-primary: #cbccc6;
+  --color-text-secondary: #8a9199;
+  --color-text-tertiary: #5c6773;
+}
+
+[data-theme-name="ayu-mirage"] .fishbones-editor-run,
+[data-theme-name="ayu-mirage"] .fishbones-lesson-nav-btn--next:hover:not(:disabled) {
+  background: #ffa759 !important;
+  color: #1f2430 !important;
+  border-color: #ffa759 !important;
+}
+
+[data-theme-name="ayu-mirage"] .fishbones__lesson-status--done {
+  background: #bae67e;
+  border-color: #bae67e;
+  color: #1f2430;
+}
+
+[data-theme-name="ayu-mirage"] .fishbones__lesson-status--active {
+  border-color: #73d0ff;
+  box-shadow: 0 0 0 3px rgba(115, 208, 255, 0.15);
+  color: #73d0ff;
+}
+
+[data-theme-name="ayu-mirage"] .fishbones-import-primary,
+[data-theme-name="ayu-mirage"] .fishbones-settings-primary,
+[data-theme-name="ayu-mirage"] .fishbones-library-import,
+[data-theme-name="ayu-mirage"] .fishbones-welcome-primary,
+[data-theme-name="ayu-mirage"] .fishbones-library-pill--active {
+  background: #ffa759;
+  color: #1f2430;
+  border-color: #ffa759;
+}
+
+/* ---- Catppuccin Mocha --------------------------------------------------- */
+/* From catppuccin/vscode. Mocha is the flagship dark variant. Canonical
+   palette naming (base/mantle/surface0/text/subtext/overlay/…) — see
+   https://github.com/catppuccin/catppuccin for the full spec. The border
+   uses "surface0" (#313244) which is the theme's own divider color. */
+[data-theme-name="catppuccin-mocha"] {
+  --color-bg-primary: #1e1e2e;   /* base */
+  --color-bg-secondary: #181825; /* mantle */
+  --color-bg-tertiary: #313244;  /* surface0 */
+  --color-border-default: #313244;
+  --color-text-primary: #cdd6f4; /* text */
+  --color-text-secondary: #a6adc8; /* subtext0 */
+  --color-text-tertiary: #7f849c; /* overlay1 */
+}
+
+[data-theme-name="catppuccin-mocha"] .fishbones-editor-run,
+[data-theme-name="catppuccin-mocha"] .fishbones-lesson-nav-btn--next:hover:not(:disabled) {
+  background: #cba6f7 !important; /* mauve */
+  color: #1e1e2e !important;
+  border-color: #cba6f7 !important;
+}
+
+[data-theme-name="catppuccin-mocha"] .fishbones__lesson-status--done {
+  background: #a6e3a1; /* green */
+  border-color: #a6e3a1;
+  color: #1e1e2e;
+}
+
+[data-theme-name="catppuccin-mocha"] .fishbones__lesson-status--active {
+  border-color: #89b4fa; /* blue */
+  box-shadow: 0 0 0 3px rgba(137, 180, 250, 0.18);
+  color: #89b4fa;
+}
+
+[data-theme-name="catppuccin-mocha"] .fishbones-import-primary,
+[data-theme-name="catppuccin-mocha"] .fishbones-settings-primary,
+[data-theme-name="catppuccin-mocha"] .fishbones-library-import,
+[data-theme-name="catppuccin-mocha"] .fishbones-welcome-primary,
+[data-theme-name="catppuccin-mocha"] .fishbones-library-pill--active {
+  background: #cba6f7;
+  color: #1e1e2e;
+  border-color: #cba6f7;
+}
+
+/* ---- Ayu Light ---------------------------------------------------------- */
+[data-theme-name="ayu-light"] {
+  --color-bg-primary: #fcfcfc;
+  --color-bg-secondary: #fafafa;
+  --color-bg-tertiary: #f0f0f0;
+  --color-border-default: #e7ebed;
+  --color-text-primary: #5c6166;
+  --color-text-secondary: #8a9199;
+  --color-text-tertiary: #abb0b6;
+}
+
+[data-theme-name="ayu-light"] .fishbones-editor-run,
+[data-theme-name="ayu-light"] .fishbones-lesson-nav-btn--next:hover:not(:disabled) {
+  background: #fa8d3e !important;
+  color: #ffffff !important;
+  border-color: #fa8d3e !important;
+}
+
+[data-theme-name="ayu-light"] .fishbones__lesson-status--done {
+  background: #86b300;
+  border-color: #86b300;
+  color: #ffffff;
+}
+
+[data-theme-name="ayu-light"] .fishbones__lesson-status--active {
+  border-color: #399ee6;
+  box-shadow: 0 0 0 3px rgba(57, 158, 230, 0.15);
+  color: #399ee6;
+}
+
+[data-theme-name="ayu-light"] .fishbones-import-primary,
+[data-theme-name="ayu-light"] .fishbones-settings-primary,
+[data-theme-name="ayu-light"] .fishbones-library-import,
+[data-theme-name="ayu-light"] .fishbones-welcome-primary,
+[data-theme-name="ayu-light"] .fishbones-library-pill--active {
+  background: #fa8d3e;
+  color: #ffffff;
+  border-color: #fa8d3e;
+}
+
+/* ---- Ayu Dark ----------------------------------------------------------- */
+[data-theme-name="ayu-dark"] {
+  --color-bg-primary: #0b0e14;
+  --color-bg-secondary: #0d1017;
+  --color-bg-tertiary: #151a22;
+  --color-border-default: #1b212a;
+  --color-text-primary: #bfbdb6;
+  --color-text-secondary: #787b80;
+  --color-text-tertiary: #4d5566;
+}
+
+[data-theme-name="ayu-dark"] .fishbones-editor-run,
+[data-theme-name="ayu-dark"] .fishbones-lesson-nav-btn--next:hover:not(:disabled) {
+  background: #ffb454 !important;
+  color: #0b0e14 !important;
+  border-color: #ffb454 !important;
+}
+
+[data-theme-name="ayu-dark"] .fishbones__lesson-status--done {
+  background: #aad94c;
+  border-color: #aad94c;
+  color: #0b0e14;
+}
+
+[data-theme-name="ayu-dark"] .fishbones__lesson-status--active {
+  border-color: #59c2ff;
+  box-shadow: 0 0 0 3px rgba(89, 194, 255, 0.15);
+  color: #59c2ff;
+}
+
+[data-theme-name="ayu-dark"] .fishbones-import-primary,
+[data-theme-name="ayu-dark"] .fishbones-settings-primary,
+[data-theme-name="ayu-dark"] .fishbones-library-import,
+[data-theme-name="ayu-dark"] .fishbones-welcome-primary,
+[data-theme-name="ayu-dark"] .fishbones-library-pill--active {
+  background: #ffb454;
+  color: #0b0e14;
+  border-color: #ffb454;
+}
+
+/* ---- Catppuccin Latte (light) ------------------------------------------ */
+[data-theme-name="catppuccin-latte"] {
+  --color-bg-primary: #eff1f5;    /* base */
+  --color-bg-secondary: #e6e9ef;  /* mantle */
+  --color-bg-tertiary: #ccd0da;   /* surface0 */
+  --color-border-default: #ccd0da;
+  --color-text-primary: #4c4f69;  /* text */
+  --color-text-secondary: #6c6f85; /* subtext0 */
+  --color-text-tertiary: #9ca0b0; /* overlay0 */
+}
+
+[data-theme-name="catppuccin-latte"] .fishbones-editor-run,
+[data-theme-name="catppuccin-latte"] .fishbones-lesson-nav-btn--next:hover:not(:disabled) {
+  background: #8839ef !important; /* mauve */
+  color: #eff1f5 !important;
+  border-color: #8839ef !important;
+}
+
+[data-theme-name="catppuccin-latte"] .fishbones__lesson-status--done {
+  background: #40a02b; /* green */
+  border-color: #40a02b;
+  color: #eff1f5;
+}
+
+[data-theme-name="catppuccin-latte"] .fishbones__lesson-status--active {
+  border-color: #1e66f5; /* blue */
+  box-shadow: 0 0 0 3px rgba(30, 102, 245, 0.18);
+  color: #1e66f5;
+}
+
+[data-theme-name="catppuccin-latte"] .fishbones-import-primary,
+[data-theme-name="catppuccin-latte"] .fishbones-settings-primary,
+[data-theme-name="catppuccin-latte"] .fishbones-library-import,
+[data-theme-name="catppuccin-latte"] .fishbones-welcome-primary,
+[data-theme-name="catppuccin-latte"] .fishbones-library-pill--active {
+  background: #8839ef;
+  color: #eff1f5;
+  border-color: #8839ef;
+}
+
+/* ---- Catppuccin Frappé -------------------------------------------------- */
+[data-theme-name="catppuccin-frappe"] {
+  --color-bg-primary: #303446;
+  --color-bg-secondary: #292c3c;
+  --color-bg-tertiary: #414559;
+  --color-border-default: #414559;
+  --color-text-primary: #c6d0f5;
+  --color-text-secondary: #a5adce;
+  --color-text-tertiary: #737994;
+}
+
+[data-theme-name="catppuccin-frappe"] .fishbones-editor-run,
+[data-theme-name="catppuccin-frappe"] .fishbones-lesson-nav-btn--next:hover:not(:disabled) {
+  background: #ca9ee6 !important;
+  color: #303446 !important;
+  border-color: #ca9ee6 !important;
+}
+
+[data-theme-name="catppuccin-frappe"] .fishbones__lesson-status--done {
+  background: #a6d189;
+  border-color: #a6d189;
+  color: #303446;
+}
+
+[data-theme-name="catppuccin-frappe"] .fishbones__lesson-status--active {
+  border-color: #8caaee;
+  box-shadow: 0 0 0 3px rgba(140, 170, 238, 0.18);
+  color: #8caaee;
+}
+
+[data-theme-name="catppuccin-frappe"] .fishbones-import-primary,
+[data-theme-name="catppuccin-frappe"] .fishbones-settings-primary,
+[data-theme-name="catppuccin-frappe"] .fishbones-library-import,
+[data-theme-name="catppuccin-frappe"] .fishbones-welcome-primary,
+[data-theme-name="catppuccin-frappe"] .fishbones-library-pill--active {
+  background: #ca9ee6;
+  color: #303446;
+  border-color: #ca9ee6;
+}
+
+/* ---- Catppuccin Macchiato ---------------------------------------------- */
+[data-theme-name="catppuccin-macchiato"] {
+  --color-bg-primary: #24273a;
+  --color-bg-secondary: #1e2030;
+  --color-bg-tertiary: #363a4f;
+  --color-border-default: #363a4f;
+  --color-text-primary: #cad3f5;
+  --color-text-secondary: #a5adcb;
+  --color-text-tertiary: #6e738d;
+}
+
+[data-theme-name="catppuccin-macchiato"] .fishbones-editor-run,
+[data-theme-name="catppuccin-macchiato"] .fishbones-lesson-nav-btn--next:hover:not(:disabled) {
+  background: #c6a0f6 !important;
+  color: #24273a !important;
+  border-color: #c6a0f6 !important;
+}
+
+[data-theme-name="catppuccin-macchiato"] .fishbones__lesson-status--done {
+  background: #a6da95;
+  border-color: #a6da95;
+  color: #24273a;
+}
+
+[data-theme-name="catppuccin-macchiato"] .fishbones__lesson-status--active {
+  border-color: #8aadf4;
+  box-shadow: 0 0 0 3px rgba(138, 173, 244, 0.18);
+  color: #8aadf4;
+}
+
+[data-theme-name="catppuccin-macchiato"] .fishbones-import-primary,
+[data-theme-name="catppuccin-macchiato"] .fishbones-settings-primary,
+[data-theme-name="catppuccin-macchiato"] .fishbones-library-import,
+[data-theme-name="catppuccin-macchiato"] .fishbones-welcome-primary,
+[data-theme-name="catppuccin-macchiato"] .fishbones-library-pill--active {
+  background: #c6a0f6;
+  color: #24273a;
+  border-color: #c6a0f6;
+}
+

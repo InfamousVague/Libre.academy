@@ -1,0 +1,117 @@
+/* Vertical split for the editor + console. The divider is a thin draggable
+   strip with a subtle grip so users discover the resize affordance without
+   us having to label it.
+   The workbench is the only card in the lesson layout — the reader prose
+   flows flat on the base surface; this panel visually groups the editor +
+   output as a single "tool" and floats it against the prose with its own
+   border/radius/shadow. */
+.fishbones-workbench {
+  display: flex;
+  flex-direction: column;
+  width: 48%;
+  min-width: 380px;
+  /* Only a left margin — the parent `.fishbones__lesson` supplies the top/bottom
+     10px so our top/bottom edges line up with the sidebar card. Doubling
+     the vertical margins made the workbench float lower than the sidebar
+     by 10px. */
+  margin-left: 10px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.fishbones-workbench-pane {
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+}
+
+.fishbones-workbench-pane--editor {
+  border-bottom: 0; /* divider provides its own border */
+}
+
+.fishbones-workbench-pane .fishbones-editor,
+.fishbones-workbench-pane .fishbones-output {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.fishbones-workbench-divider {
+  flex: 0 0 6px;
+  cursor: row-resize;
+  background: var(--color-bg-primary);
+  border-top: 1px solid var(--color-border-default);
+  border-bottom: 1px solid var(--color-border-default);
+  display: grid;
+  place-items: center;
+  transition: background 0.15s ease;
+  touch-action: none;
+}
+
+.fishbones-workbench-divider:hover,
+.fishbones-workbench-divider:active {
+  background: var(--color-bg-tertiary);
+}
+
+.fishbones-workbench-divider-grip {
+  width: 28px;
+  height: 2px;
+  background: var(--color-border-default);
+  border-radius: 2px;
+}
+
+.fishbones-workbench-divider:hover .fishbones-workbench-divider-grip,
+.fishbones-workbench-divider:active .fishbones-workbench-divider-grip {
+  background: var(--color-text-tertiary);
+}
+
+/* When the workbench is rendered inside the popped-out window it occupies
+   the full viewport instead of a floating card — reset card styling so it
+   fills edge-to-edge. */
+.fishbones-workbench--standalone {
+  width: 100%;
+  min-width: 0;
+  height: 100vh;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Layout for the popped-out browser/webview window. Full viewport with a
+   thin title strip so the learner can see which lesson they're editing. */
+.fishbones-workbench-standalone-host {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background: var(--color-bg-primary);
+}
+
+.fishbones-workbench-standalone-title {
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.fishbones-workbench-standalone-title span {
+  color: var(--color-text-tertiary);
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+.fishbones-workbench-standalone-host > .fishbones-workbench {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}

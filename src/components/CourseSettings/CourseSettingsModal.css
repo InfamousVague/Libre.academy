@@ -1,0 +1,208 @@
+.fishbones-coursesettings-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  z-index: 120;
+}
+
+.fishbones-coursesettings-panel {
+  width: min(540px, 92vw);
+  max-height: 85vh;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.fishbones-coursesettings-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.fishbones-coursesettings-titleblock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.fishbones-coursesettings-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+.fishbones-coursesettings-course {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fishbones-coursesettings-author {
+  font-size: 11.5px;
+  color: var(--color-text-tertiary);
+}
+
+.fishbones-coursesettings-close {
+  background: none;
+  border: 0;
+  color: var(--color-text-tertiary);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 8px;
+}
+
+.fishbones-coursesettings-close:hover {
+  color: var(--color-text-primary);
+}
+
+.fishbones-coursesettings-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fishbones-coursesettings-body section {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.fishbones-coursesettings-body section:last-child {
+  border-bottom: 0;
+}
+
+.fishbones-coursesettings-section {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  margin-bottom: 10px;
+}
+
+.fishbones-coursesettings-section--danger {
+  color: #f1b5b5;
+}
+
+.fishbones-coursesettings-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.fishbones-coursesettings-stats > div {
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 8px;
+  padding: 8px 10px;
+  text-align: center;
+}
+
+.fishbones-coursesettings-stat-value {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.fishbones-coursesettings-stat-label {
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-top: 2px;
+}
+
+.fishbones-coursesettings-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.fishbones-coursesettings-row-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.fishbones-coursesettings-row-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 2px;
+}
+
+.fishbones-coursesettings-row-hint {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  max-width: 360px;
+}
+
+.fishbones-coursesettings-btn {
+  flex-shrink: 0;
+  padding: 7px 14px;
+  background: transparent;
+  border: 1px solid var(--color-border-default);
+  border-radius: 7px;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.fishbones-coursesettings-btn:hover:not(:disabled) {
+  background: var(--color-bg-tertiary);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.fishbones-coursesettings-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.fishbones-coursesettings-btn--primary {
+  background: var(--color-text-primary);
+  color: var(--color-bg-primary);
+  border-color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.fishbones-coursesettings-btn--primary:hover:not(:disabled) {
+  opacity: 0.9;
+  background: var(--color-text-primary);
+}
+
+.fishbones-coursesettings-btn--danger {
+  color: #ef6f6f;
+  border-color: rgba(239, 111, 111, 0.4);
+}
+
+.fishbones-coursesettings-btn--danger:hover:not(:disabled) {
+  background: rgba(239, 111, 111, 0.12);
+  color: #ef6f6f;
+  border-color: rgba(239, 111, 111, 0.7);
+}

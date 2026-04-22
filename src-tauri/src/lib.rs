@@ -1,4 +1,4 @@
-//! Kata Tauri backend.
+//! Fishbones Tauri backend.
 //!
 //! Exposes the narrow native API the frontend needs:
 //!   - `run_swift` — writes user code to a temp file and execs the system
@@ -39,7 +39,7 @@ pub struct SubprocessResult {
 async fn run_swift(code: String) -> SubprocessResult {
     let start = Instant::now();
 
-    let temp_path = std::env::temp_dir().join("kata-swift-run.swift");
+    let temp_path = std::env::temp_dir().join("fishbones-swift-run.swift");
     if let Err(e) = std::fs::File::create(&temp_path).and_then(|mut f| f.write_all(code.as_bytes())) {
         return SubprocessResult {
             stdout: String::new(),
@@ -92,6 +92,12 @@ pub fn run() {
             // read the API key without the frontend passing it in every call.
             let initial = settings::read_from_disk(app.handle()).unwrap_or_default();
             app.manage(settings::SettingsState(parking_lot::Mutex::new(initial)));
+
+            // Ingest cancellation: one Notify shared across every in-flight
+            // `call_llm`. The `cancel_ingest` command fires notify_waiters
+            // which drops every in-flight reqwest future (tokio::select!
+            // inside call_llm).
+            app.manage(llm::IngestCancel::default());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -106,13 +112,19 @@ pub fn run() {
             courses::export_course,
             courses::import_course,
             ingest::extract_pdf_text,
+            ingest::stat_file,
+            ingest::extract_pdf_images,
             settings::load_settings,
             settings::save_settings,
             llm::structure_with_llm,
             llm::clean_code,
             llm::outline_chapter,
             llm::generate_lesson,
+            llm::generate_challenge,
+            llm::enrich_lesson,
+            llm::detect_book_meta,
             llm::retry_exercise,
+            llm::cancel_ingest,
             ingest_cache::cache_read,
             ingest_cache::cache_write,
             ingest_cache::cache_clear,
