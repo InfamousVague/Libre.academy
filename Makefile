@@ -112,8 +112,10 @@ release:
 	echo "✓ v$$NEW tagged and pushed"
 
 ## Local release: build + sign + notarize + upload current version to GitHub
-## (Use `make release` first if you want to bump the version.)
-local-release: all
+## (Use `make release` first if you want to bump the version.) Skips the
+## /Applications install step — release publishing shouldn't require
+## the user be willing to replace their local copy.
+local-release: build sign notarize
 	@DMG_CURRENT="$(TAURI)/target/release/bundle/dmg/Fishbones_$(VERSION)_$(ARCH_TAG).dmg"; \
 	if [ ! -f "$$DMG_CURRENT" ]; then \
 		echo "ERROR: DMG not found at $$DMG_CURRENT"; exit 1; \
