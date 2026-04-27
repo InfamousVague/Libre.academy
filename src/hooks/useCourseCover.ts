@@ -1,5 +1,17 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { isWeb } from "../lib/platform";
+
+/// Web-build cover URL. Resolves against the page's BASE_URL so the
+/// cover loads correctly regardless of whether the app is mounted at
+/// the page root (`/`), a subpath (`/fishbones/learn/`), or the
+/// fishbones.academy `/learn/` embed. Returns null when courseId is
+/// empty so the caller can skip rendering.
+function webCoverUrl(courseId: string): string | null {
+  if (!courseId) return null;
+  const base = (import.meta.env.BASE_URL || "/").replace(/\/$/, "");
+  return `${base}/starter-courses/${courseId}.jpg`;
+}
 
 /// Thin hook that resolves a course's cover to a data URL (`data:image/png;base64,...`)
 /// via the Rust `load_course_cover` command. Returns `null` when no
@@ -95,6 +107,17 @@ export function useCourseCover(
   );
 
   useEffect(() => {
+    // Web-build path: covers are static files under
+    // /<base>/starter-courses/<id>.jpg (staged by
+    // scripts/extract-starter-courses.mjs). Skip the Tauri IPC
+    // entirely. webSeedCourses sets `course.coverFetchedAt` to a
+    // non-zero value at seed time on courses whose manifest entry
+    // has a `cover` field, so a truthy cacheBust here = "we know
+    // this course has a cover". Skipping the synthesis when
+    // cacheBust is undefined avoids the broken-image flash on
+    // courses without one.
+    if (isWeb) return;
+
     let cancelled = false;
     const k = cacheKey(courseId, cacheBust);
 
@@ -126,5 +149,12 @@ export function useCourseCover(
     };
   }, [courseId, cacheBust]);
 
+  // Web build short-circuits to the static /starter-courses/<id>.jpg
+  // URL when we know the cover exists (via webSeedCourses setting
+  // coverFetchedAt) — no Tauri IPC needed. Desktop falls through
+  // to the cached IPC result.
+  if (isWeb) {
+    return cacheBust ? webCoverUrl(courseId) : null;
+  }
   return dataUrl;
 }

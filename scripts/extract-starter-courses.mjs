@@ -23,6 +23,72 @@ import { execFileSync } from "node:child_process";
 import { mkdir, mkdtemp, readFile, rm, writeFile, stat } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { tmpdir } from "node:os";
+
+/// Cover-resize helper. The bundled covers are ~3-4MB unoptimised
+/// PNGs (extracted as cover images by the desktop app's
+/// `load_course_cover` Tauri command). Shipping 24 of those on a
+/// static deploy = ~85MB blob just for thumbnails — wasteful.
+///
+/// We resize each cover to 480px wide JPEG, quality 78. Result:
+/// ~30-70KB per cover, total ~1-1.5MB for the 24-course starter
+/// set. Quality is more than enough for the BookCover component
+/// which renders at ~150-200px in the library grid.
+///
+/// Cross-platform tool detection: macOS has `sips` built in,
+/// Ubuntu CI runners have `magick` (ImageMagick 7) and/or
+/// `convert` (ImageMagick legacy). We try in that order and
+/// skip cover output if none are available.
+let cachedResizeImpl = null;
+function pickResizeImpl() {
+  if (cachedResizeImpl !== null) return cachedResizeImpl;
+  for (const probe of [
+    { cmd: "magick", args: ["-version"] },
+    { cmd: "convert", args: ["-version"] },
+    { cmd: "sips", args: ["--help"] },
+  ]) {
+    try {
+      execFileSync(probe.cmd, probe.args, { stdio: "ignore" });
+      cachedResizeImpl = probe.cmd;
+      return probe.cmd;
+    } catch {
+      // Not installed — try next.
+    }
+  }
+  cachedResizeImpl = "";
+  return "";
+}
+
+function resizeCover(srcPng, dstJpg) {
+  const impl = pickResizeImpl();
+  if (!impl) return false;
+  try {
+    if (impl === "magick" || impl === "convert") {
+      // ImageMagick. -strip drops EXIF metadata, -interlace Plane
+      // produces progressive JPEG (faster perceived load).
+      execFileSync(impl, [
+        impl === "magick" ? "convert" : srcPng,
+        ...(impl === "magick" ? [srcPng] : []),
+        "-resize", "480x>",
+        "-strip",
+        "-interlace", "Plane",
+        "-quality", "78",
+        dstJpg,
+      ], { stdio: "ignore" });
+    } else if (impl === "sips") {
+      // macOS sips: -Z is "resize-only-if-larger".
+      execFileSync(impl, [
+        "-Z", "480",
+        "-s", "format", "jpeg",
+        "-s", "formatOptions", "78",
+        srcPng,
+        "--out", dstJpg,
+      ], { stdio: "ignore" });
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -123,14 +189,24 @@ async function main() {
       await writeFile(outFile, courseJson, "utf-8");
       const info = await stat(outFile);
 
-      // Cover art DELIBERATELY skipped — the bundled cover.png files
-      // are unoptimised 4MB originals, and shipping 24 of them would
-      // bloat the static deploy by ~85MB. The library renders a
-      // language-tinted glyph as the fallback when `cover` is absent
-      // from the manifest, which is good enough for the web variant.
-      // Re-enable here (resized to ~400px wide) if covers become
-      // worth the bandwidth later.
-      const coverFile = undefined;
+      // Cover art — resize to 480px JPEG q78 (~30-70KB) before
+      // shipping. The bundled originals are ~3-4MB each; without
+      // resize, 24 covers = ~85MB on the deploy. With resize:
+      // ~1MB total. See `resizeCover` for the cross-platform
+      // tooling fallbacks.
+      const coverPath = join(work, "cover.png");
+      let coverFile;
+      if (existsSync(coverPath)) {
+        const candidate = `${id}.jpg`;
+        const dst = join(OUT, candidate);
+        if (resizeCover(coverPath, dst)) {
+          coverFile = candidate;
+        } else {
+          // No resizer available — skip the cover rather than
+          // ship the 4MB original. The library falls back to a
+          // language-tinted glyph when `cover` is absent.
+        }
+      }
 
       manifest.push({
         id: course.id || id,

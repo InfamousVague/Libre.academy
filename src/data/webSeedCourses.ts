@@ -45,16 +45,29 @@ function starterUrl(path: string): string {
   return `${base}${path}`;
 }
 
-/// Run the web seed if it hasn't run yet. Idempotent + safe to call
-/// during the bootloader race; only the first caller does work, the
-/// rest see `starterCoursesSeeded === true` and short-circuit.
+/// Bump this whenever the seed format changes meaningfully — adding
+/// new courses, swapping cover URLs, expanding metadata fields, etc.
+/// `seedWebStarterCourses` re-runs when the persisted version differs
+/// from this constant. Without it, returning visitors with a previous
+/// seed in IndexedDB would never pick up new books or new covers.
+const SEED_VERSION = 2;
+
+/// Run the web seed if it hasn't run yet OR if the persisted
+/// `SEED_VERSION` is older than the current build's. Idempotent +
+/// safe to call during the bootloader race; only the first caller
+/// does work for a given version.
 ///
 /// Returns the number of courses written so callers can log it.
 export async function seedWebStarterCourses(): Promise<number> {
   if (!isWeb) return 0;
 
-  const seeded = await metaGet<boolean>(SEEDED_KEY);
-  if (seeded === true) return 0;
+  // The flag transitioned from boolean → number with v2 — accept
+  // either shape on read so v1 installs roll forward without losing
+  // their progress.
+  const seeded = await metaGet<boolean | number>(SEEDED_KEY);
+  const seededVersion =
+    typeof seeded === "number" ? seeded : seeded === true ? 1 : 0;
+  if (seededVersion >= SEED_VERSION) return 0;
 
   let manifest: Manifest;
   try {
@@ -93,7 +106,21 @@ export async function seedWebStarterCourses(): Promise<number> {
       // own id field disagrees (would point at a desktop-style
       // path-derived id rather than the slug). Never seen in
       // practice but cheap insurance.
-      await storage.saveCourse(entry.id, { ...course, id: entry.id });
+      //
+      // Also stamp `coverFetchedAt` ONLY when the manifest entry
+      // has a `cover` field — `useCourseCover` keys off that
+      // truthy value to decide whether to render the static
+      // `/starter-courses/<id>.jpg` URL or fall back to the
+      // language-tinted glyph. Setting Date.now() means the cover
+      // re-fetches once whenever the manifest is reseeded; it's
+      // not a problem because the resized JPEG is small + cached
+      // by the browser.
+      const record: Course = {
+        ...course,
+        id: entry.id,
+        coverFetchedAt: entry.cover ? Date.now() : undefined,
+      };
+      await storage.saveCourse(entry.id, record);
       written += 1;
     } catch (err) {
       console.warn(
@@ -103,10 +130,13 @@ export async function seedWebStarterCourses(): Promise<number> {
     }
   }
 
-  // Mark as seeded even on partial failure — we don't want to
-  // re-fetch the same broken pack on every boot. The user can wipe
-  // their IndexedDB to retry from a clean slate if needed.
-  await metaSet(SEEDED_KEY, true);
+  // Mark as seeded at the current SEED_VERSION even on partial
+  // failure — we don't want to re-fetch the same broken pack on
+  // every boot. The user can wipe their IndexedDB to retry from a
+  // clean slate if needed. Storing the version (instead of just
+  // `true`) lets us re-seed when the pack list / cover treatment
+  // changes in a future build.
+  await metaSet(SEEDED_KEY, SEED_VERSION);
 
   // eslint-disable-next-line no-console
   console.log(
