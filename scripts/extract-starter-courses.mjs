@@ -34,12 +34,50 @@ const OUT = join(ROOT, "public", "starter-courses");
 /// Curated browser-compatible starter set. IDs match the .fishbones
 /// filenames (without the extension). Order here is the order the
 /// library renders them in on first launch.
+///
+/// Curation rules for what makes the cut:
+///   - Primary language is browser-runnable (per platform.ts canRun)
+///     — JS, TS, Python, web, three.js, React, RN, Svelte, Solid,
+///     HTMX, Astro, Bun, Tauri-as-Rust, Solidity. Rust + Go are
+///     also OK because their runtimes proxy to the public playgrounds
+///     over HTTP.
+///   - Excluded: anything needing a system compiler (C, C++, Java,
+///     Kotlin, C#, Assembly, Swift, SvelteKit's Node sidecar). Those
+///     stay desktop-only.
 const PACK_IDS = [
+  // Languages-as-a-foundation books
   "javascript-crash-course",
   "python-crash-course",
+  "javascript-the-definitive-guide",
+
+  // Frameworks + libraries
   "svelte-5-complete",
+  "solidjs-fundamentals",
+  "fluent-react",
+  "htmx-fundamentals",
+  "astro-fundamentals",
+  "bun-fundamentals",
+  "bun-complete",
+  "learning-react-native",
+  "react-native",
+  "interactive-web-development-with-three-js-and-a-frame",
+
+  // Smart-contract / web3
+  "solidity-complete",
+  "solana-programs",
+  "viem-ethers",
+
+  // Languages-via-playground (no local toolchain needed)
+  "learning-go",
+
+  // Challenge packs — one per browser-runnable language
   "challenges-javascript-handwritten",
+  "challenges-typescript-mo9c9k2o",
   "challenges-python-handwritten",
+  "challenges-go-handwritten",
+  "challenges-rust-handwritten",
+  "challenges-reactnative-handwritten",
+  "challenges-reactnative-visual",
 ];
 
 async function main() {
@@ -85,15 +123,14 @@ async function main() {
       await writeFile(outFile, courseJson, "utf-8");
       const info = await stat(outFile);
 
-      // Cover art is OPTIONAL — pack it if present so the library has
-      // something to render. Stored alongside as <id>.png.
-      const coverPath = join(work, "cover.png");
-      let coverFile;
-      if (existsSync(coverPath)) {
-        coverFile = `${id}.png`;
-        const coverBytes = await readFile(coverPath);
-        await writeFile(join(OUT, coverFile), coverBytes);
-      }
+      // Cover art DELIBERATELY skipped — the bundled cover.png files
+      // are unoptimised 4MB originals, and shipping 24 of them would
+      // bloat the static deploy by ~85MB. The library renders a
+      // language-tinted glyph as the fallback when `cover` is absent
+      // from the manifest, which is good enough for the web variant.
+      // Re-enable here (resized to ~400px wide) if covers become
+      // worth the bandwidth later.
+      const coverFile = undefined;
 
       manifest.push({
         id: course.id || id,
