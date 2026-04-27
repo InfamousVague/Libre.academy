@@ -3,7 +3,6 @@ import { defineConfig } from "vite";
 import { resolve } from "path";
 import react from "@vitejs/plugin-react";
 
-// @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
 
 // Build-target switch — desktop (Tauri shell, default) vs web
@@ -16,9 +15,7 @@ const host = process.env.TAURI_DEV_HOST;
 // `scripts/copy-vendor-to-public.mjs` for the vendor-asset prep that
 // the web build needs.
 //
-// @ts-expect-error process is a nodejs global
 const target: "desktop" | "web" =
-  // @ts-expect-error process is a nodejs global
   process.env.FISHBONES_TARGET === "web" ? "web" : "desktop";
 const isWebBuild = target === "web";
 
@@ -32,7 +29,6 @@ const isWebBuild = target === "web";
 // Override at build time with FISHBONES_BASE; falls back to the
 // mattssoftware path for backward compatibility (existing
 // build:web invocations don't need to change).
-// @ts-expect-error process is a nodejs global
 const webBase = (process.env.FISHBONES_BASE || "/fishbones/learn/").replace(
   /\/?$/,
   "/",

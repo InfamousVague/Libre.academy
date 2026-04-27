@@ -11,6 +11,7 @@ import "@base/primitives/icon/icon.css";
 import type { StreakAndXp } from "../../hooks/useStreakAndXp";
 import { ProgressRing } from "../Shared/ProgressRing";
 import LanguageChip from "../LanguageChip/LanguageChip";
+import { isWeb } from "../../lib/platform";
 import "./TopBar.css";
 
 /// Semantic color tokens for the stats chips. Each row's uppercase label
@@ -93,8 +94,29 @@ export default function TopBar({
 
   return (
     <div className="fishbones__topbar" data-tauri-drag-region>
-      {/* Reserved space for macOS traffic lights (they overlay this area). */}
-      <div className="fishbones__topbar-window-controls" data-tauri-drag-region />
+      {/* On desktop: reserved gutter so the macOS traffic lights
+          (which `titleBarStyle: "Overlay"` floats over the bar at
+          x≈18) don't collide with the sidebar toggle. On web:
+          there are no traffic lights, so we use the same width
+          for a brand element — Fishbones logo + wordmark — that
+          links back to the marketing site one path-segment up. */}
+      {isWeb ? (
+        <a
+          href="../"
+          className="fishbones__topbar-brand"
+          aria-label="Fishbones home"
+          data-tauri-drag-region={false}
+        >
+          <img
+            src={`${import.meta.env.BASE_URL}fishbones.png`}
+            alt=""
+            aria-hidden
+          />
+          <span>Fishbones</span>
+        </a>
+      ) : (
+        <div className="fishbones__topbar-window-controls" data-tauri-drag-region />
+      )}
 
       {onToggleSidebar && (
         <button
