@@ -14,6 +14,19 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
+    /* `@mattmattmattmatt/base` is wired in via a `file:../../Libs/base`
+       dependency, so npm symlinks node_modules/@mattmattmattmatt/base
+       at the on-disk source. Without preserveSymlinks tsc follows
+       the symlink and decides the .tsx files live at their realpath
+       — which on CI is INSIDE the workspace (actions/checkout drops
+       the base lib into _base/). tsc then type-checks the lib's
+       raw source and trips noUnusedLocals on its (not-our-code)
+       React imports. With preserveSymlinks the import path stays
+       node_modules/@mattmattmattmatt/base/... — i.e. inside
+       node_modules, which tsc auto-excludes. Same effect we get
+       locally where the symlink target is naturally outside the
+       project root. */
+    "preserveSymlinks": true,
 
     /* Linting */
     "strict": true,
