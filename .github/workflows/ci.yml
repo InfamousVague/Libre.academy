@@ -41,14 +41,14 @@ jobs:
       # to materialise the same layout. Checkout into _base inside
       # the workspace, then symlink it into place at the absolute
       # path the file: spec resolves to.
-      - name: Checkout @mattmattmattmatt/base (file: dep)
+      - name: "Checkout @mattmattmattmatt/base (file: dep)"
         uses: actions/checkout@v4
         with:
           repository: InfamousVague/base
           path: _base
           ref: main
 
-      - name: Symlink _base/ into Libs/base/ for the file: dep
+      - name: "Symlink _base/ into Libs/base/ for the file: dep"
         run: |
           mkdir -p /home/runner/work/Libs
           ln -sfn "$GITHUB_WORKSPACE/_base" /home/runner/work/Libs/base
