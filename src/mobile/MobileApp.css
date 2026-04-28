@@ -15,20 +15,32 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  /* Reserve space for the floating pill nav. Pill is ~52px tall and
-     sits 12px above the home indicator — total inset ≈ 80px + safe
-     area. We add the safe-area inset explicitly here (the pill is
-     fixed-position + offsets from safe-area too, but content-flow
-     still needs its own reserve). */
-  padding-bottom: calc(env(safe-area-inset-bottom, 0) + 84px);
+  /* Scroll content runs all the way to the bottom edge of the
+     screen — the floating pill nav overlays on top via fixed
+     positioning, so the last content row can scroll up under it.
+     We use `scroll-padding-bottom` (a CSS scroll-snap / focus
+     hint, NOT regular padding) so when something programmatically
+     scrolls a row INTO view (keyboard, focus, scrollIntoView), the
+     row parks above the pill rather than getting covered.
+     `padding-bottom` itself is tiny — just enough that the very
+     last row isn't pixel-flush with the home-indicator bar — so
+     the scrollable area visually extends to the edge of the
+     phone window. The pill's translucent glass treatment means
+     content scrolling beneath it stays faintly visible, which
+     is the "edge-to-edge" feel we want here. */
+  scroll-padding-bottom: calc(env(safe-area-inset-bottom, 0) + 84px);
+  padding-bottom: 8px;
   -webkit-overflow-scrolling: touch;
 }
 
 .m-app__boot {
-  position: absolute;
+  position: fixed;
   inset: 0;
   display: grid;
   place-items: center;
   background: var(--color-bg-primary);
-  z-index: 50;
+  /* Must beat the floating tab bar (z-index: 100) so the loader fully
+     blanks the screen on a cold start — otherwise the pill nav peeks
+     through and the loading state looks half-mounted. */
+  z-index: 200;
 }
