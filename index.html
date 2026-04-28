@@ -2,7 +2,16 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- `viewport-fit=cover` lets the page draw into iOS's safe-area
+         zone (under the home indicator, behind the dynamic island).
+         Without this, WebKit auto-pads the body to keep content
+         strictly inside the safe area, which leaves a visible black
+         strip at the bottom of the mobile build. We handle our own
+         safe-area math via `env(safe-area-inset-*)` in MobileApp.css
+         + MobileTabBar.css, so opting into edge-to-edge here is
+         what actually delivers the "scroll to the bottom of the
+         phone window" feel. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <link rel="icon" type="image/png" href="/fishbones.png" />
     <link rel="apple-touch-icon" href="/fishbones.png" />
     <title>Fishbones</title>
