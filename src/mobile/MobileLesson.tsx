@@ -11,11 +11,18 @@
 
 import { useState } from "react";
 import type { Course, Lesson, PuzzleBlock } from "../data/types";
-import { isCloze, isExerciseKind, isPuzzle, isQuiz } from "../data/types";
+import {
+  isCloze,
+  isExerciseKind,
+  isMicroPuzzle,
+  isPuzzle,
+  isQuiz,
+} from "../data/types";
 import MobileReader from "./MobileReader";
 import MobileQuiz from "./MobileQuiz";
 import MobilePuzzle from "./MobilePuzzle";
 import MobileCloze from "./MobileCloze";
+import MobileMicroPuzzle from "./MobileMicroPuzzle";
 import MobileOutline from "./MobileOutline";
 import { Icon } from "@base/primitives/icon";
 import { chevronLeft } from "@base/primitives/icon/icons/chevron-left";
@@ -162,6 +169,15 @@ export default function MobileLesson({
             slots={lesson.slots}
             prompt={lesson.prompt}
             onComplete={onComplete}
+            isCompleted={isCompleted}
+          />
+        )}
+        {isMicroPuzzle(lesson) && (
+          <MobileMicroPuzzle
+            key={lesson.id}
+            challenges={lesson.challenges}
+            language={lesson.language}
+            prompt={lesson.prompt}
             isCompleted={isCompleted}
           />
         )}

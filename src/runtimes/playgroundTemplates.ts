@@ -664,6 +664,37 @@ _main:
         svc     #0x80
 `,
   },
+
+  // Vyper. Browser playground can't run Vyper bytecode directly (no
+  // EVM in the page), but the editor still needs a sensible starter
+  // for the courses we ship. A minimal counter mirrors the Solidity
+  // template above so learners switching between the two see the
+  // same shape.
+  vyper: {
+    filename: "Counter.vy",
+    fileLanguage: "vyper",
+    content: `# A tiny counter — public state, two write paths, one read path.
+count: public(uint256)
+
+event Incremented:
+    by: indexed(address)
+    new_count: uint256
+
+@external
+def increment():
+    self.count += 1
+    log Incremented(msg.sender, self.count)
+
+@external
+def add(amount: uint256):
+    self.count += amount
+    log Incremented(msg.sender, self.count)
+
+@external
+def reset():
+    self.count = 0
+`,
+  },
 };
 
 /// Resolve the starter-file set for a playground language. Multi-file

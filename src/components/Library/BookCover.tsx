@@ -210,5 +210,7 @@ function langGlyph(lang: LanguageId): string {
       return "TR";
     case "solidity":
       return "SOL";
+    case "vyper":
+      return "VY";
   }
 }

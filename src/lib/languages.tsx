@@ -264,6 +264,10 @@ export const LANGUAGE_META: Record<LanguageId, LanguageMeta> = {
   // Solidity. Brand colour is the dark navy of the official wordmark
   // on docs.soliditylang.org; the glyph is the faceted-diamond mark.
   solidity: { label: "Solidity", color: "#363636", Icon: SolidityIcon },
+  // Vyper — Pythonic EVM contract language. Reuse the Solidity glyph
+  // (both are smart-contract diamonds), but tint with Python's family
+  // seafoam since the grammar derives from there.
+  vyper: { label: "Vyper", color: "#3F8A7C", Icon: SolidityIcon },
 };
 
 /// Convenience accessor with a fallback. Lookup is constant-time —

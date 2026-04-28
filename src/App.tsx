@@ -2,7 +2,14 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { save } from "@tauri-apps/plugin-dialog";
 import { onOpenUrl, getCurrent as getCurrentDeepLinks } from "@tauri-apps/plugin-deep-link";
-import { Course, Lesson, isCloze, isExerciseKind, isQuiz } from "./data/types";
+import {
+  Course,
+  Lesson,
+  isCloze,
+  isExerciseKind,
+  isMicroPuzzle,
+  isQuiz,
+} from "./data/types";
 import { makeBus, openPoppedWorkbench, closePoppedWorkbench } from "./lib/workbenchSync";
 import { deriveSolutionFiles } from "./lib/workbenchFiles";
 import { Icon } from "@base/primitives/icon";
@@ -48,6 +55,10 @@ import QuizView from "./components/Quiz/QuizView";
 // here keeps the chip rendering, option-pick sheet, and validation
 // flow in one place; only the parent layout differs by surface.
 import MobileCloze from "./mobile/MobileCloze";
+// Same story for micro-puzzles: stack of single-line drills with
+// Shiki highlighting + inline chips. The component is surface-
+// agnostic; we wrap it in the desktop column-layout chrome below.
+import MobileMicroPuzzle from "./mobile/MobileMicroPuzzle";
 import AiAssistant from "./components/AiAssistant/AiAssistant";
 import MobileApp from "./mobile/MobileApp";
 import { InstallBanner } from "./components/InstallBanner/InstallBanner";
@@ -1638,6 +1649,24 @@ function LessonView({
             slots={lesson.slots}
             prompt={lesson.prompt}
             onComplete={onComplete}
+            isCompleted={isCompleted}
+          />
+          <div className="fishbones__lesson-nav-wrap">{nav}</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isMicroPuzzle(lesson)) {
+    return (
+      <div className="fishbones__lesson fishbones__lesson--column">
+        <div className="fishbones__lesson-scroll">
+          <LessonReader lesson={lesson} />
+          <MobileMicroPuzzle
+            key={lesson.id}
+            challenges={lesson.challenges}
+            language={lesson.language}
+            prompt={lesson.prompt}
             isCompleted={isCompleted}
           />
           <div className="fishbones__lesson-nav-wrap">{nav}</div>

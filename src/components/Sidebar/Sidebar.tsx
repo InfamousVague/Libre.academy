@@ -74,6 +74,8 @@ function languageLabel(lang: LanguageId): string {
       return "Tauri";
     case "solidity":
       return "Solidity";
+    case "vyper":
+      return "Vyper";
   }
 }
 
@@ -88,10 +90,12 @@ function iconForKind(kind: Lesson["kind"]) {
     case "mixed":
     case "puzzle":
     case "cloze":
+    case "micropuzzle":
       // Code-shaped lessons all get the terminal/code icon. Puzzle
-      // (arrangement) and cloze (fill-in) sit one notch above plain
-      // reading conceptually but the sidebar already has too many
-      // kind-specific tints — collapsing to the code icon keeps the
+      // (arrangement), cloze (multi-blank fill-in), and micropuzzle
+      // (single-line cloze stack) sit one notch above plain reading
+      // conceptually but the sidebar already has too many kind-
+      // specific tints — collapsing to the code icon keeps the
       // tree visually scannable.
       return codeIcon;
     case "quiz":
@@ -1060,6 +1064,8 @@ function carouselGlyph(lang: LanguageId): string {
       return "TR";
     case "solidity":
       return "SOL";
+    case "vyper":
+      return "VY";
   }
 }
 

@@ -128,6 +128,12 @@ const MONACO_LANGUAGES: Record<FileLanguage, string> = {
   // language built in, so without this mapping `.sol` files would
   // render as plaintext.
   solidity: "solidity",
+  // Vyper has Python-like syntax — Monaco's built-in Python tokenizer
+  // gets us indentation, strings, decorators, and number literals
+  // for free. Not perfect (Vyper-specific keywords like `external`
+  // and `payable` won't get the special tint they deserve) but a
+  // sensible default until someone hand-writes a Vyper Monarch.
+  vyper: "python",
   // Monaco's built-in markdown is fine for lesson-body fragments
   // (.md files in mixed-lesson file sets) — wire it up so the
   // editor doesn't fall through to plaintext on those.

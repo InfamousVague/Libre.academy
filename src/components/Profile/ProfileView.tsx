@@ -18,12 +18,13 @@ import "./ProfileView.css";
 /// per-kind map. If we ever add a kind, update both in the same commit.
 // Keep this in lockstep with `Lesson["kind"]` — adding a kind without
 // an XP value drops it from the language-totals math silently. Cloze
-// lessons (fill-in-the-blank) award the same as quizzes; puzzles
+// + micropuzzle (fill-in styles) award the same as quizzes; puzzles
 // (arrangement) award between reading and exercise.
 const XP_PER_KIND = {
   reading: 5,
   quiz: 10,
   cloze: 10,
+  micropuzzle: 10,
   puzzle: 15,
   exercise: 20,
   mixed: 20,
