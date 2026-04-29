@@ -57,7 +57,41 @@ pub fn courses_dir(app: &tauri::AppHandle) -> anyhow::Result<PathBuf> {
 ///   1 — Initial. Adds the version concept itself; refreshes existing
 ///       installs so they pick up the 147 micropuzzle drills (792
 ///       cards) added across 11 tutorial courses.
-const SEED_VERSION: u32 = 1;
+///   2 — Library promotion. The dev's local library was zipped over
+///       the previous bundled-packs (`scripts/promote-library-to-bundle.mjs`)
+///       to ship 18 newly-imported books (Eloquent JS, Rust Book,
+///       Python Crash Course, Mastering Bitcoin/Ethereum/Lightning,
+///       Solana Programs, Solidity Complete, Vyper, Viem/Ethers, Three.js,
+///       React Native, Fluent React, Svelte tutorial, Cryptography
+///       Fundamentals, JavaScript The Definitive Guide, Learning Go,
+///       Learning React Native) plus refreshed challenge packs. Existing
+///       installs re-extract on next launch.
+///   3 — Library retirement. Drops four books that shipped in earlier
+///       bundles but were retired (`bun-complete`, `bun-fundamentals`,
+///       `svelte-5-complete`, `javascript-crash-course`). Existing
+///       desktop / mobile installs that still have these on disk get
+///       them removed on next launch. Mirrors the web seeder's V6
+///       LEGACY_STARTER_IDS prune (Apps/Fishbones/src/data/webSeedCourses.ts)
+///       so all three platforms drop the same retirees in lockstep.
+const SEED_VERSION: u32 = 3;
+
+/// Ids that previously shipped via `resources/bundled-packs/` but have
+/// since been retired. On a SEED_VERSION bump, ensure_seed deletes
+/// these from the user's courses dir if they're still present — same
+/// migration story the web seeder has via LEGACY_STARTER_IDS, kept in
+/// sync so a learner with installs on multiple platforms sees the
+/// shelf converge to the current shipped set after one launch each.
+///
+/// Don't trim this list when adding new retirees; an install that's
+/// been dormant since the very first version still needs the older
+/// ids cleaned up on its next launch.
+const RETIRED_PACK_IDS: &[&str] = &[
+    "bun-complete",
+    "bun-fundamentals",
+    "svelte-5-complete",
+    "javascript-crash-course",
+    "challenges-reactnative-visual",
+];
 
 /// Import any `.fishbones` / `.kata` archives bundled under
 /// `resources/bundled-packs/` into the user's courses dir on first launch.
@@ -87,6 +121,40 @@ pub fn ensure_seed(app: &tauri::AppHandle) -> anyhow::Result<()> {
     // candidates for re-extract. User-deleted packs (in seed_ids but
     // not on disk) still stay deleted.
     let needs_refresh = packs.seed_version < SEED_VERSION;
+
+    // Prune retired packs first. Only fires on a version bump so we
+    // don't waste IO on every cold start. We delete the course dir
+    // wholesale (course.json, cover.png, lesson assets) — progress
+    // lives in progress.sqlite which we leave alone, so if a future
+    // build ever resurrects a retired id the completion history is
+    // still there. We DON'T add the retired id to seed_ids: with the
+    // .fishbones already gone from bundled-packs/ it would never be
+    // re-imported anyway, and leaving seed_ids untouched lets a
+    // future bundle re-introduce the id without needing a marker
+    // surgery.
+    let mut pruned_this_run = 0u32;
+    if needs_refresh {
+        for retired in RETIRED_PACK_IDS {
+            let dir = courses_root.join(retired);
+            if !dir.exists() {
+                continue;
+            }
+            match fs::remove_dir_all(&dir) {
+                Ok(()) => {
+                    pruned_this_run += 1;
+                    // Drop the id from seed_ids if it's there so the
+                    // marker doesn't carry around dead entries forever.
+                    packs.seed_ids.retain(|id| id != retired);
+                }
+                Err(e) => {
+                    eprintln!(
+                        "[fishbones:seed] failed to prune retired pack {:?}: {}",
+                        dir, e
+                    );
+                }
+            }
+        }
+    }
 
     let mut imported_this_run = 0u32;
     let mut refreshed_this_run = 0u32;
@@ -164,6 +232,12 @@ pub fn ensure_seed(app: &tauri::AppHandle) -> anyhow::Result<()> {
         eprintln!(
             "[fishbones:seed] refreshed {} pack(s) (seed_version {} → {})",
             refreshed_this_run, packs.seed_version, SEED_VERSION
+        );
+    }
+    if pruned_this_run > 0 {
+        eprintln!(
+            "[fishbones:seed] pruned {} retired pack(s) on seed_version bump",
+            pruned_this_run
         );
     }
     // Always advance the persisted seed_version so the next launch
@@ -378,6 +452,122 @@ pub fn import_course(app: tauri::AppHandle, archive_path: String) -> Result<Stri
     let dir = courses_dir(&app).map_err(|e| e.to_string())?;
     let course_id = unzip_to(&Path::new(&archive_path), &dir).map_err(|e| e.to_string())?;
     Ok(course_id)
+}
+
+/// Counts returned to the UI after a manual sync. The frontend uses
+/// these to render a one-line status ("Synced 1 new course" / "Already
+/// up to date" / "Refreshed 12 packs") so the button gives the learner
+/// concrete feedback instead of disappearing-spinner anxiety.
+#[derive(Debug, Default, Serialize)]
+pub struct RefreshReport {
+    /// Packs that weren't on disk before this call. New books picked
+    /// up from the binary's bundled-packs/ since the last sync.
+    #[serde(rename = "new")]
+    pub new_count: u32,
+    /// Packs that already existed and got re-extracted in place. Lesson
+    /// updates, drill stacks, cover changes — all land here.
+    pub refreshed: u32,
+    /// Packs the user had previously seeded then deleted (id in
+    /// seed_ids but folder absent). We respect the deletion and DO NOT
+    /// resurrect the pack — it's reported here so the UI can hint at
+    /// it ("3 packs you deleted are still hidden").
+    pub skipped_deleted: u32,
+}
+
+/// User-triggered "Sync latest courses" — re-extracts every bundled
+/// pack that's still installed AND seeds any new packs that have landed
+/// in `resources/bundled-packs/` since the last sync. Unlike
+/// `ensure_seed` (which only refreshes when SEED_VERSION bumps), this
+/// always re-extracts so the user can pull in mid-version updates.
+/// User-deleted packs stay deleted (tracked by id in `seed_ids`).
+///
+/// Wired to the "Sync latest courses" button in Settings → Data.
+#[tauri::command]
+pub fn refresh_bundled_courses(app: tauri::AppHandle) -> Result<RefreshReport, String> {
+    let resource_dir = match app.path().resource_dir() {
+        Ok(p) => p.join("resources").join("bundled-packs"),
+        Err(_) => return Ok(RefreshReport::default()),
+    };
+    if !resource_dir.exists() {
+        return Ok(RefreshReport::default());
+    }
+
+    let courses_root = courses_dir(&app).map_err(|e| e.to_string())?;
+    let marker = marker_path(&app).map_err(|e| e.to_string())?;
+    let mut packs = load_seeded_packs(&marker).unwrap_or_default();
+    let mut report = RefreshReport::default();
+
+    let read_dir = match fs::read_dir(&resource_dir) {
+        Ok(r) => r,
+        Err(e) => return Err(format!("read bundled-packs dir: {e}")),
+    };
+
+    for entry in read_dir.flatten() {
+        let path = entry.path();
+        if !path.is_file() {
+            continue;
+        }
+        match path.extension().and_then(|s| s.to_str()) {
+            Some("fishbones") | Some("kata") => {}
+            _ => continue,
+        }
+
+        let id = match peek_archive_id(&path) {
+            Ok(id) if !id.is_empty() => id,
+            Ok(_) => continue,
+            Err(e) => {
+                eprintln!("[fishbones:refresh] could not read id from {:?}: {}", path, e);
+                continue;
+            }
+        };
+
+        let course_exists = courses_root.join(&id).join("course.json").exists();
+
+        if course_exists {
+            // Always re-extract in force-refresh mode. The marker
+            // lookup is just defensive — a manually-imported pack with
+            // the same id as a bundled one might not be in seed_ids,
+            // and we want to claim it once we replace its contents.
+            if !packs.seed_ids.contains(&id) {
+                packs.seed_ids.push(id.clone());
+            }
+            if let Err(e) = unzip_to(&path, &courses_root) {
+                eprintln!(
+                    "[fishbones:refresh] re-extract failed for {:?}: {}",
+                    path, e
+                );
+                continue;
+            }
+            report.refreshed += 1;
+            continue;
+        }
+
+        // User had it + deleted — respect that.
+        if packs.seed_ids.contains(&id) {
+            report.skipped_deleted += 1;
+            continue;
+        }
+
+        // Brand-new pack — fresh seed.
+        if let Err(e) = unzip_to(&path, &courses_root) {
+            eprintln!("[fishbones:refresh] unzip failed for {:?}: {}", path, e);
+            continue;
+        }
+        packs.seed_ids.push(id);
+        report.new_count += 1;
+    }
+
+    // Persist marker. We DON'T touch seed_version here — that's the
+    // launch-path's responsibility. Manual sync just records new
+    // ids; the version-gated upgrade behavior stays as-is.
+    if let Err(e) = save_seeded_packs(&marker, &packs) {
+        eprintln!("[fishbones:refresh] failed to save marker: {}", e);
+    }
+    eprintln!(
+        "[fishbones:refresh] new={} refreshed={} skipped_deleted={}",
+        report.new_count, report.refreshed, report.skipped_deleted
+    );
+    Ok(report)
 }
 
 // ---- Helpers ----------------------------------------------------------------

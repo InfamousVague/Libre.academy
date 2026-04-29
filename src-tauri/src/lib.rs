@@ -178,6 +178,7 @@ pub fn run() {
             courses::delete_course,
             courses::export_course,
             courses::import_course,
+            courses::refresh_bundled_courses,
             ingest::extract_pdf_text,
             ingest::extract_pdf_cover,
             ingest::extract_source_text,
