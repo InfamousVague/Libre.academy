@@ -10,7 +10,6 @@ import BookCover, {
   type ReleaseStatus,
 } from "./BookCover";
 import CourseContextMenu, { useCourseMenu } from "../Shared/CourseContextMenu";
-import FishbonesLoader from "../Shared/FishbonesLoader";
 import LanguageChip from "../LanguageChip/LanguageChip";
 import { prefetchCovers } from "../../hooks/useCourseCover";
 import "./CourseLibrary.css";
@@ -141,30 +140,19 @@ export default function CourseLibrary({
     }
   }, [viewMode]);
 
-  // Prefetch every cover up front so the shelf paints fully-populated
-  // instead of filling in card-by-card as IntersectionObserver fires.
-  // Covers live behind a module-level cache keyed on
-  // `courseId:coverFetchedAt`, so repeat library opens are cache hits
-  // and we only block on the first visit (or after a course's cover
-  // changes via the settings flow). The gate stays shown until every
-  // IPC resolves — failures cache as `null` and still count, so a
-  // single missing cover doesn't strand the overlay.
-  const [coversReady, setCoversReady] = useState(() => courses.length === 0);
+  // Warm the module-level cover cache up front so each BookCover
+  // pulls from a cache hit instead of firing its own IPC. Fire-and-
+  // forget — we used to gate a full-page overlay on this resolving,
+  // but the overlay flashed on every window-refocus (since the
+  // effect re-ran and the prefetch resolved synchronously from the
+  // cache the second+ time, briefly toggling false → true). Each
+  // BookCover already has a per-card loading affordance for the
+  // rare un-prefetched first paint — that's plenty.
   useEffect(() => {
-    if (courses.length === 0) {
-      setCoversReady(true);
-      return;
-    }
-    let cancelled = false;
-    setCoversReady(false);
+    if (courses.length === 0) return;
     void prefetchCovers(
       courses.map((c) => ({ courseId: c.id, cacheBust: c.coverFetchedAt })),
-    ).then(() => {
-      if (!cancelled) setCoversReady(true);
-    });
-    return () => {
-      cancelled = true;
-    };
+    );
   }, [courses]);
 
   // Pre-compute per-course progress so sorting + display share one walk.
@@ -507,14 +495,6 @@ export default function CourseLibrary({
         )}
 
         <div className="fishbones-library-body">
-          {/* Full-body loader overlay shown until every cover has
-              prefetched. Fades out on `coversReady` so the populated
-              shelf isn't jarring when it pops in. */}
-          {!coversReady && (
-            <div className="fishbones-library-prefetch-overlay" aria-hidden>
-              <FishbonesLoader label="Loading covers" />
-            </div>
-          )}
           {courses.length === 0 ? (
             <div className="fishbones-library-empty">
               <div className="fishbones-library-empty-glyph" aria-hidden>

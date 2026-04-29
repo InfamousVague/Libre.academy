@@ -357,26 +357,11 @@
   position: relative;
 }
 
-/* Cover-prefetch gate. Sits on top of the grid/shelf until every
-   cover IPC has settled so the library paints fully-populated
-   instead of card-by-card. Subtle backdrop tint (not a hard black
-   overlay) so the layout underneath shimmers into view. */
-.fishbones-library-prefetch-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: color-mix(in srgb, var(--color-bg-primary) 72%, transparent);
-  backdrop-filter: blur(2px);
-  z-index: 2;
-  animation: fishbones-library-prefetch-fade-in 0.12s ease-out both;
-}
-
-@keyframes fishbones-library-prefetch-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
+/* The cover-prefetch gate that previously lived here was removed —
+   it flashed on every window refocus because the effect re-ran and
+   the prefetch resolved synchronously from cache, briefly toggling
+   the overlay on then off. BookCover's per-card loading affordance
+   covers the rare un-prefetched first paint. */
 
 .fishbones-library-grid {
   display: grid;
