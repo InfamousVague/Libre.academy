@@ -47,36 +47,31 @@
    cards float, anchored beneath the trigger. */
 
 .fishbones__tip-panel {
-  position: absolute;
-  top: calc(100% + 16px);
-  /* Panel right-edge aligns with the trigger's right edge so the
-     deck always grows leftward on-page. The previous `-314px`
-     offset hung the panel past the trigger to the right, which
-     looked balanced when the trigger sat mid-bar but pushed the
-     panel off-screen whenever the topbar's right-side cluster
-     (Tip / Search / Stats) sat close to the viewport edge — the
-     panel got clipped against the window. Anchoring to right: 0
-     means cards always stay fully on-screen regardless of how
-     close the trigger is to the right edge. */
-  right: 0;
+  /* Pinned to the viewport, not the trigger. The earlier `position:
+     absolute; right: 0` anchored the panel's right edge to the Tip
+     button — fine in isolation, but the Tip button's own position
+     drifts based on whichever sibling buttons sit to its right
+     (search, stats, etc.), so the deck wandered. Anchoring `fixed`
+     against the viewport keeps the deck reliably tucked under the
+     topbar's right edge regardless of the trigger's position.
+     The 56px top value = 44px topbar height + 12px breathing room. */
+  position: fixed;
+  top: 56px;
+  right: 12px;
   width: 440px;
-  overflow: visible;
+  /* Belt-and-braces for narrow viewports (web embeds, mobile-ish
+     widths). Matches the leftward 12px gutter to the right's 12px
+     offset so the deck stays balanced. */
+  max-width: calc(100vw - 24px);
   display: flex;
   flex-direction: column;
+  overflow: visible;
   background: transparent;
   border: none;
   box-shadow: none;
   z-index: 200;
   animation: fishbones-tip-panel-in 180ms cubic-bezier(0.22, 1, 0.36, 1);
   transform-origin: top right;
-  /* If the trigger sits within 440px of the viewport's left edge
-     (rare on desktop, possible on narrow web embeds), nudge the
-     panel right of the viewport edge by 12px instead of letting it
-     spill off. Modern browsers honour `max(0px, calc(...))`-style
-     viewport-aware clamps; the simpler `min-width` + `max-width`
-     pair is enough to keep the deck visible at common topbar
-     widths without an opaque resize observer. */
-  max-width: calc(100vw - 24px);
 }
 
 @keyframes fishbones-tip-panel-in {
