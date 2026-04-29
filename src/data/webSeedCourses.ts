@@ -62,7 +62,16 @@ function starterUrl(path: string): string {
 /// V4 — adds 147 micropuzzle drills (792 cards) across 11 tutorial
 /// courses. Existing IndexedDB seeds get re-fetched so academy
 /// visitors see the drills inline without a manual reset.
-const SEED_VERSION = 4;
+///
+/// V5 — fixes the missing-cover bug for the dozen books whose
+/// course.id differed from their .fishbones pack-filename slug.
+/// extract-starter-courses now mirrors the JPEG under the in-zip
+/// course id, but visitors whose browsers cached the prior broken
+/// 200-HTML response still see the language-tinted glyph until the
+/// img URL changes. Bumping the seed forces fresh `coverFetchedAt`
+/// stamps, and `useCourseCover` now appends them as `?v=<n>` —
+/// the new URL bypasses the stale cache on the next visit.
+const SEED_VERSION = 5;
 
 /// Run the web seed if it hasn't run yet OR if the persisted
 /// `SEED_VERSION` is older than the current build's. Idempotent +

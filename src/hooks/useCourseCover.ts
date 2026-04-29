@@ -7,10 +7,20 @@ import { isWeb } from "../lib/platform";
 /// the page root (`/`), a subpath (`/fishbones/learn/`), or the
 /// fishbones.academy `/learn/` embed. Returns null when courseId is
 /// empty so the caller can skip rendering.
-function webCoverUrl(courseId: string): string | null {
+///
+/// `cacheBust` is appended as a `?v=<n>` query param so a re-seed
+/// (which bumps `coverFetchedAt` to a fresh `Date.now()`) produces a
+/// distinct URL — required for visitors whose browser cached an
+/// earlier broken response (e.g. the Caddy `index.html` fallback that
+/// was being served when the cover JPEG was missing). Without the
+/// param the img element keeps reading the old 200-but-HTML payload
+/// from disk cache and the shelf renders the language-tinted glyph
+/// even after the JPEG is fixed on the server.
+function webCoverUrl(courseId: string, cacheBust?: number): string | null {
   if (!courseId) return null;
   const base = (import.meta.env.BASE_URL || "/").replace(/\/$/, "");
-  return `${base}/starter-courses/${courseId}.jpg`;
+  const path = `${base}/starter-courses/${courseId}.jpg`;
+  return cacheBust ? `${path}?v=${cacheBust}` : path;
 }
 
 /// Thin hook that resolves a course's cover to a data URL (`data:image/png;base64,...`)
@@ -163,7 +173,7 @@ export function useCourseCover(
   // coverFetchedAt) — no Tauri IPC needed. Desktop falls through
   // to the cached IPC result.
   if (isWeb) {
-    return cacheBust ? webCoverUrl(courseId) : null;
+    return cacheBust ? webCoverUrl(courseId, cacheBust) : null;
   }
   return dataUrl;
 }
