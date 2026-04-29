@@ -123,7 +123,7 @@ export default function MobileLibrary({
             onClick={onOpenSearch}
             aria-label="Search"
           >
-            <Icon icon={searchIcon} size="md" color="currentColor" />
+            <Icon icon={searchIcon} size="sm" color="currentColor" />
           </button>
         )}
       </header>

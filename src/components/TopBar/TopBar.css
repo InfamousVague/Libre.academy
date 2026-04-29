@@ -7,8 +7,27 @@
   align-items: center;
   height: 44px;
   flex-shrink: 0;
-  background: var(--color-bg-primary);
-  border-bottom: 1px solid var(--color-border-default);
+  /* `backdrop-filter` creates a new stacking context. That bottles
+     up the stats popover (which lives inside the topbar in the DOM
+     but visually overhangs the page below) — its `z-index` only
+     sorts within the topbar's context. Without an explicit z-index
+     here the topbar's whole block paints in DOM order, BEHIND the
+     main-content area that follows it. Promoting the topbar to its
+     own positioned stacking context with a z-index above the page
+     content lets the popover overhang correctly.
+     position: relative + z-index together do the lift. */
+  position: relative;
+  z-index: 60;
+  /* Frosted-glass surface over the ambient DottedGradientBg corner
+     bloom. Lower-alpha base color (~35%) lets the colored bloom
+     bleed through clearly while keeping text legible; `backdrop-
+     filter: blur + saturate` gives the iOS / macOS translucent
+     vibrancy treatment. `-webkit-` prefix covers WKWebView (Tauri)
+     and older Safari; the unprefixed version covers Chromium. */
+  background: rgba(15, 15, 22, 0.35);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  backdrop-filter: blur(28px) saturate(160%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   user-select: none;
   -webkit-user-select: none;
 }
@@ -129,6 +148,97 @@
   height: 100%;
 }
 
+/* Search trigger — looks like a search <input> with a leading
+   magnifying glass and a trailing ⌘K kbd hint, but it's a <button>
+   that pops the CommandPalette on click. Sits to the LEFT of the
+   stats/streak chip in the actions row.
+
+   Styled to mirror native macOS search fields + Slack/GitHub: muted
+   bg, subtle border, rounded, placeholder-grey text. Hover lifts the
+   border + brightens the placeholder so the affordance reads as
+   interactive.
+
+   Width is bounded so it doesn't crush the tab strip on narrow
+   windows; on tighter widths the placeholder + kbd hint hide
+   progressively (see media queries below). */
+.fishbones__topbar-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 6px 0 8px;
+  min-width: 180px;
+  max-width: 240px;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 8px;
+  color: var(--color-text-tertiary);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.fishbones__topbar-search:hover,
+.fishbones__topbar-search:focus-visible {
+  color: var(--color-text-secondary);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.18);
+  outline: none;
+}
+
+.fishbones__topbar-search-icon {
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+
+.fishbones__topbar-search-placeholder {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  /* Slightly heavier than body copy so it reads as a label, not a
+     value the user already typed. */
+  font-weight: 500;
+}
+
+.fishbones__topbar-search-kbd {
+  flex-shrink: 0;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 10px;
+  letter-spacing: 0.4px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--color-text-tertiary);
+  opacity: 0.85;
+}
+
+/* Tight windows: drop the kbd hint, then the placeholder, leaving a
+   bare-icon trigger. Same staged collapse pattern as TopBar's tabs. */
+@media (max-width: 900px) {
+  .fishbones__topbar-search {
+    min-width: 0;
+  }
+  .fishbones__topbar-search-kbd {
+    display: none;
+  }
+}
+@media (max-width: 720px) {
+  .fishbones__topbar-search {
+    width: 28px;
+    min-width: 28px;
+    padding: 0;
+    justify-content: center;
+  }
+  .fishbones__topbar-search-placeholder {
+    display: none;
+  }
+}
+
 /* Combined streak + level chip with a dropdown detail panel. Lives on
    the right of the top bar. Chip shows the streak flame + a small circular
    progress ring (level-into-XP); clicking opens the full stats panel. */
@@ -197,12 +307,22 @@
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
-  z-index: 60;
-  width: 320px;
+  /* z-index only sorts within the topbar's own stacking context
+     (the backdrop-filter on .fishbones__topbar creates one). The
+     POPover-over-page-content lifting actually happens at the
+     topbar root via its own position+z-index — see the comment on
+     `.fishbones__topbar`. Here we just need to be above any inline
+     siblings inside the topbar, which is comfortably handled by 1. */
+  z-index: 1;
+  width: 360px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: 12px;
-  padding: 14px 14px 12px;
+  border-radius: 14px;
+  /* Generous padding so the hero ring + stat blocks + mini heatmap
+     don't crowd each other or the panel edges. The divider below
+     uses negative margin to bleed across the full panel width even
+     with this larger inset. */
+  padding: 18px 20px 16px;
   animation: fishbones-stats-enter 0.16s ease-out;
 }
 
@@ -304,6 +424,159 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* ---- Mini activity heatmap (4 weeks, 6px cells) ------------------- */
+/* Same intensity ramp as the Profile page's full grid — 5 levels of
+   green — but at one-third the cell size so it slots into the
+   dropdown's column. Sits between the stat blocks and the next-
+   milestone teaser; clicking through to View Profile shows the
+   full 20-week version. */
+
+.fishbones__topbar-stats-mini-heat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 12px 14px;
+  background: var(--color-bg-elevated, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--color-border-default);
+  border-radius: 10px;
+}
+
+.fishbones__topbar-stats-mini-heat-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.fishbones__topbar-stats-mini-heat-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+.fishbones__topbar-stats-mini-heat-count {
+  font-size: 10.5px;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.fishbones__topbar-stats-mini-heat-body {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.fishbones__topbar-stats-mini-heat-rowlabels {
+  display: grid;
+  /* Row gap matches the cell grid's gap exactly so the M / W / F
+     labels line up with their corresponding cell rows. Bumped from
+     2 → 3px in lockstep with the cell gap so the cells actually
+     separate visually instead of butting up against each other. */
+  grid-template-rows: repeat(7, 10px);
+  row-gap: 3px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--color-text-tertiary);
+  letter-spacing: 0.04em;
+  user-select: none;
+}
+
+.fishbones__topbar-stats-mini-heat-rowlabels span {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 10px;
+}
+
+.fishbones__topbar-stats-mini-heat-grid {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  height: calc(7 * 10px + 6 * 3px);
+  gap: 3px;
+}
+
+.fishbones__topbar-stats-mini-heat-cell {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--color-bg-inset, rgba(255, 255, 255, 0.05));
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+/* Future days of the current week — render as visible empty squares
+   (same dim background as level-0 inactive days) so the grid reads
+   as a complete 7×N rectangle instead of having ghost holes at the
+   bottom of the rightmost column. The position implies "not yet";
+   we don't ink them differently because the calendar context
+   already tells you they're upcoming. */
+.fishbones__topbar-stats-mini-heat-cell--pad {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(255, 255, 255, 0.06);
+  /* Compensate for the 1px border so the cell still occupies 10×10
+     of layout space and the columns stay aligned with the labels. */
+  width: 8px;
+  height: 8px;
+}
+
+.fishbones__topbar-stats-mini-heat-cell--lvl-0 { background: rgba(255, 255, 255, 0.05); }
+.fishbones__topbar-stats-mini-heat-cell--lvl-1 { background: rgba(124, 217, 124, 0.28); }
+.fishbones__topbar-stats-mini-heat-cell--lvl-2 { background: rgba(124, 217, 124, 0.5); }
+.fishbones__topbar-stats-mini-heat-cell--lvl-3 { background: rgba(124, 217, 124, 0.72); }
+.fishbones__topbar-stats-mini-heat-cell--lvl-4 { background: #7cd97c; }
+
+/* ---- Next-milestone teaser ---------------------------------------- */
+/* Single-line strip showing the closest still-locked achievement.
+   Gives the View Profile button below a concrete reward to point at
+   ("Next: Week strong (3/7 days)") so the gateway feels purposeful. */
+
+.fishbones__topbar-stats-next {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 12px;
+  background: linear-gradient(90deg, rgba(252, 211, 77, 0.08), transparent 90%);
+  border: 1px solid rgba(252, 211, 77, 0.2);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.fishbones__topbar-stats-next-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(252, 211, 77, 0.85);
+  flex-shrink: 0;
+}
+
+.fishbones__topbar-stats-next-name {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fishbones__topbar-stats-next-progress {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.fishbones__topbar-stats-next-unit {
+  color: var(--color-text-tertiary);
+  font-weight: 500;
 }
 
 /* Full-width "View profile" CTA pinned to the bottom of the dropdown.
@@ -490,6 +763,39 @@
   background: var(--color-bg-secondary);
   color: var(--color-text-primary);
   border-color: var(--color-border-default);
+}
+
+/* While being dragged the source tab dims and lifts so the user
+   sees what they're holding. The browser's own drag image still
+   renders normally over the cursor. */
+.fishbones__tab--dragging {
+  opacity: 0.4;
+  cursor: grabbing;
+}
+
+/* Drop indicator. We draw a 2px accent line on whichever edge of
+   the hovered tab the dragged tab will land against. Forward drags
+   (source comes from the left) drop after → trailing edge; backward
+   drags (source from the right) drop before → leading edge. The
+   indicator uses ::before so we don't have to touch the tab's
+   layout box. */
+.fishbones__tab--drag-over {
+  position: relative;
+}
+.fishbones__tab--drag-over::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: -3px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--color-text-primary);
+  pointer-events: none;
+}
+.fishbones__tab--drag-over.fishbones__tab--drop-after::before {
+  left: auto;
+  right: -3px;
 }
 
 /* Layout-only positioning for the language chip inside the tab pill.
