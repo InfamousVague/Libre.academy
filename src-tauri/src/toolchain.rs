@@ -208,6 +208,94 @@ fn recipe(language: &str) -> Option<Recipe> {
             }),
         }),
 
+        // ── 2026 expansion ───────────────────────────────────────
+        // Each runs via `simple_run_one_file` in native_runners.rs
+        // — we just need the probe binary + the install recipe so the
+        // MissingToolchainBanner can offer one-click install instead
+        // of leaving the learner to read a launch_error and figure
+        // out brew themselves.
+
+        "zig" => Some(Recipe {
+            // `zig` is a single self-contained binary; no separate
+            // compiler / linker / stdlib paths to chase down. `version`
+            // (no leading dashes) is what zig actually expects.
+            binary: "zig",
+            version_args: &["version"],
+            install: Some(InstallHint {
+                manager: "brew".into(),
+                command: "brew install zig".into(),
+                description: "Installs the Zig compiler via Homebrew. No password needed.".into(),
+                ..Default::default()
+            }),
+        }),
+
+        "elixir" => Some(Recipe {
+            binary: "elixir",
+            version_args: &["--version"],
+            install: Some(InstallHint {
+                manager: "brew".into(),
+                command: "brew install elixir".into(),
+                description: "Installs Elixir (Erlang/OTP comes along as a dependency) via Homebrew. No password needed.".into(),
+                ..Default::default()
+            }),
+        }),
+
+        "scala" => Some(Recipe {
+            // We use `scala-cli` (the modern Scala 3 toolchain) rather
+            // than the classic `scala` REPL. scala-cli handles JVM
+            // boot + dependency resolution automatically.
+            binary: "scala-cli",
+            version_args: &["--version"],
+            install: Some(InstallHint {
+                manager: "brew".into(),
+                command: "brew install Virtuslab/scala-cli/scala-cli".into(),
+                description: "Installs scala-cli (the official Scala 3 launcher) from Virtuslab's Homebrew tap. No password needed.".into(),
+                ..Default::default()
+            }),
+        }),
+
+        "dart" => Some(Recipe {
+            binary: "dart",
+            version_args: &["--version"],
+            install: Some(InstallHint {
+                manager: "brew".into(),
+                command: "brew tap dart-lang/dart && brew install dart-sdk".into(),
+                description: "Taps the Dart formula and installs the SDK via Homebrew. No password needed.".into(),
+                ..Default::default()
+            }),
+        }),
+
+        "haskell" => Some(Recipe {
+            // We probe `runghc` (the script-style runner that ships with
+            // GHC). `runghc` is the binary the kata pack actually shells
+            // out to — `ghc` would also satisfy the install but isn't
+            // what we invoke. GHCup is the canonical installer; brew
+            // has a `ghc` formula but it's typically a step behind.
+            binary: "runghc",
+            version_args: &["--version"],
+            install: Some(InstallHint {
+                manager: "ghcup".into(),
+                command: "curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh -s -- -y".into(),
+                description: "Installs GHC + cabal + HLS via GHCup, the official Haskell installer. The `-y` flag accepts the defaults non-interactively. No password needed.".into(),
+                ..Default::default()
+            }),
+        }),
+
+        "ruby" => Some(Recipe {
+            // macOS ships a system Ruby at /usr/bin/ruby, so the probe
+            // usually finds one and we never reach the install path.
+            // The recipe is here for the (rare) case where the user
+            // wants a newer Ruby than the system one.
+            binary: "ruby",
+            version_args: &["--version"],
+            install: Some(InstallHint {
+                manager: "brew".into(),
+                command: "brew install ruby".into(),
+                description: "Installs an up-to-date Ruby via Homebrew (replaces the older system Ruby on PATH). No password needed.".into(),
+                ..Default::default()
+            }),
+        }),
+
         _ => None,
     }
 }
