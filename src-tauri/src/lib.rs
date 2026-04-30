@@ -97,17 +97,15 @@ async fn run_swift(code: String) -> SubprocessResult {
 /// `[A-Za-z0-9_-]+` to avoid splicing attacker-controlled bytes into
 /// the URL via a crafted invoke call from a compromised renderer.
 ///
-/// Dev builds use `fishbones-dev://oauth/done` instead of the prod
-/// `fishbones://oauth/done`. macOS Launch Services routes a custom
-/// scheme to whichever `.app` bundle most recently registered it,
-/// and the installed `/Applications/Fishbones.app` re-claims
-/// `fishbones://` every time it's opened — meaning the OAuth callback
-/// hands the token to the prod app and the dev binary never sees it.
-/// Splitting the dev scheme means the dev binary always gets its own
-/// callbacks. Both schemes are listed in `desktop.schemes` so each
-/// build registers itself with LS on launch; the relay's
-/// `build_return_url` allow-lists `fishbones-dev://` alongside
-/// `fishbones://` so the dev `return_to` survives validation.
+/// KNOWN LIMITATION (dev mode, macOS): `tauri dev` on macOS produces
+/// a bare binary with no `.app` bundle, which means it can't claim a
+/// custom URL scheme via Launch Services. The OAuth callback to
+/// `fishbones://oauth/done` ends up routed to the installed prod
+/// `/Applications/Fishbones.app` instead. To sign in during a
+/// `tauri dev` session today, use the email + password tab — that
+/// path doesn't depend on the deep-link callback. A future iteration
+/// will spin up a localhost HTTP listener for the OAuth callback,
+/// which avoids the LS dance entirely; tracked for follow-up.
 ///
 /// IMPORTANT: we route through `app.opener().open_url(...)` (the
 /// `OpenerExt` instance method), NOT the bare
@@ -137,18 +135,9 @@ async fn start_oauth<R: tauri::Runtime>(
     {
         return Err("invalid session id (expected url-safe alphanumeric)".into());
     }
-    // `cfg!(debug_assertions)` is true for `tauri dev` / cargo build
-    // (no `--release`), false for `tauri build`. Used purely to pick
-    // the deep-link return scheme — relay logic is identical.
-    let mut url = format!(
+    let url = format!(
         "https://api.mattssoftware.com/fishbones/auth/{provider}/start?session={session_id}"
     );
-    if cfg!(debug_assertions) {
-        // url-encoded `fishbones-dev://oauth/done`. Hardcoded rather
-        // than threaded through a dependency — saves a `urlencoding`
-        // crate import for one constant string.
-        url.push_str("&return_to=fishbones-dev%3A%2F%2Foauth%2Fdone");
-    }
     app.opener()
         .open_url(url, None::<&str>)
         .map_err(|e| format!("failed to open browser: {e}"))?;

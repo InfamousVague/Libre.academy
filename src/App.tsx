@@ -239,16 +239,7 @@ export default function App() {
           const url = new URL(raw);
           // Defensive guard — the listener fires for any registered
           // scheme, and we only know how to handle our own.
-          //
-          // `fishbones-dev:` is the dev-build twin: macOS Launch
-          // Services routes a custom scheme to whichever `.app` bundle
-          // last registered it, and the installed prod app re-claims
-          // `fishbones://` on every launch. The dev binary uses the
-          // `-dev` variant so its OAuth callbacks don't get hijacked
-          // by the prod install. start_oauth (src-tauri/src/lib.rs)
-          // picks the matching `return_to` based on
-          // `cfg!(debug_assertions)`.
-          if (url.protocol !== "fishbones:" && url.protocol !== "fishbones-dev:") continue;
+          if (url.protocol !== "fishbones:") continue;
 
           // Route on the URL host (the segment after `fishbones://`):
           //   fishbones://oauth/done?status=ok&token=…   → cloud sign-in
