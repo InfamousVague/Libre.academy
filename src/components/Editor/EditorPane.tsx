@@ -140,26 +140,21 @@ const MONACO_LANGUAGES: Record<FileLanguage, string> = {
   // them to the closest syntactic neighbour. A proper Monarch
   // tokenizer per language is a follow-up; this gets us readable
   // colouring on day one.
+  // 2026 expansion — first six pull Monaco's bundled grammars, last
+  // five use the hand-rolled Monarchs in src/lib/monaco-{lang}.ts.
+  // All registered eagerly in monaco-setup.ts so production Tauri
+  // webviews don't lose them to lazy-chunk resolution failures.
   ruby: "ruby",
   lua: "lua",
   dart: "dart",
-  haskell: "haskell",
   scala: "scala",
   sql: "sql",
-  // Elixir's syntax is closer to Ruby (do/end blocks, atoms, etc.)
-  // than to anything else Monaco ships built-in.
-  elixir: "ruby",
-  // Zig has no built-in Monaco grammar yet. C-family bracing + the
-  // bulk of its keywords (`if`, `while`, `for`, `return`, `const`,
-  // `fn`) overlap heavily with Rust, so aliasing to `rust` colours
-  // most tokens correctly. Custom Monarch is a follow-up.
-  zig: "rust",
-  // Move + Sway both look very Rust-ish. Cairo 1 also leans Rust-
-  // ish. Aliasing all three to `rust` gets keywords like `fn`,
-  // `let`, `match`, plus number / string highlighting for free.
-  move: "rust",
-  cairo: "rust",
-  sway: "rust",
+  elixir: "elixir",
+  haskell: "haskell",
+  zig: "zig",
+  move: "move",
+  cairo: "cairo",
+  sway: "sway",
   // Monaco's built-in markdown is fine for lesson-body fragments
   // (.md files in mixed-lesson file sets) — wire it up so the
   // editor doesn't fall through to plaintext on those.

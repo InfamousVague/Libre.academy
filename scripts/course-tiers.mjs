@@ -24,6 +24,12 @@ export const CORE_PACK_IDS = [
   // Long-form books we want every install to start with.
   "the-rust-programming-language",
   "learning-go",
+  // Karl Seguin's free Learning Zig book, adapted + expanded into the
+  // Fishbones lesson kinds. Ships in core because Zig is one of the
+  // small set of "primary" languages we promote to first-time users
+  // alongside Rust + Go, and the archive is tiny (~50 KB) compared
+  // to the install bundle.
+  "learning-zig",
 
   // All challenge packs — kata-style learners are likely to bounce
   // through several languages, and the per-pack size is small
@@ -80,6 +86,7 @@ export const ALL_PACK_IDS = [
   "composing-programs",
   "python-crash-course",
   "learning-go",
+  "learning-zig",
 
   // ── Computer-science fundamentals ──────────────────────────────
   "algorithms-erickson",

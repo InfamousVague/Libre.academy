@@ -90,6 +90,20 @@ const LEGACY_STARTER_IDS: ReadonlyArray<string> = [
   "challenges-go-handwritten",
   "challenges-rust-handwritten",
   "challenges-reactnative-handwritten",
+  // 2026 expansion — eleven new language packs (Easy/Medium/Hard
+  // bulk-generated via Claude). Web build seeds them from the
+  // manifest just like the older challenge packs.
+  "challenges-ruby-handwritten",
+  "challenges-lua-handwritten",
+  "challenges-dart-handwritten",
+  "challenges-haskell-handwritten",
+  "challenges-scala-handwritten",
+  "challenges-sql-handwritten",
+  "challenges-elixir-handwritten",
+  "challenges-zig-handwritten",
+  "challenges-move-handwritten",
+  "challenges-cairo-handwritten",
+  "challenges-sway-handwritten",
   // Retired — explicitly listed so they're pruned on migration.
   // Includes anything we shipped in any prior PACK_IDS revision but
   // since dropped. Don't trim this list when adding new retirees;
@@ -153,7 +167,11 @@ function starterUrl(path: string): string {
 /// V7 — adds `bun-fundamentals` to the legacy prune list. It was
 /// in the very first PACK_IDS revision (alongside bun-complete) and
 /// got missed when V6 shipped, so V1-era seeds still showed it.
-const SEED_VERSION = 7;
+/// V8 — 2026 language expansion: 11 new challenge packs (ruby, lua,
+/// dart, haskell, scala, sql, elixir, zig, move, cairo, sway), all
+/// bulk-generated via the in-app Claude pipeline. Returning visitors
+/// get the new packs on next page load.
+const SEED_VERSION = 8;
 
 /// Run the web seed if it hasn't run yet OR if the persisted
 /// `SEED_VERSION` is older than the current build's. Idempotent +

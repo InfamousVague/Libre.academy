@@ -88,8 +88,25 @@ import * as mipsLang from "monaco-editor/esm/vs/basic-languages/mips/mips";
 import * as pythonLang from "monaco-editor/esm/vs/basic-languages/python/python";
 import * as rustLang from "monaco-editor/esm/vs/basic-languages/rust/rust";
 import * as swiftLang from "monaco-editor/esm/vs/basic-languages/swift/swift";
+// 2026 expansion — six languages with built-in Monaco grammars.
+// Same eager-import pattern: pulling each grammar in directly so the
+// production Tauri webview's lazy chunk loader can't strand them.
+import * as rubyLang from "monaco-editor/esm/vs/basic-languages/ruby/ruby";
+import * as luaLang from "monaco-editor/esm/vs/basic-languages/lua/lua";
+import * as dartLang from "monaco-editor/esm/vs/basic-languages/dart/dart";
+import * as scalaLang from "monaco-editor/esm/vs/basic-languages/scala/scala";
+import * as sqlLang from "monaco-editor/esm/vs/basic-languages/sql/sql";
+import * as elixirLang from "monaco-editor/esm/vs/basic-languages/elixir/elixir";
+// Hand-rolled Monarch grammars for the five languages Monaco doesn't
+// ship out of the box — Haskell, Zig, and the three smart-contract
+// languages (Move / Cairo / Sway).
 import { svelteLang, svelteConf } from "./monaco-svelte";
 import { solidityLang, solidityConf } from "./monaco-solidity";
+import { haskellLang, haskellConf } from "./monaco-haskell";
+import { zigLang, zigConf } from "./monaco-zig";
+import { moveLang, moveConf } from "./monaco-move";
+import { cairoLang, cairoConf } from "./monaco-cairo";
+import { swayLang, swayConf } from "./monaco-sway";
 
 /// Tell Monaco how to spawn a worker for a given language label. The
 /// `workerId` argument is unused — Monaco only cares which worker
@@ -152,6 +169,19 @@ const BASIC_LANGUAGES: Array<{
   { id: "swift", language: swiftLang.language, conf: swiftLang.conf },
   { id: "svelte", language: svelteLang, conf: svelteConf },
   { id: "solidity", language: solidityLang, conf: solidityConf },
+  // 2026 expansion — built-ins from monaco-editor/basic-languages.
+  { id: "ruby", language: rubyLang.language, conf: rubyLang.conf },
+  { id: "lua", language: luaLang.language, conf: luaLang.conf },
+  { id: "dart", language: dartLang.language, conf: dartLang.conf },
+  { id: "scala", language: scalaLang.language, conf: scalaLang.conf },
+  { id: "sql", language: sqlLang.language, conf: sqlLang.conf },
+  { id: "elixir", language: elixirLang.language, conf: elixirLang.conf },
+  // 2026 expansion — hand-rolled Monarchs (no Monaco built-in).
+  { id: "haskell", language: haskellLang, conf: haskellConf },
+  { id: "zig", language: zigLang, conf: zigConf },
+  { id: "move", language: moveLang, conf: moveConf },
+  { id: "cairo", language: cairoLang, conf: cairoConf },
+  { id: "sway", language: swayLang, conf: swayConf },
 ];
 
 for (const { id, language, conf } of BASIC_LANGUAGES) {

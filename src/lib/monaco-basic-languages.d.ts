@@ -54,3 +54,30 @@ declare module "monaco-editor/esm/vs/basic-languages/swift/swift" {
   export const conf: import("monaco-editor").languages.LanguageConfiguration;
   export const language: import("monaco-editor").languages.IMonarchLanguage;
 }
+// 2026 expansion — six built-in basic-language Monarchs we now eager-
+// import. Same shape as the others; declaring them ambient stops
+// TS7016 from firing on the `.js` resolutions.
+declare module "monaco-editor/esm/vs/basic-languages/ruby/ruby" {
+  export const conf: import("monaco-editor").languages.LanguageConfiguration;
+  export const language: import("monaco-editor").languages.IMonarchLanguage;
+}
+declare module "monaco-editor/esm/vs/basic-languages/lua/lua" {
+  export const conf: import("monaco-editor").languages.LanguageConfiguration;
+  export const language: import("monaco-editor").languages.IMonarchLanguage;
+}
+declare module "monaco-editor/esm/vs/basic-languages/dart/dart" {
+  export const conf: import("monaco-editor").languages.LanguageConfiguration;
+  export const language: import("monaco-editor").languages.IMonarchLanguage;
+}
+declare module "monaco-editor/esm/vs/basic-languages/scala/scala" {
+  export const conf: import("monaco-editor").languages.LanguageConfiguration;
+  export const language: import("monaco-editor").languages.IMonarchLanguage;
+}
+declare module "monaco-editor/esm/vs/basic-languages/sql/sql" {
+  export const conf: import("monaco-editor").languages.LanguageConfiguration;
+  export const language: import("monaco-editor").languages.IMonarchLanguage;
+}
+declare module "monaco-editor/esm/vs/basic-languages/elixir/elixir" {
+  export const conf: import("monaco-editor").languages.LanguageConfiguration;
+  export const language: import("monaco-editor").languages.IMonarchLanguage;
+}
