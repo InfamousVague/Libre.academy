@@ -333,13 +333,12 @@ pub async fn password_reset_request(
         let bytes: [u8; 32] = rand::random();
         base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(bytes)
     };
-    let token_hash = match crate::auth::hash_token(&token) {
-        Ok(h) => h,
-        Err(e) => {
-            tracing::error!("[reset:request] hash_token failed: {e}");
-            return StatusCode::NO_CONTENT;
-        }
-    };
+    // Deterministic SHA-256 — needed because we look up by token_hash
+    // in the consume path (`WHERE token_hash = ?`), which only works
+    // when the same plaintext maps to the same hash every time. The
+    // 32-byte random token above already has 256 bits of entropy, so
+    // a salt would protect against nothing.
+    let token_hash = crate::auth::hash_lookup_token(&token);
     if let Err(e) =
         state
             .db
@@ -399,8 +398,11 @@ pub async fn password_reset_confirm(
     // user_id only when the token is valid, unexpired, and unconsumed.
     // The DELETE…RETURNING semantics close the race where two
     // requests arrive in parallel — only one can win.
-    let token_hash = crate::auth::hash_token(&body.token)
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    //
+    // Deterministic SHA-256 here so we can lookup by hash. See
+    // `hash_lookup_token` in api/src/auth.rs for why salting is
+    // unnecessary on a 32-byte random token.
+    let token_hash = crate::auth::hash_lookup_token(&body.token);
     let user_id = state
         .db
         .consume_password_reset(&token_hash)

@@ -60,3 +60,30 @@ pub fn verify_token(token: &str, hash: &str) -> bool {
         .verify_password(token.as_bytes(), &parsed)
         .is_ok()
 }
+
+/// Deterministic SHA-256 hash of a high-entropy random token, hex-
+/// encoded for storage. Used as a database LOOKUP key — the same
+/// plaintext always produces the same hash, so we can put it in a
+/// `WHERE token_hash = ?` query and hit a primary-key index in O(1).
+///
+/// Don't use this for user passwords. The point of Argon2 (above) is
+/// to be slow against brute-force on low-entropy inputs; SHA-256 is
+/// fast enough that a leaked database with SHA-256 password hashes
+/// could be cracked offline. For session / reset tokens that already
+/// have 256 bits of entropy, the rainbow-table threat doesn't exist
+/// — there's no shorter pre-image to find — so the deterministic
+/// fast path is correct.
+pub fn hash_lookup_token(token: &str) -> String {
+    use sha2::{Digest, Sha256};
+    let mut hasher = Sha256::new();
+    hasher.update(token.as_bytes());
+    let bytes = hasher.finalize();
+    // Hex output keeps the column human-greppable for debugging
+    // without giving up much storage (64 chars vs 32 raw bytes).
+    let mut s = String::with_capacity(64);
+    for b in bytes {
+        use std::fmt::Write;
+        let _ = write!(s, "{b:02x}");
+    }
+    s
+}
