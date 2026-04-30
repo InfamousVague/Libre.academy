@@ -3,8 +3,12 @@ import { Icon } from "@base/primitives/icon";
 import { rocket } from "@base/primitives/icon/icons/rocket";
 import { flaskConical } from "@base/primitives/icon/icons/flask-conical";
 import { pencilLine } from "@base/primitives/icon/icons/pencil-line";
+import { arrowDownToLine } from "@base/primitives/icon/icons/arrow-down-to-line";
+import { loader } from "@base/primitives/icon/icons/loader";
+import { swords } from "@base/primitives/icon/icons/swords";
 import "@base/primitives/icon/icon.css";
 import type { Course, LanguageId } from "../../data/types";
+import { isChallengePack } from "../../data/types";
 import { useCourseCover } from "../../hooks/useCourseCover";
 import FishbonesLoader from "../Shared/FishbonesLoader";
 import { languageMeta } from "../../lib/languages";
@@ -41,6 +45,36 @@ interface Props {
   /// used while the course's full body is still hydrating from disk
   /// after the initial lightweight summary pull.
   loading?: boolean;
+  /// When true, this card represents a remote-catalog course the
+  /// user hasn't installed yet. Render semi-opaque, swap the open
+  /// click for `onInstall`, and override the cover lookup to
+  /// `placeholderCoverUrl` (since `useCourseCover` only knows about
+  /// installed courses).
+  placeholder?: boolean;
+  /// In-flight install indicator — shows a spinner overlay + disables
+  /// click while the parent's onInstall handler is downloading.
+  installing?: boolean;
+  /// Where to fetch the cover image from when `placeholder` is true.
+  /// Bypasses the IPC-backed `useCourseCover` lookup.
+  placeholderCoverUrl?: string;
+  /// Click handler for placeholder tiles. Parent wires to the
+  /// download-and-install flow. Required when `placeholder` is set;
+  /// without it the tile renders inert.
+  onInstall?: () => void;
+  /// When true, render the "update available" badge in the bottom-
+  /// right corner. Set by the parent (CourseLibrary) from the
+  /// `useCourseUpdates` hook's per-course map.
+  hasUpdate?: boolean;
+  /// True while the sync triggered by the badge is in flight. Swaps
+  /// the badge to a spinner + disables clicks so the user gets
+  /// feedback during the multi-second fetch / write / hydrate cycle
+  /// (without it the button looked dead and they tended to re-click
+  /// expecting something to happen).
+  updating?: boolean;
+  /// Click handler for the update badge. Parent wires to the
+  /// `syncBundledToInstalled` flow + course-list refresh. Click
+  /// stops propagation so the card's `onOpen` doesn't also fire.
+  onUpdate?: () => void;
 }
 
 /// Shelf-mode library card. Rendered at roughly 2:3 aspect ratio (the
@@ -57,11 +91,22 @@ export default function BookCover({
   onOpen,
   onContextMenu,
   loading = false,
+  hasUpdate = false,
+  updating = false,
+  onUpdate,
+  placeholder = false,
+  installing = false,
+  placeholderCoverUrl,
+  onInstall,
 }: Props) {
   // Covers are prefetched in bulk when the library mounts (see
   // `prefetchCovers` in CourseLibrary). This hook just reads from the
   // shared cache that prefetch populates — no extra IPC per card.
-  const coverUrl = useCourseCover(course.id, course.coverFetchedAt);
+  // For placeholder tiles we skip the IPC lookup entirely (the
+  // course isn't installed yet so there's nothing on disk) and use
+  // the catalog-supplied URL directly.
+  const installedCoverUrl = useCourseCover(course.id, course.coverFetchedAt);
+  const coverUrl = placeholder ? placeholderCoverUrl : installedCoverUrl;
   // Track image load failures so a 404 / blocked-by-CSP / etc. on
   // the URL falls back to the language-tinted glyph tile rather
   // than rendering Safari's broken-image placeholder. Resets when
@@ -89,6 +134,23 @@ export default function BookCover({
   // mapping into a manifest field.
   const releaseStatus = releaseStatusFor(course);
 
+  // Whether this card is a challenge pack vs. a tutorial book —
+  // surfaces a small "Challenges" chip in the corner so a learner
+  // scanning the shelf can tell exercises-only packs apart from
+  // long-form prose books at a glance. Read off the same `packType`
+  // field the Library kindFilter uses.
+  const isChallenges = isChallengePack(course);
+
+  // Placeholder tiles route their click to the install handler
+  // instead of the open handler. The card itself stays interactive
+  // so the visual affordance is consistent with installed covers
+  // (you can still tap anywhere to act on it) — the action just
+  // changes meaning.
+  const handleClick = placeholder
+    ? () => {
+        if (!installing && onInstall) onInstall();
+      }
+    : onOpen;
   return (
     <button
       type="button"
@@ -96,12 +158,25 @@ export default function BookCover({
         hasCover ? "fishbones-book--has-cover" : "fishbones-book--no-cover"
       } fishbones-book--lang-${course.language} ${
         loading ? "fishbones-book--loading" : ""
+      } ${placeholder ? "fishbones-book--placeholder" : ""} ${
+        installing ? "fishbones-book--installing" : ""
       }`}
-      onClick={onOpen}
+      onClick={handleClick}
       onContextMenu={onContextMenu}
-      title={course.title}
-      aria-label={`Open ${course.title}`}
-      aria-busy={loading || undefined}
+      title={
+        placeholder
+          ? installing
+            ? `Installing ${course.title}…`
+            : `Tap to install ${course.title}`
+          : course.title
+      }
+      aria-label={
+        placeholder
+          ? `Install ${course.title}`
+          : `Open ${course.title}`
+      }
+      aria-busy={loading || installing || undefined}
+      disabled={installing}
     >
       {/* The cover image sits absolutely behind the label stack. Using
           <img> (not background-image) so the browser caches it
@@ -181,6 +256,28 @@ export default function BookCover({
         <span className="fishbones-book-status-label">{releaseStatus}</span>
       </span>
 
+      {/* Challenge-pack tag \u2014 sits below the release-status pill and
+          uses the same chip treatment with a soft violet tint so it
+          sits distinct from the tier colours (amber ALPHA / emerald
+          BETA / slate UNREVIEWED). The `swords` glyph echoes the
+          artwork on the challenge-pack cover plates (Rust Challenges
+          has a literal crossed-swords specimen drawing), so a learner
+          who's seen one card recognises the family on a different one. */}
+      {isChallenges && (
+        <span
+          className="fishbones-book-kind fishbones-book-kind--challenges"
+          title="Challenge pack \u2014 exercises only, no readings"
+        >
+          <Icon
+            icon={swords}
+            size="xs"
+            color="currentColor"
+            className="fishbones-book-kind-icon"
+          />
+          <span className="fishbones-book-kind-label">Challenges</span>
+        </span>
+      )}
+
       {/* Progress bar along the very bottom edge. Doubles as the visual
           affordance for "how far you've read". Hidden entirely when
           progress is 0 so untouched books don't show a strip. */}
@@ -201,6 +298,70 @@ export default function BookCover({
         <div className="fishbones-book-loading" aria-hidden>
           <FishbonesLoader size="sm" />
         </div>
+      )}
+
+      {/* Placeholder install affordance — replaces the update
+          badge slot for catalog tiles. Big "+" icon plus
+          archive-size hint so the user knows what they're about
+          to download. Installing state swaps to a spinner. */}
+      {placeholder && (
+        <div className="fishbones-book-install" aria-hidden>
+          {installing ? (
+            <Icon icon={loader} size="sm" color="currentColor" />
+          ) : (
+            <>
+              <Icon icon={arrowDownToLine} size="sm" color="currentColor" />
+              <span className="fishbones-book-install-label">install</span>
+              {typeof course.archiveSize === "number" && (
+                <span className="fishbones-book-install-size">
+                  {(course.archiveSize / 1024 / 1024).toFixed(1)} MB
+                </span>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Update-available badge in the bottom-right corner. Click
+          triggers the "Reapply bundled starter" flow via the
+          parent's onUpdate. We wrap in a real button (not a span)
+          so keyboard users can tab to it; stopPropagation keeps
+          the surrounding card's onOpen from firing on the same
+          click. While the parent has the sync in flight (`updating`)
+          the badge swaps to a spinner + disables itself so the
+          user gets feedback and can't re-fire the request. */}
+      {(hasUpdate || updating) && onUpdate && (
+        <button
+          type="button"
+          className={`fishbones-book-update ${
+            updating ? "fishbones-book-update--working" : ""
+          }`}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!updating) onUpdate();
+          }}
+          disabled={updating}
+          title={
+            updating
+              ? "Updating…"
+              : "Update available — reapply bundled course"
+          }
+          aria-label={
+            updating
+              ? `Updating ${course.title}`
+              : `Update available for ${course.title}`
+          }
+          aria-busy={updating || undefined}
+        >
+          <Icon
+            icon={updating ? loader : arrowDownToLine}
+            size="xs"
+            color="currentColor"
+          />
+          <span className="fishbones-book-update-label">
+            {updating ? "updating…" : "update"}
+          </span>
+        </button>
       )}
     </button>
   );
