@@ -76,17 +76,42 @@ $SSH "cd /opt/fishbones-api/src && \
   cp target/release/fishbones-api /opt/fishbones-api/fishbones-api"
 
 # ── Apple SIWA: upload .p8 ────────────────────────────────────────
+#
+# The .p8 only ever needs to be uploaded once per VPS. Subsequent
+# deploys can re-use whatever's already at /etc/fishbones-api/. The
+# local file is often archived (or moved off the laptop entirely
+# once it's in 1Password / a secrets vault), so a missing local
+# file is a normal state — not an error. We skip the upload and
+# fall back to whichever AuthKey_*.p8 the VPS already has,
+# detected via a remote `ls`. If the VPS has nothing AND the local
+# is missing, that's a real misconfiguration; bail.
 APPLE_REMOTE_KEY_PATH=""
-if [ -n "${APPLE_PRIVATE_KEY_LOCAL:-}" ]; then
-  if [ ! -f "$APPLE_PRIVATE_KEY_LOCAL" ]; then
-    echo "Error: APPLE_PRIVATE_KEY_LOCAL=$APPLE_PRIVATE_KEY_LOCAL does not exist."
-    exit 1
-  fi
+if [ -n "${APPLE_PRIVATE_KEY_LOCAL:-}" ] && [ -f "$APPLE_PRIVATE_KEY_LOCAL" ]; then
   KEY_BASENAME="$(basename "$APPLE_PRIVATE_KEY_LOCAL")"
   APPLE_REMOTE_KEY_PATH="/etc/fishbones-api/$KEY_BASENAME"
   echo "── Uploading Apple .p8 → $APPLE_REMOTE_KEY_PATH"
   $SCP "$APPLE_PRIVATE_KEY_LOCAL" "$VPS_USER@$VPS_HOST:$APPLE_REMOTE_KEY_PATH"
   $SSH "chmod 600 $APPLE_REMOTE_KEY_PATH"
+else
+  # Local file is missing / unset. Look for any AuthKey_*.p8 already
+  # uploaded on the VPS. If found, point the env file at it and skip
+  # the upload step. If none exists, only fail if the user actually
+  # wants Apple SIWA (APPLE_CLIENT_ID set).
+  REMOTE_KEY="$($SSH 'ls /etc/fishbones-api/AuthKey_*.p8 2>/dev/null | head -1' || true)"
+  if [ -n "$REMOTE_KEY" ]; then
+    APPLE_REMOTE_KEY_PATH="$REMOTE_KEY"
+    if [ -n "${APPLE_PRIVATE_KEY_LOCAL:-}" ]; then
+      echo "── Skipping Apple .p8 upload (local file missing); reusing $REMOTE_KEY"
+    else
+      echo "── Reusing Apple .p8 already on VPS: $REMOTE_KEY"
+    fi
+  elif [ -n "${APPLE_CLIENT_ID:-}" ]; then
+    echo "Error: APPLE_CLIENT_ID is set but no AuthKey_*.p8 is on the VPS"
+    echo "       and APPLE_PRIVATE_KEY_LOCAL=${APPLE_PRIVATE_KEY_LOCAL:-<unset>} doesn't"
+    echo "       exist locally. Restore the .p8 file or unset APPLE_CLIENT_ID to deploy"
+    echo "       without Apple sign-in."
+    exit 1
+  fi
 fi
 
 # ── Env file (systemd EnvironmentFile=) ───────────────────────────
