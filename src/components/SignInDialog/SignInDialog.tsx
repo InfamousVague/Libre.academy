@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { UseFishbonesCloud } from "../../hooks/useFishbonesCloud";
 import { isWeb } from "../../lib/platform";
+import PasswordField, { PASSWORD_MIN_LENGTH, scorePassword } from "./PasswordField";
 import "./SignInDialog.css";
 
 /// Three-tab sign-in modal: email, Apple, Google. Used both by the
@@ -36,6 +37,15 @@ interface Props {
 
 type Tab = "email" | "apple" | "google";
 
+/// Email-tab sub-mode. Replaces the previous "try login, fall back to
+/// signup" auto-flow which dead-ended whenever the user typed the
+/// wrong password for an existing account: login 401 → signup 409
+/// "account exists" → no path forward in the dialog. Explicit modes
+/// give the user a clear next step ("forgot? switch to Sign in" /
+/// "no account? switch to Create account") and let us tailor the
+/// password input (strength meter on signup, plain on signin).
+type EmailMode = "signIn" | "signUp";
+
 /// Generate a URL-safe random session id. The relay uses this to
 /// correlate the browser-side OAuth flow with the desktop callback,
 /// but here we just need something opaque the server side will echo
@@ -60,13 +70,23 @@ export default function SignInDialog({
   blurb,
 }: Props) {
   const [tab, setTab] = useState<Tab>("email");
+  const [emailMode, setEmailMode] = useState<EmailMode>("signIn");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  /// Shown above the form when we auto-create an account on the user's
-  /// behalf. Lets them know "you didn't have an account, we made one"
-  /// without making them choose between Sign in and Create account up
-  /// front. Cleared on the next submit.
-  const [autoCreatedNotice, setAutoCreatedNotice] = useState(false);
+  /// Local-only error state for the email tab. We don't surface
+  /// `cloud.error` directly anymore because the explicit-mode form
+  /// needs more nuanced messaging than the hook's pass-through 401
+  /// string ("Email or password didn't match"). Examples:
+  ///   - Sign-in 401   → "Email or password didn't match. Forgot? You
+  ///                      can also create a new account."
+  ///   - Signup 409   → "An account with that email exists — switch
+  ///                      to Sign in?"
+  /// Cleared on the next submit attempt and on mode switches.
+  const [emailError, setEmailError] = useState<string | null>(null);
+  /// Shown above the form once a freshly-created account is signed
+  /// in. Distinct from the existing `signedIn`-watcher close so the
+  /// learner sees a beat of "you're in" copy before the modal closes.
+  const [createdNotice, setCreatedNotice] = useState(false);
   /// `true` once the user clicks "Continue with Apple/Google" and the
   /// system browser has been launched. We stay in this state until the
   /// deep-link callback fires and `cloud.signedIn` flips. If the user
@@ -79,49 +99,72 @@ export default function SignInDialog({
   /// blocked, etc.).
   const [oauthError, setOauthError] = useState<string | null>(null);
 
-  /// Single "Continue with email" submit. We hide the sign-in vs.
-  /// create-account distinction from the user — under the hood we
-  /// always try login first, and if the relay 401s we fall back to
-  /// signup with the same credentials. The fallback covers two cases:
-  ///
-  ///   - email is brand new → login 401 → signup 200 → signed in.
-  ///   - email is registered, password wrong → login 401 → signup 409
-  ///     ("already exists") → we surface "Email or password didn't
-  ///     match" to the user.
-  ///
-  /// This is safe because both paths require the user's password —
-  /// nobody can take over an existing account this way; they just
-  /// either log in or create an account on first contact.
-  const onEmailSubmit = async (e: React.FormEvent) => {
+  /// Sign-in submit. Calls the relay's login endpoint and surfaces a
+  /// targeted error on 401 ("didn't match"). Other failures
+  /// (network down, 503) fall through to whatever message the hook
+  /// puts on `cloud.error`.
+  const onSignInSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setAutoCreatedNotice(false);
+    setEmailError(null);
+    setCreatedNotice(false);
     try {
       await cloud.signInEmail(email, password);
       onClose();
-      return;
-    } catch (signInErr) {
-      const msg =
-        signInErr instanceof Error ? signInErr.message : String(signInErr);
-      // The hook only collapses status codes into messages — anything
-      // other than the 401 "didn't match" branch is a real failure
-      // (server unreachable, 503 etc.) and we shouldn't auto-create.
-      if (!msg.includes("didn't match")) {
-        return;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.toLowerCase().includes("didn't match") || msg.includes("401")) {
+        setEmailError(
+          "Email or password didn't match. If you don't have an account yet, switch to Create account.",
+        );
+      } else {
+        setEmailError(msg || "Couldn't sign in. Please try again.");
       }
     }
-    // Login 401 → either the account doesn't exist (auto-create) OR
-    // the account exists with a different password (signup will 409,
-    // we relay that as "didn't match").
+  };
+
+  /// Create-account submit. Validates length client-side (same 8-char
+  /// floor the relay enforces in api/src/routes/auth.rs) so the user
+  /// gets immediate feedback instead of a server round-trip 400. On
+  /// 409 ("already exists") we route the user to the Sign-in tab so
+  /// they don't dead-end.
+  const onSignUpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEmailError(null);
+    setCreatedNotice(false);
+    if (password.length < PASSWORD_MIN_LENGTH) {
+      setEmailError(`Password must be at least ${PASSWORD_MIN_LENGTH} characters.`);
+      return;
+    }
     try {
       // No display_name yet — the user can set one in Settings →
       // Account once they're in. Keeping the modal small.
       await cloud.signUpEmail(email, password);
-      setAutoCreatedNotice(true);
-      onClose();
-    } catch {
-      /* signUpEmail surfaces its own error message via cloud.error,
-         which the form already renders below the inputs. */
+      setCreatedNotice(true);
+      // Don't close yet — the cloud watcher (line ~140) auto-closes
+      // once the /me fetch resolves and `cloud.signedIn` flips.
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const lower = msg.toLowerCase();
+      if (lower.includes("already exists") || msg.includes("409")) {
+        setEmailError(
+          "An account with that email already exists. Switch to Sign in instead?",
+        );
+      } else if (lower.includes("password") && lower.includes("8")) {
+        setEmailError(`Password must be at least ${PASSWORD_MIN_LENGTH} characters.`);
+      } else {
+        setEmailError(msg || "Couldn't create account. Please try again.");
+      }
     }
+  };
+
+  /// Reset the local error state when the user switches modes — the
+  /// previous mode's error becomes irrelevant ("password too short"
+  /// from a signup attempt shouldn't linger when the user clicks
+  /// Sign in to retry an existing account).
+  const switchEmailMode = (next: EmailMode) => {
+    setEmailMode(next);
+    setEmailError(null);
+    setCreatedNotice(false);
   };
 
   /// Auto-close once the deep-link path lands and the user record
@@ -303,11 +346,42 @@ export default function SignInDialog({
         </div>
 
         {tab === "email" && (
-          <form onSubmit={onEmailSubmit} className="fishbones-signin-form">
+          <form
+            onSubmit={emailMode === "signIn" ? onSignInSubmit : onSignUpSubmit}
+            className="fishbones-signin-form"
+          >
+            {/* Mode toggle — segmented Sign in / Create account.
+                Replaces the old "we'll figure out which one" copy
+                with an explicit choice. The submit handler, button
+                label, password autocomplete, strength meter, and
+                cross-link below all key off this state. */}
+            <div className="fishbones-signin-mode-toggle" role="tablist" aria-label="Email account mode">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={emailMode === "signIn"}
+                className={`fishbones-signin-mode-btn ${emailMode === "signIn" ? "fishbones-signin-mode-btn--active" : ""}`}
+                onClick={() => switchEmailMode("signIn")}
+              >
+                Sign in
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={emailMode === "signUp"}
+                className={`fishbones-signin-mode-btn ${emailMode === "signUp" ? "fishbones-signin-mode-btn--active" : ""}`}
+                onClick={() => switchEmailMode("signUp")}
+              >
+                Create account
+              </button>
+            </div>
+
             <p className="fishbones-signin-helper">
-              Enter your email and password — we'll sign you in if you
-              have an account, or create one if you don't.
+              {emailMode === "signIn"
+                ? "Welcome back. Enter the email and password you signed up with."
+                : "New here? We'll set up your account so progress syncs across devices."}
             </p>
+
             <label className="fishbones-signin-field">
               <span>Email</span>
               <input
@@ -318,33 +392,84 @@ export default function SignInDialog({
                 autoComplete="email"
               />
             </label>
-            <label className="fishbones-signin-field">
-              <span>Password</span>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={8}
-                autoComplete="current-password"
-              />
-              <small>At least 8 characters if creating a new account.</small>
-            </label>
-            {cloud.error && (
-              <p className="fishbones-signin-error">{cloud.error}</p>
+
+            {/* Reusable PasswordField — strength meter only shows on
+                Create account where it's actionable. autoComplete
+                flips between current-password (Sign in) and
+                new-password (Create account) so password managers
+                pick the right slot. */}
+            <PasswordField
+              value={password}
+              onChange={setPassword}
+              showStrength={emailMode === "signUp"}
+              autoComplete={emailMode === "signUp" ? "new-password" : "current-password"}
+              required
+              disabled={cloud.busy}
+              helper={
+                emailMode === "signUp"
+                  ? `At least ${PASSWORD_MIN_LENGTH} characters. Mix cases, digits, and symbols for a stronger password.`
+                  : null
+              }
+            />
+
+            {emailError && (
+              <p className="fishbones-signin-error">{emailError}</p>
             )}
-            {autoCreatedNotice && !cloud.error && (
-              <p className="fishbones-signin-helper">
-                Welcome! We created your account.
+            {createdNotice && !emailError && (
+              <p className="fishbones-signin-helper fishbones-signin-helper--success">
+                Welcome! Account created — signing you in…
               </p>
             )}
+
             <button
               type="submit"
               className="fishbones-signin-primary"
-              disabled={cloud.busy}
+              disabled={
+                cloud.busy ||
+                email.length === 0 ||
+                password.length === 0 ||
+                // On Create account, also block the submit when the
+                // password is below the relay's minimum. Sign in
+                // doesn't gate on length — a legacy account might
+                // pre-date today's policy.
+                (emailMode === "signUp" && scorePassword(password).belowMinLength)
+              }
             >
-              {cloud.busy ? "…" : "Continue with email"}
+              {cloud.busy
+                ? "…"
+                : emailMode === "signIn"
+                  ? "Sign in"
+                  : "Create account"}
             </button>
+
+            {/* Cross-link — gives the user an unmistakable next step
+                when they realise they're on the wrong mode. Buttons
+                instead of <a> tags so we stay inside the dialog. */}
+            <p className="fishbones-signin-switch">
+              {emailMode === "signIn" ? (
+                <>
+                  Don't have an account?{" "}
+                  <button
+                    type="button"
+                    className="fishbones-signin-switch__link"
+                    onClick={() => switchEmailMode("signUp")}
+                  >
+                    Create one
+                  </button>
+                </>
+              ) : (
+                <>
+                  Already have an account?{" "}
+                  <button
+                    type="button"
+                    className="fishbones-signin-switch__link"
+                    onClick={() => switchEmailMode("signIn")}
+                  >
+                    Sign in
+                  </button>
+                </>
+              )}
+            </p>
           </form>
         )}
 
