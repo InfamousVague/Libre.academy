@@ -145,81 +145,103 @@ export function GanacheDock({ variant = "banner", onOpenPopout, onClose }: Props
         </div>
       </header>
 
-      <div className="ganache-dock__grid">
-        <section className="ganache-dock__panel ganache-dock__panel--accounts">
-          <h3 className="ganache-dock__panel-title">Accounts</h3>
-          {!defaultAcc && (
-            <div className="ganache-dock__empty">
-              The chain hasn't been initialised yet. Run a smart-contract
-              lesson to spin it up.
+      {/* Body. Mirrors the editor/output pattern: each sub-panel
+          has its own header strip (bg-secondary, uppercase label,
+          right-side count chip) and a body sitting on bg-primary.
+          That's why the three columns read as part of the same
+          family as the workbench rather than a standalone overlay. */}
+      <div className="ganache-dock__body">
+        <div className="ganache-dock__grid">
+          <section className="ganache-dock__panel ganache-dock__panel--accounts">
+            <header className="ganache-dock__panel-header">
+              <span className="ganache-dock__panel-label">Accounts</span>
+              {snap.accounts.length > 0 && (
+                <span className="ganache-dock__panel-meta">
+                  {snap.accounts.length}
+                </span>
+              )}
+            </header>
+            <div className="ganache-dock__panel-body">
+              {!defaultAcc && (
+                <div className="ganache-dock__empty">
+                  The chain hasn't been initialised yet. Run a smart-contract
+                  lesson to spin it up.
+                </div>
+              )}
+              {defaultAcc && (
+                <AccountRow
+                  acc={defaultAcc}
+                  isDefault
+                  pending={pendingFaucet.has(defaultAcc.address)}
+                  onFaucet={onFaucet}
+                />
+              )}
+              {otherAccs.length > 0 && (
+                <details className="ganache-dock__more">
+                  <summary>+{otherAccs.length} other accounts</summary>
+                  <div className="ganache-dock__more-list">
+                    {otherAccs.map((a) => (
+                      <AccountRow
+                        key={a.address}
+                        acc={a}
+                        pending={pendingFaucet.has(a.address)}
+                        onFaucet={onFaucet}
+                      />
+                    ))}
+                  </div>
+                </details>
+              )}
             </div>
-          )}
-          {defaultAcc && (
-            <AccountRow
-              acc={defaultAcc}
-              isDefault
-              pending={pendingFaucet.has(defaultAcc.address)}
-              onFaucet={onFaucet}
-            />
-          )}
-          {otherAccs.length > 0 && (
-            <details className="ganache-dock__more">
-              <summary>+{otherAccs.length} other accounts</summary>
-              <div className="ganache-dock__more-list">
-                {otherAccs.map((a) => (
-                  <AccountRow
-                    key={a.address}
-                    acc={a}
-                    pending={pendingFaucet.has(a.address)}
-                    onFaucet={onFaucet}
-                  />
+          </section>
+
+          <section className="ganache-dock__panel ganache-dock__panel--contracts">
+            <header className="ganache-dock__panel-header">
+              <span className="ganache-dock__panel-label">Contracts</span>
+              <span className="ganache-dock__panel-meta">
+                {snap.contracts.length}
+              </span>
+            </header>
+            <div className="ganache-dock__panel-body">
+              {snap.contracts.length === 0 && (
+                <div className="ganache-dock__empty ganache-dock__empty--inline">
+                  No deploys yet.
+                </div>
+              )}
+              <ul className="ganache-dock__contract-list">
+                {snap.contracts.slice(0, 8).map((c) => (
+                  <li key={c.address} className="ganache-dock__contract">
+                    <span className="ganache-dock__contract-name">{c.name}</span>
+                    <span className="ganache-dock__contract-addr">
+                      {shortAddr(c.address)}
+                    </span>
+                    <span className="ganache-dock__contract-block">
+                      block {c.deployedAtBlock.toString()}
+                    </span>
+                  </li>
                 ))}
-              </div>
-            </details>
-          )}
-        </section>
-
-        <section className="ganache-dock__panel ganache-dock__panel--contracts">
-          <h3 className="ganache-dock__panel-title">
-            Contracts
-            <span className="ganache-dock__count">{snap.contracts.length}</span>
-          </h3>
-          {snap.contracts.length === 0 && (
-            <div className="ganache-dock__empty ganache-dock__empty--inline">
-              No deploys yet.
+              </ul>
             </div>
-          )}
-          <ul className="ganache-dock__contract-list">
-            {snap.contracts.slice(0, 8).map((c) => (
-              <li key={c.address} className="ganache-dock__contract">
-                <span className="ganache-dock__contract-name">{c.name}</span>
-                <span className="ganache-dock__contract-addr">
-                  {shortAddr(c.address)}
-                </span>
-                <span className="ganache-dock__contract-block">
-                  block {c.deployedAtBlock.toString()}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
+          </section>
 
-        <section className="ganache-dock__panel ganache-dock__panel--txs">
-          <h3 className="ganache-dock__panel-title">
-            Recent transactions
-            <span className="ganache-dock__count">{snap.txs.length}</span>
-          </h3>
-          {snap.txs.length === 0 && (
-            <div className="ganache-dock__empty ganache-dock__empty--inline">
-              No txs yet.
+          <section className="ganache-dock__panel ganache-dock__panel--txs">
+            <header className="ganache-dock__panel-header">
+              <span className="ganache-dock__panel-label">Recent transactions</span>
+              <span className="ganache-dock__panel-meta">{snap.txs.length}</span>
+            </header>
+            <div className="ganache-dock__panel-body">
+              {snap.txs.length === 0 && (
+                <div className="ganache-dock__empty ganache-dock__empty--inline">
+                  No txs yet.
+                </div>
+              )}
+              <ul className="ganache-dock__tx-list">
+                {snap.txs.slice(0, 8).map((tx) => (
+                  <TxRow key={tx.hash} tx={tx} />
+                ))}
+              </ul>
             </div>
-          )}
-          <ul className="ganache-dock__tx-list">
-            {snap.txs.slice(0, 8).map((tx) => (
-              <TxRow key={tx.hash} tx={tx} />
-            ))}
-          </ul>
-        </section>
+          </section>
+        </div>
       </div>
     </div>
   );
