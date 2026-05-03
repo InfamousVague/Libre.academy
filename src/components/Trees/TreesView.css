@@ -1,0 +1,451 @@
+/* Trees feature — picker shelf + DAG detail.
+ *
+ * Visual rules: single-screen rectangular layout that fits inside
+ * the right-pane (where Library and the lesson reader render). The
+ * shelf is a card grid; the DAG is depth-banded rows.
+ *
+ * Per-tree accent colour is set on the outer container as
+ * `--tree-accent` and consumed by node rings, progress bars, and
+ * the highlighted Next Up node.
+ */
+
+.fishbones-trees {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  padding: 24px 28px 32px;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+.fishbones-trees__header {
+  margin-bottom: 24px;
+}
+
+.fishbones-trees__title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 6px;
+  letter-spacing: -0.01em;
+}
+
+.fishbones-trees__blurb {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 0;
+  max-width: 64ch;
+  line-height: 1.45;
+}
+
+.fishbones-trees__section {
+  margin-top: 16px;
+}
+
+.fishbones-trees__section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--color-text-tertiary);
+  margin-bottom: 10px;
+}
+
+/* ── shelf grid ─────────────────────────────────────────────── */
+
+.fishbones-trees__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.fishbones-trees__card {
+  --tree-accent: #7faaff;
+  appearance: none;
+  text-align: left;
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-secondary);
+  border-radius: 10px;
+  padding: 14px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    transform 140ms ease,
+    box-shadow 140ms ease;
+  font-family: inherit;
+  color: var(--color-text-primary);
+}
+
+.fishbones-trees__card:hover {
+  border-color: var(--tree-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
+.fishbones-trees__card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fishbones-trees__card-tag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--tree-accent);
+  background: color-mix(in srgb, var(--tree-accent) 14%, transparent);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.fishbones-trees__card-pct {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--tree-accent);
+}
+
+.fishbones-trees__card-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.fishbones-trees__card-blurb {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  /* Clamp to ~3 lines so cards stay roughly the same height. */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.fishbones-trees__card-meta {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+}
+
+.fishbones-trees__card-bar {
+  height: 4px;
+  background: var(--color-bg-tertiary);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.fishbones-trees__card-bar-fill {
+  height: 100%;
+  background: var(--tree-accent);
+  transition: width 240ms ease;
+}
+
+/* ── detail (single tree DAG view) ──────────────────────────── */
+
+.fishbones-trees--detail {
+  --tree-accent: #7faaff;
+}
+
+.fishbones-trees__detail-head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.fishbones-trees__back {
+  appearance: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.fishbones-trees__back:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+.fishbones-trees__detail-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  letter-spacing: -0.01em;
+}
+
+.fishbones-trees__detail-blurb {
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.fishbones-trees__detail-progress {
+  text-align: right;
+}
+
+.fishbones-trees__detail-pct {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--tree-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.fishbones-trees__detail-pct-label {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+}
+
+/* ── DAG ─────────────────────────────────────────────────────── */
+
+.fishbones-trees__dag {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 8px 0 28px;
+}
+
+.fishbones-trees__dag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.fishbones-trees__node {
+  position: relative;
+  appearance: none;
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  border-radius: 8px;
+  padding: 10px 14px;
+  min-width: 140px;
+  font-size: 12.5px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 120ms ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fishbones-trees__node:hover:not(:disabled) {
+  border-color: var(--tree-accent);
+  transform: translateY(-1px);
+}
+
+.fishbones-trees__node--complete {
+  background: color-mix(in srgb, var(--tree-accent) 16%, var(--color-bg-secondary));
+  border-color: color-mix(in srgb, var(--tree-accent) 50%, transparent);
+}
+
+.fishbones-trees__node--locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+  /* Keep clickable so the side panel can still explain WHY it's
+   * locked — just visually flag it. */
+}
+
+.fishbones-trees__node--next {
+  border-color: var(--tree-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--tree-accent) 30%, transparent);
+}
+
+.fishbones-trees__node--gap {
+  border-style: dashed;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+}
+
+.fishbones-trees__node--selected {
+  border-color: var(--tree-accent);
+  background: color-mix(in srgb, var(--tree-accent) 10%, var(--color-bg-secondary));
+}
+
+.fishbones-trees__node-check {
+  color: var(--tree-accent);
+  font-weight: 700;
+}
+
+.fishbones-trees__node-lock,
+.fishbones-trees__node-gap-mark {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+}
+
+/* ── side panel ──────────────────────────────────────────────── */
+
+.fishbones-trees__panel {
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: min(360px, 92vw);
+  background: var(--color-bg-secondary);
+  border-left: 1px solid var(--color-border-default);
+  padding: 20px 22px;
+  overflow-y: auto;
+  z-index: 30;
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fishbones-trees__panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.fishbones-trees__panel-pre {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.fishbones-trees__panel-flag {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--tree-accent);
+  background: color-mix(in srgb, var(--tree-accent) 14%, transparent);
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.fishbones-trees__panel-flag--done {
+  color: #7fc97f;
+  background: rgba(127, 201, 127, 0.14);
+}
+
+.fishbones-trees__panel-flag--locked {
+  color: var(--color-text-tertiary);
+  background: var(--color-bg-tertiary);
+}
+
+.fishbones-trees__panel-flag--gap {
+  color: #c89cdf;
+  background: rgba(200, 156, 223, 0.14);
+}
+
+.fishbones-trees__panel-close {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: var(--color-text-tertiary);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.fishbones-trees__panel-close:hover {
+  color: var(--color-text-primary);
+}
+
+.fishbones-trees__panel-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.fishbones-trees__panel-summary {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.fishbones-trees__panel-locked,
+.fishbones-trees__panel-gap {
+  font-size: 12px;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.fishbones-trees__panel-locked ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-family: var(--font-mono, ui-monospace), monospace;
+  font-size: 11px;
+}
+
+.fishbones-trees__panel-lessons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.fishbones-trees__panel-lessons-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--color-text-tertiary);
+}
+
+.fishbones-trees__panel-lesson {
+  position: relative;
+  appearance: none;
+  text-align: left;
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-tertiary);
+  border-radius: 6px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--color-text-primary);
+  transition: all 120ms ease;
+}
+
+.fishbones-trees__panel-lesson:hover:not(:disabled) {
+  border-color: var(--tree-accent);
+}
+
+.fishbones-trees__panel-lesson:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.fishbones-trees__panel-lesson--done {
+  border-color: color-mix(in srgb, var(--tree-accent) 50%, transparent);
+}
+
+.fishbones-trees__panel-lesson-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.fishbones-trees__panel-lesson-course {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  margin-top: 2px;
+}
+
+.fishbones-trees__panel-lesson-check {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  color: var(--tree-accent);
+  font-weight: 700;
+}

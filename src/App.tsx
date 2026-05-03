@@ -20,7 +20,8 @@ import "@base/primitives/icon/icon.css";
 import Sidebar from "./components/Sidebar/Sidebar";
 import TopBar from "./components/TopBar/TopBar";
 import LessonReader from "./components/Lesson/LessonReader";
-import { GanacheDock } from "./components/GanacheDock/GanacheDock";
+import TreesView from "./components/Trees/TreesView";
+import { ChainDock } from "./components/ChainDock/ChainDock";
 import { openEvmDockPopout } from "./lib/evmDockPopout";
 import LessonNav from "./components/Lesson/LessonNav";
 import EditorPane from "./components/Editor/EditorPane";
@@ -456,7 +457,7 @@ export default function App() {
   /// iconbar. Selecting a lesson anywhere forces back to "courses" so the
   /// learner isn't stuck on a side view after clicking a sidebar item.
   const [view, setView] = useState<
-    "courses" | "profile" | "playground" | "library" | "docs"
+    "courses" | "profile" | "playground" | "library" | "docs" | "trees"
   >(
     "courses",
   );
@@ -1068,6 +1069,7 @@ export default function App() {
           onSelectCourse={openCourseFromLibrary}
           onLibrary={() => setView("library")}
           onSettings={() => setSettingsOpen(true)}
+          onTrees={() => setView("trees")}
           onPlayground={() => setView("playground")}
           onDocs={() => setView("docs")}
           // Docs nav is rendered IN this Sidebar (replaces the
@@ -1096,6 +1098,18 @@ export default function App() {
             />
           ) : view === "playground" ? (
             <PlaygroundView />
+          ) : view === "trees" ? (
+            <TreesView
+              courses={courses}
+              completed={completed}
+              onOpenLesson={(courseId, lessonId) => {
+                selectLesson(courseId, lessonId);
+                // Hand off to the lesson view so the learner lands
+                // directly in the chosen lesson; the trees panel
+                // closes itself by virtue of view changing.
+                setView("courses");
+              }}
+            />
           ) : view === "docs" ? (
             <DocsView
               activeId={docsActiveId}
@@ -1211,7 +1225,7 @@ export default function App() {
             </DeferredMount>
           ) : activeLesson && activeCourse ? (
             <>
-              {/* Ganache-style chain dock — appears above any
+              {/* local-chain dock — appears above any
                   smart-contract lesson so the learner can watch
                   account balances, recent deploys, and tx flow as
                   their tests run. Hides automatically when the
@@ -2469,7 +2483,7 @@ function findLesson(course: Course | null, lessonId: string | undefined): Lesson
   return null;
 }
 
-/// Show the GanacheDock when the lesson actively interacts with the
+/// Show the ChainDock when the lesson actively interacts with the
 /// EVM (`harness: "evm"`) OR when the lesson is a Solidity / Vyper
 /// exercise that compiles to bytecode. Other lessons in EVM courses
 /// (the chapter introduction reading, JS-only encoding drills) skip
@@ -2491,7 +2505,7 @@ function shouldShowEvmDock(lesson: Lesson, _course: Course): boolean {
 /// on real chain mutations.
 function EvmDockBanner() {
   return (
-    <GanacheDock
+    <ChainDock
       variant="banner"
       onOpenPopout={() => {
         void openEvmDockPopout();

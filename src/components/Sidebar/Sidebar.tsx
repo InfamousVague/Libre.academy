@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Icon } from "@base/primitives/icon";
 import { chevronRight } from "@base/primitives/icon/icons/chevron-right";
 import { chevronDown } from "@base/primitives/icon/icons/chevron-down";
@@ -7,6 +8,7 @@ import { code as codeIcon } from "@base/primitives/icon/icons/code";
 import { fileText } from "@base/primitives/icon/icons/file-text";
 import { helpCircle } from "@base/primitives/icon/icons/help-circle";
 import { libraryBig } from "@base/primitives/icon/icons/library-big";
+import { trees as treesIcon } from "@base/primitives/icon/icons/trees";
 import { settings as settingsIcon } from "@base/primitives/icon/icons/settings";
 import { download as downloadIcon } from "@base/primitives/icon/icons/download";
 import { x as xIcon } from "@base/primitives/icon/icons/x";
@@ -145,6 +147,10 @@ interface Props {
   /// Opens the course library modal.
   onLibrary: () => void;
   onSettings: () => void;
+  /// Trees route — skill-tree explorer. Optional so embeddings
+  /// without a trees pane (popped workbench, mobile) don't grow a
+  /// dead chip.
+  onTrees?: () => void;
   /// Playground route — free-form coding sandbox, jsfiddle-style.
   onPlayground?: () => void;
   /// Docs route — in-app documentation. Optional so embeddings of the
@@ -168,7 +174,7 @@ interface Props {
   /// its callback and lets the parent manage the state transition.
   /// "profile" stays a valid destination even though it's no longer in
   /// the sidebar — the top-bar streak pill's "View profile" CTA sets it.
-  activeView?: "courses" | "profile" | "playground" | "library" | "docs";
+  activeView?: "courses" | "profile" | "playground" | "library" | "docs" | "trees";
   onExportCourse?: (courseId: string, courseTitle: string) => void;
   onDeleteCourse?: (courseId: string, courseTitle: string) => void;
   onCourseSettings?: (courseId: string) => void;
@@ -196,6 +202,7 @@ export default function Sidebar({
   onSelectLesson,
   onSelectCourse,
   onLibrary,
+  onTrees,
   onSettings,
   onPlayground,
   onDocs,
@@ -321,6 +328,14 @@ export default function Sidebar({
           onClick={onLibrary}
           active={activeView === "library"}
         />
+        {onTrees && (
+          <SidebarNavItem
+            icon={treesIcon}
+            label="Trees"
+            onClick={onTrees}
+            active={activeView === "trees"}
+          />
+        )}
         {onPlayground && (
           <SidebarNavItem
             icon={terminalIcon}
@@ -521,11 +536,14 @@ export default function Sidebar({
       </nav>
       )}
 
-      {menu && (onExportCourse || onDeleteCourse || onCourseSettings || onResetCourse) && (
+      {menu && (onExportCourse || onDeleteCourse || onCourseSettings || onResetCourse) && createPortal(
         <div
           className="fishbones__context-menu"
           // Position at cursor. Fixed positioning so scroll state doesn't
           // matter — the window-level click listener dismisses us anyway.
+          // Portalled to document.body so the sidebar's `backdrop-filter`
+          // (which makes the sidebar a containing block for fixed
+          // descendants) doesn't clip us.
           style={{ left: menu.x, top: menu.y }}
           // Stop the click from bubbling to window and dismissing before
           // the item's onClick fires.
@@ -596,10 +614,11 @@ export default function Sidebar({
               </button>
             </>
           )}
-        </div>
+        </div>,
+        document.body,
       )}
 
-      {chapterMenu && onResetChapter && (
+      {chapterMenu && onResetChapter && createPortal(
         <div
           className="fishbones__context-menu"
           style={{ left: chapterMenu.x, top: chapterMenu.y }}
@@ -618,10 +637,11 @@ export default function Sidebar({
             </span>
             Reset chapter progress
           </button>
-        </div>
+        </div>,
+        document.body,
       )}
 
-      {lessonMenu && onResetLesson && (
+      {lessonMenu && onResetLesson && createPortal(
         <div
           className="fishbones__context-menu"
           style={{ left: lessonMenu.x, top: lessonMenu.y }}
@@ -640,7 +660,8 @@ export default function Sidebar({
             </span>
             Mark incomplete
           </button>
-        </div>
+        </div>,
+        document.body,
       )}
     </aside>
   );
