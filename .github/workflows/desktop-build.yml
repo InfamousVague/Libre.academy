@@ -153,6 +153,22 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: choco install imagemagick.app -y --no-progress
 
+      # macOS-only: tauri.conf.json hardcodes a Developer ID
+      # signing identity (the maintainer's local cert hash). On CI
+      # that identity isn't in the runner's keychain, so codesign
+      # fails with "The specified item could not be found in the
+      # keychain." Swap it to "-" (ad-hoc signing) just for the CI
+      # build — no edit to the on-disk config that would affect
+      # local developer builds. Produces an unsigned bundle that
+      # Gatekeeper warns about; proper code-signing is the
+      # follow-up signing/notarization step (see workflow header).
+      - name: 'Override macOS signing identity for CI (ad-hoc)'
+        if: matrix.os == 'macos-latest'
+        run: |
+          jq '.bundle.macOS.signingIdentity = "-"' src-tauri/tauri.conf.json > /tmp/conf.json
+          mv /tmp/conf.json src-tauri/tauri.conf.json
+          echo "Patched signingIdentity to '-' for CI."
+
       - name: Install npm deps
         run: npm ci
 

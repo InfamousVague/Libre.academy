@@ -25,7 +25,7 @@ import {
   createWriteStream,
   existsSync,
 } from "node:fs";
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir, readdir, rename, rm } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
@@ -116,11 +116,23 @@ async function extract(archive, ext, dst) {
     const flag = ext === "tar.gz" ? "z" : "J";
     await run("tar", [`-x${flag}f`, archive, "-C", dst, "--strip-components=1"]);
   } else if (ext === "zip") {
-    // macOS / Linux always have unzip; Windows uses tar these days
-    // but we stay platform-aware: spawn whichever's available.
-    await run("unzip", ["-q", archive, "-d", dst]);
-    // Windows zip wraps in a top-level dir — flatten by copying its
-    // contents up. Skipped on darwin/linux since we use tar instead.
+    // tar.exe ships with Windows 10+ and handles zips — using it
+    // here means we don't have to depend on `unzip` being installed
+    // (it isn't on stock GitHub Windows runners). On macOS / Linux
+    // tar also handles zips. The version-named wrapper directory
+    // (`node-vXX-win-x64/`) gets flattened below since tar's
+    // `--strip-components` flag is unreliable for zip on Windows
+    // (it works on GNU tar but not on Windows' bsdtar variant).
+    await run("tar", ["-xf", archive, "-C", dst]);
+    const entries = await readdir(dst);
+    if (entries.length === 1) {
+      const wrapperDir = join(dst, entries[0]);
+      const wrapperEntries = await readdir(wrapperDir);
+      for (const f of wrapperEntries) {
+        await rename(join(wrapperDir, f), join(dst, f));
+      }
+      await rm(wrapperDir, { recursive: true, force: true });
+    }
   } else {
     throw new Error(`unsupported archive ext: ${ext}`);
   }
