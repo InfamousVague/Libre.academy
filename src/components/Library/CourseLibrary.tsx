@@ -95,6 +95,12 @@ interface Props {
   /// dropdown still surfaces the explicit options for users who
   /// want them.
   onAddCourse?: () => void;
+  /// Opens the catalog browser modal — search the official Fishbones
+  /// library and install courses the user doesn't have yet. Distinct
+  /// from `onAddCourse` (which is for files the user already has on
+  /// disk) and from `onInstallCatalogEntry` (the lower-level install
+  /// primitive that the browser modal calls).
+  onBrowseCatalog?: () => void;
   /// Install a remote-catalog placeholder. Wired by App.tsx to fetch
   /// the .fishbones archive (desktop) or course JSON (web), persist
   /// it via storage.saveCourse, then refresh the in-memory list so
@@ -267,6 +273,7 @@ export default function CourseLibrary({
   onBulkExport,
   onUpdateCourse,
   onAddCourse,
+  onBrowseCatalog,
   onInstallCatalogEntry,
   mode = "modal",
 }: Props) {
@@ -630,7 +637,21 @@ export default function CourseLibrary({
                 onBulkPdfs={onBulkImport}
                 onDocsUrl={onDocsImport}
                 onArchive={onImportArchive}
+                onBrowseCatalog={onBrowseCatalog}
               />
+            )}
+            {/* On web (no onAddCourse), still surface the catalog
+                browser as a standalone button — web users can't
+                import files from disk, but they should still be
+                able to add catalog books. */}
+            {!onAddCourse && onBrowseCatalog && (
+              <button
+                type="button"
+                className="fishbones-library-import"
+                onClick={onBrowseCatalog}
+              >
+                Browse catalog
+              </button>
             )}
             {/* Fallback: when the host hasn't wired the new
                 onAddCourse handler (e.g. on web build, or in

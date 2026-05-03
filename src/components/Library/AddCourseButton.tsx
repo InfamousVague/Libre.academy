@@ -27,6 +27,11 @@ interface Props {
   /// picker handles archives too, so this is a redundant convenience
   /// — kept for users who specifically want the "Archive" affordance.
   onArchive?: () => void;
+  /// Opens the catalog browser modal so the user can search the
+  /// official Fishbones library and install courses they don't
+  /// have yet. Distinct from `onSmartPick` — that's for files /
+  /// URLs the user already has; this discovers what's available.
+  onBrowseCatalog?: () => void;
 }
 
 /// Single "Add course" entry point in the library header. Replaces
@@ -47,6 +52,7 @@ export default function AddCourseButton({
   onBulkPdfs,
   onDocsUrl,
   onArchive,
+  onBrowseCatalog,
 }: Props) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -176,6 +182,24 @@ export default function AddCourseButton({
                 </span>
                 <span className="fishbones-addcourse-item-hint">
                   .fishbones / .kata exports (also handled by the smart picker)
+                </span>
+              </span>
+            </button>
+          )}
+          {onBrowseCatalog && (
+            <button
+              type="button"
+              role="menuitem"
+              className="fishbones-addcourse-item"
+              onClick={() => dispatch(onBrowseCatalog)}
+            >
+              <Icon icon={libraryBig} size="xs" color="currentColor" />
+              <span className="fishbones-addcourse-item-body">
+                <span className="fishbones-addcourse-item-title">
+                  Browse catalog…
+                </span>
+                <span className="fishbones-addcourse-item-hint">
+                  Search and install books from the Fishbones library
                 </span>
               </span>
             </button>

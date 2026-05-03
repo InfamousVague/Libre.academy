@@ -69,6 +69,7 @@ import MobileMicroPuzzle from "./mobile/MobileMicroPuzzle";
 import AiAssistant from "./components/AiAssistant/AiAssistant";
 import MobileApp from "./mobile/MobileApp";
 import { InstallBanner } from "./components/InstallBanner/InstallBanner";
+import CatalogBrowser from "./components/CatalogBrowser/CatalogBrowser";
 import CommandPalette from "./components/CommandPalette/CommandPalette";
 import { VerifyCourseOverlay, type VerifySessionView } from "./components/VerifyCourse";
 import FixApplierDialog from "./components/FixApplier/FixApplierDialog";
@@ -193,6 +194,10 @@ export default function App() {
     string | null
   >(null);
   const [importOpen, setImportOpen] = useState(false);
+  // Catalog browser modal — discovery surface for the Fishbones
+  // library. Default seed only ships TRPL + Mastering Ethereum +
+  // challenges; users add anything else from here.
+  const [catalogBrowserOpen, setCatalogBrowserOpen] = useState(false);
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [docsImportOpen, setDocsImportOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -1148,6 +1153,7 @@ export default function App() {
                 onBulkExport={isWeb ? undefined : bulkExportLibrary}
                 onUpdateCourse={handleReapplyBundledStarter}
                 onAddCourse={isWeb ? undefined : handleAddCourse}
+                onBrowseCatalog={() => setCatalogBrowserOpen(true)}
                 onInstallCatalogEntry={handleInstallCatalogEntry}
               />
             </DeferredMount>
@@ -1251,6 +1257,7 @@ export default function App() {
                 onBulkExport={isWeb ? undefined : bulkExportLibrary}
                 onUpdateCourse={handleReapplyBundledStarter}
                 onAddCourse={isWeb ? undefined : handleAddCourse}
+                onBrowseCatalog={() => setCatalogBrowserOpen(true)}
                 onInstallCatalogEntry={handleInstallCatalogEntry}
               />
             </DeferredMount>
@@ -1501,6 +1508,14 @@ export default function App() {
           component self-gates on `isWeb` and a 30-day localStorage
           dismissal, so on desktop this is a no-op render. */}
       <InstallBanner />
+      <CatalogBrowser
+        open={catalogBrowserOpen}
+        onClose={() => setCatalogBrowserOpen(false)}
+        installedIds={new Set(courses.map((c) => c.id))}
+        onInstall={async (entry) => {
+          await handleInstallCatalogEntry(entry);
+        }}
+      />
 
       {/* First-launch sign-in nudge. Self-gates on
           `cloud.user === false` (= no token, not signed in) and on
