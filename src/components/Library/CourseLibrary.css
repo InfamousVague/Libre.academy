@@ -19,6 +19,9 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* Anchor absolutely-positioned children (e.g. the floating
+     "Update all" banner) inside the panel rather than the document. */
+  position: relative;
 }
 
 /* Inline variant — used as the right-pane content when no course tab is
@@ -59,6 +62,84 @@
   padding: 18px 22px;
   border-bottom: 1px solid var(--color-border-default);
   flex-shrink: 0;
+}
+
+/* "Update all" banner. Floats absolutely over the library so it
+   doesn't push the grid down — the user wants the panel-style
+   backdrop gone and the callout to sit on top of whatever's
+   underneath. Anchored to the top-right of the library so it lines
+   up with the Shelf/Grid toggle on the same row visually but lives
+   in a layer above. The button keeps its tinted-pill treatment
+   since it's the clickable affordance; the text floats naked
+   alongside it (no surface, just text). */
+.fishbones-library-update-banner {
+  position: absolute;
+  /* Anchored inside .fishbones-library-body (which already has
+     position: relative). 8px from the body's top so it sits
+     just inside the body padding edge but above the cards. */
+  top: 8px;
+  right: 22px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  pointer-events: none; /* let clicks fall through to the cards underneath */
+  flex-shrink: 0;
+}
+
+/* Re-enable pointer events on the button itself — the wrapper
+   ignores clicks so the cards beneath the banner stay reachable,
+   but Update all has to remain clickable. */
+.fishbones-library-update-banner-btn {
+  pointer-events: auto;
+}
+
+/* Inline mode body uses 12px horizontal padding instead of 22px —
+   match the right anchor so the banner sits in the same visual
+   gutter as the card grid below it. */
+.fishbones-library-panel--inline .fishbones-library-update-banner {
+  top: 8px;
+  right: 12px;
+}
+
+.fishbones-library-update-banner-text {
+  font-size: 13px;
+  color: var(--color-text-primary);
+  letter-spacing: -0.005em;
+}
+
+.fishbones-library-update-banner-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  background: rgba(108, 140, 255, 0.18);
+  color: #6c8cff;
+  border: 1px solid rgba(108, 140, 255, 0.4);
+  transition:
+    background 120ms ease,
+    transform 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.fishbones-library-update-banner-btn:hover:not(:disabled) {
+  background: rgba(108, 140, 255, 0.28);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(108, 140, 255, 0.25);
+}
+
+.fishbones-library-update-banner-btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
 }
 
 .fishbones-library-titleblock {

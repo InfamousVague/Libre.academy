@@ -12,6 +12,14 @@ import BookCover, {
 import CourseContextMenu, { useCourseMenu } from "../Shared/CourseContextMenu";
 import LanguageChip from "../LanguageChip/LanguageChip";
 import { prefetchCovers } from "../../hooks/useCourseCover";
+import { useCourseUpdates } from "../../hooks/useCourseUpdates";
+import { useCatalog } from "../../hooks/useCatalog";
+import {
+  placeholderCourseFromCatalog,
+  coverHref,
+  type CatalogEntry,
+} from "../../lib/catalog";
+import AddCourseButton from "./AddCourseButton";
 import "./CourseLibrary.css";
 
 /// Library display mode. `shelf` = tall 2:3 book-cover cards (the new
@@ -63,6 +71,28 @@ interface Props {
   /// the Import cluster. Skipped when the host doesn't offer it (e.g.
   /// the web-preview build with no filesystem access).
   onBulkExport?: () => void;
+  /// Reapply the bundled `public/starter-courses/<id>.json` over the
+  /// installed copy. Wired by App.tsx to `syncBundledToInstalled` +
+  /// `refreshCourses`. When supplied, the library shows an "update
+  /// available" badge on every course whose bundled hash differs
+  /// from its `bundleSha`. Click → run this handler. Optional —
+  /// hidden cleanly when the host doesn't wire it (e.g. tests).
+  onUpdateCourse?: (courseId: string) => Promise<void> | void;
+  /// Smart "Add course" entry point. Opens an OS file picker with
+  /// all supported formats (.pdf, .epub, .fishbones, .kata, .zip,
+  /// .json) and dispatches each picked file to the right pipeline.
+  /// When supplied, replaces the old 4-segment Book / Bulk books /
+  /// Docs site / Archive cluster with a single split button. The
+  /// dropdown still surfaces the explicit options for users who
+  /// want them.
+  onAddCourse?: () => void;
+  /// Install a remote-catalog placeholder. Wired by App.tsx to fetch
+  /// the .fishbones archive (desktop) or course JSON (web), persist
+  /// it via storage.saveCourse, then refresh the in-memory list so
+  /// the placeholder is replaced with the real installed cover. When
+  /// omitted the Library still renders catalog placeholders, but
+  /// they're inert (clicking does nothing).
+  onInstallCatalogEntry?: (entry: CatalogEntry) => Promise<void> | void;
   /// "modal" (default) — centered overlay with a dimmed backdrop; closed
   /// via the × button or clicking the backdrop.
   /// "inline" — renders inside the current container with no backdrop,
@@ -118,6 +148,9 @@ export default function CourseLibrary({
   onDelete,
   onSettings,
   onBulkExport,
+  onUpdateCourse,
+  onAddCourse,
+  onInstallCatalogEntry,
   mode = "modal",
 }: Props) {
   const isInline = mode === "inline";
@@ -155,9 +188,99 @@ export default function CourseLibrary({
     );
   }, [courses]);
 
+  // Per-course "update available" map. Each course's bundled JSON
+  // gets fetched + hashed on mount; cells with the badge fire
+  // `onUpdateCourse` when clicked. The hook also exposes `recheck`
+  // so we can clear the badge immediately after a successful update
+  // instead of waiting for the next mount.
+  const { updates, recheck } = useCourseUpdates(courses);
+
+  // Remote-catalog entries — anything in the catalog that isn't
+  // already installed gets rendered as a semi-opaque placeholder
+  // tile. The catalog is fetched once per app session (cached in
+  // src/lib/catalog.ts).
+  const { catalog } = useCatalog();
+  const installedIds = useMemo(
+    () => new Set(courses.map((c) => c.id)),
+    [courses],
+  );
+  const placeholderEntries = useMemo(
+    () => catalog.filter((e) => !installedIds.has(e.id)),
+    [catalog, installedIds],
+  );
+  const placeholderCourses = useMemo(
+    () => placeholderEntries.map(placeholderCourseFromCatalog),
+    [placeholderEntries],
+  );
+  // Map id → catalog entry for the install click handler — we need
+  // the original entry (with archiveUrl, file, etc.), not just the
+  // synthetic placeholder Course.
+  const entryById = useMemo(() => {
+    const m = new Map<string, CatalogEntry>();
+    for (const e of catalog) m.set(e.id, e);
+    return m;
+  }, [catalog]);
+
+  // Per-course "currently installing" tracker so the placeholder
+  // tile can show a spinner + disable click while a download is in
+  // flight. Mirrors the updatingIds pattern below.
+  const [installingIds, setInstallingIds] = useState<Set<string>>(new Set());
+
+  const handleInstallClick = async (courseId: string) => {
+    if (!onInstallCatalogEntry) return;
+    if (installingIds.has(courseId)) return;
+    const entry = entryById.get(courseId);
+    if (!entry) return;
+    setInstallingIds((prev) => {
+      const next = new Set(prev);
+      next.add(courseId);
+      return next;
+    });
+    try {
+      await onInstallCatalogEntry(entry);
+    } finally {
+      setInstallingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(courseId);
+        return next;
+      });
+    }
+  };
+
+  // Per-course "currently updating" tracker so the cover badge can
+  // render a spinner + disable clicks while a sync is in-flight.
+  // Without this the user got zero feedback during the multi-second
+  // fetch + write + hydrate cycle and tended to click the badge
+  // again, which is a no-op (the handler ignores re-entry) but felt
+  // like nothing was happening.
+  const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
+
+  const handleUpdateClick = async (courseId: string) => {
+    if (!onUpdateCourse) return;
+    if (updatingIds.has(courseId)) return; // re-entry guard
+    setUpdatingIds((prev) => {
+      const next = new Set(prev);
+      next.add(courseId);
+      return next;
+    });
+    try {
+      await onUpdateCourse(courseId);
+      await recheck(courseId);
+    } finally {
+      setUpdatingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(courseId);
+        return next;
+      });
+    }
+  };
+
   // Pre-compute per-course progress so sorting + display share one walk.
   const enriched = useMemo(() => {
-    return courses.map((c) => {
+    // Installed courses contribute real progress numbers from the
+    // user's completion set. Placeholders contribute 0 across the
+    // board — they have no installed lessons to count yet.
+    const installedRows = courses.map((c) => {
       let total = 0;
       let done = 0;
       for (const ch of c.chapters) {
@@ -173,7 +296,14 @@ export default function CourseLibrary({
         pct: total > 0 ? done / total : 0,
       };
     });
-  }, [courses, completed]);
+    const placeholderRows = placeholderCourses.map((c) => ({
+      course: c,
+      total: 0,
+      done: 0,
+      pct: 0,
+    }));
+    return [...installedRows, ...placeholderRows];
+  }, [courses, completed, placeholderCourses]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -293,46 +423,31 @@ export default function CourseLibrary({
                 "Bulk import…" three times — the label answers "what do
                 these buttons do" once; each segment is just the NAME of
                 the thing being imported. */}
-            {onImport && (
-            <div className="fishbones-library-import-group" role="group" aria-label="Import courses">
-              <span className="fishbones-library-import-label">Import</span>
-              <div className="fishbones-library-import-segmented">
-                <button
-                  className="fishbones-library-import-seg fishbones-library-import-seg--primary"
-                  onClick={onImport}
-                  title="Run the AI pipeline on a PDF or EPUB to generate a course"
-                >
-                  Book
-                </button>
-                {onBulkImport && (
-                  <button
-                    className="fishbones-library-import-seg"
-                    onClick={onBulkImport}
-                    title="Queue several books for unattended batch import"
-                  >
-                    Bulk books
-                  </button>
-                )}
-                {onDocsImport && (
-                  <button
-                    className="fishbones-library-import-seg"
-                    onClick={onDocsImport}
-                    title="Crawl a documentation website and generate a course from its pages"
-                  >
-                    Docs site
-                  </button>
-                )}
-                {onImportArchive && (
-                  <button
-                    className="fishbones-library-import-seg"
-                    onClick={onImportArchive}
-                    title="Import a previously-exported .fishbones archive (legacy .kata also supported)"
-                  >
-                    Archive
-                  </button>
-                )}
-              </div>
-            </div>
+            {/* Single "Add course" split button replaces the old
+                four-button cluster. The smart-pick path covers PDFs,
+                EPUBs, archives and JSON exports; the dropdown caret
+                surfaces the explicit alternatives (bulk wizard,
+                docs URL, archive picker) for users who want them. */}
+            {onAddCourse && (
+              <AddCourseButton
+                onSmartPick={onAddCourse}
+                onBulkPdfs={onBulkImport}
+                onDocsUrl={onDocsImport}
+                onArchive={onImportArchive}
+              />
+            )}
+            {/* Fallback: when the host hasn't wired the new
+                onAddCourse handler (e.g. on web build, or in
+                tests), fall back to the legacy "Book" button so
+                the library still has a visible import entry. */}
+            {!onAddCourse && onImport && (
+              <button
+                className="fishbones-library-import-seg fishbones-library-import-seg--primary"
+                onClick={onImport}
+                title="Run the AI pipeline on a PDF or EPUB to generate a course"
+              >
+                Import book…
+              </button>
             )}
             {onBulkExport && (
               <button
@@ -494,7 +609,66 @@ export default function CourseLibrary({
           </div>
         )}
 
+        {/*
+          "Update all" banner. Surfaces above the grid when one or more
+          installed courses have a pending update (the same condition
+          that makes individual book covers show their per-tile Update
+          badge). Sums the badges into a single click so a learner who
+          launches after a long break doesn't have to update each book
+          one-at-a-time.
+
+          Pending updates are computed from the same `updates` map the
+          per-cover badges read, minus anything already in flight via
+          `updatingIds`. This avoids re-firing in-flight syncs and
+          gives the banner a real-time count as updates complete.
+        */}
         <div className="fishbones-library-body">
+          {/* Update-all banner. Rendered INSIDE the body (not as a
+              sibling above) so its absolute positioning anchors to
+              the scroll container — that lets the banner float
+              over the first card row without pushing the grid down,
+              which the user wants ("floats on top of the library
+              without the background"). The body already has
+              position: relative for similar reasons. */}
+          {(() => {
+            const pendingIds = Object.entries(updates)
+              .filter(([id, hasUpdate]) => hasUpdate && !updatingIds.has(id))
+              .map(([id]) => id);
+            const inflightCount = courses.filter((c) => updatingIds.has(c.id)).length;
+            if (pendingIds.length === 0 && inflightCount === 0) return null;
+            const allBusy = pendingIds.length === 0 && inflightCount > 0;
+            // Update sequentially so we don't hammer the disk + render
+            // path with N parallel writes; the per-book sync also reads
+            // a fresh disk snapshot which serial cadence keeps simple.
+            const updateAll = async () => {
+              for (const id of pendingIds) {
+                await handleUpdateClick(id);
+              }
+            };
+            return (
+              <div
+                className="fishbones-library-update-banner"
+                role="status"
+                aria-live="polite"
+              >
+                <div className="fishbones-library-update-banner-text">
+                  {allBusy
+                    ? `Updating ${inflightCount} ${inflightCount === 1 ? "book" : "books"}…`
+                    : `${pendingIds.length} ${pendingIds.length === 1 ? "book has" : "books have"} updates available${inflightCount > 0 ? ` · ${inflightCount} in progress` : ""}`}
+                </div>
+                <button
+                  type="button"
+                  className="fishbones-library-update-banner-btn"
+                  onClick={updateAll}
+                  disabled={allBusy || pendingIds.length === 0}
+                  title="Re-sync each updated book against its bundled source"
+                >
+                  {allBusy ? "Updating…" : `Update all (${pendingIds.length})`}
+                </button>
+              </div>
+            );
+          })()}
+
           {courses.length === 0 ? (
             <div className="fishbones-library-empty">
               <div className="fishbones-library-empty-glyph" aria-hidden>
@@ -583,8 +757,35 @@ export default function CourseLibrary({
                         loading={hydrating?.has(e.course.id)}
                         onOpen={() => onOpen(e.course.id)}
                         onContextMenu={
-                          onExport || onDelete || onSettings
+                          // Placeholders have no installed-course
+                          // context menu (Export / Delete / Settings
+                          // need an installed copy on disk).
+                          !e.course.placeholder &&
+                          (onExport || onDelete || onSettings)
                             ? (ev) => ctxMenu.show(e.course, ev)
+                            : undefined
+                        }
+                        hasUpdate={
+                          !e.course.placeholder &&
+                          !!onUpdateCourse &&
+                          !!updates[e.course.id]
+                        }
+                        updating={updatingIds.has(e.course.id)}
+                        onUpdate={
+                          !e.course.placeholder && onUpdateCourse
+                            ? () => void handleUpdateClick(e.course.id)
+                            : undefined
+                        }
+                        placeholder={e.course.placeholder}
+                        installing={installingIds.has(e.course.id)}
+                        placeholderCoverUrl={
+                          e.course.placeholder
+                            ? coverHref(entryById.get(e.course.id)!)
+                            : undefined
+                        }
+                        onInstall={
+                          e.course.placeholder && onInstallCatalogEntry
+                            ? () => void handleInstallClick(e.course.id)
                             : undefined
                         }
                       />
