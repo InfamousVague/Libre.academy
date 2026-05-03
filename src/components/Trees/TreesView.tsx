@@ -8,10 +8,11 @@
 /// this into App-level routing later (?tree=foundations) but it's
 /// not worth the URL plumbing yet.
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { Course } from "../../data/types";
 import {
   TREES,
+  iconForSkill,
   layoutTree,
   isSkillComplete,
   isSkillUnlocked,
@@ -21,7 +22,100 @@ import {
   type SkillTree,
   type SkillNode,
 } from "../../data/trees";
+// Eager-import every lucide icon `iconForSkill` can return. Using a
+// static map keeps the bundler's dead-code path predictable — only
+// the icons listed below ship in the chunk that loads with the
+// Trees view, regardless of which trees the learner explores.
+import { box } from "@base/primitives/icon/icons/box";
+import { calculator } from "@base/primitives/icon/icons/calculator";
+import { quote } from "@base/primitives/icon/icons/quote";
+import { toggleLeft } from "@base/primitives/icon/icons/toggle-left";
+import { equal } from "@base/primitives/icon/icons/equal";
+import { gitBranch } from "@base/primitives/icon/icons/git-branch";
+import { repeat } from "@base/primitives/icon/icons/repeat";
+import { parentheses } from "@base/primitives/icon/icons/parentheses";
+import { cornerDownLeft } from "@base/primitives/icon/icons/corner-down-left";
+import { list } from "@base/primitives/icon/icons/list";
+import { iconPackage as packageIcon } from "@base/primitives/icon/icons/package";
+import { layers } from "@base/primitives/icon/icons/layers";
+import { infinity as infinityIcon } from "@base/primitives/icon/icons/infinity";
+import { alertTriangle } from "@base/primitives/icon/icons/alert-triangle";
+import { terminal } from "@base/primitives/icon/icons/terminal";
+import { fileText } from "@base/primitives/icon/icons/file-text";
+import { checkCircle } from "@base/primitives/icon/icons/check-circle";
+import { code as codeIcon } from "@base/primitives/icon/icons/code";
+import { palette } from "@base/primitives/icon/icons/palette";
+import { mousePointer2 } from "@base/primitives/icon/icons/mouse-pointer-2";
+import { zap } from "@base/primitives/icon/icons/zap";
+import { download } from "@base/primitives/icon/icons/download";
+import { hourglass } from "@base/primitives/icon/icons/hourglass";
+import { atom } from "@base/primitives/icon/icons/atom";
+import { route } from "@base/primitives/icon/icons/route";
+import { type as typeIcon } from "@base/primitives/icon/icons/type";
+import { server } from "@base/primitives/icon/icons/server";
+import { sparkles } from "@base/primitives/icon/icons/sparkles";
+import { cpu } from "@base/primitives/icon/icons/cpu";
+import { database } from "@base/primitives/icon/icons/database";
+import { functionSquare } from "@base/primitives/icon/icons/function-square";
+import { radio } from "@base/primitives/icon/icons/radio";
+import { shield } from "@base/primitives/icon/icons/shield";
+import { coins } from "@base/primitives/icon/icons/coins";
+import { image as imageIcon } from "@base/primitives/icon/icons/image";
+import { fuel } from "@base/primitives/icon/icons/fuel";
+import { factory } from "@base/primitives/icon/icons/factory";
+import { link } from "@base/primitives/icon/icons/link";
+import { arrowLeftRight } from "@base/primitives/icon/icons/arrow-left-right";
+import { vote } from "@base/primitives/icon/icons/vote";
+import { treePine } from "@base/primitives/icon/icons/tree-pine";
+import { signature } from "@base/primitives/icon/icons/signature";
+import { memoryStick } from "@base/primitives/icon/icons/memory-stick";
+import { arrowRight } from "@base/primitives/icon/icons/arrow-right";
+import { alignJustify } from "@base/primitives/icon/icons/align-justify";
+import { boxes } from "@base/primitives/icon/icons/boxes";
+import { packagePlus } from "@base/primitives/icon/icons/package-plus";
+import { link2 } from "@base/primitives/icon/icons/link-2";
+import { code2 } from "@base/primitives/icon/icons/code-2";
+import { cog } from "@base/primitives/icon/icons/cog";
+import { network } from "@base/primitives/icon/icons/network";
+import { binary } from "@base/primitives/icon/icons/binary";
+import { smartphone } from "@base/primitives/icon/icons/smartphone";
+import { bird } from "@base/primitives/icon/icons/bird";
+import { appWindow } from "@base/primitives/icon/icons/app-window";
+import { watch } from "@base/primitives/icon/icons/watch";
+import { leaf } from "@base/primitives/icon/icons/leaf";
+import { combine } from "@base/primitives/icon/icons/combine";
+import { sigma } from "@base/primitives/icon/icons/sigma";
+import { gauge } from "@base/primitives/icon/icons/gauge";
+import { hash } from "@base/primitives/icon/icons/hash";
+import { arrowDownUp } from "@base/primitives/icon/icons/arrow-down-up";
+import { search } from "@base/primitives/icon/icons/search";
+import { grid3x3 } from "@base/primitives/icon/icons/grid-3x3";
+import { target } from "@base/primitives/icon/icons/target";
+import { triangle } from "@base/primitives/icon/icons/triangle";
+import { circle } from "@base/primitives/icon/icons/circle";
+import "@base/primitives/icon/icon.css";
 import "./TreesView.css";
+
+/// Lucide-id → svg-paths-string map. The `Icon` component takes a
+/// raw string of inner SVG paths; we look up by the same id strings
+/// `iconForSkill` returns. Keep this in lockstep with that
+/// function — adding a new icon means an entry here AND a mapping
+/// rule there.
+const ICON_REGISTRY: Record<string, string> = {
+  box, calculator, quote, "toggle-left": toggleLeft, equal, "git-branch": gitBranch,
+  repeat, parentheses, "corner-down-left": cornerDownLeft, list, package: packageIcon,
+  layers, infinity: infinityIcon, "alert-triangle": alertTriangle, terminal,
+  "file-text": fileText, "check-circle": checkCircle, code: codeIcon, palette,
+  "mouse-pointer-2": mousePointer2, zap, download, hourglass, atom, route,
+  type: typeIcon, server, sparkles, cpu, database, "function-square": functionSquare,
+  radio, shield, coins, image: imageIcon, fuel, factory, link,
+  "arrow-left-right": arrowLeftRight, vote, "tree-pine": treePine, signature,
+  "memory-stick": memoryStick, "arrow-right": arrowRight, "align-justify": alignJustify,
+  boxes, "package-plus": packagePlus, "link-2": link2, "code-2": code2, cog, network,
+  binary, smartphone, bird, "app-window": appWindow, watch, leaf, combine, sigma,
+  gauge, hash, "arrow-down-up": arrowDownUp, search, "grid-3x3": grid3x3, target,
+  triangle, circle,
+};
 
 interface Props {
   courses: readonly Course[];
@@ -151,6 +245,65 @@ interface TreeDetailProps {
   onOpenLesson: (courseId: string, lessonId: string) => void;
 }
 
+/// Web-style layout: each node gets an (x, y) coord, nodes at the
+/// same depth share a row, x is biased toward the average of each
+/// node's prereqs' x so children sit roughly under their parents.
+/// Greedy collision resolution within a row keeps spacing minimum.
+const ROW_HEIGHT = 110;
+const NODE_RADIUS = 28;
+const COL_SPACING = 88;
+const ROOT_SPACING = 140;
+
+interface PositionedNode extends SkillNode {
+  depth: number;
+  x: number;
+  y: number;
+}
+
+function layoutWeb(tree: SkillTree): PositionedNode[] {
+  const sized = layoutTree(tree);
+  const byDepth = new Map<number, typeof sized>();
+  for (const n of sized) {
+    const arr = byDepth.get(n.depth) ?? [];
+    arr.push(n);
+    byDepth.set(n.depth, arr);
+  }
+  const placed = new Map<string, PositionedNode>();
+  const depths = [...byDepth.keys()].sort((a, b) => a - b);
+  for (const d of depths) {
+    const row = byDepth.get(d)!;
+    if (d === 0) {
+      // Roots: distribute evenly around 0
+      const total = row.length;
+      const startX = -((total - 1) * ROOT_SPACING) / 2;
+      row.forEach((n, i) => {
+        placed.set(n.id, {
+          ...n,
+          x: startX + i * ROOT_SPACING,
+          y: d * ROW_HEIGHT,
+        });
+      });
+      continue;
+    }
+    // Position relative to parents' average x.
+    const proposed = row.map((n) => {
+      const px = n.prereqs
+        .map((p) => placed.get(p)?.x ?? 0)
+        .reduce((a, b) => a + b, 0);
+      const avg = n.prereqs.length ? px / n.prereqs.length : 0;
+      return { node: n, desiredX: avg };
+    });
+    proposed.sort((a, b) => a.desiredX - b.desiredX);
+    let lastX = -Infinity;
+    for (const { node, desiredX } of proposed) {
+      const x = Math.max(desiredX, lastX + COL_SPACING);
+      lastX = x;
+      placed.set(node.id, { ...node, x, y: d * ROW_HEIGHT });
+    }
+  }
+  return [...placed.values()];
+}
+
 function TreeDetail({
   tree,
   courses,
@@ -159,7 +312,13 @@ function TreeDetail({
   onOpenLesson,
 }: TreeDetailProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const layout = useMemo(() => layoutTree(tree), [tree]);
+  const [hover, setHover] = useState<{
+    nodeId: string;
+    x: number;
+    y: number;
+  } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const positioned = useMemo(() => layoutWeb(tree), [tree]);
   const byId = useMemo(() => {
     const m = new Map<string, SkillNode>();
     for (const n of tree.nodes) m.set(n.id, n);
@@ -171,20 +330,25 @@ function TreeDetail({
   );
   const pct = treeProgressPercent(tree, completed);
 
-  // Group nodes by depth → render one row per depth band.
-  const rows = useMemo(() => {
-    const map = new Map<number, typeof layout>();
-    for (const n of layout) {
-      const arr = map.get(n.depth) ?? [];
-      arr.push(n);
-      map.set(n.depth, arr);
-    }
-    return Array.from(map.entries())
-      .sort((a, b) => a[0] - b[0])
-      .map(([depth, nodes]) => ({ depth, nodes }));
-  }, [layout]);
+  // Compute SVG viewBox + canvas size from the positioned nodes.
+  // The greedy layout outputs raw coordinates; we shift them so the
+  // leftmost node sits at x = padding and the SVG starts at 0.
+  const PAD_X = 60;
+  const PAD_Y = 40;
+  const minX = positioned.reduce((acc, n) => Math.min(acc, n.x), Infinity);
+  const maxX = positioned.reduce((acc, n) => Math.max(acc, n.x), -Infinity);
+  const maxY = positioned.reduce((acc, n) => Math.max(acc, n.y), 0);
+  const offsetX = -minX + PAD_X;
+  const width = maxX - minX + PAD_X * 2;
+  const height = maxY + PAD_Y * 2;
+  const posMap = useMemo(() => {
+    const m = new Map<string, { x: number; y: number }>();
+    for (const n of positioned) m.set(n.id, { x: n.x + offsetX, y: n.y + PAD_Y });
+    return m;
+  }, [positioned, offsetX]);
 
   const selected = selectedId ? byId.get(selectedId) ?? null : null;
+  const hovered = hover ? byId.get(hover.nodeId) ?? null : null;
 
   return (
     <div
@@ -212,62 +376,184 @@ function TreeDetail({
         </div>
       </header>
 
-      <div className="fishbones-trees__dag">
-        {rows.map((row) => (
-          <div key={row.depth} className="fishbones-trees__dag-row">
-            {row.nodes.map((n) => {
-              const complete = isSkillComplete(n, completed);
-              const unlocked = isSkillUnlocked(n, byId, completed);
-              const isNext = nextUp?.id === n.id;
-              const isGap = n.matches.length === 0;
+      <div className="fishbones-trees__web-scroll" ref={containerRef}>
+        <svg
+          className="fishbones-trees__web"
+          width={Math.max(width, 600)}
+          height={height}
+          viewBox={`0 0 ${Math.max(width, 600)} ${height}`}
+        >
+          {/* Edges first — drawn under the circles. Cubic bezier
+              with control points pulled toward the row midpoint
+              gives the curves an organic, "skill-tree" feel rather
+              than diagonal straight lines. */}
+          {tree.nodes.flatMap((n) => {
+            const childPos = posMap.get(n.id);
+            if (!childPos) return [];
+            const childComplete = isSkillComplete(n, completed);
+            const childUnlocked = isSkillUnlocked(n, byId, completed);
+            return n.prereqs.map((pid) => {
+              const parentPos = posMap.get(pid);
+              if (!parentPos) return null;
+              const parentNode = byId.get(pid);
+              const parentComplete = parentNode
+                ? isSkillComplete(parentNode, completed)
+                : false;
+              // Active edge = both ends complete (the path the
+              // learner has already walked). Inert otherwise.
+              const active = parentComplete && childComplete;
+              const reachable = parentComplete && childUnlocked;
+              const midY = (parentPos.y + childPos.y) / 2;
+              const d = `M ${parentPos.x} ${parentPos.y + NODE_RADIUS} C ${parentPos.x} ${midY}, ${childPos.x} ${midY}, ${childPos.x} ${childPos.y - NODE_RADIUS}`;
               return (
-                <button
-                  key={n.id}
-                  type="button"
+                <path
+                  key={`${pid}->${n.id}`}
                   className={[
-                    "fishbones-trees__node",
-                    complete && "fishbones-trees__node--complete",
-                    !unlocked && "fishbones-trees__node--locked",
-                    isNext && "fishbones-trees__node--next",
-                    isGap && "fishbones-trees__node--gap",
-                    selectedId === n.id &&
-                      "fishbones-trees__node--selected",
+                    "fishbones-trees__edge",
+                    active && "fishbones-trees__edge--active",
+                    !active && reachable && "fishbones-trees__edge--reachable",
                   ]
                     .filter(Boolean)
                     .join(" ")}
-                  onClick={() => setSelectedId(n.id)}
-                  title={
-                    !unlocked
-                      ? `Locked — finish ${n.prereqs.join(", ")} first`
-                      : isGap
-                        ? `Coming soon — ${n.gapNote ?? "content needed"}`
-                        : n.summary
-                  }
-                >
-                  <span className="fishbones-trees__node-label">{n.label}</span>
-                  {complete && (
-                    <span className="fishbones-trees__node-check" aria-hidden>
-                      ✓
-                    </span>
-                  )}
-                  {!unlocked && (
-                    <span className="fishbones-trees__node-lock" aria-hidden>
-                      🔒
-                    </span>
-                  )}
-                  {isGap && unlocked && (
-                    <span
-                      className="fishbones-trees__node-gap-mark"
-                      aria-hidden
-                    >
-                      …
-                    </span>
-                  )}
-                </button>
+                  d={d}
+                  fill="none"
+                />
               );
-            })}
+            });
+          })}
+
+          {/* Nodes — circle + lucide icon, with state-based class
+              modifiers for complete / locked / next-up / gap. */}
+          {positioned.map((n) => {
+            const pos = posMap.get(n.id)!;
+            const complete = isSkillComplete(n, completed);
+            const unlocked = isSkillUnlocked(n, byId, completed);
+            const isNext = nextUp?.id === n.id;
+            const isGap = n.matches.length === 0;
+            const iconName = iconForSkill(n.id);
+            const iconPaths = ICON_REGISTRY[iconName] ?? ICON_REGISTRY.circle;
+            return (
+              <g
+                key={n.id}
+                className={[
+                  "fishbones-trees__node",
+                  complete && "fishbones-trees__node--complete",
+                  !unlocked && "fishbones-trees__node--locked",
+                  isNext && "fishbones-trees__node--next",
+                  isGap && "fishbones-trees__node--gap",
+                  selectedId === n.id && "fishbones-trees__node--selected",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                transform={`translate(${pos.x} ${pos.y})`}
+                onMouseEnter={() =>
+                  setHover({ nodeId: n.id, x: pos.x, y: pos.y })
+                }
+                onMouseLeave={() =>
+                  setHover((h) => (h?.nodeId === n.id ? null : h))
+                }
+                onClick={() => setSelectedId(n.id)}
+              >
+                <circle
+                  className="fishbones-trees__node-circle"
+                  r={NODE_RADIUS}
+                  cx={0}
+                  cy={0}
+                />
+                {isNext && !complete && (
+                  /* Pulsing accent ring so the learner's eye lands
+                     on the recommended-next node first. */
+                  <circle
+                    className="fishbones-trees__node-pulse"
+                    r={NODE_RADIUS + 4}
+                    cx={0}
+                    cy={0}
+                    fill="none"
+                  />
+                )}
+                <g
+                  className="fishbones-trees__node-icon"
+                  /* lucide path strings live in a 24×24 box; centre
+                     by translating -12,-12 inside the group. */
+                  transform="translate(-12 -12)"
+                  dangerouslySetInnerHTML={{ __html: iconPaths }}
+                />
+                {/* Label below the circle. Truncated to 20 chars
+                    so wide labels don't crash into neighbours. */}
+                <text
+                  className="fishbones-trees__node-text"
+                  y={NODE_RADIUS + 16}
+                  textAnchor="middle"
+                >
+                  {n.label.length > 20 ? n.label.slice(0, 18) + "…" : n.label}
+                </text>
+                {complete && (
+                  <text
+                    className="fishbones-trees__node-mark"
+                    y={-NODE_RADIUS - 6}
+                    textAnchor="middle"
+                  >
+                    ✓
+                  </text>
+                )}
+                {!unlocked && (
+                  <text
+                    className="fishbones-trees__node-mark fishbones-trees__node-mark--lock"
+                    y={-NODE_RADIUS - 6}
+                    textAnchor="middle"
+                  >
+                    🔒
+                  </text>
+                )}
+              </g>
+            );
+          })}
+        </svg>
+
+        {/* Hover tooltip — separate HTML layer so we can style with
+            real CSS (text wrapping, padding, drop-shadow) and keep
+            a11y predictable. Positioned in the SCROLL container,
+            not the page, so it tracks scroll naturally. */}
+        {hover && hovered && (
+          <div
+            className="fishbones-trees__tooltip"
+            style={{
+              left: hover.x + offsetX + NODE_RADIUS + 12,
+              top: hover.y + PAD_Y - 4,
+            }}
+            role="tooltip"
+          >
+            <div className="fishbones-trees__tooltip-title">
+              {hovered.label}
+            </div>
+            <div className="fishbones-trees__tooltip-body">
+              {hovered.summary}
+            </div>
+            <div className="fishbones-trees__tooltip-state">
+              {isSkillComplete(hovered, completed) && (
+                <span className="fishbones-trees__tooltip-flag fishbones-trees__tooltip-flag--done">
+                  Complete
+                </span>
+              )}
+              {nextUp?.id === hovered.id && !isSkillComplete(hovered, completed) && (
+                <span className="fishbones-trees__tooltip-flag">
+                  Next up
+                </span>
+              )}
+              {!isSkillUnlocked(hovered, byId, completed) && (
+                <span className="fishbones-trees__tooltip-flag fishbones-trees__tooltip-flag--locked">
+                  Locked — needs {hovered.prereqs.length} prereq
+                  {hovered.prereqs.length === 1 ? "" : "s"}
+                </span>
+              )}
+              {hovered.matches.length === 0 && (
+                <span className="fishbones-trees__tooltip-flag fishbones-trees__tooltip-flag--gap">
+                  Coming soon
+                </span>
+              )}
+            </div>
           </div>
-        ))}
+        )}
       </div>
 
       {selected && (

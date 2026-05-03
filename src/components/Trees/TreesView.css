@@ -205,83 +205,238 @@
   color: var(--color-text-tertiary);
 }
 
-/* ── DAG ─────────────────────────────────────────────────────── */
+/* ── Web layout (SVG circles + bezier connectors) ─────────────── */
 
-.fishbones-trees__dag {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  padding: 8px 0 28px;
+/* Scroll container. Vertical-scroll-friendly so the learner can
+ * browse a tall tree without horizontal nav. The SVG inside grows
+ * to its content size; the container clips and scrolls vertically. */
+.fishbones-trees__web-scroll {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 0 32px;
 }
 
-.fishbones-trees__dag-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
+.fishbones-trees__web {
+  display: block;
+  margin: 0 auto;
 }
+
+/* ── edges (cubic bezier curves between connected nodes) ─────── */
+
+.fishbones-trees__edge {
+  stroke: var(--color-border-default);
+  stroke-width: 1.5;
+  fill: none;
+  transition: stroke 200ms ease;
+}
+
+/* Edge whose source node is complete AND target is also complete
+ * — the path the learner has actually walked. Drawn in the tree's
+ * accent so the completed sub-graph stands out. */
+.fishbones-trees__edge--active {
+  stroke: var(--tree-accent);
+  stroke-width: 2;
+}
+
+/* Edge whose source is complete but target is still incomplete —
+ * the "wavefront" of available next steps. Slightly accented so
+ * the learner can trace where to go next visually. */
+.fishbones-trees__edge--reachable {
+  stroke: color-mix(in srgb, var(--tree-accent) 50%, var(--color-border-default));
+  stroke-width: 1.5;
+}
+
+/* ── nodes (circle + icon + label below) ─────────────────────── */
 
 .fishbones-trees__node {
-  position: relative;
-  appearance: none;
-  border: 1px solid var(--color-border-default);
-  background: var(--color-bg-secondary);
-  color: var(--color-text-primary);
-  border-radius: 8px;
-  padding: 10px 14px;
-  min-width: 140px;
-  font-size: 12.5px;
-  font-weight: 500;
-  font-family: inherit;
   cursor: pointer;
-  transition: all 120ms ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  transition: transform 140ms ease;
 }
 
-.fishbones-trees__node:hover:not(:disabled) {
-  border-color: var(--tree-accent);
-  transform: translateY(-1px);
+.fishbones-trees__node:hover {
+  transform: translate(var(--node-x, 0px), var(--node-y, 0px)) scale(1.04);
+  /* note: SVG `transform` on <g> isn't directly composable with CSS
+   * transforms in all engines — we set a per-node `--node-x/--node-y`
+   * via inline style WHEN we want the hover scale; otherwise the
+   * inline transform from React already places the group correctly.
+   * Skipping the scale on hover for simplicity is fine — the
+   * circle stroke + tooltip already convey hover. */
 }
 
-.fishbones-trees__node--complete {
-  background: color-mix(in srgb, var(--tree-accent) 16%, var(--color-bg-secondary));
-  border-color: color-mix(in srgb, var(--tree-accent) 50%, transparent);
+.fishbones-trees__node-circle {
+  fill: var(--color-bg-secondary);
+  stroke: var(--color-border-default);
+  stroke-width: 2;
+  transition:
+    fill 200ms ease,
+    stroke 200ms ease,
+    stroke-width 200ms ease;
+}
+
+.fishbones-trees__node:hover .fishbones-trees__node-circle {
+  stroke: var(--tree-accent);
+  stroke-width: 2.5;
+}
+
+.fishbones-trees__node--complete .fishbones-trees__node-circle {
+  fill: color-mix(in srgb, var(--tree-accent) 22%, var(--color-bg-secondary));
+  stroke: var(--tree-accent);
 }
 
 .fishbones-trees__node--locked {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
-  /* Keep clickable so the side panel can still explain WHY it's
-   * locked — just visually flag it. */
 }
 
-.fishbones-trees__node--next {
-  border-color: var(--tree-accent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--tree-accent) 30%, transparent);
+.fishbones-trees__node--locked .fishbones-trees__node-circle {
+  stroke-dasharray: 3 3;
 }
 
-.fishbones-trees__node--gap {
-  border-style: dashed;
-  background: var(--color-bg-tertiary);
-  color: var(--color-text-secondary);
+.fishbones-trees__node--next .fishbones-trees__node-circle {
+  stroke: var(--tree-accent);
+  stroke-width: 2.5;
 }
 
-.fishbones-trees__node--selected {
-  border-color: var(--tree-accent);
-  background: color-mix(in srgb, var(--tree-accent) 10%, var(--color-bg-secondary));
+.fishbones-trees__node--gap .fishbones-trees__node-circle {
+  fill: var(--color-bg-tertiary);
+  stroke-dasharray: 4 3;
+  stroke: var(--color-text-tertiary);
 }
 
-.fishbones-trees__node-check {
-  color: var(--tree-accent);
+.fishbones-trees__node--selected .fishbones-trees__node-circle {
+  stroke: var(--tree-accent);
+  stroke-width: 3;
+}
+
+/* Pulsing ring around the recommended-next node so the learner's
+ * eye lands there first. Uses the same accent as the edges. */
+.fishbones-trees__node-pulse {
+  stroke: var(--tree-accent);
+  stroke-width: 2;
+  fill: none;
+  opacity: 0.55;
+  animation: fishbones-trees-pulse 1800ms ease-in-out infinite;
+}
+
+@keyframes fishbones-trees-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0;
+  }
+}
+
+/* Lucide icon inside the circle. Stroke styles inherited from the
+ * standard lucide CSS (lucide-static ships path strings; we apply
+ * the canonical 24×24 stroke=2 convention here). */
+.fishbones-trees__node-icon {
+  pointer-events: none;
+  stroke: var(--color-text-primary);
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fishbones-trees__node--complete .fishbones-trees__node-icon {
+  stroke: var(--tree-accent);
+}
+
+.fishbones-trees__node--gap .fishbones-trees__node-icon {
+  stroke: var(--color-text-tertiary);
+}
+
+.fishbones-trees__node-text {
+  font-family: var(--font-sans, system-ui), sans-serif;
+  font-size: 11.5px;
+  font-weight: 500;
+  fill: var(--color-text-secondary);
+  pointer-events: none;
+}
+
+.fishbones-trees__node--complete .fishbones-trees__node-text,
+.fishbones-trees__node--next .fishbones-trees__node-text {
+  fill: var(--color-text-primary);
+}
+
+.fishbones-trees__node-mark {
+  font-size: 12px;
   font-weight: 700;
+  fill: var(--tree-accent);
+  pointer-events: none;
 }
 
-.fishbones-trees__node-lock,
-.fishbones-trees__node-gap-mark {
-  font-size: 11px;
+.fishbones-trees__node-mark--lock {
+  fill: var(--color-text-tertiary);
+}
+
+/* ── hover tooltip ───────────────────────────────────────────── */
+
+.fishbones-trees__tooltip {
+  position: absolute;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  border-left: 3px solid var(--tree-accent);
+  border-radius: 8px;
+  padding: 10px 12px;
+  max-width: 260px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.32);
+  pointer-events: none;
+  z-index: 20;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--color-text-primary);
+}
+
+.fishbones-trees__tooltip-title {
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: -0.005em;
+  margin-bottom: 4px;
+}
+
+.fishbones-trees__tooltip-body {
+  color: var(--color-text-secondary);
+  font-size: 11.5px;
+  line-height: 1.45;
+  margin-bottom: 6px;
+}
+
+.fishbones-trees__tooltip-state {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.fishbones-trees__tooltip-flag {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--tree-accent);
+  background: color-mix(in srgb, var(--tree-accent) 14%, transparent);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.fishbones-trees__tooltip-flag--done {
+  color: #7fc97f;
+  background: rgba(127, 201, 127, 0.14);
+}
+
+.fishbones-trees__tooltip-flag--locked {
   color: var(--color-text-tertiary);
+  background: var(--color-bg-tertiary);
+}
+
+.fishbones-trees__tooltip-flag--gap {
+  color: #c89cdf;
+  background: rgba(200, 156, 223, 0.14);
 }
 
 /* ── side panel ──────────────────────────────────────────────── */
