@@ -1,0 +1,1 @@
+/Users/matt/Development/Apps/Fishbones/tests/svm-runtime/programs/counter/target/sbpf-solana-solana/release/libfishbones_counter.rlib: /Users/matt/Development/Apps/Fishbones/tests/svm-runtime/programs/counter/src/lib.rs

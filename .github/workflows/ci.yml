@@ -1,10 +1,10 @@
 name: CI
 
-# Web-variant smoke build. Catches breakage in the type-check and
-# vite build before it reaches the marketing site's deploy.
-# Desktop builds live in desktop-build.yml — this workflow stays
-# light so PRs get fast feedback. Real test suite (vitest etc.)
-# lands here once it exists.
+# Lint + web-variant build. Strictly the two checks the user wants
+# before a PR can land: lint (tsc --noEmit, run as `npm run lint`)
+# and a build that doesn't error. No unit / integration / e2e
+# tests — those live in a future test framework that's not yet
+# wired up. Desktop bundles live in desktop-build.yml.
 on:
   push:
     branches: [main]
@@ -75,6 +75,9 @@ jobs:
           key: vendor-${{ hashFiles('package-lock.json', 'scripts/vendor-cdn-deps.mjs') }}
           restore-keys: |
             vendor-
+
+      - name: Lint (tsc --noEmit)
+        run: npm run lint
 
       - name: Build web variant
         env:
