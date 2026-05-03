@@ -55,8 +55,13 @@ fn state(app: &tauri::AppHandle) -> Result<Arc<PreviewState>, String> {
         .map_err(|e| format!("failed to start preview server: {e}"))?;
     let addr = match server.server_addr() {
         tiny_http::ListenAddr::IP(a) => a,
-        tiny_http::ListenAddr::Unix(_) => {
-            return Err("preview server bound to a unix socket, expected TCP".into());
+        // Wildcard catches `ListenAddr::Unix(_)` on Unix targets;
+        // on Windows the enum only has the IP variant, so an
+        // explicit `Unix(_)` arm here is a compile error
+        // (E0599 — "no variant or associated item named `Unix`").
+        // The match-all keeps both targets compiling.
+        _ => {
+            return Err("preview server bound to a non-IP socket, expected TCP".into());
         }
     };
 
