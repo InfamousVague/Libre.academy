@@ -3,6 +3,54 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ─────────────────────────────────────────────────────────────────
+ * Scrollbar styling (esp. for Windows + WebView2).
+ *
+ * macOS WKWebView hides scrollbars by default (overlay mode); Linux
+ * GTK is restrained; Windows WebView2 ships chunky default Edge
+ * Chromium scrollbars that absolutely DESTROY the dark UI — wide
+ * white tracks, raised thumbs, the works. Override with the modern
+ * `scrollbar-color` + `scrollbar-width` properties (works in
+ * Chromium 121+, which WebView2 always is) and fall back to legacy
+ * `::-webkit-scrollbar` for Safari/older WebKit.
+ *
+ * Targeting `*` so every scrollable region inherits — sidebar,
+ * library body, code editor gutter, AI chat, dialogs. Components
+ * that want a hidden scrollbar (the topbar tab strip, the carousel)
+ * already override with `scrollbar-width: none`.
+ * ───────────────────────────────────────────────────────────── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-default) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--color-border-default);
+  border-radius: 999px;
+  /* 2px transparent border = padding inside the track, so the thumb
+     reads as a thin floating capsule rather than a wall-to-wall slab. */
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-strong);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 html, body, #root {
   height: 100%;
   background: var(--color-bg-primary);
@@ -264,97 +312,11 @@ button {
   padding: 0 16px 28px;
 }
 
-/* First-run welcome. Shown when the learner has zero courses on disk. We
-   center the whole pane and size for readability on larger windows. */
-.fishbones__welcome {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
-  background: var(--color-bg-secondary);
-  margin: 10px 10px 10px 0;
-  border: 1px solid var(--color-border-default);
-  border-radius: 12px;
-}
-
-.fishbones__welcome-inner {
-  max-width: 480px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-}
-
-.fishbones__welcome-glyph {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 2px;
-  color: #e8c46b;
-}
-
-.fishbones__welcome-title {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--color-text-primary);
-}
-
-.fishbones__welcome-blurb {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--color-text-secondary);
-}
-
-.fishbones__welcome-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 8px;
-}
-
-.fishbones__welcome-primary {
-  padding: 10px 18px;
-  background: var(--color-text-primary);
-  color: var(--color-bg-primary);
-  border: 0;
-  border-radius: 8px;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.fishbones__welcome-primary:hover {
-  opacity: 0.9;
-}
-
-.fishbones__welcome-secondary {
-  padding: 10px 16px;
-  background: transparent;
-  color: var(--color-text-secondary);
-  border: 1px solid var(--color-border-default);
-  border-radius: 8px;
-  font-family: inherit;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.fishbones__welcome-secondary:hover {
-  color: var(--color-text-primary);
-  background: var(--color-bg-tertiary);
-}
-
-.fishbones__welcome-hint {
-  margin: 6px 0 0;
-  font-size: 11.5px;
-  color: var(--color-text-tertiary);
-  line-height: 1.5;
-  max-width: 420px;
-}
+/* First-run welcome moved into HomeShowcase
+ * (src/components/Home/HomeShowcase.tsx) — the inline `.fishbones__welcome*`
+ * rules that lived here are gone. The HomeShowcase component owns its
+ * own CSS surface and renders a feature-grid landing experience that
+ * mounts real components with mock data. */
 
 .fishbones__empty {
   flex: 1;

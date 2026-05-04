@@ -633,19 +633,97 @@ fn read_course_json_from_archive(archive: &Path) -> anyhow::Result<CourseJson> {
 /// Powers the in-app CatalogBrowser on desktop — no server needed,
 /// since the catalog IS the bundled archives. Web uses a fetched
 /// manifest.json instead (see lib/catalog.ts).
+///
+/// ### Cross-platform layout robustness
+///
+/// Tauri 2 places `resources` in different absolute locations
+/// per-OS, but ALWAYS preserves the relative subpath declared in
+/// `tauri.conf.json`. So `resources/bundled-packs/foo.fishbones`
+/// lands at `<resource_dir>/resources/bundled-packs/foo.fishbones`
+/// on every platform — in theory.
+///
+/// In practice, Windows MSI packaging has historically been
+/// finicky: some Tauri / WiX combinations strip a level of nesting,
+/// or place all declared resources directly under `<resource_dir>`
+/// without preserving the `resources/` parent. The Discover tab
+/// being empty on Windows v0.1.7 / v0.1.8 traced to exactly this:
+/// `read_dir(<resource_dir>/resources/bundled-packs)` returned
+/// `NotFound`, the function bailed, the JS got `[]`.
+///
+/// The fix: try a SHORT LIST of known candidate paths, take the
+/// first one with at least one `.fishbones` inside, and walk it.
+/// Logs every attempt so future regressions show up loudly in
+/// `journalctl`/Console.app/whatever Windows users send us.
 #[tauri::command]
 pub fn list_bundled_catalog_entries(
     app: tauri::AppHandle,
 ) -> Result<Vec<BundledCatalogEntry>, String> {
-    let resource_dir = match app.path().resource_dir() {
-        Ok(p) => p.join("resources").join("bundled-packs"),
-        Err(_) => return Ok(Vec::new()),
+    let base = match app.path().resource_dir() {
+        Ok(p) => p,
+        Err(e) => {
+            eprintln!("[fishbones:catalog] resource_dir() failed: {}", e);
+            return Ok(Vec::new());
+        }
     };
-    if !resource_dir.exists() {
-        return Ok(Vec::new());
+
+    // Candidates in priority order. `<resource_dir>/resources/bundled-packs`
+    // is the canonical layout; the rest are fallbacks for installers
+    // that flatten the path.
+    let candidates: Vec<std::path::PathBuf> = vec![
+        base.join("resources").join("bundled-packs"),
+        base.join("bundled-packs"),
+        base.clone(),
+    ];
+
+    let mut chosen: Option<std::path::PathBuf> = None;
+    for c in &candidates {
+        if !c.exists() {
+            eprintln!("[fishbones:catalog] candidate missing: {:?}", c);
+            continue;
+        }
+        // Quick probe: does this dir contain any .fishbones at all?
+        // We don't want to silently pick `base` (the resource_dir
+        // root) just because it exists — only the dir that actually
+        // holds course archives wins.
+        let has_fishbones = match fs::read_dir(c) {
+            Ok(rd) => rd
+                .filter_map(|e| e.ok())
+                .any(|e| {
+                    e.path()
+                        .extension()
+                        .and_then(|s| s.to_str())
+                        .map(|s| s == "fishbones" || s == "kata")
+                        .unwrap_or(false)
+                }),
+            Err(e) => {
+                eprintln!("[fishbones:catalog] read_dir({:?}) failed: {}", c, e);
+                false
+            }
+        };
+        if has_fishbones {
+            eprintln!("[fishbones:catalog] using {:?}", c);
+            chosen = Some(c.clone());
+            break;
+        }
     }
+
+    let bundled_dir = match chosen {
+        Some(p) => p,
+        None => {
+            eprintln!(
+                "[fishbones:catalog] no .fishbones archives found under any of: {:?}",
+                candidates
+            );
+            return Ok(Vec::new());
+        }
+    };
+
     let mut out = Vec::new();
-    for entry in fs::read_dir(&resource_dir).map_err(|e| e.to_string())? {
+    let entries = match fs::read_dir(&bundled_dir) {
+        Ok(rd) => rd,
+        Err(e) => return Err(format!("read_dir({:?}): {}", bundled_dir, e)),
+    };
+    for entry in entries {
         let entry = entry.map_err(|e| e.to_string())?;
         let path = entry.path();
         if !path.is_file() {
@@ -679,6 +757,11 @@ pub fn list_bundled_catalog_entries(
     }
     // Stable order so the JS list doesn't shuffle between calls.
     out.sort_by(|a, b| a.title.to_lowercase().cmp(&b.title.to_lowercase()));
+    eprintln!(
+        "[fishbones:catalog] returning {} entries from {:?}",
+        out.len(),
+        bundled_dir
+    );
     Ok(out)
 }
 

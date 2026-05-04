@@ -14,7 +14,9 @@ import {
 import { makeBus, openPoppedWorkbench, closePoppedWorkbench } from "./lib/workbenchSync";
 import { deriveSolutionFiles } from "./lib/workbenchFiles";
 import { Icon } from "@base/primitives/icon";
-import { libraryBig } from "@base/primitives/icon/icons/library-big";
+// `libraryBig` was previously used by the inline welcome card; the
+// HomeShowcase component owns the welcome surface now and imports
+// its own icons.
 import { panelLeftOpen } from "@base/primitives/icon/icons/panel-left-open";
 import "@base/primitives/icon/icon.css";
 import Sidebar from "./components/Sidebar/Sidebar";
@@ -53,7 +55,10 @@ import PlaygroundView from "./components/Playground/PlaygroundView";
 import DocsView from "./components/Docs/DocsView";
 import { FISHBONES_DOCS } from "./docs/pages";
 import { isWeb, isMobile } from "./lib/platform";
-import DownloadButton from "./components/DownloadButton/DownloadButton";
+// DownloadButton lives inside HomeShowcase's hero on the web build —
+// keep the import here removed so the file's import set tracks what's
+// actually rendered from this file.
+import HomeShowcase from "./components/Home/HomeShowcase";
 import GeneratePackDialog from "./components/ChallengePack/GeneratePackDialog";
 import { useIngestRun } from "./hooks/useIngestRun";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
@@ -459,6 +464,7 @@ export default function App() {
   /// iconbar. Selecting a lesson anywhere forces back to "courses" so the
   /// learner isn't stuck on a side view after clicking a sidebar item.
   const [view, setView] = useState<
+    | "home"
     | "courses"
     | "profile"
     | "playground"
@@ -1077,6 +1083,7 @@ export default function App() {
           recents={recentCourses}
           onSelectLesson={selectLesson}
           onSelectCourse={openCourseFromLibrary}
+          onHome={() => setView("home")}
           onLibrary={() => setView("library")}
           onDiscover={() => setView("discover")}
           onSettings={() => setSettingsOpen(true)}
@@ -1099,7 +1106,23 @@ export default function App() {
         />
 
         <main className="fishbones__main">
-          {view === "profile" ? (
+          {view === "home" ? (
+            // Sidebar Home tab — renders the same showcase the
+            // empty-state welcome surfaces, but accessible at any
+            // time so desktop users (whose library is auto-seeded
+            // and never hits the empty-state branch) can still
+            // discover the new feature set.
+            <HomeShowcase
+              onOpenLibrary={() => setView("library")}
+              onOpenDiscover={() => setView("discover")}
+              onOpenTrees={() => setView("trees")}
+              onOpenPlayground={() => setView("playground")}
+              onPrimaryAction={
+                isWeb ? undefined : () => setImportOpen(true)
+              }
+              primaryActionLabel={isWeb ? undefined : "Import a book"}
+            />
+          ) : view === "profile" ? (
             <ProfileView
               courses={courses}
               completed={completed}
@@ -1186,50 +1209,23 @@ export default function App() {
               />
             </DeferredMount>
           ) : courses.length === 0 && coursesLoaded ? (
-            <div className="fishbones__welcome">
-              <div className="fishbones__welcome-inner">
-                <div className="fishbones__welcome-glyph" aria-hidden>
-                  <Icon icon={libraryBig} size="2xl" color="currentColor" weight="light" />
-                </div>
-                <h1 className="fishbones__welcome-title">Welcome to Fishbones</h1>
-                <p className="fishbones__welcome-blurb">
-                  {isWeb
-                    ? "A browser-native preview. Try the bundled lessons in JavaScript, Python, or Svelte — your progress saves locally and syncs to the cloud once you sign in."
-                    : "Turn any technical book into an interactive course. Pick a PDF to import, and Fishbones will split it into lessons, generate exercises, and let you code along chapter by chapter."}
-                </p>
-                <div className="fishbones__welcome-actions">
-                  {isWeb ? (
-                    // Web visitors get the split-button download —
-                    // primary face for the detected OS, caret on
-                    // the right opens a menu with all three. Same
-                    // pattern as the library's `+ Add course ▾` so
-                    // the two CTAs feel consistent. Hero size since
-                    // this carries the welcome screen.
-                    <DownloadButton className="fishbones-download--hero" />
-                  ) : (
-                    <>
-                      <button
-                        className="fishbones__welcome-primary"
-                        onClick={() => setImportOpen(true)}
-                      >
-                        Import a PDF
-                      </button>
-                      <button
-                        className="fishbones__welcome-secondary"
-                        onClick={() => setSettingsOpen(true)}
-                      >
-                        Open Settings
-                      </button>
-                    </>
-                  )}
-                </div>
-                <p className="fishbones__welcome-hint">
-                  {isWeb
-                    ? "Want to import your own PDFs, run C / C++ / Java / Swift, or use the offline AI? Grab the desktop app — it ships every runtime."
-                    : "You'll need an Anthropic API key in Settings for the AI-assisted structuring pipeline. Without one, imports fall back to simple section splits."}
-                </p>
-              </div>
-            </div>
+            // Welcome / first-launch screen. Replaces the older single-
+            // hero card with a real-component showcase: skill trees,
+            // book covers, the Monaco workbench, the in-process EVM
+            // dock, the AI assistant. Each tile mounts the production
+            // component with curated mock data so visitors see the
+            // exact UI they'll get inside the app, not a marketing
+            // screenshot. CTAs route into the dedicated views.
+            <HomeShowcase
+              onOpenLibrary={() => setView("library")}
+              onOpenDiscover={() => setView("discover")}
+              onOpenTrees={() => setView("trees")}
+              onOpenPlayground={() => setView("playground")}
+              onPrimaryAction={
+                isWeb ? undefined : () => setImportOpen(true)
+              }
+              primaryActionLabel={isWeb ? undefined : "Import a book"}
+            />
           ) : openTabs.length === 0 ? (
             // No tabs open (all closed, or freshly launched before first
             // tab was created) — render the library inline so the learner
