@@ -16,11 +16,14 @@
 
 .fishbones-addcourse-main,
 .fishbones-addcourse-caret {
-  /* Theme-driven accent. Default-dark sets this to the bone-amber
-     palette; other themes that don't define --color-accent fall back
-     to the periwinkle that was the original default. */
-  background: var(--color-accent, #6c8cff);
-  color: var(--color-accent-fg, var(--color-bg-primary, #0b0b10));
+  /* Match the active grid/shelf view-mode toggle's pattern:
+     `background: var(--color-text-primary)` paired with
+     `color: var(--color-bg-primary)`. Both buttons are "primary
+     emphasis on a dark surface," so they read as the same family.
+     Default-dark's --color-text-primary is the bone-white tint
+     (#f4eedd) — different themes will get their own primary text. */
+  background: var(--color-text-primary, #f5f5f7);
+  color: var(--color-bg-primary, #0b0b10);
   border: 0;
   cursor: pointer;
   font-size: 12px;

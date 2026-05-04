@@ -58,10 +58,10 @@
  * ───────────────────────────────────────────────────────────── */
 * {
   scrollbar-width: thin;
-  /* Bone-amber thumb at low alpha so it tints the scroll without
-     screaming. Track stays transparent — the surface behind it
-     shows through. */
-  scrollbar-color: rgba(201, 167, 107, 0.42) transparent;
+  /* Bone-white thumb at low alpha — same cool tone as the
+     FishbonesLoader ring and the wordmark mid-stroke. The track
+     stays transparent so the surface behind it shows through. */
+  scrollbar-color: rgba(212, 197, 161, 0.42) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -74,11 +74,10 @@
 }
 
 *::-webkit-scrollbar-thumb {
-  /* Bone-amber thumb — same warm palette as the FishbonesLoader
-     ring and the AddCourse button accent. Low alpha (~42%) keeps
-     it gentle on long scrollable surfaces; the hover state below
-     bumps it to ~75% for tactile feedback. */
-  background: rgba(201, 167, 107, 0.42);
+  /* Bone-white thumb — matches --fb-bone-color (#d4c5a1) at
+     ~42% alpha. Hover state below bumps it to ~78% for tactile
+     feedback without flipping the hue. */
+  background: rgba(212, 197, 161, 0.42);
   border-radius: var(--fb-radius-pill);
   /* 2px transparent border = padding inside the track, so the thumb
      reads as a thin floating capsule rather than a wall-to-wall slab. */
@@ -87,7 +86,7 @@
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: rgba(212, 175, 111, 0.78);
+  background: rgba(212, 197, 161, 0.78);
   background-clip: padding-box;
 }
 
