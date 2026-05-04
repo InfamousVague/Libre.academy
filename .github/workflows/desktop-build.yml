@@ -68,15 +68,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # macOS only builds on push-to-main + workflow_dispatch as
-          # a smoke test. On tag push we INTENTIONALLY skip it: the
-          # signed + notarized DMG is produced locally via
-          # `make local-release` (the maintainer's Apple Developer ID
-          # cert isn't on the CI runner), and the unsigned ad-hoc
-          # CI build would race against the signed one for the same
-          # release. The `if:` on each step below gates this; the
-          # entry stays in the matrix so the smoke-test path still
-          # exercises the Mac toolchain.
+          # macOS skips its build step on tag push (see `if:` on the
+          # Build step below). The signed + notarized DMG is produced
+          # locally via `make local-release` — the maintainer's
+          # Apple Developer ID cert isn't on the CI runner, so an
+          # unsigned ad-hoc CI build would race against the signed
+          # one for the same release. The matrix entry stays so the
+          # push-to-main + workflow_dispatch smoke-test paths still
+          # exercise the Mac toolchain.
           - os: macos-latest
             label: macOS (Universal)
             # Universal binary covers both Apple Silicon and Intel
@@ -84,23 +83,14 @@ jobs:
             # have to ship + support.
             tauri-args: '--target universal-apple-darwin'
             rust-targets: 'aarch64-apple-darwin,x86_64-apple-darwin'
-            skipOnTag: true
           - os: ubuntu-22.04
             label: Linux (x64)
             tauri-args: ''
             rust-targets: ''
-            skipOnTag: false
           - os: windows-latest
             label: Windows (x64)
             tauri-args: ''
             rust-targets: ''
-            skipOnTag: false
-
-    # Skip the whole job when the matrix row is flagged skipOnTag
-    # AND the trigger is a tag. On push-to-main / workflow_dispatch
-    # everything still runs (smoke test). One condition on the job
-    # keeps each platform-step block from needing its own `if:`.
-    if: ${{ !(matrix.skipOnTag && github.ref_type == 'tag') }}
 
     steps:
       - uses: actions/checkout@v4
@@ -221,7 +211,14 @@ jobs:
       # to a separate hidden draft). With draft=false it appends to
       # whatever's already there — the Linux .AppImage/.deb and
       # Windows .msi/.exe land alongside the local Mac DMG.
+      # Skip the macOS build entirely on tag push: we don't want CI's
+      # ad-hoc-signed Universal DMG racing the signed/notarized
+      # aarch64 DMG that `make local-release` uploads from the
+      # maintainer's machine. Linux + Windows still build and append.
+      # On push-to-main + workflow_dispatch the gate is open so all
+      # three platforms get smoke-tested.
       - name: Build (Tauri bundle)
+        if: ${{ !(matrix.os == 'macos-latest' && github.ref_type == 'tag') }}
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -235,8 +232,10 @@ jobs:
 
       # Always upload the bundle artefacts to the workflow run too,
       # whether or not we created a release. Lets a maintainer grab
-      # a build off any dispatch run for ad-hoc QA.
+      # a build off any dispatch run for ad-hoc QA. Skip on the
+      # macOS-tag-push path since the build was skipped there too.
       - name: Upload bundle artefacts
+        if: ${{ !(matrix.os == 'macos-latest' && github.ref_type == 'tag') }}
         uses: actions/upload-artifact@v4
         with:
           name: fishbones-${{ matrix.os }}
