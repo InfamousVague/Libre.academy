@@ -142,13 +142,25 @@ const manifest = {
   platforms,
 };
 
-const manifestPath = join(tmpdir(), `fishbones-latest-${Date.now()}.json`);
+// IMPORTANT: the file MUST be named exactly `latest.json` on disk
+// before we hand it to `gh release upload`. The `#display-name`
+// suffix gh supports is purely cosmetic — it changes the label in
+// the GitHub UI but the asset URL still uses the original filename.
+// And the updater endpoint
+//   github.com/.../releases/latest/download/latest.json
+// resolves on filename match, so a mis-named asset breaks OTA
+// silently. (v0.1.12's first run uploaded `fishbones-latest-…json`,
+// which clients hitting `/latest.json` would 404 on.)
+import { mkdtempSync } from "node:fs";
+
+const stagingDir = mkdtempSync(join(tmpdir(), "fishbones-manifest-"));
+const manifestPath = join(stagingDir, "latest.json");
 writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
 console.log(`\n[updater] manifest written to ${manifestPath}:`);
 console.log(JSON.stringify(manifest, null, 2));
 
 execSync(
-  `gh release upload "${tag}" "${manifestPath}#latest.json" --repo "${REPO}" --clobber`,
+  `gh release upload "${tag}" "${manifestPath}" --repo "${REPO}" --clobber`,
   { stdio: "inherit" },
 );
 console.log(`\n[updater] uploaded to ${tag} as latest.json`);
