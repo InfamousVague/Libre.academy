@@ -22,6 +22,14 @@
   --color-glass-border: rgba(255, 255, 255, 0.08);
   --color-glass-rim: rgba(255, 255, 255, 0.04);
   --color-glass-shadow: rgba(0, 0, 0, 0.35);
+
+  /* Bone palette — mid-tone of the new fishbones wordmark texture.
+     Used by the FishbonesLoader spinner ring and any other surface
+     that wants to read as "part of the brand" rather than stark white.
+     Two strengths so consumers can pick the right contrast for their
+     surface. */
+  --fb-bone-color: #d4c5a1;
+  --fb-bone-color-soft: #f4eedd; /* near-white text tint, see below */
 }
 
 [data-theme-name="ayu-light"],
@@ -35,6 +43,21 @@
   --color-glass-border: rgba(0, 0, 0, 0.08);
   --color-glass-rim: rgba(255, 255, 255, 0.5);
   --color-glass-shadow: rgba(0, 0, 0, 0.08);
+}
+
+/* ---- Fishbones default dark — bone-tinted whites ----------------------
+   Stark `#FAFAFA` (the base kit's default text colour) reads as a
+   slightly cool / clinical white. The new fishbones wordmark is bone-
+   textured — a warm off-white. We tint the default dark theme's primary
+   text (and the secondary/tertiary tones at lower intensities) so the
+   whole UI reads as a piece with the brand mark.
+   The shift is intentionally tiny: about 5° toward yellow on the colour
+   wheel and a few percent saturation. Body text still reads as "white,"
+   not "cream." */
+[data-theme-name="default-dark"] {
+  --color-text-primary: #f4eedd;     /* was ~#fafafa, now bone-tinted */
+  --color-text-secondary: #c5bfae;   /* was ~#a4a4ad, slightly warmed */
+  --color-text-tertiary: #8a8576;    /* was ~#71717a, slightly warmed */
 }
 
 /* ---- Synesthesia Synthwave --------------------------------------------- */

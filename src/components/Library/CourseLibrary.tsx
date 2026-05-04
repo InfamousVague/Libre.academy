@@ -5,6 +5,7 @@ import "@base/primitives/icon/icon.css";
 import type { Course, LanguageId } from "../../data/types";
 import { isChallengePack } from "../../data/types";
 import BookCover from "./BookCover";
+import FishbonesLoader from "../Shared/FishbonesLoader";
 import CourseContextMenu, { useCourseMenu } from "../Shared/CourseContextMenu";
 import { prefetchCovers } from "../../hooks/useCourseCover";
 import { useCourseUpdates } from "../../hooks/useCourseUpdates";
@@ -211,7 +212,7 @@ export default function CourseLibrary({
   // already installed gets rendered as a semi-opaque placeholder
   // tile. The catalog is fetched once per app session (cached in
   // src/lib/catalog.ts).
-  const { catalog } = useCatalog();
+  const { catalog, loaded: catalogLoaded } = useCatalog();
   const installedIds = useMemo(
     () => new Set(courses.map((c) => c.id)),
     [courses],
@@ -683,7 +684,17 @@ export default function CourseLibrary({
             );
           })()}
 
-          {courses.length === 0 ? (
+          {scope === "discover" && !catalogLoaded ? (
+            // Catalog fetch in flight. The desktop build hits a Tauri
+            // command that walks the bundled-packs dir; the web build
+            // fetches a static JSON manifest. Either way, on cold
+            // start the catalog can take a moment — show the
+            // FishbonesLoader instead of the misleading "No courses
+            // yet" or "No matches" empty states.
+            <div className="fishbones-library-empty">
+              <FishbonesLoader size="md" label="Loading catalog…" />
+            </div>
+          ) : courses.length === 0 && scope !== "discover" ? (
             <div className="fishbones-library-empty">
               <div className="fishbones-library-empty-glyph" aria-hidden>
                 <Icon icon={libraryBig} size="2xl" color="currentColor" weight="light" />
