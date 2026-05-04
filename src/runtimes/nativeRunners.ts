@@ -247,13 +247,19 @@ export async function runZig(code: string, testCode?: string): Promise<RunResult
   // bound from std), so we strip from the test side.
   const dedupedTests = dedupeZigStdImport(code, testCode);
   const merged = dedupedTests ? `${code}\n${dedupedTests}\n` : code;
+  // Pick the Zig subcommand based on whether this is a lesson run
+  // (test cases attached) or a playground run (script with main).
+  // `zig test` only invokes `test "..." {}` blocks and never calls
+  // `pub fn main`; running playground sources through it is what
+  // produced "All 0 tests passed." with no Hello-world output.
+  const mode: "test" | "run" = testCode !== undefined ? "test" : "run";
   const raw = await invoke<{
     stdout: string;
     stderr: string;
     success: boolean;
     duration_ms: number;
     launch_error: string | null;
-  }>("run_zig", { code: merged });
+  }>("run_zig", { code: merged, mode });
 
   if (raw.launch_error) {
     return {

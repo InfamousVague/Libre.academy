@@ -384,7 +384,7 @@ fn save_seeded_packs(path: &Path, packs: &SeededPacks) -> anyhow::Result<()> {
 
 /// Read ONLY the course id out of a .fishbones/.kata archive without
 /// extracting anything. Used by the seed routine to decide whether to skip.
-fn peek_archive_id(archive: &Path) -> anyhow::Result<String> {
+pub fn peek_archive_id(archive: &Path) -> anyhow::Result<String> {
     let file = fs::File::open(archive)?;
     let mut zip = zip::ZipArchive::new(file)?;
     for i in 0..zip.len() {
@@ -560,6 +560,72 @@ pub struct BundledCatalogEntry {
     /// resources/bundled-packs/. The frontend passes this back to
     /// `import_course` to install without a network round-trip.
     pub local_path: String,
+}
+
+/// Read the FULL course.json out of a bundled `.fishbones` archive
+/// without extracting anything else. Used by the per-course update
+/// detection (`fetchBundledCourse` in courseSync.ts) so it compares
+/// against the in-binary source of truth instead of the
+/// possibly-stale `public/starter-courses/<id>.json` that the web
+/// extractor produces on its own cadence.
+///
+/// Looks the archive up by FILENAME first (fast — a single stat),
+/// falls back to scanning every archive's course.id when the
+/// filename doesn't match the requested id (some packs ship with a
+/// .fishbones name that differs from the inner id).
+#[tauri::command]
+pub fn read_bundled_course(
+    app: tauri::AppHandle,
+    course_id: String,
+) -> Result<Option<CourseJson>, String> {
+    let resource_dir = match app.path().resource_dir() {
+        Ok(p) => p.join("resources").join("bundled-packs"),
+        Err(_) => return Ok(None),
+    };
+    if !resource_dir.exists() {
+        return Ok(None);
+    }
+    // Fast path — filename matches the id.
+    for ext in ["fishbones", "kata"] {
+        let candidate = resource_dir.join(format!("{course_id}.{ext}"));
+        if candidate.is_file() {
+            if let Ok(course) = read_course_json_from_archive(&candidate) {
+                return Ok(Some(course));
+            }
+        }
+    }
+    // Slow path — scan every archive's course.id.
+    for entry in fs::read_dir(&resource_dir).map_err(|e| e.to_string())? {
+        let entry = entry.map_err(|e| e.to_string())?;
+        let path = entry.path();
+        if !path.is_file() {
+            continue;
+        }
+        match path.extension().and_then(|s| s.to_str()) {
+            Some("fishbones") | Some("kata") => {}
+            _ => continue,
+        }
+        if let Ok(id) = peek_archive_id(&path) {
+            if id == course_id {
+                return Ok(read_course_json_from_archive(&path).ok());
+            }
+        }
+    }
+    Ok(None)
+}
+
+fn read_course_json_from_archive(archive: &Path) -> anyhow::Result<CourseJson> {
+    let file = fs::File::open(archive)?;
+    let mut zip = zip::ZipArchive::new(file)?;
+    for i in 0..zip.len() {
+        let mut entry = zip.by_index(i)?;
+        if entry.name().ends_with("course.json") && !entry.is_dir() {
+            let mut buf = String::new();
+            entry.read_to_string(&mut buf)?;
+            return Ok(serde_json::from_str(&buf)?);
+        }
+    }
+    anyhow::bail!("course.json not found in archive");
 }
 
 /// Lists every `.fishbones` archive shipped under

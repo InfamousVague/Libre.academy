@@ -1,0 +1,139 @@
+/* Split-button download — primary face for the detected OS, caret
+ * on the right that reveals all 3 platforms. Mirrors the
+ * `+ Add course ▾` cluster's structure (see AddCourseButton.css) so
+ * the two CTAs read as part of the same vocabulary, with one
+ * difference: the download CTA gets a more prominent fill since
+ * it's the primary action on the surfaces it shows up on (welcome
+ * screen, install banner). */
+
+.fishbones-download {
+  position: relative;
+  display: inline-flex;
+}
+
+.fishbones-download-split {
+  display: inline-flex;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  /* Solid fill so the CTA pops on a translucent banner / hero
+   * background. Per-theme override at the end of this file. */
+  background: var(--color-text-primary, #fafafa);
+  color: var(--color-bg-primary, #0b0b10);
+  font-family: inherit;
+}
+
+.fishbones-download-main,
+.fishbones-download-caret {
+  background: transparent;
+  color: inherit;
+  border: 0;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  padding: 8px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  font-family: inherit;
+  transition: filter 120ms ease;
+}
+
+.fishbones-download-main:hover,
+.fishbones-download-caret:hover {
+  filter: brightness(0.9);
+}
+
+.fishbones-download-caret {
+  padding: 8px 10px;
+  border-left: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+/* Dropdown menu — same panel treatment as the addcourse menu so
+ * the two cluster styles match. Offset to the RIGHT-edge of the
+ * trigger so the menu doesn't overflow when this sits at the right
+ * of a hero / banner. */
+.fishbones-download-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 280px;
+  z-index: 50;
+  background: var(--color-bg-secondary, #15151c);
+  border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.08));
+  border-radius: 8px;
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.45),
+    0 2px 6px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+}
+
+.fishbones-download-item {
+  display: grid;
+  grid-template-columns: 16px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--color-text-primary);
+  text-decoration: none;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 100ms ease;
+}
+
+.fishbones-download-item:hover {
+  background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.06));
+}
+
+.fishbones-download-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  text-align: left;
+}
+
+.fishbones-download-item-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--color-text-primary);
+}
+
+.fishbones-download-item-hint {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+}
+
+.fishbones-download-item-badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--color-text-tertiary);
+  background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.06));
+  border-radius: 999px;
+  padding: 2px 8px;
+  flex-shrink: 0;
+}
+
+/* Larger size variant for the welcome screen — bigger touch
+ * target + bigger label so it carries the page like a hero CTA
+ * should. The host applies `fishbones-download--hero` next to the
+ * default class. */
+.fishbones-download--hero .fishbones-download-main,
+.fishbones-download--hero .fishbones-download-caret {
+  font-size: 14px;
+  padding: 10px 18px;
+}
+
+.fishbones-download--hero .fishbones-download-caret {
+  padding: 10px 12px;
+}

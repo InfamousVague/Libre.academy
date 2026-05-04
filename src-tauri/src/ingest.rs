@@ -633,20 +633,106 @@ pub fn extract_source_cover(
 /// base64 data URL that the frontend can drop straight into `<img src>`.
 /// Returns `None` when no cover is present — callers render their
 /// fallback tile in that case.
+///
+/// Lookup order:
+///   1. `<app-data>/courses/<course_id>/cover.png` — installed copy.
+///   2. `<resources>/bundled-packs/<course_id>.fishbones` (or `.kata`)
+///      — extract `cover.png` straight out of the archive.
+///   3. Fallback scan of every `.fishbones` archive looking for one
+///      whose inner `course.json` matches `course_id`.
+///
+/// Step 2 + 3 give the catalog placeholders (Discover view) real
+/// cover artwork without needing a separate IPC. They also serve as
+/// a graceful fallback when the on-disk cover.png went missing for
+/// any reason — the bundled archive is the canonical source of
+/// truth.
 #[tauri::command]
 pub fn load_course_cover(
     app: tauri::AppHandle,
     course_id: String,
 ) -> Result<Option<String>, String> {
-    let courses_dir = crate::courses::courses_dir(&app).map_err(|e| e.to_string())?;
-    let cover_path = courses_dir.join(&course_id).join("cover.png");
-    if !cover_path.exists() {
+    use base64::Engine;
+
+    fn encode_png(bytes: &[u8]) -> String {
+        let b64 = base64::engine::general_purpose::STANDARD.encode(bytes);
+        format!("data:image/png;base64,{b64}")
+    }
+
+    // 1. Installed copy — fastest path, single stat.
+    if let Ok(courses_dir) = crate::courses::courses_dir(&app) {
+        let cover_path = courses_dir.join(&course_id).join("cover.png");
+        if cover_path.exists() {
+            let bytes =
+                std::fs::read(&cover_path).map_err(|e| format!("read cover: {e}"))?;
+            return Ok(Some(encode_png(&bytes)));
+        }
+    }
+
+    // 2 + 3. Pull from the bundled archive. Discover-view placeholders
+    // and any first-launch UI that renders before the seed extract
+    // finishes both rely on this branch.
+    let resource_dir = match app.path().resource_dir() {
+        Ok(p) => p.join("resources").join("bundled-packs"),
+        Err(_) => return Ok(None),
+    };
+    if !resource_dir.exists() {
         return Ok(None);
     }
-    let bytes = std::fs::read(&cover_path).map_err(|e| format!("read cover: {e}"))?;
-    // `base64` crate uses the `Engine` API in 0.22+. Use the standard
-    // config (with padding, alphabet = a-zA-Z0-9+/).
-    use base64::Engine;
-    let b64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
-    Ok(Some(format!("data:image/png;base64,{b64}")))
+    // 2. Filename match — fast path.
+    for ext in ["fishbones", "kata"] {
+        let archive = resource_dir.join(format!("{course_id}.{ext}"));
+        if archive.is_file() {
+            if let Ok(Some(bytes)) = read_cover_png_from_archive(&archive) {
+                return Ok(Some(encode_png(&bytes)));
+            }
+        }
+    }
+    // 3. Scan every archive looking for a matching inner id. Last-
+    // resort path; only used when the on-disk filename diverges from
+    // the inner course.id (rare).
+    if let Ok(read_dir) = std::fs::read_dir(&resource_dir) {
+        for entry in read_dir.flatten() {
+            let path = entry.path();
+            if !path.is_file() {
+                continue;
+            }
+            match path.extension().and_then(|s| s.to_str()) {
+                Some("fishbones") | Some("kata") => {}
+                _ => continue,
+            }
+            // Cheaply check the id first so we don't repeatedly
+            // base64-encode covers that don't match.
+            if let Ok(id) = crate::courses::peek_archive_id(&path) {
+                if id == course_id {
+                    if let Ok(Some(bytes)) = read_cover_png_from_archive(&path) {
+                        return Ok(Some(encode_png(&bytes)));
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(None)
+}
+
+/// Pull `cover.png` (anywhere in the archive) out of a `.fishbones`.
+/// Returns `Ok(None)` when the archive doesn't carry one — common for
+/// older / hand-built packs that pre-date cover artwork.
+fn read_cover_png_from_archive(
+    archive: &std::path::Path,
+) -> anyhow::Result<Option<Vec<u8>>> {
+    let file = std::fs::File::open(archive)?;
+    let mut zip = zip::ZipArchive::new(file)?;
+    for i in 0..zip.len() {
+        let mut entry = zip.by_index(i)?;
+        if entry.is_dir() {
+            continue;
+        }
+        if entry.name().ends_with("cover.png") {
+            let mut buf = Vec::new();
+            std::io::Read::read_to_end(&mut entry, &mut buf)?;
+            return Ok(Some(buf));
+        }
+    }
+    Ok(None)
 }

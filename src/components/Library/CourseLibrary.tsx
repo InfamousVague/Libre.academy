@@ -114,6 +114,14 @@ interface Props {
   /// suitable for the "no-tabs-open" empty state. The close × is hidden
   /// since there's no underlying view to return to.
   mode?: "modal" | "inline";
+  /// Which slice of the catalog to render. "library" (default) shows
+  /// the user's INSTALLED courses only; "discover" shows the catalog
+  /// PLACEHOLDERS only (with install buttons on each tile). The
+  /// component is rendered with `scope="library"` from the Library
+  /// route in the sidebar and `scope="discover"` from the Discover
+  /// route, so the two surfaces share filter / search / view-mode
+  /// machinery without mixing their content.
+  scope?: "library" | "discover";
 }
 
 type SortKey = "name" | "progress" | "lessons";
@@ -276,6 +284,7 @@ export default function CourseLibrary({
   onBrowseCatalog,
   onInstallCatalogEntry,
   mode = "modal",
+  scope = "library",
 }: Props) {
   const isInline = mode === "inline";
   const ctxMenu = useCourseMenu();
@@ -410,11 +419,24 @@ export default function CourseLibrary({
   };
 
   // Pre-compute per-course progress so sorting + display share one walk.
+  // Scope-aware on purpose: in `library` scope `enriched` only carries
+  // installed courses; in `discover` scope it only carries the catalog
+  // placeholders. Doing the split HERE (rather than relying on a
+  // downstream `.filter(scope ? ... )`) guarantees a placeholder can
+  // never leak into a library render even if a later filter is
+  // skipped or rewritten — a defensive belt-and-suspenders after a
+  // bug report where switching Discover → Library briefly showed
+  // uninstalled tiles in the library view.
   const enriched = useMemo(() => {
-    // Installed courses contribute real progress numbers from the
-    // user's completion set. Placeholders contribute 0 across the
-    // board — they have no installed lessons to count yet.
-    const installedRows = courses.map((c) => {
+    if (scope === "discover") {
+      return placeholderCourses.map((c) => ({
+        course: c,
+        total: 0,
+        done: 0,
+        pct: 0,
+      }));
+    }
+    return courses.map((c) => {
       let total = 0;
       let done = 0;
       for (const ch of c.chapters) {
@@ -430,18 +452,18 @@ export default function CourseLibrary({
         pct: total > 0 ? done / total : 0,
       };
     });
-    const placeholderRows = placeholderCourses.map((c) => ({
-      course: c,
-      total: 0,
-      done: 0,
-      pct: 0,
-    }));
-    return [...installedRows, ...placeholderRows];
-  }, [courses, completed, placeholderCourses]);
+  }, [scope, courses, completed, placeholderCourses]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return enriched
+      // Belt + suspenders: the scope-aware `enriched` above already
+      // partitions installed vs placeholder, but keeping the
+      // explicit filter here means an accidental future change to
+      // `enriched` can't silently mix the two surfaces.
+      .filter((e) =>
+        scope === "discover" ? !!e.course.placeholder : !e.course.placeholder,
+      )
       .filter(
         (e) =>
           categoryFilter === "all" ||
@@ -480,6 +502,7 @@ export default function CourseLibrary({
       });
   }, [
     enriched,
+    scope,
     categoryFilter,
     chainFilter,
     langFilter,
@@ -615,9 +638,13 @@ export default function CourseLibrary({
     >
         <div className="fishbones-library-header">
           <div className="fishbones-library-titleblock">
-            <span className="fishbones-library-title">Library</span>
+            <span className="fishbones-library-title">
+              {scope === "discover" ? "Discover" : "Library"}
+            </span>
             <span className="fishbones-library-subtitle">
-              {courses.length} course{courses.length === 1 ? "" : "s"} on this machine
+              {scope === "discover"
+                ? `${placeholderCourses.length} book${placeholderCourses.length === 1 ? "" : "s"} available to install`
+                : `${courses.length} course${courses.length === 1 ? "" : "s"} on this machine`}
             </span>
           </div>
           <div className="fishbones-library-header-actions">
@@ -935,6 +962,18 @@ export default function CourseLibrary({
                             ? (ev) => ctxMenu.show(e.course, ev)
                             : undefined
                         }
+                        // Discover-mode: install affordance per
+                        // tile. Mirrors the BookCover treatment in
+                        // book view so both view modes can install
+                        // a catalog entry without bouncing through
+                        // the modal.
+                        placeholder={e.course.placeholder}
+                        installing={installingIds.has(e.course.id)}
+                        onInstall={
+                          e.course.placeholder && onInstallCatalogEntry
+                            ? () => void handleInstallClick(e.course.id)
+                            : undefined
+                        }
                       />
                     ))}
                   </div>
@@ -972,6 +1011,13 @@ function CourseCard({
   onExport,
   onDelete,
   onContextMenu,
+  // Discover-mode props — when course.placeholder, the card swaps
+  // its progress meter for an Install button (or "Installing…"
+  // spinner). Passed through from the library's per-tile install
+  // handler so the same code path works in both views.
+  placeholder,
+  installing,
+  onInstall,
 }: {
   course: Course;
   total: number;
@@ -981,6 +1027,9 @@ function CourseCard({
   onExport?: () => void;
   onDelete?: () => void;
   onContextMenu?: (e: React.MouseEvent) => void;
+  placeholder?: boolean;
+  installing?: boolean;
+  onInstall?: () => void;
 }) {
   const chapters = course.chapters.length;
   const status =
@@ -989,6 +1038,47 @@ function CourseCard({
       : pct === 1
       ? "completed"
       : `${Math.round(pct * 100)}%`;
+
+  // Placeholder cards (Discover mode) have no progress, no
+  // chapters yet — just metadata + the install affordance. We use
+  // the same wrapper but render a different inner block.
+  if (placeholder) {
+    return (
+      <div
+        className="fishbones-library-card fishbones-library-card--placeholder"
+        onContextMenu={onContextMenu}
+      >
+        <div className="fishbones-library-card-main">
+          <div className="fishbones-library-card-header">
+            <LanguageChip language={course.language} size="sm" />
+            <span className="fishbones-library-card-status">Available</span>
+          </div>
+          <div className="fishbones-library-card-title">{course.title}</div>
+          {course.author && (
+            <div className="fishbones-library-card-author">by {course.author}</div>
+          )}
+          <div className="fishbones-library-card-meta">
+            {chapters > 0
+              ? `${chapters} chapter${chapters === 1 ? "" : "s"}`
+              : "Catalog book"}
+          </div>
+        </div>
+        <div className="fishbones-library-card-actions">
+          <button
+            className="fishbones-library-card-action fishbones-library-card-action--install"
+            onClick={(e) => {
+              e.stopPropagation();
+              onInstall?.();
+            }}
+            disabled={installing || !onInstall}
+            title="Add this book to your library"
+          >
+            {installing ? "Installing…" : "Install"}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fishbones-library-card" onContextMenu={onContextMenu}>

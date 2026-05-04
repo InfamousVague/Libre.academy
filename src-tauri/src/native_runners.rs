@@ -709,37 +709,53 @@ pub async fn run_dart(code: String) -> SubprocessResult {
 
 // ---- Zig ------------------------------------------------------------
 
-/// `zig test <file>`. Native Zig test runner — no harness synthesis,
-/// no `KATA_TEST::` protocol, no stdout dance. We hand `zig test` the
-/// merged source (solution + tests) and it compiles + runs every
-/// `test "name" { ... }` block, printing one `N/M slug.test.<name>...
-/// (OK|FAIL [(reason)])` line per case to stderr.
+/// Run a Zig source file. Two modes, picked by the caller via the
+/// `mode` argument:
 ///
-/// Why native test instead of the older `zig run` + synthesised
-/// `pub fn main()` harness:
-///   - **Idiomatic.** Lesson tests now look like the `test "name" {}`
-///     blocks every Zig codebase uses — what learners will write
-///     outside the lesson.
-///   - **`std.testing.allocator` works.** Leak-checked, double-free-
-///     checked. For a course full of allocator lessons that's a real
-///     teaching feature, not a workaround.
-///   - **No 0.x churn.** `zig test`'s output format has been stable
-///     since 0.10. We don't have to rediscover the new buffered-
-///     writer API every release just to print one line per test.
-///   - **Drops 150 lines of Rust.** `preprocess_zig_source` and its
-///     helpers (`scan_test_fn_names`, `parse_cases_comment`,
-///     `parse_runtest_calls`, `strip_top_level_block`) become dead
-///     code; left in place for now in case some legacy lesson source
-///     surfaces, but the live path no longer touches them.
+///   - `"test"` — `zig test <file>`. Compiles + runs every
+///     `test "name" { ... }` block, printing one
+///     `N/M slug.test.<name>...(OK|FAIL [(reason)])` line per case to
+///     stderr. Used by lesson runs (the merged source carries
+///     starter + hidden test cases) so learners see per-test pass /
+///     fail with leak detection from `std.testing.allocator`.
 ///
-/// Output parsing happens in `runtimes/nativeRunners.ts::runZig` —
-/// regex on the per-test lines from stderr, matched up with leak
-/// reports and overall exit code.
+///   - `"run"` — `zig run <file>`. Compiles + executes `pub fn main`
+///     and pipes its stdout / stderr through verbatim. Used by the
+///     Playground where the user's code is a script with `pub fn
+///     main`; running it as `zig test` would only collect test blocks
+///     and never call `main`, which manifested as "All 0 tests
+///     passed." with no Hello-world output (the bug this split fixes).
+///
+/// `mode` is intentionally a string, not an enum — keeps the IPC
+/// payload trivial and lets the JS side pick mode from a single
+/// boolean (`testCode != null ? "test" : "run"`).
+///
+/// Output parsing happens in `runtimes/nativeRunners.ts::runZig`.
 #[tauri::command]
-pub async fn run_zig(code: String) -> SubprocessResult {
+pub async fn run_zig(code: String, mode: Option<String>) -> SubprocessResult {
+    let zig_subcommand = match mode.as_deref() {
+        // Default to `test` for backwards-compat with any caller that
+        // omits `mode`. Lesson runs always pass "test"; Playground
+        // passes "run".
+        Some("run") => "run",
+        Some("test") | None => "test",
+        Some(other) => {
+            return SubprocessResult {
+                stdout: String::new(),
+                stderr: format!(
+                    "internal error: unknown zig run mode {other:?} (expected \"test\" or \"run\")"
+                ),
+                success: false,
+                duration_ms: 0,
+                launch_error: Some(format!(
+                    "unknown zig mode {other:?}; expected \"test\" or \"run\""
+                )),
+            };
+        }
+    };
     simple_run_one_file(
         "zig",
-        &["test"],
+        &[zig_subcommand],
         "zig",
         "zig",
         "install Zig (`brew install zig` on macOS, or grab a tarball from https://ziglang.org/download/).",

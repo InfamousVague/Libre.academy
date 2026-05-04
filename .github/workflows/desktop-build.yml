@@ -11,10 +11,17 @@ name: Desktop Build
 #                              attached to the workflow run. Smoke
 #                              test that every change still produces
 #                              installable bundles.
-#   - tag push (v*)         → ALSO builds on all 3 platforms AND
-#                              uploads bundles to a draft GitHub
-#                              release named after the tag.
-#   - workflow_dispatch     → ad-hoc build, artefacts only.
+#   - tag push (v*)         → builds Linux + Windows (NOT macOS) and
+#                              uploads bundles to the published GitHub
+#                              release named after the tag. macOS is
+#                              skipped because the maintainer's signed
+#                              + notarized DMG comes from
+#                              `make local-release` running on their
+#                              local machine — the CI runner doesn't
+#                              have the Apple Developer ID cert. The
+#                              local upload runs first; CI appends
+#                              Linux/Windows to the same release.
+#   - workflow_dispatch     → ad-hoc build, artefacts only (all 3).
 #
 # COST WARNING: this fires on every push to main. macOS runners
 # bill at 10× the per-minute rate of Linux on GitHub Actions and
@@ -61,6 +68,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # macOS only builds on push-to-main + workflow_dispatch as
+          # a smoke test. On tag push we INTENTIONALLY skip it: the
+          # signed + notarized DMG is produced locally via
+          # `make local-release` (the maintainer's Apple Developer ID
+          # cert isn't on the CI runner), and the unsigned ad-hoc
+          # CI build would race against the signed one for the same
+          # release. The `if:` on each step below gates this; the
+          # entry stays in the matrix so the smoke-test path still
+          # exercises the Mac toolchain.
           - os: macos-latest
             label: macOS (Universal)
             # Universal binary covers both Apple Silicon and Intel
@@ -68,14 +84,23 @@ jobs:
             # have to ship + support.
             tauri-args: '--target universal-apple-darwin'
             rust-targets: 'aarch64-apple-darwin,x86_64-apple-darwin'
+            skip-on-tag: true
           - os: ubuntu-22.04
             label: Linux (x64)
             tauri-args: ''
             rust-targets: ''
+            skip-on-tag: false
           - os: windows-latest
             label: Windows (x64)
             tauri-args: ''
             rust-targets: ''
+            skip-on-tag: false
+
+    # Skip the whole job when the matrix row is flagged skip-on-tag
+    # AND the trigger is a tag. On push-to-main / workflow_dispatch
+    # everything still runs (smoke test). One condition on the job
+    # keeps each platform-step block from needing its own `if:`.
+    if: ${{ !(matrix.skip-on-tag && github.ref_type == 'tag') }}
 
     steps:
       - uses: actions/checkout@v4
@@ -184,10 +209,18 @@ jobs:
             vendor-
 
       # tauri-action wraps `tauri build`, runs the matrix args, and
-      # — when tagName is set — uploads the produced bundles to a
-      # draft GitHub release named after the tag. On manual dispatch
-      # we leave tagName empty so it just builds + uploads as a
-      # workflow artefact (handled by upload-artifact below).
+      # — when tagName is set — uploads the produced bundles to the
+      # GitHub release named after the tag. On manual dispatch we
+      # leave tagName empty so it just builds + uploads as a workflow
+      # artefact (handled by upload-artifact below).
+      #
+      # `releaseDraft: false` matters here: `make local-release`
+      # publishes the macOS DMG into a NON-draft release first, and
+      # if we set draft=true, tauri-action's upload to the existing
+      # published release was silently dropping the assets (or going
+      # to a separate hidden draft). With draft=false it appends to
+      # whatever's already there — the Linux .AppImage/.deb and
+      # Windows .msi/.exe land alongside the local Mac DMG.
       - name: Build (Tauri bundle)
         uses: tauri-apps/tauri-action@v0
         env:
@@ -195,8 +228,8 @@ jobs:
         with:
           tagName: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
           releaseName: ${{ github.ref_type == 'tag' && format('Fishbones {0}', github.ref_name) || '' }}
-          releaseBody: ${{ github.ref_type == 'tag' && format('Auto-generated draft release for {0}. Edit before publishing.', github.ref_name) || '' }}
-          releaseDraft: true
+          releaseBody: ${{ github.ref_type == 'tag' && format('Signed and notarized macOS release. Linux + Windows builds attached automatically by CI.', github.ref_name) || '' }}
+          releaseDraft: false
           prerelease: false
           args: ${{ matrix.tauri-args }}
 

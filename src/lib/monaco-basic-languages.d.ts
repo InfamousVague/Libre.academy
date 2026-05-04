@@ -81,3 +81,14 @@ declare module "monaco-editor/esm/vs/basic-languages/elixir/elixir" {
   export const conf: import("monaco-editor").languages.LanguageConfiguration;
   export const language: import("monaco-editor").languages.IMonarchLanguage;
 }
+// JS / TS Monarch backstops. Pulled in directly so the editor has
+// guaranteed tokenization even before the Language-Service worker
+// boots (or if it never does — see monaco-setup.ts comment).
+declare module "monaco-editor/esm/vs/basic-languages/javascript/javascript" {
+  export const conf: import("monaco-editor").languages.LanguageConfiguration;
+  export const language: import("monaco-editor").languages.IMonarchLanguage;
+}
+declare module "monaco-editor/esm/vs/basic-languages/typescript/typescript" {
+  export const conf: import("monaco-editor").languages.LanguageConfiguration;
+  export const language: import("monaco-editor").languages.IMonarchLanguage;
+}

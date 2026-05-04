@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
 import { storage, type Completion } from "../lib/storage";
+import {
+  clearWorkbenchForChapter,
+  clearWorkbenchForCourse,
+  clearWorkbenchForLesson,
+} from "./useWorkbenchFiles";
 
 export type { Completion };
 
@@ -70,6 +75,12 @@ export function useProgress() {
   /// Reset a single lesson's completion. Drops the key from the in-memory
   /// Set and history array immediately so progress rings update without
   /// a re-fetch, then fires the matching storage delete.
+  ///
+  /// Also clears the per-lesson workbench (saved editor content) so the
+  /// reset puts the lesson back to its starter state — without this,
+  /// "Reset progress" only cleared the completion checkmark while the
+  /// learner's last solution stayed in localStorage and re-loaded
+  /// the next time they opened the lesson.
   function clearLessonCompletion(courseId: string, lessonId: string) {
     const key = `${courseId}:${lessonId}`;
     setCompleted((prev) => {
@@ -82,12 +93,18 @@ export function useProgress() {
       prev.filter((r) => !(r.course_id === courseId && r.lesson_id === lessonId)),
     );
     storage.clearLessonCompletion(courseId, lessonId).catch(() => {});
+    clearWorkbenchForLesson(courseId, lessonId);
   }
 
   /// Reset every lesson in a chapter. We don't have a chapter id in the schema
   /// (completions are flat per-lesson) so the caller passes in the list of
   /// lesson_ids that belong to the chapter. Local state updates happen in one
   /// batched setState; the storage deletes are fired in parallel.
+  ///
+  /// Workbench files for each chapter lesson get nuked alongside the
+  /// completion records so the reset is a true "back to starter" rather
+  /// than just clearing checkmarks (see `clearLessonCompletion` for the
+  /// rationale).
   function clearChapterCompletions(courseId: string, lessonIds: string[]) {
     if (lessonIds.length === 0) return;
     const keys = new Set(lessonIds.map((id) => `${courseId}:${id}`));
@@ -106,10 +123,16 @@ export function useProgress() {
       ),
     );
     storage.clearChapterCompletions(courseId, lessonIds).catch(() => {});
+    clearWorkbenchForChapter(courseId, lessonIds);
   }
 
   /// Reset every completion for a course. Single command call instead of
   /// per-lesson fan-out — the backend has a course-scoped DELETE.
+  ///
+  /// Also wipes every saved workbench under this course so the editor
+  /// shows the original starter on the next visit (and any currently-
+  /// mounted LessonView snaps back via the broadcast inside
+  /// `clearWorkbenchForCourse`).
   function clearCourseCompletions(courseId: string) {
     setCompleted((prev) => {
       let mutated = false;
@@ -124,6 +147,7 @@ export function useProgress() {
     });
     setHistory((prev) => prev.filter((r) => r.course_id !== courseId));
     storage.clearCourseCompletions(courseId).catch(() => {});
+    clearWorkbenchForCourse(courseId);
   }
 
   /// Wipe ALL local completions + history. Used by the mobile Settings
@@ -140,6 +164,12 @@ export function useProgress() {
         storage.clearCourseCompletions(id).catch(() => {}),
       ),
     );
+    // Drop every per-lesson workbench so the wipe is a true back-to-
+    // starter — same rationale as `clearCourseCompletions`. Walks each
+    // touched course; lives mostly in localStorage so this is cheap.
+    for (const id of courseIds) {
+      clearWorkbenchForCourse(id);
+    }
     setCompleted(new Set());
     setHistory([]);
   }

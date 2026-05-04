@@ -83,6 +83,19 @@ import * as cppLang from "monaco-editor/esm/vs/basic-languages/cpp/cpp";
 import * as csharpLang from "monaco-editor/esm/vs/basic-languages/csharp/csharp";
 import * as goLang from "monaco-editor/esm/vs/basic-languages/go/go";
 import * as javaLang from "monaco-editor/esm/vs/basic-languages/java/java";
+// Eager JS / TS Monarch grammars. The `language/typescript/monaco.contribution`
+// import above registers a richer Language-Service-driven tokenizer that
+// delivers full syntax + semantic highlighting once its worker boots, but
+// in the Tauri production webview the worker loader has historically been
+// flaky enough that we'd see plain unstyled JS / TS until the worker
+// succeeded (or never, if it failed silently). Pulling in the basic
+// Monarch grammars gives us a guaranteed, no-worker-required tokenizer
+// that paints the moment the editor mounts; the Language Service overlays
+// itself on top once it's ready (semantic highlighting still wins for
+// known identifiers). Result: code never renders as a wall of plain
+// white text again.
+import * as javascriptLang from "monaco-editor/esm/vs/basic-languages/javascript/javascript";
+import * as typescriptLang from "monaco-editor/esm/vs/basic-languages/typescript/typescript";
 import * as kotlinLang from "monaco-editor/esm/vs/basic-languages/kotlin/kotlin";
 import * as mipsLang from "monaco-editor/esm/vs/basic-languages/mips/mips";
 import * as pythonLang from "monaco-editor/esm/vs/basic-languages/python/python";
@@ -160,6 +173,13 @@ const BASIC_LANGUAGES: Array<{
   { id: "cpp", language: cppLang.language, conf: cppLang.conf },
   { id: "csharp", language: csharpLang.language, conf: csharpLang.conf },
   { id: "go", language: goLang.language, conf: goLang.conf },
+  // JS / TS Monarch backstop. Registered alongside the Language Service
+  // so we always have a tokenizer in memory; setMonarchTokensProvider is
+  // a no-op once the worker-driven mode binds, but it's the safety net
+  // that keeps the playground from rendering blank-white code when
+  // (e.g.) a worker URL fails to resolve in production.
+  { id: "javascript", language: javascriptLang.language, conf: javascriptLang.conf },
+  { id: "typescript", language: typescriptLang.language, conf: typescriptLang.conf },
   { id: "java", language: javaLang.language, conf: javaLang.conf },
   { id: "kotlin", language: kotlinLang.language, conf: kotlinLang.conf },
   { id: "mips", language: mipsLang.language, conf: mipsLang.conf },

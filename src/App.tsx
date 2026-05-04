@@ -52,7 +52,8 @@ import ProfileView from "./components/Profile/ProfileView";
 import PlaygroundView from "./components/Playground/PlaygroundView";
 import DocsView from "./components/Docs/DocsView";
 import { FISHBONES_DOCS } from "./docs/pages";
-import { isWeb, isMobile, downloadUrl } from "./lib/platform";
+import { isWeb, isMobile } from "./lib/platform";
+import DownloadButton from "./components/DownloadButton/DownloadButton";
 import GeneratePackDialog from "./components/ChallengePack/GeneratePackDialog";
 import { useIngestRun } from "./hooks/useIngestRun";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
@@ -69,7 +70,6 @@ import MobileMicroPuzzle from "./mobile/MobileMicroPuzzle";
 import AiAssistant from "./components/AiAssistant/AiAssistant";
 import MobileApp from "./mobile/MobileApp";
 import { InstallBanner } from "./components/InstallBanner/InstallBanner";
-import CatalogBrowser from "./components/CatalogBrowser/CatalogBrowser";
 import CommandPalette from "./components/CommandPalette/CommandPalette";
 import { VerifyCourseOverlay, type VerifySessionView } from "./components/VerifyCourse";
 import FixApplierDialog from "./components/FixApplier/FixApplierDialog";
@@ -93,7 +93,6 @@ import { useRecentCourses } from "./hooks/useRecentCourses";
 import { useStreakAndXp } from "./hooks/useStreakAndXp";
 import { useWorkbenchFiles } from "./hooks/useWorkbenchFiles";
 import {
-  loadPersistedTabs,
   savePersistedTabs,
   validateTabsAgainstCourses,
   type OpenCourse,
@@ -159,13 +158,12 @@ export default function App() {
   // `tabs: []` is treated as "the user explicitly closed everything"
   // and bypasses the auto-open via `didAutoOpen.current = true` (see
   // useRef init below).
-  const initialPersisted = useRef(loadPersistedTabs()).current;
-  const [openTabs, setOpenTabs] = useState<OpenCourse[]>(
-    initialPersisted?.tabs ?? [],
-  );
-  const [activeTabIndex, setActiveTabIndex] = useState(
-    initialPersisted?.activeIndex ?? 0,
-  );
+  // Always start with NO tabs open — the user lands on the Library
+  // route on every launch and re-opens whatever lesson they want
+  // from there. Persisted tabs from the previous session aren't
+  // auto-restored.
+  const [openTabs, setOpenTabs] = useState<OpenCourse[]>([]);
+  const [activeTabIndex, setActiveTabIndex] = useState(0);
 
   /// `cmd+K → "Verify this course"` session state. Null when no
   /// verification is in flight or visible. The overlay component
@@ -197,7 +195,6 @@ export default function App() {
   // Catalog browser modal — discovery surface for the Fishbones
   // library. Default seed only ships TRPL + Mastering Ethereum +
   // challenges; users add anything else from here.
-  const [catalogBrowserOpen, setCatalogBrowserOpen] = useState(false);
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [docsImportOpen, setDocsImportOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -462,10 +459,14 @@ export default function App() {
   /// iconbar. Selecting a lesson anywhere forces back to "courses" so the
   /// learner isn't stuck on a side view after clicking a sidebar item.
   const [view, setView] = useState<
-    "courses" | "profile" | "playground" | "library" | "docs" | "trees"
-  >(
-    "courses",
-  );
+    | "courses"
+    | "profile"
+    | "playground"
+    | "library"
+    | "discover"
+    | "docs"
+    | "trees"
+  >("library");
 
   /// Active docs page id. Lifted to App-level so the main Sidebar can
   /// render the docs section/page nav AND DocsView can render the
@@ -589,11 +590,15 @@ export default function App() {
   // The ref is flipped after the first auto-open OR after any manual
   // selectLesson call so repeated close-all cycles don't keep re-opening.
   //
-  // Initial value of `true` whenever we hydrated tabs from disk —
-  // either case (restored tabs OR explicitly-empty snapshot) means the
-  // learner already has a last-known intent and we shouldn't paper
-  // over it with the courses[0] default.
-  const didAutoOpen = useRef(initialPersisted !== null);
+  // Initial value of `true` always — the app lands on the Library
+  // route with no tabs open by default. The auto-open-first-course
+  // path used to fire on a true cold start (no persisted snapshot)
+  // and pick courses[0] for the user, but that's confusing when
+  // the intended landing surface is the Library list itself.
+  // Deep-link / pendingOpen flows still set tabs explicitly via
+  // selectLesson; only the implicit "open something" pass is
+  // disabled here.
+  const didAutoOpen = useRef(true);
   useEffect(() => {
     if (didAutoOpen.current) return;
     if (!coursesLoaded || courses.length === 0 || openTabs.length !== 0) return;
@@ -1073,6 +1078,7 @@ export default function App() {
           onSelectLesson={selectLesson}
           onSelectCourse={openCourseFromLibrary}
           onLibrary={() => setView("library")}
+          onDiscover={() => setView("discover")}
           onSettings={() => setSettingsOpen(true)}
           onTrees={() => setView("trees")}
           onPlayground={() => setView("playground")}
@@ -1120,18 +1126,40 @@ export default function App() {
               activeId={docsActiveId}
               onActiveIdChange={setDocsActiveId}
             />
-          ) : view === "library" ? (
-            // Library view — renders the inline CourseLibrary as the main
-            // pane content (not as a modal overlay). DeferredMount paints
-            // a "Loading library…" card for one animation frame so the
-            // sidebar click feels instant even when the cover-loading
-            // IPCs stack up under StrictMode's dev-mode double-render.
+          ) : view === "library" || view === "discover" ? (
+            // Library + Discover both render through CourseLibrary —
+            // same chrome (filters / search / view-mode), different
+            // dataset slice. The `scope` prop drives the filter:
+            // "library" shows installed courses only; "discover"
+            // shows catalog placeholders only with install buttons
+            // on each card. Sidebar nav controls which one's active.
+            //
+            // The `key={view}` is load-bearing: without it React
+            // reuses the SAME CourseLibrary instance across a
+            // library ↔ discover switch, which historically meant
+            // useState/useMemo state from one scope could survive
+            // into the other (most visibly: the Discover view's
+            // placeholder tiles still showing up in Library on the
+            // first frame after switching back). Keying on `view`
+            // forces React to unmount + remount, giving each scope
+            // a fresh component instance with its own filter state.
+            // Phase on DeferredMount also tracks `view` so the
+            // loader briefly flashes between switches as a visual
+            // confirmation that we're on a new dataset.
             <DeferredMount
-              phase="library"
-              fallback={<LoadingPane label="Loading library…" />}
+              phase={view}
+              fallback={
+                <LoadingPane
+                  label={
+                    view === "discover" ? "Loading catalog…" : "Loading library…"
+                  }
+                />
+              }
             >
               <CourseLibrary
+                key={view}
                 mode="inline"
+                scope={view === "discover" ? "discover" : "library"}
                 courses={courses}
                 completed={completed}
                 hydrating={hydrating}
@@ -1153,7 +1181,7 @@ export default function App() {
                 onBulkExport={isWeb ? undefined : bulkExportLibrary}
                 onUpdateCourse={handleReapplyBundledStarter}
                 onAddCourse={isWeb ? undefined : handleAddCourse}
-                onBrowseCatalog={() => setCatalogBrowserOpen(true)}
+                onBrowseCatalog={() => setView("discover")}
                 onInstallCatalogEntry={handleInstallCatalogEntry}
               />
             </DeferredMount>
@@ -1171,43 +1199,13 @@ export default function App() {
                 </p>
                 <div className="fishbones__welcome-actions">
                   {isWeb ? (
-                    (() => {
-                      // Web visitors see explicit per-platform
-                      // download buttons. Detected OS gets the
-                      // primary CTA; the other two sit alongside as
-                      // smaller pills so a Linux user on a Windows
-                      // detection still has a one-click path. All
-                      // links go to the latest GitHub release page.
-                      const { primary, all } = downloadUrl();
-                      const others = all.filter((t) => t.os !== primary.os);
-                      return (
-                        <>
-                          <a
-                            className="fishbones__welcome-primary"
-                            href={primary.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {primary.label}
-                          </a>
-                          {others.map((t) => (
-                            <a
-                              key={t.os}
-                              className="fishbones__welcome-secondary"
-                              href={t.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              {t.os === "macos"
-                                ? "macOS"
-                                : t.os === "windows"
-                                  ? "Windows"
-                                  : "Linux"}
-                            </a>
-                          ))}
-                        </>
-                      );
-                    })()
+                    // Web visitors get the split-button download —
+                    // primary face for the detected OS, caret on
+                    // the right opens a menu with all three. Same
+                    // pattern as the library's `+ Add course ▾` so
+                    // the two CTAs feel consistent. Hero size since
+                    // this carries the welcome screen.
+                    <DownloadButton className="fishbones-download--hero" />
                   ) : (
                     <>
                       <button
@@ -1257,7 +1255,7 @@ export default function App() {
                 onBulkExport={isWeb ? undefined : bulkExportLibrary}
                 onUpdateCourse={handleReapplyBundledStarter}
                 onAddCourse={isWeb ? undefined : handleAddCourse}
-                onBrowseCatalog={() => setCatalogBrowserOpen(true)}
+                onBrowseCatalog={() => setView("discover")}
                 onInstallCatalogEntry={handleInstallCatalogEntry}
               />
             </DeferredMount>
@@ -1508,14 +1506,6 @@ export default function App() {
           component self-gates on `isWeb` and a 30-day localStorage
           dismissal, so on desktop this is a no-op render. */}
       <InstallBanner />
-      <CatalogBrowser
-        open={catalogBrowserOpen}
-        onClose={() => setCatalogBrowserOpen(false)}
-        installedIds={new Set(courses.map((c) => c.id))}
-        onInstall={async (entry) => {
-          await handleInstallCatalogEntry(entry);
-        }}
-      />
 
       {/* First-launch sign-in nudge. Self-gates on
           `cloud.user === false` (= no token, not signed in) and on

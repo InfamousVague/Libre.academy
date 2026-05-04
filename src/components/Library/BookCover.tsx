@@ -100,13 +100,17 @@ export default function BookCover({
   onInstall,
 }: Props) {
   // Covers are prefetched in bulk when the library mounts (see
-  // `prefetchCovers` in CourseLibrary). This hook just reads from the
+  // `prefetchCovers` in CourseLibrary). This hook reads from the
   // shared cache that prefetch populates — no extra IPC per card.
-  // For placeholder tiles we skip the IPC lookup entirely (the
-  // course isn't installed yet so there's nothing on disk) and use
-  // the catalog-supplied URL directly.
-  const installedCoverUrl = useCourseCover(course.id, course.coverFetchedAt);
-  const coverUrl = placeholder ? placeholderCoverUrl : installedCoverUrl;
+  //
+  // Both installed and placeholder tiles route through useCourseCover.
+  // The desktop IPC (`load_course_cover`) falls back to extracting
+  // cover.png from the bundled `.fishbones` archive when the course
+  // isn't installed yet, so a Discover placeholder gets the same
+  // cover its installed twin would. Web hosts skip the IPC and use
+  // the catalog-supplied URL directly via `placeholderCoverUrl`.
+  const hookCoverUrl = useCourseCover(course.id, course.coverFetchedAt);
+  const coverUrl = hookCoverUrl ?? placeholderCoverUrl;
   // Track image load failures so a 404 / blocked-by-CSP / etc. on
   // the URL falls back to the language-tinted glyph tile rather
   // than rendering Safari's broken-image placeholder. Resets when

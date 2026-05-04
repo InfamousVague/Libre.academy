@@ -76,13 +76,39 @@ export function bundledCourseUrl(courseId: string): string {
   return `${base}starter-courses/${courseId}.json`;
 }
 
-/// Fetch the bundled course JSON. Returns null when the URL 404s
-/// (e.g. a user-imported course that has no bundled counterpart) or
-/// the network is unreachable — callers treat both as "no bundled
-/// version available, no update to surface".
+/// Fetch the bundled course JSON. Returns null when no bundled
+/// counterpart exists (user-imported course, network unreachable on
+/// web, etc.) — callers treat null as "no bundled version, nothing
+/// to update against".
+///
+/// Desktop: reads the .fishbones archive shipped under
+/// `src-tauri/resources/bundled-packs/` via the Rust
+/// `read_bundled_course` command. This is the SAME source the
+/// desktop seed extracts from on first launch — keeping update
+/// detection on the same source of truth means "freshly seeded"
+/// can never come up as "update available". The earlier desktop
+/// path here read from `public/starter-courses/<id>.json` (the web
+/// extractor's output), which drifts whenever the .fishbones
+/// changes without a manual `npm run starter:web` re-extract,
+/// triggering perpetual update badges.
+///
+/// Web: still fetches `${BASE_URL}starter-courses/<id>.json`
+/// (same-origin) — that IS the source of truth for the deployed
+/// web build.
 export async function fetchBundledCourse(
   courseId: string,
 ): Promise<Course | null> {
+  if (isDesktop) {
+    try {
+      const { invoke } = await import("@tauri-apps/api/core");
+      const result = await invoke<Course | null>("read_bundled_course", {
+        courseId,
+      });
+      return result ?? null;
+    } catch {
+      return null;
+    }
+  }
   try {
     const res = await fetch(bundledCourseUrl(courseId), { cache: "no-cache" });
     if (!res.ok) return null;

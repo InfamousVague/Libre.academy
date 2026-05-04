@@ -767,11 +767,16 @@ SELECT name, species FROM pets ORDER BY name;
   zig: {
     filename: "main.zig",
     fileLanguage: "zig",
+    // Zig 0.16 reorganised `std.io` — the older
+    // `std.io.getStdOut().writer()` pattern errors with "no member
+    // named 'io'". Use `std.debug.print` (writes to stderr; the
+    // playground merges both streams into one log pane), which has
+    // been stable since 0.x and avoids the writer-buffer dance the
+    // newer `std.fs.File.stdout()` API now requires.
     content: `const std = @import("std");
 
 pub fn main() !void {
-    const stdout = std.io.getStdOut().writer();
-    try stdout.print("Hello, world!\\n", .{});
+    std.debug.print("Hello, world!\\n", .{});
 }
 `,
   },

@@ -8,6 +8,7 @@ import { code as codeIcon } from "@base/primitives/icon/icons/code";
 import { fileText } from "@base/primitives/icon/icons/file-text";
 import { helpCircle } from "@base/primitives/icon/icons/help-circle";
 import { libraryBig } from "@base/primitives/icon/icons/library-big";
+import { compass as compassIcon } from "@base/primitives/icon/icons/compass";
 import { trees as treesIcon } from "@base/primitives/icon/icons/trees";
 import { settings as settingsIcon } from "@base/primitives/icon/icons/settings";
 import { download as downloadIcon } from "@base/primitives/icon/icons/download";
@@ -146,6 +147,12 @@ interface Props {
   onSelectCourse?: (courseId: string) => void;
   /// Opens the course library modal.
   onLibrary: () => void;
+  /// Discover route — browse catalog books + challenge packs not
+  /// yet in the user's library. Distinct from `onLibrary` so the
+  /// installed shelf and the available-to-install shelf don't
+  /// share a surface. Optional — embeddings without a discover
+  /// view just don't render the entry.
+  onDiscover?: () => void;
   onSettings: () => void;
   /// Trees route — skill-tree explorer. Optional so embeddings
   /// without a trees pane (popped workbench, mobile) don't grow a
@@ -174,7 +181,14 @@ interface Props {
   /// its callback and lets the parent manage the state transition.
   /// "profile" stays a valid destination even though it's no longer in
   /// the sidebar — the top-bar streak pill's "View profile" CTA sets it.
-  activeView?: "courses" | "profile" | "playground" | "library" | "docs" | "trees";
+  activeView?:
+    | "courses"
+    | "profile"
+    | "playground"
+    | "library"
+    | "discover"
+    | "docs"
+    | "trees";
   onExportCourse?: (courseId: string, courseTitle: string) => void;
   onDeleteCourse?: (courseId: string, courseTitle: string) => void;
   onCourseSettings?: (courseId: string) => void;
@@ -202,6 +216,7 @@ export default function Sidebar({
   onSelectLesson,
   onSelectCourse,
   onLibrary,
+  onDiscover,
   onTrees,
   onSettings,
   onPlayground,
@@ -328,6 +343,14 @@ export default function Sidebar({
           onClick={onLibrary}
           active={activeView === "library"}
         />
+        {onDiscover && (
+          <SidebarNavItem
+            icon={compassIcon}
+            label="Discover"
+            onClick={onDiscover}
+            active={activeView === "discover"}
+          />
+        )}
         {onTrees && (
           <SidebarNavItem
             icon={treesIcon}

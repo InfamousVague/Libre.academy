@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Icon } from "@base/primitives/icon";
 import { x as xIcon } from "@base/primitives/icon/icons/x";
-import { download as downloadIcon } from "@base/primitives/icon/icons/download";
 import "@base/primitives/icon/icon.css";
-import { downloadUrl, isWeb } from "../../lib/platform";
+import { isWeb } from "../../lib/platform";
+import DownloadButton from "../DownloadButton/DownloadButton";
 import "./InstallBanner.css";
 
 /// Floating "get the desktop app" card mounted by App.tsx on the web
@@ -55,9 +55,6 @@ export function InstallBanner() {
 
   if (!isWeb || !visible) return null;
 
-  const { primary, all } = downloadUrl();
-  const others = all.filter((t) => t.os !== primary.os);
-
   const dismiss = () => {
     setVisible(false);
     try {
@@ -89,36 +86,7 @@ export function InstallBanner() {
         offline AI. Free + open source.
       </div>
       <div className="fishbones-install-banner__cta">
-        <a
-          href={primary.url}
-          className="fishbones-install-banner__primary"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <span aria-hidden>
-            <Icon icon={downloadIcon} size="xs" color="currentColor" />
-          </span>
-          {primary.label}
-        </a>
-        <div className="fishbones-install-banner__alts">
-          {others.map((t) => (
-            <a
-              key={t.os}
-              href={t.url}
-              className="fishbones-install-banner__alt"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {/* Single-word OS label so the row stays one line on
-                  narrow viewports. */}
-              {t.os === "macos"
-                ? "macOS"
-                : t.os === "windows"
-                  ? "Windows"
-                  : "Linux"}
-            </a>
-          ))}
-        </div>
+        <DownloadButton />
       </div>
     </aside>
   );

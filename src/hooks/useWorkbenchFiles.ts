@@ -23,6 +23,107 @@ function storageKey(courseId: string, lessonId: string): string {
   return `${STORAGE_PREFIX}${courseId}:${lessonId}`;
 }
 
+/// Custom DOM event a "Reset progress" caller fires when the user
+/// nukes a course / chapter / lesson via the sidebar context menu.
+/// Mounted `useWorkbenchFiles` instances listen for this and reset
+/// their in-memory files to the starter set when the event's scope
+/// matches their `(courseId, lessonId)`. Without this, resetting a
+/// course's progress only cleared completion checkmarks — the
+/// learner's last solution stayed in localStorage and re-hydrated
+/// the editor on next visit, defeating the reset.
+const WORKBENCH_RESET_EVENT = "fishbones:workbench-reset";
+interface WorkbenchResetDetail {
+  /// Match scope. Exactly one of these is set:
+  /// - `lessonId` set → reset that specific lesson under courseId
+  /// - `lessonId` empty + courseId set → reset every lesson in the course
+  /// - both empty → reset every workbench (used by Settings → wipe all)
+  courseId: string;
+  lessonId?: string;
+}
+
+/// Drop the saved workbench for a single lesson AND broadcast so a
+/// mounted `useWorkbenchFiles` for that lesson re-renders with the
+/// starter set immediately (instead of waiting for navigation away
+/// and back to remount the hook).
+export function clearWorkbenchForLesson(
+  courseId: string,
+  lessonId: string,
+): void {
+  if (typeof localStorage !== "undefined") {
+    try {
+      localStorage.removeItem(storageKey(courseId, lessonId));
+    } catch {
+      /* private mode or quota — swallow */
+    }
+  }
+  dispatchReset({ courseId, lessonId });
+}
+
+/// Drop the saved workbench for every listed lesson under a course.
+/// One pass over localStorage so chapters with many lessons stay cheap.
+export function clearWorkbenchForChapter(
+  courseId: string,
+  lessonIds: string[],
+): void {
+  if (lessonIds.length === 0) return;
+  if (typeof localStorage !== "undefined") {
+    for (const lessonId of lessonIds) {
+      try {
+        localStorage.removeItem(storageKey(courseId, lessonId));
+      } catch {
+        /* swallow */
+      }
+    }
+  }
+  // Fire one event per lesson so per-lesson hooks each see their
+  // match. (Cheap — typical chapter is <20 lessons.)
+  for (const lessonId of lessonIds) {
+    dispatchReset({ courseId, lessonId });
+  }
+}
+
+/// Drop every workbench file saved under a course — used by the
+/// "Reset progress" menu item on a course in the sidebar. Walks all
+/// localStorage keys with the workbench prefix because we don't keep
+/// a separate index of which lessons have been edited.
+export function clearWorkbenchForCourse(courseId: string): void {
+  if (typeof localStorage !== "undefined") {
+    const prefix = `${STORAGE_PREFIX}${courseId}:`;
+    try {
+      // Collect first then delete — mutating localStorage mid-iteration
+      // shifts indices and would skip keys.
+      const toRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(prefix)) toRemove.push(key);
+      }
+      for (const k of toRemove) {
+        try {
+          localStorage.removeItem(k);
+        } catch {
+          /* swallow */
+        }
+      }
+    } catch {
+      /* swallow */
+    }
+  }
+  dispatchReset({ courseId });
+}
+
+function dispatchReset(detail: WorkbenchResetDetail): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.dispatchEvent(
+      new CustomEvent<WorkbenchResetDetail>(WORKBENCH_RESET_EVENT, {
+        detail,
+      }),
+    );
+  } catch {
+    /* CustomEvent unsupported in some headless environments — drop */
+  }
+}
+
 /// Signature = sorted filenames joined. Content-agnostic on purpose: if the
 /// lesson author tweaks a comment in the starter we still want to restore
 /// the learner's edits. It's only the *shape* (file set) that invalidates.
@@ -152,6 +253,49 @@ export function useWorkbenchFiles(
       /* ignore — best-effort cleanup */
     }
   }, [starter, courseId, lesson.id]);
+
+  /// Listen for a "Reset progress" broadcast from the sidebar context
+  /// menu. Without this, a course-level reset only cleared the
+  /// completion checkmarks while the live editor kept showing the
+  /// learner's last solution (re-saved from the in-memory `files`
+  /// state on the next debounce). Now any mounted instance whose
+  /// scope matches the event resets its in-memory files to starter,
+  /// matching the user's mental model that "reset" puts the lesson
+  /// back to the way it was before they typed anything.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!hasExercise) return;
+    const onReset = (ev: Event) => {
+      const detail = (ev as CustomEvent<{
+        courseId: string;
+        lessonId?: string;
+      }>).detail;
+      if (!detail) return;
+      // Course-only event matches every mounted lesson under that
+      // course; per-lesson event must match this lesson exactly.
+      const matchesCourse = detail.courseId === courseId;
+      const matchesLesson =
+        !detail.lessonId || detail.lessonId === lesson.id;
+      if (!matchesCourse || !matchesLesson) return;
+      // Reset to starter without writing to localStorage — the
+      // dispatcher already cleared the saved copy. Suppressing the
+      // debounce write that the next state change would queue is
+      // handled implicitly: the unmount/effect-cleanup chain only
+      // writes whatever's in `latestFilesRef.current`, which we
+      // overwrite to `starter` on the next render via setFiles.
+      setFiles(starter);
+    };
+    window.addEventListener(
+      "fishbones:workbench-reset",
+      onReset as EventListener,
+    );
+    return () => {
+      window.removeEventListener(
+        "fishbones:workbench-reset",
+        onReset as EventListener,
+      );
+    };
+  }, [courseId, lesson.id, hasExercise, starter]);
 
   return { files, setFiles, resetToStarter };
 }

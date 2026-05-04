@@ -134,6 +134,19 @@ release:
 ## (Use `make release` first if you want to bump the version.) Skips the
 ## /Applications install step — release publishing shouldn't require
 ## the user be willing to replace their local copy.
+##
+## After this finishes, `.github/workflows/desktop-build.yml` is also
+## triggered by the same tag push (or already running). It builds Linux
+## (.AppImage + .deb) and Windows (.msi + .exe) and APPENDS them to the
+## same release within ~25 minutes. macOS is intentionally skipped in CI
+## — the signed/notarized DMG can only be produced here, where the
+## Apple Developer ID cert lives.
+##
+## So a complete release flow looks like:
+##   make release        → bump + tag + push (triggers CI Linux+Win)
+##   make local-release  → build + sign + notarize + publish DMG
+##   …wait ~25 min…       CI uploads Linux + Windows assets
+##   visit https://github.com/InfamousVague/Fishbones/releases/latest
 local-release: build sign notarize
 	@DMG_CURRENT="$(TAURI)/target/release/bundle/dmg/Fishbones_$(VERSION)_$(ARCH_TAG).dmg"; \
 	if [ ! -f "$$DMG_CURRENT" ]; then \
