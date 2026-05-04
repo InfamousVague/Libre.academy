@@ -38,9 +38,15 @@ type ViewMode = "shelf" | "grid";
 const VIEW_MODE_STORAGE_KEY = "fishbones:library-view-mode";
 
 function loadInitialViewMode(): ViewMode {
-  if (typeof localStorage === "undefined") return "shelf";
+  // Default is grid (info-dense). Users who explicitly picked shelf
+  // (and persisted that pick to localStorage) keep it; everyone else
+  // — first-time visitors AND people who never touched the toggle —
+  // lands on grid. Inverted from the original "shelf default" after
+  // user feedback that the dense-info card view is more useful at a
+  // glance for someone deciding what to open.
+  if (typeof localStorage === "undefined") return "grid";
   const stored = localStorage.getItem(VIEW_MODE_STORAGE_KEY);
-  return stored === "grid" ? "grid" : "shelf";
+  return stored === "shelf" ? "shelf" : "grid";
 }
 
 interface Props {

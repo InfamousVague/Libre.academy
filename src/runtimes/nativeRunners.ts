@@ -272,29 +272,37 @@ export async function runZig(code: string, testCode?: string): Promise<RunResult
   }
 
   const isLessonRun = testCode !== undefined;
-  const tests = isLessonRun ? parseZigTestOutput(raw.stderr) : undefined;
-
-  // Build the visible log stream. Strip the per-test result lines and
-  // the "N passed; M skipped; K failed." footer — the test pills
-  // already convey that information. Keep stderr noise that points at
-  // compile errors / panic stacks / leak reports so the learner can
-  // see what went wrong.
-  const visibleStderr = isLessonRun
-    ? stripZigTestProtocol(raw.stderr)
-    : raw.stderr.replace(/\n+$/, "");
+  // Single pass: extract test results AND the user's `std.debug.print`
+  // output (which intermixes with the test runner's protocol on
+  // stderr). The console pane shows the prints + any leak / error
+  // traces; the test pills handle pass/fail. Without this split, a
+  // lesson with debug prints rendered an empty console (the prints
+  // were swallowed by the protocol-strip filter).
+  const parsed = isLessonRun
+    ? parseZigTestRun(raw.stderr)
+    : { tests: undefined, console: raw.stderr.replace(/\n+$/, "") };
   const visibleStdout = raw.stdout.replace(/\n+$/, "");
+  const visibleStderr = parsed.console;
 
   const logs: LogLine[] = [];
   if (visibleStdout) logs.push({ level: "log", text: visibleStdout });
-  if (visibleStderr && !raw.success) {
-    logs.push({ level: "error", text: visibleStderr.trimEnd() });
-  } else if (visibleStderr) {
-    logs.push({ level: "warn", text: visibleStderr.trimEnd() });
+  if (visibleStderr) {
+    // For lesson runs we report the stderr stream as a "log" line
+    // regardless of pass/fail. The test pills already show the red
+    // FAIL state; an additional "error"-level wrapper around the
+    // user's own debug prints is a category mismatch ("you printed
+    // to debug, here's an error"). Compile errors and panics still
+    // come through — they're visible as text, just not styled red
+    // by the log-level chrome.
+    logs.push({
+      level: isLessonRun ? "log" : raw.success ? "log" : "error",
+      text: visibleStderr.trimEnd(),
+    });
   }
 
   return {
     logs,
-    tests,
+    tests: parsed.tests,
     durationMs: performance.now() - start,
     testsExpected: isLessonRun,
   };
@@ -312,61 +320,122 @@ function dedupeZigStdImport(code: string, testCode?: string): string | undefined
   return testCode.replace(importRe, "");
 }
 
-/// Parse the per-test lines `zig test` writes to stderr. Each test
-/// emits exactly one line in the format:
+/// Single-pass parser for `zig test` stderr.
 ///
-///   1/3 mySlug.test.add basic...OK
-///   2/3 mySlug.test.add negatives...FAIL (TestUnexpectedResult)
+/// `zig test` mixes three streams onto one buffer:
+///   1. **Protocol lines** — `1/N slug.test.name...` headers, status
+///      (`OK` / `FAIL [(reason)]` / `SKIP`), the `N passed; M skipped;
+///      K failed.` footer, and the `error: the following test command
+///      failed...` epilogue. These convey pass/fail and become
+///      `TestResult` pills.
+///   2. **User debug output** — anything the test body wrote via
+///      `std.debug.print` (or any other write to stderr). Appears
+///      INLINE: the first chunk gets concatenated to the header line
+///      after `...`, then subsequent prints land on their own lines
+///      until the test terminates with a status. Goes to the console
+///      so the learner can see what their code printed.
+///   3. **Failure traces** — file:line:col header, the source line,
+///      a caret pointing at the failing expression. Also goes to the
+///      console so the learner can find the bug.
 ///
-/// The slug is the temp filename (random; we ignore it). The test
-/// name is everything between `.test.` and `...`. The status is
-/// `OK`, `FAIL`, or `SKIP`; FAIL may include a parenthesised reason.
+/// We walk the stream once, classify each segment, route to the right
+/// bucket. The console string keeps stream order intact so prints +
+/// failure traces interleave the way the user expects.
 ///
-/// Leak reports (from `std.testing.allocator`) come on separate
-/// lines after the `OK` summary — we surface them by retroactively
-/// flipping affected tests to FAIL (the `0x... in test.<name>` line
-/// in the leak trace tells us which test owns the leak).
-function parseZigTestOutput(stderr: string): TestResult[] {
-  const results: TestResult[] = [];
+/// Leak reports (from `std.testing.allocator`) come AFTER the test
+/// summary. We retroactively flip the owning test from PASS to FAIL
+/// using the `0x... in test.<name>` line in the leak trace — and pass
+/// the leak text through to the console so the learner can see WHY
+/// the leak fired.
+function parseZigTestRun(stderr: string): {
+  tests: TestResult[];
+  console: string;
+} {
   const lines = stderr.split("\n");
-  // Header line shape: `<idx>/<total> <slug>.test.<name>...<trailing>`
-  // The trailing portion MAY be the status (`OK` / `FAIL [(reason)]`)
-  // OR may be empty / contain stdout the test body printed inline. In
-  // the latter case the actual status lands on a later line with no
-  // header — so we track an "active" test until we see its terminator.
-  const headerRe = /\d+\/\d+\s+\S+\.test\.(.+?)\.\.\.(.*)$/;
+  const tests: TestResult[] = [];
+  const consoleLines: string[] = [];
+
+  const headerRe = /^(\d+\/\d+\s+\S+\.test\.)(.+?)\.\.\.(.*)$/;
   const statusRe = /^(OK|FAIL|SKIP)(?:\s+\((.+?)\))?\s*$/;
+  const summaryRe = /^\d+ passed; \d+ skipped; \d+ failed\.$/;
+  const allPassedRe = /^All \d+ tests passed\.$/;
+  const epilogueRe = /^error: the following test command failed/;
+  const cachePathRe = /^\/.*?\.cache\/zig\/o\/[a-f0-9]+\/test/;
+
   let active: { name: string } | null = null;
+
   for (const rawLine of lines) {
     const line = rawLine.replace(/\r$/, "");
+
+    // Protocol summary / epilogue lines never go to the console — the
+    // test pills + count badge already tell that story.
+    if (summaryRe.test(line) || allPassedRe.test(line) || epilogueRe.test(line) || cachePathRe.test(line)) {
+      continue;
+    }
+
     const header = headerRe.exec(line);
     if (header) {
-      // Flush any unresolved previous header as a failure — this only
-      // hits malformed output, but failing closed beats silent drop.
-      if (active) results.push({ name: active.name, passed: false, error: "no status line" });
-      const [, name, trailing] = header;
-      const inline = statusRe.exec(trailing.trim());
+      // Flush the previous header as a failure if it never resolved
+      // (malformed output). Failing closed beats silent drop.
+      if (active) {
+        tests.push({ name: active.name, passed: false, error: "no status line" });
+      }
+      const [, , name, trailing] = header;
+      const trailingTrim = trailing.trim();
+      const inline = statusRe.exec(trailingTrim);
       if (inline) {
+        // Pure-status header — `1/1 ...test.foo...OK`. No console
+        // output to capture.
         const [, status, reason] = inline;
-        if (status === "OK") results.push({ name, passed: true });
-        else if (status === "FAIL") results.push({ name, passed: false, error: reason || "test failed" });
+        if (status === "OK") tests.push({ name, passed: true });
+        else if (status === "FAIL") tests.push({ name, passed: false, error: reason || "test failed" });
+        else if (status === "SKIP") {
+          // Skipped tests still produce a result row so the count UI
+          // doesn't lie about how many cases ran.
+          tests.push({ name, passed: true, error: "skipped" });
+        }
         active = null;
       } else {
+        // Test printed output before its status landed. The trailing
+        // text after `...` is the FIRST chunk of debug output — capture
+        // it so the console doesn't lose the print.
         active = { name };
+        if (trailingTrim.length > 0) {
+          consoleLines.push(trailingTrim);
+        }
       }
       continue;
     }
-    if (!active) continue;
-    const standalone = statusRe.exec(line.trim());
-    if (!standalone) continue;
-    const [, status, reason] = standalone;
-    if (status === "OK") results.push({ name: active.name, passed: true });
-    else if (status === "FAIL") results.push({ name: active.name, passed: false, error: reason || "test failed" });
-    active = null;
+
+    if (active) {
+      const standalone = statusRe.exec(line.trim());
+      if (standalone) {
+        const [, status, reason] = standalone;
+        if (status === "OK") tests.push({ name: active.name, passed: true });
+        else if (status === "FAIL") tests.push({ name: active.name, passed: false, error: reason || "test failed" });
+        else if (status === "SKIP") tests.push({ name: active.name, passed: true, error: "skipped" });
+        active = null;
+        continue;
+      }
+      // Inside an active test but not a status line — debug print
+      // output. Goes to the console, preserving blank lines so prose
+      // formatting in the user's debug output reads cleanly.
+      consoleLines.push(line);
+      continue;
+    }
+
+    // Outside any active test — failure traces, leak reports, and
+    // anything else that isn't summary chrome lands here.
+    consoleLines.push(line);
   }
-  if (active) results.push({ name: active.name, passed: false, error: "no status line" });
-  // Walk leak trace lines and demote any matching test from PASS to
-  // FAIL. Format: `0xADDR in test.<name> (test)`.
+
+  if (active) {
+    tests.push({ name: active.name, passed: false, error: "no status line" });
+  }
+
+  // Leak detection — same retroactive flip as before. We don't strip
+  // the leak text from console; the learner needs it to find the
+  // allocation site.
   const leakOwnerRe = /0x[0-9a-fA-F]+ in test\.(.+?) \(test\)/;
   let sawLeakHeader = false;
   for (const line of lines) {
@@ -378,31 +447,15 @@ function parseZigTestOutput(stderr: string): TestResult[] {
     const m = leakOwnerRe.exec(line);
     if (!m) continue;
     const owner = m[1];
-    const idx = results.findIndex((r) => r.name === owner && r.passed);
+    const idx = tests.findIndex((r) => r.name === owner && r.passed);
     if (idx >= 0) {
-      results[idx] = { name: owner, passed: false, error: "leaked memory" };
+      tests[idx] = { name: owner, passed: false, error: "leaked memory" };
     }
     sawLeakHeader = false;
   }
-  return results;
-}
 
-/// Drop the per-test result lines, the leak-report block, and the
-/// final `N passed; M skipped; K failed.` summary from stderr so the
-/// log pane only shows real diagnostic output. Leaves compile errors,
-/// panic stacks, and `error:` lines intact since those are the
-/// signal the learner needs.
-function stripZigTestProtocol(stderr: string): string {
-  return stderr
-    .split("\n")
-    .filter((line) => {
-      if (/^\s*\d+\/\d+\s+\S+\.test\..+\.\.\.(OK|FAIL|SKIP)/.test(line)) return false;
-      if (/^\d+ passed; \d+ skipped; \d+ failed\.$/.test(line)) return false;
-      if (/^All \d+ tests passed\.$/.test(line)) return false;
-      if (/^error: the following test command failed/.test(line)) return false;
-      if (/^\/.*?\.cache\/zig\/o\/[a-f0-9]+\/test/.test(line)) return false;
-      return true;
-    })
-    .join("\n")
-    .replace(/\n+$/, "");
+  return {
+    tests,
+    console: consoleLines.join("\n").replace(/\n+$/, ""),
+  };
 }

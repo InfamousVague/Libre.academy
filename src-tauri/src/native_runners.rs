@@ -764,14 +764,26 @@ pub async fn run_zig(code: String, mode: Option<String>) -> SubprocessResult {
             };
         }
     };
-    simple_run_one_file(
+    let result = simple_run_one_file(
         "zig",
         &[zig_subcommand],
         "zig",
         "zig",
         "install Zig (`brew install zig` on macOS, or grab a tarball from https://ziglang.org/download/).",
         code,
-    )
+    );
+    // Diagnostic — surface what zig itself returned so we can see
+    // whether the subprocess launched, whether stderr carries the
+    // expected per-test lines, and what exit code we observed.
+    eprintln!(
+        "[fishbones:zig] result success={} dur={}ms launch_err={:?} stdout_len={} stderr_head={:?}",
+        result.success,
+        result.duration_ms,
+        result.launch_error,
+        result.stdout.len(),
+        &result.stderr.chars().take(220).collect::<String>(),
+    );
+    result
 }
 
 /// Transform a Zig lesson's source into something runnable on the
