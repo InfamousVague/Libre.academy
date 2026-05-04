@@ -84,23 +84,23 @@ jobs:
             # have to ship + support.
             tauri-args: '--target universal-apple-darwin'
             rust-targets: 'aarch64-apple-darwin,x86_64-apple-darwin'
-            skip-on-tag: true
+            skipOnTag: true
           - os: ubuntu-22.04
             label: Linux (x64)
             tauri-args: ''
             rust-targets: ''
-            skip-on-tag: false
+            skipOnTag: false
           - os: windows-latest
             label: Windows (x64)
             tauri-args: ''
             rust-targets: ''
-            skip-on-tag: false
+            skipOnTag: false
 
-    # Skip the whole job when the matrix row is flagged skip-on-tag
+    # Skip the whole job when the matrix row is flagged skipOnTag
     # AND the trigger is a tag. On push-to-main / workflow_dispatch
     # everything still runs (smoke test). One condition on the job
     # keeps each platform-step block from needing its own `if:`.
-    if: ${{ !(matrix.skip-on-tag && github.ref_type == 'tag') }}
+    if: ${{ !(matrix.skipOnTag && github.ref_type == 'tag') }}
 
     steps:
       - uses: actions/checkout@v4
