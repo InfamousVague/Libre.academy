@@ -65,10 +65,19 @@ function classify(name) {
     // is explicit.
     return "darwin-aarch64";
   }
-  // Linux — `.AppImage.tar.gz` (the Tauri updater AppImage delta wrapper).
+  // Linux — `.AppImage.tar.gz` (the Tauri updater AppImage delta
+  // wrapper) preferred, but Tauri 2 + the post-matrix manifest job
+  // also produce raw `.AppImage` / `.deb` / `.rpm` with sibling
+  // `.sig` files. Match those too so Linux entries appear in
+  // latest.json.
   if (name.endsWith(".AppImage.tar.gz")) return "linux-x86_64";
-  // Windows — `.nsis.zip` (preferred) or `.msi.zip`.
-  if (name.endsWith(".nsis.zip") || name.endsWith(".msi.zip")) {
+  if (name.endsWith(".AppImage")) return "linux-x86_64";
+  // Windows — Tauri 2 emits `.exe` (NSIS installer) and `.msi`
+  // directly, NOT `.nsis.zip`/`.msi.zip` (Tauri 1 wrappers). The
+  // updater calls the .exe with silent-install flags. Prefer
+  // `.exe` over `.msi` since NSIS supports the updater's silent-
+  // background-install path; .msi requires admin elevation.
+  if (name.endsWith("-setup.exe") || name.endsWith(".nsis.zip")) {
     if (/aarch64|arm64/.test(name)) return "windows-aarch64";
     return "windows-x86_64";
   }
