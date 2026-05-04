@@ -26,10 +26,14 @@
   /* Bone palette — mid-tone of the new fishbones wordmark texture.
      Used by the FishbonesLoader spinner ring and any other surface
      that wants to read as "part of the brand" rather than stark white.
-     Two strengths so consumers can pick the right contrast for their
-     surface. */
+     Three strengths so consumers can pick the right contrast for their
+     surface. The amber variant is shifted ~15° toward orange and used
+     for scrollbars + accent buttons where pure bone reads too washed-
+     out against dark surfaces. */
   --fb-bone-color: #d4c5a1;
   --fb-bone-color-soft: #f4eedd; /* near-white text tint, see below */
+  --fb-bone-amber: #c9a76b; /* warmer bone — scrollbars, accents */
+  --fb-bone-amber-strong: #d4af6f; /* hover state, brighter on dark */
 }
 
 [data-theme-name="ayu-light"],
@@ -58,6 +62,13 @@
   --color-text-primary: #f4eedd;     /* was ~#fafafa, now bone-tinted */
   --color-text-secondary: #c5bfae;   /* was ~#a4a4ad, slightly warmed */
   --color-text-tertiary: #8a8576;    /* was ~#71717a, slightly warmed */
+  /* Default-dark didn't ship its own --color-accent token, so any
+     component falling back to that variable (notably the
+     AddCourseButton's split-button row) was hard-coding the legacy
+     periwinkle #6c8cff. Define it here as the bone-amber so the
+     button reads as part of the brand. */
+  --color-accent: var(--fb-bone-amber);
+  --color-accent-fg: #1a1410; /* deep brown for text-on-accent contrast */
 }
 
 /* ---- Synesthesia Synthwave --------------------------------------------- */

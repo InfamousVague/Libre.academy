@@ -16,8 +16,11 @@
 
 .fishbones-addcourse-main,
 .fishbones-addcourse-caret {
+  /* Theme-driven accent. Default-dark sets this to the bone-amber
+     palette; other themes that don't define --color-accent fall back
+     to the periwinkle that was the original default. */
   background: var(--color-accent, #6c8cff);
-  color: var(--color-bg-primary, #0b0b10);
+  color: var(--color-accent-fg, var(--color-bg-primary, #0b0b10));
   border: 0;
   cursor: pointer;
   font-size: 12px;
