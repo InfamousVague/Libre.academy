@@ -124,9 +124,33 @@ export function fetchCatalog(opts: { refresh?: boolean } = {}): Promise<
   ) {
     return cachedPromise;
   }
-  cachedPromise = isWeb ? fetchWebCatalog() : fetchDesktopCatalog();
+  // Always dedupe-by-id at the layer boundary. Desktop's
+  // `list_bundled_catalog_entries` is supposed to walk one directory,
+  // but a renamed archive (e.g. someone copied a .fishbones to a new
+  // filename without changing the inner course.json id) silently
+  // produces two rows with the same id — the Discover grid would
+  // then show two tiles for the same install. Web fetches a single
+  // manifest so this is a no-op there, but having one funnel keeps
+  // both surfaces honest.
+  cachedPromise = (isWeb ? fetchWebCatalog() : fetchDesktopCatalog()).then(
+    dedupeById,
+  );
   cachedAt = Date.now();
   return cachedPromise;
+}
+
+/// Collapse catalog entries by id, keeping the first occurrence.
+/// Stable order — important so a learner navigating Discover doesn't
+/// see tiles shuffle between renders.
+function dedupeById(entries: CatalogEntry[]): CatalogEntry[] {
+  const seen = new Set<string>();
+  const out: CatalogEntry[] = [];
+  for (const e of entries) {
+    if (seen.has(e.id)) continue;
+    seen.add(e.id);
+    out.push(e);
+  }
+  return out;
 }
 
 async function fetchWebCatalog(): Promise<CatalogEntry[]> {

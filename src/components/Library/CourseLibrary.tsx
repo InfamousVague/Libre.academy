@@ -980,6 +980,23 @@ export default function CourseLibrary({
                             ? () => void handleInstallClick(e.course.id)
                             : undefined
                         }
+                        // Library-mode: always-on reinstall (re-extract
+                        // bundled archive). Same handler as the
+                        // BookCover update badge — onUpdateCourse —
+                        // surfaced explicitly as a button so users
+                        // don't have to wait for an upstream-changed
+                        // signal to re-apply.
+                        hasUpdate={
+                          !e.course.placeholder &&
+                          !!onUpdateCourse &&
+                          !!updates[e.course.id]
+                        }
+                        updating={updatingIds.has(e.course.id)}
+                        onReinstall={
+                          !e.course.placeholder && onUpdateCourse
+                            ? () => void handleUpdateClick(e.course.id)
+                            : undefined
+                        }
                       />
                     ))}
                   </div>
@@ -1024,6 +1041,13 @@ function CourseCard({
   placeholder,
   installing,
   onInstall,
+  // Library-mode props — always-on reinstall + optional "update
+  // available" tint when the bundled hash differs from installed.
+  // Same handler signature as `onUpdateCourse` upstream, just
+  // renamed at the boundary so this component speaks "reinstall".
+  hasUpdate,
+  updating,
+  onReinstall,
 }: {
   course: Course;
   total: number;
@@ -1036,6 +1060,9 @@ function CourseCard({
   placeholder?: boolean;
   installing?: boolean;
   onInstall?: () => void;
+  hasUpdate?: boolean;
+  updating?: boolean;
+  onReinstall?: () => void;
 }) {
   const chapters = course.chapters.length;
   const status =
@@ -1108,6 +1135,27 @@ function CourseCard({
         </div>
       </button>
       <div className="fishbones-library-card-actions">
+        {onReinstall && (
+          <button
+            className={`fishbones-library-card-action ${
+              hasUpdate ? "fishbones-library-card-action--update" : ""
+            }`}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!updating) onReinstall();
+            }}
+            disabled={updating}
+            title={
+              updating
+                ? "Reinstalling…"
+                : hasUpdate
+                  ? "Update available — reapply bundled archive"
+                  : "Reinstall — re-extract bundled archive"
+            }
+          >
+            {updating ? "Reinstalling…" : hasUpdate ? "Update" : "Reinstall"}
+          </button>
+        )}
         {onExport && (
           <button
             className="fishbones-library-card-action"

@@ -30,7 +30,12 @@
 }
 
 /* Cover image — absolute full-fill so aspect-ratio wrapper clips to the
-   2:3 frame regardless of the image's native dimensions. */
+   2:3 frame regardless of the image's native dimensions.
+   Progressive blur-up: a freshly-mounted cover starts blurred + dim
+   (the `--loading` class) and fades crisp + bright (the `--loaded`
+   class) once the browser fires `onLoad`. The 1.05 scale during
+   loading conceals the blur's halo at the edges so the transition
+   reads as "image sharpening" rather than "blur fading away". */
 .fishbones-book-cover {
   position: absolute;
   inset: 0;
@@ -40,6 +45,42 @@
   object-position: center;
   display: block;
   user-select: none;
+  /* Compose the transitions on properties the GPU handles cheaply
+     so a Discover grid full of fading covers doesn't drop frames. */
+  transition:
+    filter 350ms ease-out,
+    opacity 350ms ease-out,
+    transform 450ms ease-out;
+}
+
+/* Pre-load state — visible while the JPEG bytes are still on the
+   wire. The blur radius is generous (16px) because the actual
+   rendered tile is small; on a Retina display the image scales up
+   ~2x so the blur reads stronger than its number suggests. */
+.fishbones-book-cover--loading {
+  filter: blur(16px) saturate(140%);
+  opacity: 0.65;
+  transform: scale(1.05);
+}
+
+/* Post-load state — clear, fully opaque, at native scale. */
+.fishbones-book-cover--loaded {
+  filter: blur(0) saturate(100%);
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Honor reduced-motion preferences — drop the blur transition for
+   users who'd rather see the cover snap in directly. */
+@media (prefers-reduced-motion: reduce) {
+  .fishbones-book-cover {
+    transition: none;
+  }
+  .fishbones-book-cover--loading {
+    filter: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* Gradient that fades from transparent (top) to dark (bottom) so the

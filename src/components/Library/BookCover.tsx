@@ -116,8 +116,14 @@ export default function BookCover({
   // than rendering Safari's broken-image placeholder. Resets when
   // the URL changes (rare, but happens after a fresh cover fetch).
   const [imageError, setImageError] = useState(false);
+  // Progressive blur-up: covers start blurred + dimmed and crisp-fade
+  // in once the bytes finish landing. Two states because we need a
+  // momentary "transition off" window so re-pointing at a different
+  // URL re-runs the blur-up instead of jumping the cover in instantly.
+  const [imageLoaded, setImageLoaded] = useState(false);
   useEffect(() => {
     setImageError(false);
+    setImageLoaded(false);
   }, [coverUrl]);
   const hasCover = !!coverUrl && !imageError;
 
@@ -187,11 +193,19 @@ export default function BookCover({
           properly and shows alt text if it fails to load. */}
       {hasCover && (
         <img
-          className="fishbones-book-cover"
+          className={`fishbones-book-cover ${
+            imageLoaded ? "fishbones-book-cover--loaded" : "fishbones-book-cover--loading"
+          }`}
           src={coverUrl}
           alt={`${course.title} cover`}
           loading="lazy"
+          // `decoding="async"` lets the browser decode off the main
+          // thread, so a 1MB JPEG doesn't block paint while it parses.
+          // Combined with the blur-up CSS this yields the iOS
+          // Photos-style "appears blurry, sharpens in" effect for free.
+          decoding="async"
           draggable={false}
+          onLoad={() => setImageLoaded(true)}
           onError={() => setImageError(true)}
         />
       )}
@@ -326,19 +340,25 @@ export default function BookCover({
         </div>
       )}
 
-      {/* Update-available badge in the bottom-right corner. Click
-          triggers the "Reapply bundled starter" flow via the
-          parent's onUpdate. We wrap in a real button (not a span)
-          so keyboard users can tab to it; stopPropagation keeps
-          the surrounding card's onOpen from firing on the same
-          click. While the parent has the sync in flight (`updating`)
-          the badge swaps to a spinner + disables itself so the
-          user gets feedback and can't re-fire the request. */}
-      {(hasUpdate || updating) && onUpdate && (
+      {/* Bottom-right reinstall / update badge. Always visible on
+          installed cards once the parent wires `onUpdate` — replaces
+          the older "only render on hash mismatch" gate so a learner
+          can re-extract the bundled archive at will (useful after
+          editing a lesson and wanting the canonical copy back).
+          Three states:
+            - hasUpdate=true  → label "update"     (signals upstream changed)
+            - hasUpdate=false → label "reinstall"  (idempotent re-extract)
+            - updating=true   → label "updating…"  (sync in flight)
+          Wrapped in a real button so keyboard users can tab to it;
+          stopPropagation prevents the surrounding card's onOpen
+          firing on the same click. */}
+      {!placeholder && onUpdate && (
         <button
           type="button"
           className={`fishbones-book-update ${
             updating ? "fishbones-book-update--working" : ""
+          } ${
+            hasUpdate ? "fishbones-book-update--has-update" : ""
           }`}
           onClick={(e) => {
             e.stopPropagation();
@@ -348,12 +368,16 @@ export default function BookCover({
           title={
             updating
               ? "Updating…"
-              : "Update available — reapply bundled course"
+              : hasUpdate
+                ? "Update available — reapply bundled course"
+                : "Reinstall — re-extract bundled archive over installed copy"
           }
           aria-label={
             updating
               ? `Updating ${course.title}`
-              : `Update available for ${course.title}`
+              : hasUpdate
+                ? `Update available for ${course.title}`
+                : `Reinstall ${course.title}`
           }
           aria-busy={updating || undefined}
         >
@@ -363,7 +387,7 @@ export default function BookCover({
             color="currentColor"
           />
           <span className="fishbones-book-update-label">
-            {updating ? "updating…" : "update"}
+            {updating ? "updating…" : hasUpdate ? "update" : "reinstall"}
           </span>
         </button>
       )}
