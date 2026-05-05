@@ -91,7 +91,12 @@ export default function BookCover({
   onOpen,
   onContextMenu,
   loading = false,
-  hasUpdate = false,
+  // `hasUpdate` is accepted for backwards-compat with callers but
+  // no longer rendered as an inline badge — the indicator + action
+  // both live in the right-click context menu now. Suppressed to
+  // avoid the unused-variable warning while keeping the prop in the
+  // public API.
+  hasUpdate: _hasUpdate = false,
   updating = false,
   onUpdate,
   placeholder = false,
@@ -340,56 +345,27 @@ export default function BookCover({
         </div>
       )}
 
-      {/* Bottom-right reinstall / update badge. Always visible on
-          installed cards once the parent wires `onUpdate` — replaces
-          the older "only render on hash mismatch" gate so a learner
-          can re-extract the bundled archive at will (useful after
-          editing a lesson and wanting the canonical copy back).
-          Three states:
-            - hasUpdate=true  → label "update"     (signals upstream changed)
-            - hasUpdate=false → label "reinstall"  (idempotent re-extract)
-            - updating=true   → label "updating…"  (sync in flight)
-          Wrapped in a real button so keyboard users can tab to it;
-          stopPropagation prevents the surrounding card's onOpen
-          firing on the same click. */}
-      {!placeholder && onUpdate && (
-        <button
-          type="button"
-          className={`fishbones-book-update ${
-            updating ? "fishbones-book-update--working" : ""
-          } ${
-            hasUpdate ? "fishbones-book-update--has-update" : ""
-          }`}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (!updating) onUpdate();
-          }}
-          disabled={updating}
-          title={
-            updating
-              ? "Updating…"
-              : hasUpdate
-                ? "Update available — reapply bundled course"
-                : "Reinstall — re-extract bundled archive over installed copy"
-          }
-          aria-label={
-            updating
-              ? `Updating ${course.title}`
-              : hasUpdate
-                ? `Update available for ${course.title}`
-                : `Reinstall ${course.title}`
-          }
-          aria-busy={updating || undefined}
+      {/* Reinstall / update affordance moved to the right-click
+          context menu (`CourseContextMenu`). Pre-fix every installed
+          tile carried a small "reinstall" button bottom-right; the
+          button competed with the cover art and was visible even when
+          there was nothing meaningful to do (idempotent re-extract).
+          The context menu now hosts both the manual reinstall and the
+          "update available" reapply, with the menu item label
+          switching based on `hasUpdate`. */}
+      {!placeholder && onUpdate && updating && (
+        /* Mid-update overlay — small spinner pinned bottom-right so
+           the learner knows the chain is busy. Stays visible because
+           there's no cover-level alternative once the menu has
+           dismissed. */
+        <span
+          className="fishbones-book-update fishbones-book-update--working"
+          aria-busy="true"
+          aria-label={`Updating ${course.title}`}
         >
-          <Icon
-            icon={updating ? loader : arrowDownToLine}
-            size="xs"
-            color="currentColor"
-          />
-          <span className="fishbones-book-update-label">
-            {updating ? "updating…" : hasUpdate ? "update" : "reinstall"}
-          </span>
-        </button>
+          <Icon icon={loader} size="xs" color="currentColor" />
+          <span className="fishbones-book-update-label">updating…</span>
+        </span>
       )}
     </button>
   );

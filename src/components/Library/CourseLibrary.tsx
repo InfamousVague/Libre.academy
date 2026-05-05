@@ -773,8 +773,11 @@ export default function CourseLibrary({
                           // context menu (Export / Delete / Settings
                           // need an installed copy on disk).
                           !e.course.placeholder &&
-                          (onExport || onDelete || onSettings)
-                            ? (ev) => ctxMenu.show(e.course, ev)
+                          (onExport || onDelete || onSettings || onUpdateCourse)
+                            ? (ev) =>
+                                ctxMenu.show(e.course, ev, {
+                                  hasUpdate: !!updates[e.course.id],
+                                })
                             : undefined
                         }
                         hasUpdate={
@@ -892,6 +895,13 @@ export default function CourseLibrary({
           onDismiss={ctxMenu.close}
           onSettings={onSettings}
           onExport={onExport}
+          onUpdate={
+            onUpdateCourse
+              ? (courseId) => {
+                  void onUpdateCourse(courseId);
+                }
+              : undefined
+          }
           onDelete={onDelete}
         />
     </div>

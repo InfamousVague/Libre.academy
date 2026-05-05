@@ -1112,7 +1112,11 @@
 .fishbones__carousel-progress-fill {
   display: block;
   height: 100%;
-  background: #e8c46b;
+  /* Bone-white (#d4c5a1, --fb-bone-color). The previous hardcoded
+     amber #e8c46b was a holdover from the pre-bone-palette design
+     and visibly diverged from every other progress indicator in
+     the app, all of which now read as bone. */
+  background: var(--fb-bone-color, #d4c5a1);
   transition: width 0.25s ease;
 }
 
