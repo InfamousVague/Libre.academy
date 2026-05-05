@@ -110,15 +110,26 @@ export interface WatchVerifyOptions {
   postReadingMs?: number; // pause for plain reading lessons
 }
 
+/// Verifier pacing — these were tuned for "watchable" originally
+/// (800/600/1000/700/1200 ms = ~2-3 s per lesson before the
+/// next-click). The user's testing showed that's slower than the
+/// dev workflow benefits from. New caps:
+///   - text/reading lessons:  ~200 ms total
+///   - quizzes:                ~200 ms after the answer settles
+///   - exercises:              ~200 ms after the test result row
+/// `lessonViewMs` and `solutionRevealMs` get tiny safety frames
+/// (50 ms each) because we already await the `lessonReady` event
+/// and the editor's solution-reveal is synchronous — but a small
+/// settle still gives the LessonView's render queue a moment.
 const DEFAULTS = {
   lessonReadyTimeoutMs: 5_000,
   runTimeoutMs: 30_000,
   quizTimeoutMs: 10_000,
-  lessonViewMs: 800,
-  solutionRevealMs: 600,
-  postRunMs: 1_000,
-  postQuizMs: 700,
-  postReadingMs: 1_200,
+  lessonViewMs: 50,
+  solutionRevealMs: 50,
+  postRunMs: 200,
+  postQuizMs: 200,
+  postReadingMs: 200,
 };
 
 /// Walk a course in document order and tag every lesson with the
@@ -186,9 +197,11 @@ export async function verifyCourse(
     // Skipped on the last iteration because there's no next
     // neighbor for handleNext to navigate to.
     if (i < targets.length - 1) {
-      // Brief pause so the user can see the result settle before
-      // the next click fires.
-      await delay(120);
+      // Tiny safety frame so React commits the result-row paint
+      // before the next-click rerenders the LessonView. 30 ms is
+      // about two animation frames at 60 Hz — invisible to the
+      // user, enough to avoid clobbering an in-flight commit.
+      await delay(30);
       dispatchCommand({ type: "next", lessonId: target.lesson.id });
     }
   }
