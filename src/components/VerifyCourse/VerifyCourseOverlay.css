@@ -311,15 +311,18 @@
 }
 
 .fishbones-verify-btn--primary {
-  background: var(--color-accent, #6c8cff);
+  /* Match the rest of the app's primary-action buttons (Run /
+     Next / Submit / Import / AddCourse): bone-white background
+     with bg-primary text. Pre-fix this used --color-accent which
+     resolves to bone-amber on default-dark — visibly different
+     from the white "Run" button it sits next to. */
+  background: var(--color-text-primary, #f5f5f7);
   color: var(--color-bg-primary, #0b0b10);
   border-color: transparent;
   font-weight: 500;
 }
 
 .fishbones-verify-btn--primary:hover {
-  /* Slightly darker than the accent for a press-feedback feel.
-     Falls back to the secondary bg if the accent var isn't set. */
   filter: brightness(0.92);
-  background: var(--color-accent, #6c8cff);
+  background: var(--color-text-primary, #f5f5f7);
 }
