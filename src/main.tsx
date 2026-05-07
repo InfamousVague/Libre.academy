@@ -7,12 +7,29 @@ import { ChainDock } from "./components/ChainDock/ChainDock";
 import { BitcoinChainDock } from "./components/BitcoinChainDock/BitcoinChainDock";
 import { SvmDock } from "./components/SvmDock/SvmDock";
 import { applyTheme, loadTheme } from "./theme/themes";
+import { prewarmCoursesSummary } from "./hooks/useCourses";
 import "./theme/themes.css";
 import "./App.css";
 
 // Apply the user's chosen theme (or system preference for the first-run
 // default) before React mounts so we don't flash the wrong palette.
 applyTheme(loadTheme());
+
+// Kick off the courses-summary IPC BEFORE React mounts. By the time
+// `useCourses`'s effect runs, the IPC is typically already settled,
+// so the library renders against fresh data on the very first paint
+// instead of waiting on a post-mount round-trip. Skipped on the
+// popout / dock variants below — they don't render the library.
+if (typeof window !== "undefined") {
+  const params = new URLSearchParams(window.location.search);
+  const popoutMode =
+    params.get("popped") === "1" ||
+    params.get("phone") === "1" ||
+    params.get("evmDock") === "1" ||
+    params.get("btcDock") === "1" ||
+    params.get("svmDock") === "1";
+  if (!popoutMode) prewarmCoursesSummary();
+}
 
 // Three render modes out of a single bundle:
 // - default: full App (sidebar + reader + workbench)

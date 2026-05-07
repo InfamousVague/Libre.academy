@@ -19,10 +19,11 @@
    * shouldn't scroll. The detail variant overrides this below. */
   overflow: auto;
   padding: 24px 28px 32px;
-  /* Transparent so the app-wide DottedGradientBg corner-bloom shows
-   * through. A solid `--color-bg-primary` here used to cover the
-   * gradient and made the Trees route read as a flat black slab
-   * while every other route picked up the bloom. */
+  /* Transparent so the app's `--color-bg-primary` floor reads
+   * through. The DottedGradientBg ambient bloom that used to live
+   * behind every surface was retired; transparency here is now a
+   * vestige of that decision but kept so future ambient layers
+   * (if any) compose correctly without a slab override. */
   background: transparent;
   color: var(--color-text-primary);
   /* Defensive: any min-height descendant needs `min-height: 0` to

@@ -59,3 +59,6 @@ vite.config.js
 
 # LLM micropuzzle authoring cache (one entry per lesson, sha-keyed)
 .cache/micropuzzles/
+
+# LLM blocks-data authoring cache (one entry per exercise, sha-keyed)
+.cache/blocks/

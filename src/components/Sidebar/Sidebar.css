@@ -1,14 +1,11 @@
-/* Floating sidebar — direct port of Stash's .stash__sidebar styling so Fishbones
-   feels like part of the same family.
+/* Floating sidebar — direct port of Stash's .stash__sidebar styling
+   so Fishbones feels like part of the same family.
 
-   Surface is now frosted glass over the ambient DottedGradientBg
-   corner bloom living behind `.fishbones`. Low-alpha tinted base + a
-   strong backdrop-filter blur gives the translucent-vibrancy treatment
-   iOS / macOS use for navigation chrome — the colored dots from the
-   bloom show through softly without making the sidebar text hard to
-   read. The hairline border is bumped to a brighter rgba so the
-   sidebar still reads as a distinct floating panel against the
-   translucent backdrop. */
+   Surface is frosted glass: low-alpha tinted base + a strong
+   backdrop-filter blur gives the translucent-vibrancy treatment iOS /
+   macOS use for navigation chrome. The hairline border keeps the
+   sidebar reading as a distinct floating panel against the flat
+   `--color-bg-primary` floor it sits on top of. */
 .fishbones__sidebar {
   width: 260px;
   margin: 10px 0 10px 10px;

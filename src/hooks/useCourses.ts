@@ -5,6 +5,68 @@ import { seedWebStarterCourses } from "../data/webSeedCourses";
 import { isWeb } from "../lib/platform";
 import type { Course } from "../data/types";
 
+/// Last-fetched summary cache. Read synchronously on first render so
+/// the library has SOMETHING to paint while the IPC is in flight —
+/// SWR-style: render stale, revalidate, swap if changed. Bumping the
+/// `-vN` suffix invalidates every user's cache (use when the
+/// summary's stripped-body shape changes server-side).
+const SUMMARY_CACHE_KEY = "fb:courses-summary-cache-v1";
+const SUMMARY_CACHE_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
+interface SummaryCache {
+  ts: number;
+  courses: Course[];
+}
+
+function readSummaryCache(): Course[] | null {
+  if (typeof localStorage === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(SUMMARY_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as SummaryCache;
+    if (!parsed || !Array.isArray(parsed.courses)) return null;
+    if (Date.now() - parsed.ts > SUMMARY_CACHE_MAX_AGE_MS) return null;
+    return parsed.courses;
+  } catch {
+    return null;
+  }
+}
+
+function writeSummaryCache(courses: Course[]): void {
+  if (typeof localStorage === "undefined") return;
+  try {
+    const payload: SummaryCache = { ts: Date.now(), courses };
+    localStorage.setItem(SUMMARY_CACHE_KEY, JSON.stringify(payload));
+  } catch {
+    // Quota exceeded / private mode — silent. We re-paint correctly
+    // from the live IPC; cache is purely a paint-speed optimisation.
+  }
+}
+
+/// Pre-warmed summary Promise. `main.tsx` calls `prewarmCoursesSummary`
+/// BEFORE React mounts, so by the time this hook's effect runs the
+/// IPC has typically already returned. The hook checks this slot
+/// first and reuses the in-flight promise instead of firing a second
+/// (redundant) IPC.
+let prewarmedSummary: Promise<Course[]> | null = null;
+export function prewarmCoursesSummary(): void {
+  if (prewarmedSummary) return;
+  // The storage layer might not be ready synchronously (Tauri's
+  // invoke is, but IndexedDB needs an open). Fire and store —
+  // failures here are rethrown on the consumer's await.
+  try {
+    prewarmedSummary = storage.listCoursesSummary();
+  } catch {
+    prewarmedSummary = null;
+  }
+}
+function consumePrewarmedSummary(): Promise<Course[]> | null {
+  const p = prewarmedSummary;
+  // Single-shot — subsequent refreshes (focus/visibility revalidate)
+  // hit the live IPC, not the stale prewarm.
+  prewarmedSummary = null;
+  return p;
+}
+
 /// Load the user's courses from the app data dir.
 ///
 /// First-launch seeding: if the app data dir has no courses, we serialize the
@@ -33,8 +95,18 @@ import type { Course } from "../data/types";
 /// Outside Tauri (plain `vite dev` or unit tests) we fall back to the
 /// seed set so components render.
 export function useCourses() {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  // Seed from localStorage cache so first paint has something to
+  // render. The bootloader still gates on `loaded` flipping true,
+  // but downstream consumers (sidebar, library hover-prefetch, the
+  // streak/XP engine) can already operate on the cached set while
+  // the live IPC catches up.
+  const initialCache = readSummaryCache();
+  const [courses, setCourses] = useState<Course[]>(initialCache ?? []);
+  // If we have a cache, treat the library as "loaded enough to
+  // render." The background IPC still runs and swaps in fresh data
+  // if anything changed; rendering from cache while we wait is
+  // an SWR pattern — avoids the "blank library on cold boot" flash.
+  const [loaded, setLoaded] = useState(initialCache !== null);
   const [error, setError] = useState<string | null>(null);
   // Set of course ids currently being hydrated in the background.
   // Exposed through the return value so BookCover / Sidebar can render a
@@ -100,7 +172,11 @@ export function useCourses() {
       // SQLite on desktop, IndexedDB on web), heavy fields stripped
       // before return. Flips `loaded` the moment this returns so the
       // bootloader dismisses and the library renders.
-      let summaries = await storage.listCoursesSummary();
+      // Pre-warmed promise, if main.tsx already kicked the IPC off
+      // before React mounted: reuse it instead of firing a duplicate.
+      // Subsequent refreshes (focus/visibility) skip this branch.
+      const prewarmed = consumePrewarmedSummary();
+      let summaries = await (prewarmed ?? storage.listCoursesSummary());
       const tSummary = performance.now();
 
       // First-launch seed: if storage has no courses AND we ship
@@ -119,6 +195,10 @@ export function useCourses() {
       setCourses(summaries);
       setLoaded(true);
       setError(null);
+      // Refresh the SWR-style cache so the NEXT cold boot paints
+      // even faster. Stripped-body summaries are usually <300KB
+      // serialised; localStorage's 5MB ceiling is plenty.
+      writeSummaryCache(summaries);
       const tSetState = performance.now();
       const payloadBytes = (() => {
         try {

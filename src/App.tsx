@@ -35,7 +35,6 @@ import ArchiveDropOverlay from "./components/Library/ArchiveDropOverlay";
 import { useArchiveDrop } from "./hooks/useArchiveDrop";
 import { DeferredMount, LoadingPane } from "./components/Shared/DeferredMount";
 import FishbonesLoader from "./components/Shared/FishbonesLoader";
-import DottedGradientBg from "./components/Shared/DottedGradientBg";
 import ConfirmDialog from "./components/dialogs/ConfirmDialog/ConfirmDialog";
 import CourseSettingsModal from "./components/dialogs/CourseSettings/CourseSettingsModal";
 import FloatingIngestPanel from "./components/IngestPanel/FloatingIngestPanel";
@@ -985,37 +984,21 @@ export default function App() {
         sidebarCollapsed ? "fishbones--sidebar-collapsed" : ""
       }`}
     >
-      {/* Always-on top-left corner bloom — the same animated dotted
-          gradient used by the bootloader, but anchored top-left of the
-          viewport via `variant="corner"` and pointer-events disabled.
-          Fixed-position so it stays put across view changes. Lives
-          above the root .fishbones bg but below the topbar / sidebar /
-          panels (z-index 0); chrome with solid backgrounds covers it
-          where they overlap, but it peeks through any transparent
-          surface (e.g. the bootloader during fade-out, an empty
-          welcome view). */}
-      <DottedGradientBg variant="corner" />
-
       {/* First-load overlay. Shown until `useCourses` resolves its
           initial list so the learner sees a branded loader instead of
           an empty sidebar + blank welcome flash. Same fish-bone spinner
           the OutputPane uses — keeps the loading vocabulary consistent
           across the app. Fades itself out via CSS once coursesLoaded
-          flips true. */}
+          flips true. The DottedGradientBg ambient bloom that used to
+          live behind every surface (and as fill on this bootloader)
+          was retired — the app reads cleaner against a flat
+          `--color-bg-primary` floor. */}
       <div
         className={`fishbones__bootloader ${
           coursesLoaded ? "fishbones__bootloader--hidden" : ""
         }`}
         aria-hidden={coursesLoaded}
       >
-        {/* Boot screen is intentionally a flat surface — just the
-            spinner against the app's `--color-bg-primary`. The
-            DottedGradientBg drift used to live here but was loud
-            for a screen the learner only sees for a beat at app
-            cold-start; the always-on corner gradient (rendered via
-            the sibling `<DottedGradientBg variant="corner" />` at
-            the App shell level) carries the visual identity for
-            every other screen. */}
         <FishbonesLoader label="loading Fishbones…" />
       </div>
 
