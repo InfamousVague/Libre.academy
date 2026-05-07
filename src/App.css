@@ -176,9 +176,19 @@ button {
    component and mounts the new one, which means the direct child
    gets a fresh DOM node — CSS animations replay on each new node, so
    targeting `> *` cross-fades on every route change without any JSX
-   plumbing. Honor reduced-motion via the media query below. */
+   plumbing.
+   IMPORTANT: NO `forwards` / `both` fill-mode here. Persisting the
+   final keyframe's `transform: translateY(0)` after the animation
+   ends turns the route container into a CSS containing block for
+   `position: fixed` descendants — which silently broke dnd-kit's
+   `<DragOverlay>` in BlocksView (drag previews appeared offset to
+   the bottom-right of the cursor by the route container's distance
+   from the viewport). Default `animation-fill-mode: none` lets the
+   element return to its base styles (opacity:1, transform:none)
+   after the 180ms cross-fade. Honor reduced-motion via the media
+   query below. */
 .fishbones__main > * {
-  animation: fb-route-fade 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: fb-route-fade 0.18s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes fb-route-fade {
