@@ -132,7 +132,7 @@ export async function runGo(code: string, testCode?: string): Promise<RunResult>
 /// block. Without this, the test file's `import` block lands *after* user
 /// function declarations in the concatenated source and the compiler rejects
 /// it with "imports must appear before other declarations".
-function joinCodeAndTests(userCode: string, testCode: string): string {
+export function joinCodeAndTests(userCode: string, testCode: string): string {
   const stripPackage = (s: string) =>
     s.replace(/^\s*package\s+\w+\s*$/m, "");
   const { imports: userImports, rest: userRest } = extractImports(stripMain(stripPackage(userCode)));
@@ -157,7 +157,7 @@ function joinCodeAndTests(userCode: string, testCode: string): string {
 /// without this fallback, lessons whose solution is purely
 /// helper-function declarations fail with
 /// `runtime.main_main·f: function main is undeclared`.
-function ensureMain(src: string): string {
+export function ensureMain(src: string): string {
   if (/\bfunc\s+main\s*\(\s*\)/.test(src)) return src;
   return `${src.trimEnd()}\n\nfunc main() {}\n`;
 }
@@ -258,7 +258,7 @@ function dedupeImports(specs: string[]): string[] {
 /// Pull TestResult[] out of the stdout stream. Lines look like
 /// `KATA_TEST::test_reverse_basic::PASS` or
 /// `KATA_TEST::test_reverse_basic::FAIL::expected "olleh", got "hello"`.
-function parseTestResults(stdout: string): TestResult[] {
+export function parseTestResults(stdout: string): TestResult[] {
   const results: TestResult[] = [];
   for (const line of stdout.split("\n")) {
     const m = /^KATA_TEST::([\w-]+)::(PASS|FAIL)(?:::(.*))?$/.exec(line);

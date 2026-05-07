@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Course,
+  ExerciseLesson,
   Lesson,
-  isCloze,
+  MixedLesson,
   isExerciseKind,
-  isMicroPuzzle,
   isQuiz,
 } from "../../data/types";
 import { Icon } from "@base/primitives/icon";
@@ -25,8 +25,7 @@ import MissingToolchainBanner from "../banners/MissingToolchain/MissingToolchain
 import { useToolchainStatus } from "../../hooks/useToolchainStatus";
 import { useLocalStorageState } from "../../hooks/useLocalStorageState";
 import QuizView from "../Quiz/QuizView";
-import MobileCloze from "../../mobile/MobileCloze";
-import MobileMicroPuzzle from "../../mobile/MobileMicroPuzzle";
+import BlocksView from "../Blocks/BlocksView";
 import { makeBus, openPoppedWorkbench, closePoppedWorkbench } from "../../lib/workbenchSync";
 import { deriveSolutionFiles } from "../../lib/workbenchFiles";
 import {
@@ -57,6 +56,8 @@ const NATIVE_TOOLCHAIN_LANGUAGES = new Set<string>([
 export default function LessonView({
   courseId,
   courseLanguage,
+  courseRequiresDevice,
+  isChallenge = false,
   lesson,
   neighbors,
   isCompleted,
@@ -73,6 +74,17 @@ export default function LessonView({
   /// sends RN source to the JavaScript worker and fails with an
   /// opaque `AsyncFunction@[native code]` blob-URL error.
   courseLanguage: Course["language"];
+  /// Pulled off the parent course's `requiresDevice` field. Threaded
+  /// through to LessonReader so it can mount the Ledger status pill
+  /// next to the time-to-read chip on hardware-wallet courses.
+  courseRequiresDevice?: Course["requiresDevice"];
+  /// True when the parent course's `packType === "challenges"`.
+  /// Drives a `--challenge` modifier class on the lesson layout —
+  /// challenge prose is a one-paragraph problem statement, so the
+  /// reader pane shrinks to ~30% and the workbench claims the rest.
+  /// Defaults to false for compatibility with callers that don't
+  /// thread this through.
+  isChallenge?: boolean;
   lesson: Lesson;
   neighbors: Neighbors;
   isCompleted: boolean;
@@ -103,6 +115,24 @@ export default function LessonView({
   // the main-window editor gets hidden in favor of a "currently popped out"
   // placeholder. Reset on lesson change via the parent's keyed remount.
   const [popped, setPopped] = useState(false);
+
+  // Exercise render mode — only meaningful when `lesson.blocks` is present
+  // (otherwise the lesson can only be played as a free-form editor). Stored
+  // per-lesson in localStorage so a learner who prefers blocks gets blocks
+  // every time on their saved lessons. Default is "editor" on desktop —
+  // we don't want to flip the workflow out from under existing users; they
+  // opt in to blocks via the toggle. Mobile is forced to "blocks" (see
+  // MobileLesson dispatch — this LessonView is desktop-only).
+  const exerciseHasBlocks =
+    hasExercise && "blocks" in lesson && !!lesson.blocks;
+  const [exerciseMode, setExerciseMode] = useLocalStorageState<
+    "editor" | "blocks"
+  >(`fb:lesson-mode:${lesson.id}`, "editor");
+  // Force editor mode when blocks aren't available — even if a user once
+  // saved "blocks" for this lesson and then a regenerate stripped the data.
+  const effectiveExerciseMode: "editor" | "blocks" = exerciseHasBlocks
+    ? exerciseMode
+    : "editor";
 
   // React Native courses route their preview through a SEPARATE OS
   // window (the popped phone simulator) instead of a fixed bottom-
@@ -495,7 +525,7 @@ export default function LessonView({
     return (
       <div className="fishbones__lesson fishbones__lesson--column">
         <div className="fishbones__lesson-scroll">
-          <LessonReader lesson={lesson} />
+          <LessonReader lesson={lesson} requiresDevice={courseRequiresDevice} />
           <QuizView lesson={lesson} onComplete={onComplete} />
           <div className="fishbones__lesson-nav-wrap">{nav}</div>
         </div>
@@ -503,59 +533,17 @@ export default function LessonView({
     );
   }
 
-  // Cloze lessons share the column layout with quizzes — prose on top,
-  // interactive code-with-chips below. We reuse MobileCloze for the
-  // chip rendering since the UX is fundamentally the same on phone and
-  // desktop (a code block with inline tappable slots); the only
-  // surface-specific decision is the option-picker presentation, which
-  // stays as a bottom sheet on both since it's compact and doesn't
-  // need the screen real estate a popover would.
-  if (isCloze(lesson)) {
-    return (
-      <div className="fishbones__lesson fishbones__lesson--column">
-        <div className="fishbones__lesson-scroll">
-          <LessonReader lesson={lesson} />
-          <MobileCloze
-            // Remount on lesson change so picks / fired-flag don't
-            // leak the previous lesson's "correct" state — same fix
-            // as the mobile MobileLesson dispatch.
-            key={lesson.id}
-            template={lesson.template}
-            slots={lesson.slots}
-            prompt={lesson.prompt}
-            onComplete={onComplete}
-            isCompleted={isCompleted}
-          />
-          <div className="fishbones__lesson-nav-wrap">{nav}</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (isMicroPuzzle(lesson)) {
-    return (
-      <div className="fishbones__lesson fishbones__lesson--column">
-        <div className="fishbones__lesson-scroll">
-          <LessonReader lesson={lesson} />
-          <MobileMicroPuzzle
-            key={lesson.id}
-            challenges={lesson.challenges}
-            language={lesson.language}
-            prompt={lesson.prompt}
-            isCompleted={isCompleted}
-          />
-          <div className="fishbones__lesson-nav-wrap">{nav}</div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="fishbones__lesson">
+    <div
+      className={`fishbones__lesson ${
+        isChallenge ? "fishbones__lesson--challenge" : ""
+      }`}
+    >
       <LessonReader
         lesson={lesson}
         footer={nav}
         onRetryLesson={onRetryLesson}
+        requiresDevice={courseRequiresDevice}
       />
       {hasExercise && !popped && (
         <div className="fishbones__lesson-workbench-wrap">
@@ -572,7 +560,57 @@ export default function LessonView({
               onInstalled={() => setTcRefresh((n) => n + 1)}
             />
           )}
-          {useFloatingPhone ? (
+          {exerciseHasBlocks && (
+            // Editor / Blocks toggle. Only renders when the lesson
+            // ships authored blocks data — without it, the toggle
+            // would land the learner in a broken view. Stored per
+            // lesson so each learner's preference is sticky.
+            <div className="fishbones__lesson-mode-toggle" role="group" aria-label="Exercise mode">
+              <button
+                type="button"
+                className={
+                  "fishbones__lesson-mode-btn" +
+                  (effectiveExerciseMode === "editor"
+                    ? " fishbones__lesson-mode-btn--active"
+                    : "")
+                }
+                onClick={() => setExerciseMode("editor")}
+                aria-pressed={effectiveExerciseMode === "editor"}
+              >
+                Editor
+              </button>
+              <button
+                type="button"
+                className={
+                  "fishbones__lesson-mode-btn" +
+                  (effectiveExerciseMode === "blocks"
+                    ? " fishbones__lesson-mode-btn--active"
+                    : "")
+                }
+                onClick={() => setExerciseMode("blocks")}
+                aria-pressed={effectiveExerciseMode === "blocks"}
+              >
+                Blocks
+              </button>
+            </div>
+          )}
+          {effectiveExerciseMode === "blocks" ? (
+            // Blocks mode owns its own template/pool/output layout —
+            // no Workbench split, no EditorPane. Verification still
+            // routes through `runFiles` and the same OutputPane the
+            // editor mode uses (BlocksView includes one inline).
+            // `onSolutionAccepted` syncs the editor-mode workbench
+            // state with the learner's winning placement, so a
+            // toggle back to Editor mode shows working code instead
+            // of stale starter — completes the "I solved it in
+            // blocks, now let me read the final source" flow.
+            <BlocksView
+              key={lesson.id}
+              lesson={lesson as ExerciseLesson | MixedLesson}
+              onComplete={onComplete}
+              onSolutionAccepted={(blockFiles) => setFiles(blockFiles)}
+            />
+          ) : useFloatingPhone ? (
             // RN-course path — editor takes the full workbench width
             // and the phone popout window (lib/phonePopout.ts) carries
             // the preview. We render the EditorPane inside a `solo`

@@ -1,0 +1,22 @@
+/* SVM-specific overrides on top of the shared `chain-dock-*` styles.
+ * Most of the dock is visually identical to the EVM ChainDock —
+ * we just retint the chip + a couple of accents to a Solana-purple
+ * so a learner glancing at the screen instantly knows which chain
+ * they're looking at.
+ *
+ * Solana's brand uses a teal→purple gradient. We pick the purple
+ * end (#9945FF / "Solana Purple") for the chip background and a
+ * light-violet for the chip text so it carries the same visual
+ * vocabulary the docs / explorer / wallets use. */
+
+.svm-dock__chip {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(20, 241, 149, 0.18),
+      rgba(153, 69, 255, 0.22)
+    ),
+    rgba(153, 69, 255, 0.16);
+  color: rgb(210, 180, 255);
+  border: 1px solid rgba(153, 69, 255, 0.4);
+}

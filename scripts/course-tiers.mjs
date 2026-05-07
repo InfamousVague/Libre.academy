@@ -21,15 +21,18 @@
 /// take care of the rest.
 
 export const CORE_PACK_IDS = [
+  // ── In-house "A to <lang>" tutorial books ──────────────────────
+  // Flagship Fishbones-authored courses that walk a beginner from
+  // zero to fluency in a single language. Bundled in core so every
+  // install opens with two opinionated, end-to-end tutorials.
+  "a-to-zig",
+  "a-to-ts",
+
   // Long-form books we want every install to start with.
   "the-rust-programming-language",
   "learning-go",
-  // Karl Seguin's free Learning Zig book, adapted + expanded into the
-  // Fishbones lesson kinds. Ships in core because Zig is one of the
-  // small set of "primary" languages we promote to first-time users
-  // alongside Rust + Go, and the archive is tiny (~50 KB) compared
-  // to the install bundle.
-  "learning-zig",
+  // (`learning-zig` was retired here — A to Zig is the in-house
+  // replacement and is shipped above as its own bundled .fishbones.)
 
   // All challenge packs — kata-style learners are likely to bounce
   // through several languages, and the per-pack size is small
@@ -74,36 +77,46 @@ export const CORE_PACK_IDS = [
 /// here but NOT in CORE_PACK_IDS becomes a remote placeholder. Kept
 /// in the same order the Library should display them in.
 export const ALL_PACK_IDS = [
+  // ── In-house "A to <lang>" tutorial books ──────────────────────
+  // Listed first so they top the catalog — these are the flagship
+  // beginner-friendly tutorials Fishbones authors directly.
+  "a-to-zig",
+  "a-to-ts",
+  // Hardware-wallet course — uses the new Ledger transport (Rust
+  // hidapi on desktop, WebHID on web) introduced alongside it.
+  // Course `requiresDevice: "ledger"` flag mounts the Ledger
+  // status pill in the lesson view; readings include device-action
+  // markdown buttons that send real APDUs.
+  "learning-ledger",
+
   // ── Languages-as-a-foundation books ────────────────────────────
+  // Removed from the catalog (retired) on 2026-05-07:
+  //   eloquent-javascript, the-modern-javascript-tutorial-fundamentals,
+  //   you-don-t-know-js-yet, python-crash-course, learning-zig.
+  // The Zig spot is now covered by the in-house "A to Zig" course
+  // bundled above, not via these third-party books.
   "the-rust-programming-language",
   "rust-by-example",
   "the-async-book-rust",
   "the-rustonomicon",
-  "eloquent-javascript",
-  "the-modern-javascript-tutorial-fundamentals",
-  "javascript-the-definitive-guide",
-  "you-don-t-know-js-yet",
   "composing-programs",
-  "python-crash-course",
   "learning-go",
-  "learning-zig",
 
   // ── Computer-science fundamentals ──────────────────────────────
+  // Removed 2026-05-07: crafting-interpreters-javascript.
   "algorithms-erickson",
   "open-data-structures",
-  "crafting-interpreters-javascript",
   "pro-git",
 
   // ── Frameworks + libraries ─────────────────────────────────────
+  // Removed 2026-05-07: learning-react-native, fluent-react,
+  //   interactive-web-development-with-three-js-and-a-frame.
   "learning-svelte",
   "solidjs-fundamentals",
   "htmx-fundamentals",
   "astro-fundamentals",
   "react-native",
-  "learning-react-native",
-  "fluent-react",
   "tauri-2-fundamentals",
-  "interactive-web-development-with-three-js-and-a-frame",
 
   // ── Smart-contract / web3 / crypto ─────────────────────────────
   "mastering-bitcoin",

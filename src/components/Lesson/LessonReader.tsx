@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -17,6 +18,12 @@ import "@base/primitives/icon/icon.css";
 import { renderMarkdown } from "./markdown";
 import LessonPopover, { type PopoverContent } from "./LessonPopover";
 import InlineSandbox from "./InlineSandbox";
+import TTSButton from "./TTSButton";
+import { estimateReadingMinutes } from "./readingTime";
+import { stopLessonAudio, useLessonAudio } from "../../hooks/useLessonAudio";
+import { useLessonReadCursor } from "../../hooks/useLessonReadCursor";
+import DeviceAction from "../Ledger/DeviceAction";
+import LedgerStatusPill from "../Ledger/LedgerStatusPill";
 import "./LessonReader.css";
 
 interface Props {
@@ -30,6 +37,11 @@ interface Props {
   /// not provided, the button just doesn't render. Parent wires to
   /// `useIngestRun.startRetryLesson`.
   onRetryLesson?: (lessonId: string) => void;
+  /// When set, the parent course needs a hardware wallet — render a
+  /// LedgerStatusPill at the top of the reading pane so the learner
+  /// can connect / see the device state without scrolling. Currently
+  /// only "ledger" is supported; other values render nothing.
+  requiresDevice?: "ledger";
 }
 
 /// Regex that detects the italic demotion note the ingest pipeline
@@ -43,12 +55,6 @@ const DEMOTED_NOTE_RE =
 const DEMOTED_REASON_RE =
   /\(This exercise was demoted to a reading lesson after 3 validation failures:\s*(.*?)\)/i;
 
-/// Words-per-minute used for the "time to read" estimate. 225 is a
-/// common middle-of-the-road number for skim-to-careful technical
-/// reading. We round up at the end so short passages always show at
-/// least "1 min read".
-const READING_WPM = 225;
-
 /// The top half of a lesson pane: prose rendered from the lesson's markdown
 /// body, with fenced code blocks highlighted by Shiki. Also drives the
 /// progress bar, objectives card, inline-sandbox hydration, popover
@@ -57,6 +63,7 @@ export default function LessonReader({
   lesson,
   footer,
   onRetryLesson,
+  requiresDevice,
 }: Props) {
   const [html, setHtml] = useState<string>("");
 
@@ -118,8 +125,55 @@ export default function LessonReader({
 
   // --- Scroll progress tracking ---------------------------------------
 
+  // `scrollRef` keeps the imperative-access pattern the existing
+  // scroll-progress effect uses; `scrollEl` (state below) feeds the
+  // TTS cursor hook reactively. The callback ref keeps both in sync
+  // on every mount/unmount.
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [progress, setProgress] = useState(0); // 0..1
+
+  // ── TTS narration cursor ─────────────────────────────────────────
+  // Walks the rendered article's `data-tts-block` annotations (added
+  // by markdown.ts step 6), maps the audio's progress fraction to a
+  // current block index, and applies the `.fb-tts-current` class on
+  // the matching DOM element. The hook keys boundary recomputation
+  // and class re-application off the `html` string identity rather
+  // than a MutationObserver — the v1 design used MOs and froze the
+  // app on lesson entry due to interaction with React-mounted
+  // descendants (InlineSandbox, popover wiring, "Ask Fishbones"
+  // badges) that mutate the article's subtree.
+  const audio = useLessonAudio(lesson.id);
+  const audioProgress = audio.available ? audio.progress : 0;
+  const audioPlaying = audio.available ? audio.isPlaying : false;
+  // Article + scroll refs are state-backed so the cursor hook
+  // reactively re-runs when the underlying DOM nodes mount /
+  // remount. Plain `useRef` would capture `null` on first render
+  // and never re-trigger the hook's boundary computation.
+  const [articleEl, setArticleEl] = useState<HTMLDivElement | null>(null);
+  const [scrollEl, setScrollEl] = useState<HTMLDivElement | null>(null);
+  useLessonReadCursor({
+    scrollContainer: scrollEl,
+    article: articleEl,
+    html,
+    progress: audioProgress,
+    isPlaying: audioPlaying,
+  });
+
+  // Imperatively set the article's innerHTML on html change. We
+  // don't use `dangerouslySetInnerHTML` because React (19 at least)
+  // appears to rebuild the children on every render the prop is
+  // present — even when the inner __html string is identical — and
+  // that detaches the TTS cursor's highlight + every hydrated
+  // sub-component on every audio timeupdate.
+  // useLayoutEffect (not useEffect) so the children are populated
+  // synchronously after commit, before the browser paints — without
+  // it the first render would briefly show an empty article.
+  useLayoutEffect(() => {
+    if (!articleEl) return;
+    if (articleEl.innerHTML !== html) {
+      articleEl.innerHTML = html;
+    }
+  }, [articleEl, html]);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -258,6 +312,34 @@ export default function LessonReader({
         />,
       );
     }
+
+    // 1.5) Device-action hydration — for the Learning Ledger course
+    //      (and any other course flagged as device-required). Each
+    //      marker decodes a JSON config from its data-attr and
+    //      mounts a small <DeviceAction> button that talks to the
+    //      singleton Ledger transport.
+    const deviceActions = Array.from(
+      container.querySelectorAll<HTMLDivElement>(".fishbones-device-action"),
+    );
+    for (const el of deviceActions) {
+      const b64 = el.dataset.fishbonesConfig ?? "";
+      let config: import("../Ledger/DeviceAction").DeviceActionConfig | null = null;
+      try {
+        const raw = decodeB64(b64);
+        config = JSON.parse(raw) as import("../Ledger/DeviceAction").DeviceActionConfig;
+      } catch (err) {
+        // Bad fence → render an inert marker so the lesson still
+        // displays. Devs reading the console see the parse error.
+        // eslint-disable-next-line no-console
+        console.error("[device-action] bad config JSON:", err);
+        el.textContent = "(invalid device-action config)";
+        continue;
+      }
+      el.innerHTML = "";
+      const root = createRoot(el);
+      localRoots.push(root);
+      root.render(<DeviceAction config={config} />);
+    }
     rootsRef.current = localRoots;
 
     // 2) Popover triggers — event delegation from the container so we
@@ -380,6 +462,16 @@ export default function LessonReader({
     setPopoverContent(null);
   }, [lesson.id, cancelHide]);
 
+  // Stop the singleton TTS player when the user navigates to a
+  // different lesson or unmounts the reader entirely. Without this
+  // the narration of the previous lesson keeps playing while the
+  // new one's prose is on screen — disorienting.
+  useEffect(() => {
+    return () => {
+      stopLessonAudio();
+    };
+  }, [lesson.id]);
+
   // Dismiss on any scroll while the popover is open. The popover is
   // locked to its initial cursor position — if the user scrolls, the
   // trigger underneath moves but the popover doesn't, which quickly
@@ -436,7 +528,17 @@ export default function LessonReader({
         />
       </div>
 
-      <div className="fishbones-reader-scroll" ref={scrollRef}>
+      <div
+        className="fishbones-reader-scroll"
+        ref={(el) => {
+          // Dual ref: imperative access for the legacy scroll-
+          // progress effect AND a state-backed reference for the
+          // TTS cursor hook (which needs a reactive value to
+          // recompute boundaries after mount).
+          scrollRef.current = el;
+          setScrollEl(el);
+        }}
+      >
         <div className="fishbones-reader-inner">
           {/* Lesson title rendered above everything else so the learner
               always knows where they are — markdown bodies often repeat
@@ -448,13 +550,32 @@ export default function LessonReader({
               live in the same row so the eye catches the meta info
               without eating much vertical space. */}
           <div className="fishbones-reader-meta">
-            <div className="fishbones-reader-meta-time">
-              {progress < 0.05
-                ? `${readingMinutes} min read`
-                : minutesRemaining === 0
-                ? "almost done"
-                : `${minutesRemaining} min left`}
-            </div>
+            {/* Combined narration + reading-time pill. When pre-
+                generated audio exists for this lesson it shows
+                play/pause + a circular progress ring + remaining
+                audio time. When no audio is available it falls back
+                to a static "X min read" chip so the meta row still
+                has one element instead of empty space. The audio
+                survives across LessonReader mount cycles via the
+                singleton player in `useLessonAudio`; the unmount
+                effect below stops it when the lesson changes.
+                See scripts/generate-lesson-audio.mjs for the pipeline
+                that fills the manifest. */}
+            <TTSButton
+              lessonId={lesson.id}
+              estimatedReadMinutes={
+                progress < 0.05
+                  ? readingMinutes
+                  : minutesRemaining > 0
+                    ? minutesRemaining
+                    : 0
+              }
+            />
+            {/* Hardware-wallet chip — only mounts when the parent
+                course is flagged `requiresDevice`. Sits inline with
+                the time-to-read chip so a learner can see + act on
+                connection status without leaving the lesson scroll. */}
+            {requiresDevice === "ledger" && <LedgerStatusPill />}
             {hasGlossary && (
               <button
                 type="button"
@@ -526,9 +647,17 @@ export default function LessonReader({
           )}
 
           <div
+            ref={setArticleEl}
             className="fishbones-reader-body"
-            // Markdown → HTML is rendered by our pipeline, not user-authored HTML.
-            dangerouslySetInnerHTML={{ __html: html }}
+            // innerHTML is set imperatively below in a `[articleEl, html]`
+            // useEffect — using `dangerouslySetInnerHTML` here would
+            // pass a fresh object literal on every render, and React
+            // (at least 19) treats that as "DOM update needed" and
+            // rebuilds the article's children every tick. That detaches
+            // the TTS cursor's highlighted paragraph (along with every
+            // hydrated InlineSandbox / popover handler) on every audio
+            // timeupdate. The imperative path runs once per html
+            // identity change and leaves the children alone otherwise.
           />
           {footer}
         </div>
@@ -590,17 +719,6 @@ function stripLeadingTitleHeading(body: string, title: string): string {
   const lessonTitle = title.trim().toLowerCase();
   if (heading !== lessonTitle) return body;
   return body.slice(match.index + match[0].length).replace(/^\s*\n/, "");
-}
-
-/// Cheap reading-time estimate. Strips fenced code blocks from the word
-/// count since those aren't read linearly — they're scanned, or skipped
-/// entirely, or copy-pasted. Rounds up so a 30-second read still shows
-/// as "1 min read" rather than "0 min read".
-function estimateReadingMinutes(md: string): number {
-  const prose = md.replace(/```[\s\S]*?```/g, ""); // drop fenced code
-  const words = prose.trim().split(/\s+/).filter(Boolean).length;
-  if (words === 0) return 1;
-  return Math.max(1, Math.ceil(words / READING_WPM));
 }
 
 function decodeB64(b64: string): string {

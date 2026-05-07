@@ -12,6 +12,9 @@ import { useLocalStorageState } from "../../hooks/useLocalStorageState";
 import { runFiles, isPassing, type RunResult } from "../../runtimes";
 import EditorPane from "../Editor/EditorPane";
 import OutputPane from "../Output/OutputPane";
+import EvmDockBanner from "../ChainDock/EvmDockBanner";
+import BitcoinDockBanner from "../BitcoinChainDock/BitcoinDockBanner";
+import { useChainActivity } from "../../hooks/useChainActivity";
 import PhoneToggleButton from "../FloatingPhone/PhoneToggleButton";
 import {
   openPhonePopout,
@@ -174,6 +177,13 @@ export default function PlaygroundView() {
   const [activeFileIdx, setActiveFileIdx] = useState(0);
   const [result, setResult] = useState<RunResult | null>(null);
   const [running, setRunning] = useState(false);
+  /// Watch the in-process chains. The dock banners self-mount above
+  /// the playground header whenever either chain has txs / blocks
+  /// past genesis. Lets a learner experiment with `runFiles({...})`
+  /// using the bitcoin or evm harness and immediately see balances
+  /// + recent txs without leaving the sandbox. Both gate to false
+  /// on a fresh chain so the playground stays uncluttered.
+  const chainActivity = useChainActivity();
   /// Bumped after a successful toolchain install so the probe re-runs
   /// and the banner can disappear. Kept here instead of inside the hook
   /// so the Run button can also trigger a re-probe after a `launch_error`
@@ -477,6 +487,12 @@ export default function PlaygroundView() {
   // upstream so this is defensive) shows a placeholder.
   return (
     <div className="fishbones-playground">
+      {/* Chain docks (EVM + Bitcoin). Each gates on its own
+          activity flag — they stay hidden on a fresh playground and
+          slide in above the header once the learner runs code that
+          touches the singleton chain. */}
+      {chainActivity.evm && <EvmDockBanner />}
+      {chainActivity.bitcoin && <BitcoinDockBanner />}
       {/* Header: language picker on the left, view toggle on the right. */}
       <div className="fishbones-playground-header">
         <label className="fishbones-playground-lang-picker">

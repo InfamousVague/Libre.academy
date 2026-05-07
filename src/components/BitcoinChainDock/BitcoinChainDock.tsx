@@ -16,7 +16,7 @@
 /// column to handle a pretend-Either type. Sharing the panel
 /// grid CSS gives us visual continuity without that compromise.
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import {
   subscribeBitcoinChain,
   getBitcoinChainSnapshot,
@@ -27,8 +27,19 @@ import {
   type BitcoinUtxo,
   type BitcoinBlockSnapshot,
 } from "../../lib/bitcoin/chainService";
+import { useLocalStorageState } from "../../hooks/useLocalStorageState";
 import "../ChainDock/ChainDock.css";
 import "./BitcoinChainDock.css";
+
+/// Banner-mode dock height bounds. Default is "half-height" relative
+/// to the bumped 360px we used pre-resize, so a learner who never
+/// touches the handle gets a more compact dock that doesn't dominate
+/// the lesson view. They can still drag down for more space when
+/// scrolling through 30 mined blocks gets tedious.
+const BTC_DOCK_HEIGHT_KEY = "fb.btc-dock.height";
+const BTC_DOCK_HEIGHT_DEFAULT = 180;
+const BTC_DOCK_HEIGHT_MIN = 120;
+const BTC_DOCK_HEIGHT_MAX = 600;
 
 interface Props {
   variant?: "banner" | "popout";
@@ -121,11 +132,70 @@ export function BitcoinChainDock({
   const otherAccs = snap.accounts.slice(1);
   const tipBlock = snap.blocks[0];
 
+  // Banner-mode resize. Persist the height across reloads — once a
+  // learner picks a comfortable size, every subsequent visit gets it
+  // back. Popout mode is full-window and ignores this entirely.
+  const [bannerHeight, setBannerHeight] = useLocalStorageState<number>(
+    BTC_DOCK_HEIGHT_KEY,
+    BTC_DOCK_HEIGHT_DEFAULT,
+  );
+  // Drag state held in a ref so the mousemove closure doesn't trigger
+  // re-renders every frame; we only commit the new height when the
+  // pointer comes up. The CSS variable on the root re-applies live
+  // via direct DOM mutation while dragging for instant feedback.
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const dragRef = useRef<{ startY: number; startH: number } | null>(null);
+  const onResizeStart = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (variant !== "banner") return;
+      e.preventDefault();
+      dragRef.current = { startY: e.clientY, startH: bannerHeight };
+      const onMove = (ev: MouseEvent) => {
+        if (!dragRef.current || !rootRef.current) return;
+        const delta = ev.clientY - dragRef.current.startY;
+        const next = Math.max(
+          BTC_DOCK_HEIGHT_MIN,
+          Math.min(BTC_DOCK_HEIGHT_MAX, dragRef.current.startH + delta),
+        );
+        // Live preview via the CSS variable so the dock tracks the
+        // pointer without React re-rendering each frame.
+        rootRef.current.style.setProperty("--btc-dock-height", `${next}px`);
+      };
+      const onUp = () => {
+        if (!dragRef.current || !rootRef.current) return;
+        // Read the live size back from the var the pointer-move loop
+        // has been writing, then commit to React state + localStorage
+        // in one go.
+        const live = rootRef.current.style.getPropertyValue(
+          "--btc-dock-height",
+        );
+        const px = parseInt(live, 10);
+        if (Number.isFinite(px)) setBannerHeight(px);
+        dragRef.current = null;
+        window.removeEventListener("mousemove", onMove);
+        window.removeEventListener("mouseup", onUp);
+      };
+      window.addEventListener("mousemove", onMove);
+      window.addEventListener("mouseup", onUp);
+    },
+    [variant, bannerHeight, setBannerHeight],
+  );
+
+  // Build the inline style — only assert the height variable in
+  // banner mode. Popout mode wants 100vh from its CSS rule and
+  // shouldn't be overridden.
+  const rootStyle =
+    variant === "banner"
+      ? ({ "--btc-dock-height": `${bannerHeight}px` } as React.CSSProperties)
+      : undefined;
+
   return (
     <div
+      ref={rootRef}
       className={`chain-dock chain-dock--${variant} btc-dock`}
       role="region"
       aria-label="In-process Bitcoin regtest chain"
+      style={rootStyle}
     >
       <header className="chain-dock__header">
         <div className="chain-dock__title">
@@ -307,6 +377,20 @@ export function BitcoinChainDock({
           </section>
         </div>
       </div>
+      {/* Bottom-edge drag handle for resizing the banner. Only shown
+          in banner mode — popout fills its own window. The handle is
+          a thin strip with `cursor: ns-resize` and a faint highlight
+          so the affordance is visible without dominating. */}
+      {variant === "banner" && (
+        <div
+          className="btc-dock__resize-handle"
+          onMouseDown={onResizeStart}
+          role="separator"
+          aria-orientation="horizontal"
+          aria-label="Resize Bitcoin dock"
+          title="Drag to resize"
+        />
+      )}
     </div>
   );
 }

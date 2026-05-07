@@ -60,6 +60,23 @@ md.renderer.rules.fence = (tokens, idx) => {
   const infoParts = (token.info || "").trim().split(/\s+/);
   const lang = infoParts[0] || "text";
   const isPlayground = infoParts.slice(1).includes("playground");
+  // `device-action` fence — used by the Learning Ledger course (and
+  // any other course that wants real-device interaction inline in
+  // a reading). Body is JSON describing what the button does:
+  //   ```device-action
+  //   { "verb": "connect", "label": "Connect Ledger" }
+  //   ```
+  // LessonReader hydrates the marker into a <DeviceAction> React
+  // component that knows how to talk to the singleton ledger
+  // transport. The base64 wrapper keeps the JSON HTML-safe through
+  // the `data-fishbones-config` attribute.
+  if (lang === "device-action") {
+    const raw = (token.content || "").trim();
+    const b64 = typeof btoa === "function"
+      ? btoa(unescape(encodeURIComponent(raw)))
+      : Buffer.from(raw, "utf-8").toString("base64");
+    return `<div class="fishbones-device-action" data-fishbones-config="${b64}"></div>`;
+  }
   // Tutorial filename convention — Svelte's tutorial markdown (and a
   // few others we've imported) prefixes every code fence with a
   // `/// file: App.svelte` header line so the learner knows which
@@ -135,7 +152,55 @@ export async function renderMarkdown(
     joined = wrapGlossaryTerms(joined, opts.enrichment.glossary);
   }
 
+  // Step 6 — annotate top-level block elements for TTS cursor
+  // tracking. The lesson-audio cursor reads these attributes at
+  // runtime to find the currently-narrated block, highlight it, and
+  // scroll it into view as audio progresses. See useLessonReadCursor
+  // for the consumer side.
+  joined = annotateTtsBlocks(joined);
+
   return joined;
+}
+
+/// Walk the rendered HTML's top-level block elements and stamp them
+/// with sequential `data-tts-block` indices. The `data-tts-len`
+/// attribute carries the element's visible text length, used by the
+/// cursor hook to char-weight the timing boundaries (a long
+/// paragraph takes more audio time than a short one — uniform
+/// spacing would lag through prose and rush through code summaries).
+///
+/// Annotation is done via DOMParser so we don't have to write a
+/// regex parser for HTML. `DOMParser` is browser-only; on the
+/// (currently nonexistent) Node-side render path this would no-op
+/// gracefully.
+function annotateTtsBlocks(html: string): string {
+  if (typeof DOMParser === "undefined") return html;
+  try {
+    // Wrap in a sentinel root so DOMParser keeps the top-level
+    // siblings as direct children rather than re-parenting things.
+    const doc = new DOMParser().parseFromString(
+      `<!doctype html><html><body><div id="__tts_root__">${html}</div></body></html>`,
+      "text/html",
+    );
+    const root = doc.getElementById("__tts_root__");
+    if (!root) return html;
+    let idx = 0;
+    for (const child of Array.from(root.children)) {
+      if (!(child instanceof Element)) continue;
+      // Skip purely-decorative blocks the narrator doesn't read.
+      if (child.tagName === "HR") continue;
+      child.setAttribute("data-tts-block", String(idx));
+      child.setAttribute(
+        "data-tts-len",
+        String((child.textContent || "").trim().length),
+      );
+      idx++;
+    }
+    return root.innerHTML;
+  } catch {
+    // Defensive — never let the annotation step break the render.
+    return html;
+  }
 }
 
 // ---------- Callouts -------------------------------------------------------

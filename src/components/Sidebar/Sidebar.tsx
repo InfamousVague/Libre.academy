@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "@base/primitives/icon";
-import { fileText } from "@base/primitives/icon/icons/file-text";
 import { libraryBig } from "@base/primitives/icon/icons/library-big";
 import { compass as compassIcon } from "@base/primitives/icon/icons/compass";
 import { trees as treesIcon } from "@base/primitives/icon/icons/trees";
@@ -17,8 +16,38 @@ import { isChallengePack } from "../../data/types";
 import { languageLabel } from "./labels";
 import CourseGroup from "./CourseGroup";
 import CourseCarousel from "./CourseCarousel";
-import DocsSidebarNav, { SidebarNavItem } from "./DocsSidebarNav";
 import "./Sidebar.css";
+
+/// Vertical nav-list row at the top of the sidebar. Icon + label, full
+/// width. `active` controls the highlighted pill state for persistent
+/// destinations (Library, Discover, Trees, Playground) so the learner
+/// always knows which main-pane route they're on. Moved here from
+/// `DocsSidebarNav.tsx` after the in-app docs section was retired —
+/// Sidebar is now the only consumer.
+function SidebarNavItem({
+  icon,
+  label,
+  onClick,
+  active,
+}: {
+  icon: string;
+  label: string;
+  onClick: () => void;
+  active?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      className={`fishbones__sidebar-nav-item ${active ? "fishbones__sidebar-nav-item--active" : ""}`}
+      onClick={onClick}
+    >
+      <span className="fishbones__sidebar-nav-icon" aria-hidden>
+        <Icon icon={icon} size="sm" color="currentColor" />
+      </span>
+      <span className="fishbones__sidebar-nav-label">{label}</span>
+    </button>
+  );
+}
 
 interface Props {
   courses: Course[];
@@ -51,22 +80,6 @@ interface Props {
   onTrees?: () => void;
   /// Playground route — free-form coding sandbox, jsfiddle-style.
   onPlayground?: () => void;
-  /// Docs route — in-app documentation. Optional so embeddings of the
-  /// sidebar without a docs pane (e.g. the popped-out workbench window)
-  /// don't grow a dead chip.
-  onDocs?: () => void;
-  /// When `activeView === "docs"`, the sidebar swaps its course tree
-  /// for a docs-page nav driven by this id. Lifted from App-level so
-  /// the same state drives both the sidebar list and DocsView's main
-  /// pane — without it the user would see two separate sidebars.
-  /// Undefined means "not in docs mode" and the sidebar renders the
-  /// regular course tree.
-  docsActiveId?: string;
-  /// Called when the user clicks a docs page in the sidebar nav.
-  /// App.tsx forwards this to its `setDocsActiveId` so DocsView
-  /// re-renders with the new page. Optional so callers without docs
-  /// support don't have to wire it up.
-  onDocsSelect?: (pageId: string) => void;
   /// Which main-pane destination is currently showing. Used ONLY to draw
   /// an active state on the matching icon chip; clicking a chip calls
   /// its callback and lets the parent manage the state transition.
@@ -78,7 +91,6 @@ interface Props {
     | "playground"
     | "library"
     | "discover"
-    | "docs"
     | "trees";
   onExportCourse?: (courseId: string, courseTitle: string) => void;
   onDeleteCourse?: (courseId: string, courseTitle: string) => void;
@@ -111,9 +123,6 @@ export default function Sidebar({
   onTrees,
   onSettings,
   onPlayground,
-  onDocs,
-  docsActiveId,
-  onDocsSelect,
   activeView = "courses",
   onExportCourse,
   onDeleteCourse,
@@ -198,9 +207,8 @@ export default function Sidebar({
           newest-activity first. Hidden when there's 0 or 1 course
           (nothing to switch between). Clicking a thumbnail jumps to
           the course — the parent resolves which lesson to resume.
-          Also hidden when the sidebar is in docs mode — the rail
-          becomes the docs nav, so a course-switcher would be noise. */}
-      {activeView !== "docs" && onSelectCourse && (
+          */}
+      {onSelectCourse && (
         <CourseCarousel
           courses={courses}
           recents={recents}
@@ -258,14 +266,6 @@ export default function Sidebar({
             active={activeView === "playground"}
           />
         )}
-        {onDocs && (
-          <SidebarNavItem
-            icon={fileText}
-            label="Docs"
-            onClick={onDocs}
-            active={activeView === "docs"}
-          />
-        )}
         <SidebarNavItem
           icon={settingsIcon}
           label="Settings"
@@ -273,12 +273,6 @@ export default function Sidebar({
         />
       </div>
 
-      {activeView === "docs" ? (
-        <DocsSidebarNav
-          activeId={docsActiveId}
-          onSelect={onDocsSelect}
-        />
-      ) : (
       <nav className="fishbones__nav">
         {(() => {
           // Partition into books vs challenge packs so they render under
@@ -448,7 +442,6 @@ export default function Sidebar({
           );
         })()}
       </nav>
-      )}
 
       {menu && (onExportCourse || onDeleteCourse || onCourseSettings || onResetCourse) && createPortal(
         <div

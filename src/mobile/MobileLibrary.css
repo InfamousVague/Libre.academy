@@ -34,6 +34,68 @@
   margin: 0;
 }
 
+/* Right-edge action group: view toggle + search. Pinned to the
+   header's top-right so it tracks the title rather than the page
+   margin. */
+.m-lib__head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+/* View-mode toggle — two pill-joined icon buttons (grid / covers).
+   Mirrors the desktop toggle visually but sized for thumb taps. */
+.m-lib__viewtoggle {
+  display: inline-flex;
+  background: var(--color-bg-elevated, #19191d);
+  border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.08));
+  border-radius: var(--fb-radius-md);
+  padding: 2px;
+  gap: 2px;
+}
+
+.m-lib__viewbtn {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--color-text-tertiary);
+  border-radius: calc(var(--fb-radius-md) - 2px);
+  cursor: pointer;
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--fb-motion-quick), color var(--fb-motion-quick);
+}
+
+.m-lib__viewbtn--active {
+  background: var(--color-bg-secondary, #21262d);
+  color: var(--color-text-primary);
+}
+
+.m-lib__viewbtn:hover:not(.m-lib__viewbtn--active) {
+  color: var(--color-text-secondary);
+}
+
+/* Single-column stack of CourseCards for grid view. The CourseCard
+   component owns its internal layout (title / author / progress /
+   actions); we just give it a full-width slot. */
+.m-lib__cardlist {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.m-lib__cardcell {
+  display: block;
+}
+
 /* Search-trigger button — a compact 28px square sitting top-right of
    the header. Smaller than the tab-bar icons on purpose: search is a
    secondary action on mobile (the primary path is browsing the
@@ -54,10 +116,8 @@
   font: inherit;
   -webkit-tap-highlight-color: transparent;
   transition: background var(--fb-motion-quick), color var(--fb-motion-quick);
-  /* Nudge it down so it visually centers against the title baseline
-     rather than the title's top. Header uses align-items: flex-start
-     so we adjust here instead of changing the whole row's alignment. */
-  margin-top: 6px;
+  /* No margin-top here — the parent `.m-lib__head-actions` owns the
+     vertical alignment for the whole group (toggle + search). */
 }
 
 .m-lib__search:active {
@@ -122,9 +182,47 @@
   opacity: 0.85;
 }
 
-/* Grid of book covers — 2:3 portrait cards in a 2-col grid. The cover
-   image is an absolute background; the title + meta sit BELOW the
-   cover, not on top of it (better for legibility on small art). */
+/* Section wrapper — Books up top, Challenges below, mirroring the
+   desktop CourseLibrary structure. Headers space-separate the two
+   piles visually so the language-pill filter row above doesn't lead
+   straight into a wall of mixed covers. */
+.m-lib__section {
+  margin-top: 18px;
+}
+.m-lib__section:first-of-type {
+  margin-top: 0;
+}
+
+.m-lib__section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 0 2px;
+}
+
+.m-lib__section-title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary, #f5f5f7);
+  margin: 0;
+}
+
+.m-lib__section-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-tertiary, #6b7180);
+  background: var(--color-bg-tertiary, #21262d);
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Grid of <BookCover> tiles — 2:3 portrait cards in a 2-col grid.
+   The shared `<BookCover>` component owns its own internal layout
+   (cover image, title overlay, language badge, release pill,
+   completion-tier frame). We just give it a cell to live in. */
 .m-lib__grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

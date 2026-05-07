@@ -1,0 +1,387 @@
+/* Building-blocks view. Two visual zones — the template (read-only
+   code with chip-shaped drop zones) and the pool (the tray of
+   blocks the learner picks from). Chips are deliberately tactile:
+   a subtle border + bg differentiation from regular code makes them
+   feel pickable, an "armed" ring + drag-ghost reinforces selection,
+   and per-slot answer-key colouring (only after Verify) gives
+   feedback without spoiling the puzzle.
+
+   The layout is single-column on every viewport — phone, tablet,
+   desktop. The lesson reader's existing column constraints
+   (.fishbones-reader-body / .m-reader__prose) already cap width;
+   we don't impose further. */
+
+.fb-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-family: var(--font-body, system-ui);
+}
+
+.fb-blocks--error {
+  padding: 16px;
+  border: 1px dashed var(--color-border-default);
+  border-radius: var(--fb-radius-md);
+  color: var(--color-text-secondary);
+}
+
+.fb-blocks__prompt {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+/* ── Template ──────────────────────────────────────────────────── */
+
+/* The template is a monospace block. Each token rendered inside
+   carries an inline `color` style from Shiki (github-dark theme);
+   our `.fb-blocks__template` rule sets the FALLBACK text colour
+   for the rare token Shiki doesn't colour, plus the panel
+   background. Chips inside the template inherit the surrounding
+   line-height + indentation so a placed chip reads as continuous
+   code. `white-space: pre-wrap` lets long lines wrap on phone
+   without losing leading indentation. */
+.fb-blocks__template {
+  margin: 0;
+  padding: 14px 16px;
+  font-family: var(--font-mono, "SF Mono", Menlo, monospace);
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--color-text-primary);
+  /* Match the github-dark Shiki theme's canonical bg so coloured
+     tokens have the contrast they're tuned for. Pure black would
+     also work but the slight blue-grey tint is what Shiki ships. */
+  background: #0d1117;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--fb-radius-md);
+  white-space: pre-wrap;
+  /* Allow long code to scroll horizontally if wrap isn't enough. */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Each line is wrapped in a span so we can target hover / focus
+   per-line later if needed. Block-level so the line breaks render
+   even with a flexbox parent. Inline-block keeps the line-height
+   correct without forcing line wrapping inside chips. */
+.fb-blocks__line {
+  display: inline;
+}
+
+/* ── Slot drop zones ───────────────────────────────────────────── */
+
+/* A slot is an inline-block chip-shaped region the learner drops
+   blocks into. Width is content-based so a slot for `0` is small,
+   a slot for a multi-token expression is wide. Min-width keeps
+   tiny slots tappable on phone. `text-align: center` horizontally
+   centres whatever lives inside (the placeholder hint, the placed
+   chip's `<code>`); without it short answers like `c` or `9.0`
+   sit hard-left in a wider min-width box and read as misaligned. */
+.fb-blocks__slot {
+  display: inline-block;
+  vertical-align: baseline;
+  min-width: 56px;
+  min-height: 1.6em;
+  padding: 0 6px;
+  margin: 0 2px;
+  border-radius: 6px;
+  border: 1px dashed var(--color-border-strong, var(--color-border-default));
+  background: var(--color-bg-elevated, rgba(255, 255, 255, 0.03));
+  cursor: pointer;
+  user-select: none;
+  text-align: center;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+/* Filled slot — drop ALL chrome (border, padding, background) so
+   the placed chip reads as continuous code, not a stamped tile.
+   The min-width from the base rule still keeps short answers
+   centered in a stable column-width so the line doesn't reflow
+   as values fall in. Hover (desktop only — no-op on touch) lights
+   up the gold ring as a "tap to remove" hint, since with the chip
+   chrome gone there's no other visual cue. */
+.fb-blocks__slot--filled {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+.fb-blocks__slot--filled:hover {
+  background: rgba(214, 185, 105, 0.08);
+  box-shadow: 0 0 0 1px rgba(214, 185, 105, 0.35);
+  border-radius: 4px;
+}
+
+/* While a draggable hovers over the slot — strong visual confirmation
+   the drop will land here. */
+.fb-blocks__slot--over {
+  background: rgba(214, 185, 105, 0.18);
+  border-color: rgba(214, 185, 105, 0.7);
+  box-shadow: 0 0 0 2px rgba(214, 185, 105, 0.25);
+}
+
+/* Answer-key feedback. Only applied AFTER Verify has been run at
+   least once (component gates with `allowFeedback`) so the puzzle
+   doesn't degenerate into "drag random blocks until everything
+   turns green." */
+.fb-blocks__slot--correct {
+  border-color: rgba(120, 200, 140, 0.6);
+  box-shadow: inset 0 0 0 1px rgba(120, 200, 140, 0.35);
+}
+
+.fb-blocks__slot--wrong {
+  border-color: rgba(220, 110, 110, 0.7);
+  box-shadow: inset 0 0 0 1px rgba(220, 110, 110, 0.4);
+}
+
+.fb-blocks__slot-placeholder {
+  display: inline-block;
+  font-size: 0.92em;
+  color: var(--color-text-tertiary, var(--color-text-secondary));
+  font-style: italic;
+  opacity: 0.7;
+}
+
+/* ── Block chips ───────────────────────────────────────────────── */
+
+/* A chip is the same monospace as the template so a placed chip
+   reads as continuous code. The pool's chips get a subtle elevation
+   to communicate "pickable"; placed chips drop the elevation so
+   the eye doesn't bounce between filled slots. */
+.fb-blocks__chip {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--color-bg-elevated, #19191d);
+  border: 1px solid var(--color-border-default);
+  cursor: grab;
+  user-select: none;
+  font-family: var(--font-mono, "SF Mono", Menlo, monospace);
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: nowrap;
+  transition:
+    transform 80ms ease,
+    box-shadow 120ms ease,
+    border-color 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+}
+
+.fb-blocks__chip:hover {
+  border-color: var(--color-border-strong, var(--color-border-default));
+}
+
+.fb-blocks__chip:active,
+.fb-blocks__chip--dragging {
+  cursor: grabbing;
+}
+
+/* Tap-to-place "armed" state — distinct from drag. The ring
+   colour is the same warm gold the cursor + TTS pill use so the
+   app feels coherent across surfaces. */
+.fb-blocks__chip--armed {
+  border-color: rgba(214, 185, 105, 0.7);
+  box-shadow: 0 0 0 2px rgba(214, 185, 105, 0.25);
+}
+
+/* Placed chips read as fully continuous code — no chrome at all,
+   just the Shiki-coloured tokens against the template background.
+   Discoverability of "tap to remove" lives on the parent slot's
+   hover state (`.fb-blocks__slot--filled:hover` lights up a gold
+   ring) so the chip itself stays visually transparent. */
+.fb-blocks__chip--placed {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  border-radius: 0;
+}
+
+/* Floating ghost the DragOverlay renders. Slightly elevated so the
+   user sees what they're carrying. */
+.fb-blocks__chip--ghost {
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(214, 185, 105, 0.5);
+  pointer-events: none;
+  /* Subtle scale to read as "lifted off the page." */
+  transform: scale(1.02);
+}
+
+.fb-blocks__chip code {
+  font-family: inherit;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: inherit;
+  color: inherit;
+}
+
+/* ── Pool tray ─────────────────────────────────────────────────── */
+
+.fb-blocks__pool {
+  padding: 12px;
+  border-radius: var(--fb-radius-md);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  min-height: 56px;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+
+.fb-blocks__pool--over {
+  background: rgba(214, 185, 105, 0.10);
+  border-color: rgba(214, 185, 105, 0.45);
+}
+
+.fb-blocks__pool-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.fb-blocks__pool-empty {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+/* ── Controls ─────────────────────────────────────────────────── */
+
+.fb-blocks__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.fb-blocks__verify {
+  padding: 8px 18px;
+  border: 0;
+  border-radius: var(--fb-radius-md);
+  background: var(--color-text-primary);
+  color: var(--color-bg-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--fb-motion-quick, 100ms ease);
+}
+
+.fb-blocks__verify:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.fb-blocks__reset {
+  padding: 8px 14px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--fb-radius-md);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.fb-blocks__reset:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-border-strong, var(--color-border-default));
+}
+
+.fb-blocks__answerkey {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.fb-blocks__answerkey--ok {
+  color: rgba(120, 200, 140, 0.85);
+}
+
+.fb-blocks__answerkey--maybe {
+  color: var(--color-text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fb-blocks__chip,
+  .fb-blocks__slot,
+  .fb-blocks__pool {
+    transition: none;
+  }
+}
+
+/* ── Accessibility helpers ─────────────────────────────────────── */
+
+/* Visually-hidden span for the screen-reader live region. Off-screen
+   without `display: none` so AT actually announces updates. */
+.fb-blocks__sr-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip: rect(0 0 0 0);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* Visible focus rings on slots and chips. dnd-kit's keyboard sensor
+   moves focus between draggables; without an obvious ring you can't
+   tell which one is "armed" via keyboard. Ring colour matches the
+   warm-gold accent used for tap-arm + drag-over so the visual
+   vocabulary stays consistent. */
+.fb-blocks__chip:focus-visible,
+.fb-blocks__slot:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(214, 185, 105, 0.65);
+  border-radius: 6px;
+}
+
+/* ── Success fanfare ────────────────────────────────────────────── */
+
+/* When the verifier reports all-tests-pass, briefly pulse a soft
+   green wash across the template + a subtle scale on the prompt.
+   Auto-removes after ~1.6s (driven by component state) so re-running
+   a passing solution can re-trigger the celebration. The animation
+   is purely cosmetic — completion is credited even if the user has
+   `prefers-reduced-motion: reduce` set, just without the visuals. */
+.fb-blocks--passed .fb-blocks__template {
+  animation: fb-blocks-fanfare 1.5s ease-out 1;
+}
+
+.fb-blocks--passed .fb-blocks__verify {
+  animation: fb-blocks-verify-pop 0.6s ease-out 1;
+}
+
+@keyframes fb-blocks-fanfare {
+  0% {
+    box-shadow: 0 0 0 0 rgba(120, 200, 140, 0);
+    background: #0d1117;
+  }
+  20% {
+    box-shadow: 0 0 0 4px rgba(120, 200, 140, 0.45);
+    background: #11201a;
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(120, 200, 140, 0);
+    background: #0d1117;
+  }
+}
+
+@keyframes fb-blocks-verify-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fb-blocks--passed .fb-blocks__template,
+  .fb-blocks--passed .fb-blocks__verify {
+    animation: none;
+  }
+}

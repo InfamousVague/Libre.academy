@@ -58,10 +58,11 @@ export default function CourseCard({
   onReinstall,
 }: Props) {
   const chapters = course.chapters.length;
+  const isCompleted = pct === 1;
   const status =
     pct === 0
       ? "not started"
-      : pct === 1
+      : isCompleted
         ? "completed"
         : `${Math.round(pct * 100)}%`;
 
@@ -111,7 +112,31 @@ export default function CourseCard({
       <button className="fishbones-library-card-main" onClick={onOpen}>
         <div className="fishbones-library-card-header">
           <LanguageChip language={course.language} size="sm" />
-          <span className="fishbones-library-card-status">{status}</span>
+          <span
+            className={
+              isCompleted
+                ? "fishbones-library-card-status fishbones-library-card-status--completed"
+                : "fishbones-library-card-status"
+            }
+          >
+            {isCompleted && (
+              // Crown icon — marks fully-finished courses on the
+              // grid view. Inline SVG so we don't pull in an icon
+              // library just for one glyph; sized to sit in the
+              // baseline of the uppercase status text.
+              <svg
+                className="fishbones-library-card-status-icon"
+                viewBox="0 0 24 24"
+                width="11"
+                height="11"
+                fill="currentColor"
+                aria-hidden
+              >
+                <path d="M3 7l4 5 5-7 5 7 4-5v11H3V7zm0 13h18v2H3z" />
+              </svg>
+            )}
+            {status}
+          </span>
         </div>
         <div className="fishbones-library-card-title">{course.title}</div>
         {course.author && (

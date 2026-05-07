@@ -709,3 +709,36 @@
   color: var(--color-text-primary);
   font-weight: 600;
 }
+
+
+/* Narration cursor — applied by useLessonReadCursor to the
+   `[data-tts-block="N"]` whose audio range covers the current
+   playback position. Soft warm-gold tint matches the playing-state
+   of the TTS pill so the listener associates the highlight with
+   "this is what the narrator is reading". Slight horizontal inset
+   ribbon so the highlight reads as a margin marker more than a
+   block-fill (less visually loud than a full background block).
+   Transitions in/out so the cursor glides between paragraphs
+   instead of stutter-cutting. */
+.fishbones-reader-body [data-tts-block].fb-tts-current {
+  position: relative;
+  background: linear-gradient(
+    90deg,
+    rgba(214, 185, 105, 0.10) 0%,
+    rgba(214, 185, 105, 0.05) 60%,
+    transparent 100%
+  );
+  border-left: 2px solid rgba(214, 185, 105, 0.6);
+  padding-left: 12px;
+  margin-left: -14px;
+  border-radius: 0 4px 4px 0;
+  transition:
+    background 350ms ease,
+    border-color 350ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fishbones-reader-body [data-tts-block].fb-tts-current {
+    transition: none;
+  }
+}

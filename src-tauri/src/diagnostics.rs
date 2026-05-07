@@ -62,6 +62,12 @@ pub async fn run_diagnostics(app: tauri::AppHandle) -> Vec<CheckResult> {
     out.push(check_bundled_packs(&app));
     out.push(check_vendor_dir(&app));
     out.push(check_node_runtime(&app));
+    // Chain backends — the in-process SVM / EVM / Bitcoin runtimes
+    // initialise at app startup; this verifies they came up healthy
+    // (10 pre-funded accounts each, snapshot is well-formed).
+    out.push(check_chain_svm(&app));
+    out.push(check_chain_evm(&app));
+    out.push(check_chain_bitcoin(&app));
     // User data — where progress / settings live.
     out.push(check_app_data_dir());
     out.push(check_progress_db(&app));
@@ -330,6 +336,131 @@ fn check_node_runtime(app: &tauri::AppHandle) -> CheckResult {
                 "SvelteKit lessons won't run. Reinstall the app to restore.".into(),
             ),
         },
+    }
+}
+
+/// Verify the SVM chain backend booted with 10 pre-funded signers.
+/// Cheap — a single mutex acquisition + snapshot inspection.
+fn check_chain_svm(app: &tauri::AppHandle) -> CheckResult {
+    let state = match app.try_state::<crate::chains::svm::SharedSvm>() {
+        Some(s) => s,
+        None => {
+            return CheckResult {
+                id: "chain-svm".into(),
+                category: "Chain backends".into(),
+                label: "SVM (litesvm)".into(),
+                status: CheckStatus::Fail,
+                detail: "SvmState not registered as Tauri state".into(),
+                remedy: Some("App init failed; reinstall.".into()),
+            };
+        }
+    };
+    let guard = state.lock();
+    let n_accounts = guard.snapshot.accounts.len();
+    if n_accounts == 10 {
+        CheckResult {
+            id: "chain-svm".into(),
+            category: "Chain backends".into(),
+            label: "SVM (litesvm)".into(),
+            status: CheckStatus::Pass,
+            detail: format!(
+                "10 pre-funded signers, slot {}, {} programs, {} txs",
+                guard.snapshot.slot, guard.snapshot.programs.len(), guard.snapshot.txs.len()
+            ),
+            remedy: None,
+        }
+    } else {
+        CheckResult {
+            id: "chain-svm".into(),
+            category: "Chain backends".into(),
+            label: "SVM (litesvm)".into(),
+            status: CheckStatus::Fail,
+            detail: format!("expected 10 pre-funded accounts, got {n_accounts}"),
+            remedy: Some("LiteSVM init failed at startup. Check app log.".into()),
+        }
+    }
+}
+
+/// Verify the EVM chain backend booted with the 10 anvil-style EOAs.
+fn check_chain_evm(app: &tauri::AppHandle) -> CheckResult {
+    let state = match app.try_state::<crate::chains::evm::SharedEvm>() {
+        Some(s) => s,
+        None => {
+            return CheckResult {
+                id: "chain-evm".into(),
+                category: "Chain backends".into(),
+                label: "EVM (revm)".into(),
+                status: CheckStatus::Fail,
+                detail: "EvmState not registered as Tauri state".into(),
+                remedy: Some("App init failed; reinstall.".into()),
+            };
+        }
+    };
+    let guard = state.lock();
+    let n_accounts = guard.snapshot.accounts.len();
+    if n_accounts == 10 {
+        CheckResult {
+            id: "chain-evm".into(),
+            category: "Chain backends".into(),
+            label: "EVM (revm)".into(),
+            status: CheckStatus::Pass,
+            detail: format!(
+                "10 pre-funded EOAs (anvil set), block {}, {} contracts deployed",
+                guard.snapshot.block_number, guard.snapshot.contracts.len()
+            ),
+            remedy: None,
+        }
+    } else {
+        CheckResult {
+            id: "chain-evm".into(),
+            category: "Chain backends".into(),
+            label: "EVM (revm)".into(),
+            status: CheckStatus::Fail,
+            detail: format!("expected 10 pre-funded accounts, got {n_accounts}"),
+            remedy: Some("revm init failed at startup. Check app log.".into()),
+        }
+    }
+}
+
+/// Verify the Bitcoin chain backend booted with 10 pre-funded
+/// P2WPKH accounts (each holding 50 BTC from genesis bootstrap).
+fn check_chain_bitcoin(app: &tauri::AppHandle) -> CheckResult {
+    let state = match app.try_state::<crate::chains::bitcoin::SharedBtc>() {
+        Some(s) => s,
+        None => {
+            return CheckResult {
+                id: "chain-bitcoin".into(),
+                category: "Chain backends".into(),
+                label: "Bitcoin (rust-bitcoin)".into(),
+                status: CheckStatus::Fail,
+                detail: "BitcoinState not registered as Tauri state".into(),
+                remedy: Some("App init failed; reinstall.".into()),
+            };
+        }
+    };
+    let guard = state.lock();
+    let n_accounts = guard.snapshot.accounts.len();
+    if n_accounts == 10 {
+        CheckResult {
+            id: "chain-bitcoin".into(),
+            category: "Chain backends".into(),
+            label: "Bitcoin (rust-bitcoin)".into(),
+            status: CheckStatus::Pass,
+            detail: format!(
+                "10 pre-funded P2WPKH accounts (regtest), height {}, {} blocks, {} mempool",
+                guard.snapshot.height, guard.snapshot.blocks.len(), guard.snapshot.mempool.len()
+            ),
+            remedy: None,
+        }
+    } else {
+        CheckResult {
+            id: "chain-bitcoin".into(),
+            category: "Chain backends".into(),
+            label: "Bitcoin (rust-bitcoin)".into(),
+            status: CheckStatus::Fail,
+            detail: format!("expected 10 pre-funded accounts, got {n_accounts}"),
+            remedy: Some("rust-bitcoin chain init failed at startup. Check app log.".into()),
+        }
     }
 }
 

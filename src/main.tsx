@@ -5,6 +5,7 @@ import PoppedWorkbench from "./components/Workbench/PoppedWorkbench";
 import PhonePopoutView from "./components/PhonePopout/PhonePopoutView";
 import { ChainDock } from "./components/ChainDock/ChainDock";
 import { BitcoinChainDock } from "./components/BitcoinChainDock/BitcoinChainDock";
+import { SvmDock } from "./components/SvmDock/SvmDock";
 import { applyTheme, loadTheme } from "./theme/themes";
 import "./theme/themes.css";
 import "./App.css";
@@ -26,10 +27,11 @@ const isPopped = params.get("popped") === "1";
 const isPhone = params.get("phone") === "1";
 // Standalone local chain-style dock windows. Each mounts only the
 // matching chain UI in popout variant — see
-// `lib/evm/dockPopout.ts` and `lib/bitcoin/dockPopout.ts` for the
-// open-side helpers.
+// `lib/evm/dockPopout.ts`, `lib/bitcoin/dockPopout.ts`, and
+// `lib/svm/dockPopout.ts` for the open-side helpers.
 const isEvmDock = params.get("evmDock") === "1";
 const isBtcDock = params.get("btcDock") === "1";
+const isSvmDock = params.get("svmDock") === "1";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
@@ -37,6 +39,8 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
       <ChainDock variant="popout" />
     ) : isBtcDock ? (
       <BitcoinChainDock variant="popout" />
+    ) : isSvmDock ? (
+      <SvmDock variant="popout" />
     ) : isPhone ? (
       <PhonePopoutView />
     ) : isPopped ? (

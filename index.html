@@ -18,11 +18,16 @@
     <!-- Pre-React preloader. The main bundle + Monaco take ~1s to parse
          on a cold launch and React's bootloader can't paint until the
          module graph resolves — so without this inline block the user
-         stares at a black window. The markup mirrors the FishbonesLoader
-         component so there's no visual jump on swap; App mounts over
-         #root and the preloader is hidden via a CSS rule that keys off
-         `body.is-booted`. App.tsx flips that class inside its mount
-         effect (see src/main.tsx). -->
+         stares at a black window.
+
+         The markup + styling mirror the React FishbonesLoader and
+         DottedGradientBg components: bone-colored ring, steady (non-
+         pulsing) fish, and a halftone-dot purple/pink gradient
+         background. Without this mirroring there's a visible jump
+         between the inline preloader and the React loader on cold
+         start (the React one fades in over the inline preloader as
+         body.is-booted flips). App.tsx flips that class inside its
+         mount effect (see src/main.tsx). -->
     <style>
       html, body {
         margin: 0;
@@ -32,6 +37,7 @@
         color: #eaeaea;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
       }
+      /* Bone tone — matches FishbonesLoader's `--fb-bone-color`. */
       #preloader {
         position: fixed;
         inset: 0;
@@ -41,56 +47,110 @@
         justify-content: center;
         gap: 10px;
         z-index: 9999;
-        background: #0a0a0a;
-        color: #eaeaea;
+        /* Solid dark base. The halftone wash + dot stencil layers below
+           paint on top of this; without an opaque base the WebView
+           sometimes flashes its default white before the wash mounts. */
+        background: #050608;
+        color: #d4c5a1;
         transition: opacity 0.25s ease, visibility 0s linear 0.25s;
+        overflow: hidden;
+        isolation: isolate;
       }
       body.is-booted #preloader {
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
       }
+      /* Halftone purple/pink wash, masked to a 7×7px dot grid. Mirrors
+         DottedGradientBg's `--fill` variant so the cold-launch screen
+         reads as part of the brand instead of a black void. Static
+         (no animation) — the React DottedGradientBg drifts, but for
+         the ~1s preloader window a static grid is enough. */
+      #preloader-wash {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        background-image:
+          radial-gradient(
+            ellipse 65% 55% at 25% 18%,
+            rgba(170, 110, 245, 0.95) 0%,
+            rgba(170, 110, 245, 0.45) 30%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 55% 50% at 70% 30%,
+            rgba(232, 110, 196, 0.85) 0%,
+            rgba(232, 110, 196, 0.40) 35%,
+            transparent 65%
+          );
+        -webkit-mask-image: radial-gradient(circle at 1px 1px, black 1px, transparent 1.4px);
+        -webkit-mask-size: 7px 7px;
+        mask-image: radial-gradient(circle at 1px 1px, black 1px, transparent 1.4px);
+        mask-size: 7px 7px;
+        filter: blur(1px);
+      }
+      /* Subtle gray dot field beneath the colored wash so dots are
+         visible everywhere, not just inside the bloom. */
+      #preloader-dots {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        background-image: radial-gradient(
+          circle at 1px 1px,
+          rgba(255, 255, 255, 0.05) 1px,
+          transparent 1.4px
+        );
+        background-size: 7px 7px;
+      }
       #preloader-stack {
         position: relative;
+        z-index: 1;
         width: 88px;
         height: 88px;
         display: flex;
         align-items: center;
         justify-content: center;
       }
+      /* Bone-colored ring (border-top-color uses the bone tone via
+         currentColor inherited from #preloader). Track is the same
+         tone at low opacity. */
       #preloader-ring {
         position: absolute;
         inset: 0;
         border-radius: 50%;
-        border: 2px solid rgba(255, 255, 255, 0.12);
-        border-top-color: #eaeaea;
+        border: 2px solid rgba(212, 197, 161, 0.18);
+        border-top-color: currentColor;
         animation: preloader-spin 1.1s linear infinite;
       }
+      /* Steady fish — no pulse animation. The 3D bone-textured fish
+         loses detail under opacity/scale animation, so we leave it
+         static and let the rotating ring carry the motion. */
       #preloader-logo {
         width: 48px;
         height: 48px;
         background: url("/fishbones.png") no-repeat center / contain;
         border-radius: 6px;
-        animation: preloader-pulse 1.8s ease-in-out infinite;
       }
       #preloader-label {
+        position: relative;
+        z-index: 1;
         font-size: 11px;
         font-weight: 600;
         letter-spacing: 0.8px;
         text-transform: uppercase;
-        opacity: 0.55;
+        color: rgba(234, 234, 234, 0.55);
       }
       @keyframes preloader-spin {
         to { transform: rotate(360deg); }
-      }
-      @keyframes preloader-pulse {
-        0%, 100% { opacity: 0.9; transform: scale(1); }
-        50%      { opacity: 0.5; transform: scale(0.94); }
       }
     </style>
   </head>
   <body>
     <div id="preloader" role="status" aria-label="Loading Fishbones">
+      <div id="preloader-wash" aria-hidden="true"></div>
+      <div id="preloader-dots" aria-hidden="true"></div>
       <div id="preloader-stack" aria-hidden="true">
         <div id="preloader-ring"></div>
         <div id="preloader-logo"></div>

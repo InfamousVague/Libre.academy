@@ -225,7 +225,6 @@ function lessonIconFor(lesson: Lesson): string {
       return helpCircle;
     case "exercise":
     case "mixed":
-    case "puzzle":
     default:
       return codeIcon;
   }

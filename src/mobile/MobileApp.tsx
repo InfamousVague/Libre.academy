@@ -17,7 +17,6 @@ import { useStreakAndXp } from "../hooks/useStreakAndXp";
 import type { Course, Lesson } from "../data/types";
 import MobileLibrary from "./MobileLibrary";
 import MobileLesson from "./MobileLesson";
-import MobilePractice from "./MobilePractice";
 import MobileProfile from "./MobileProfile";
 import MobileSettings from "./MobileSettings";
 import MobileSearchPalette from "./MobileSearchPalette";
@@ -26,7 +25,7 @@ import MobileTabBar, { type MobileTab } from "../components/MobileTabBar/MobileT
 import FishbonesLoader from "../components/Shared/FishbonesLoader";
 import "./MobileApp.css";
 
-type View = "library" | "lesson" | "practice" | "profile" | "settings";
+type View = "library" | "lesson" | "profile" | "settings";
 
 interface ActiveLesson {
   course: Course;
@@ -129,13 +128,11 @@ export default function MobileApp() {
   const activeTab: MobileTab =
     view === "lesson"
       ? "courses"
-      : view === "practice"
-        ? "practice"
-        : view === "profile"
-          ? "profile"
-          : view === "settings"
-            ? "settings"
-            : "library";
+      : view === "profile"
+        ? "profile"
+        : view === "settings"
+          ? "settings"
+          : "library";
 
   return (
     <div className="m-app">
@@ -171,9 +168,6 @@ export default function MobileApp() {
             isCompleted={completed.has(`${active.course.id}:${lesson.id}`)}
           />
         )}
-        {view === "practice" && (
-          <MobilePractice courses={courses} completed={completed} />
-        )}
         {view === "profile" && (
           <MobileProfile
             courses={courses}
@@ -200,7 +194,6 @@ export default function MobileApp() {
         onLesson={() => {
           if (active) setView("lesson");
         }}
-        onPractice={() => setView("practice")}
         onProfile={() => setView("profile")}
         onSettings={() => setView("settings")}
       />

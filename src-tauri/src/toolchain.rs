@@ -267,16 +267,34 @@ fn recipe(language: &str) -> Option<Recipe> {
 
         "haskell" => Some(Recipe {
             // We probe `runghc` (the script-style runner that ships with
-            // GHC). `runghc` is the binary the kata pack actually shells
-            // out to — `ghc` would also satisfy the install but isn't
-            // what we invoke. GHCup is the canonical installer; brew
-            // has a `ghc` formula but it's typically a step behind.
+            // GHC) since that's what the native-runner shells out to.
+            //
+            // Install via `brew install ghc` — Homebrew's formula bundles
+            // ghc + runghc + ghci and lands them in `/opt/homebrew/bin`,
+            // already on the broadened PATH so the post-install probe
+            // finds them immediately.
+            //
+            // We previously used GHCup (`curl … | sh -s -- -y`) because
+            // it ships the full ecosystem (cabal, HLS, stack), but for
+            // running kata-pack `runghc` scripts that's overkill — the
+            // GHCup install is ~10–20 minutes and ~2 GB, the `-y` flag
+            // doesn't reliably non-interactive the script (it really
+            // wants `BOOTSTRAP_HASKELL_NONINTERACTIVE=1`), and the
+            // resulting `~/.ghcup/bin` wasn't in our PATH discovery so
+            // even successful installs left the probe reporting
+            // "missing." Brew's `ghc` is "a release behind" sometimes,
+            // but more than new enough for `runghc`.
+            //
+            // Users who already have GHCup-installed Haskell are still
+            // covered: `~/.ghcup/bin/runghc` is in `find_binary_all` and
+            // the broadened PATH, so the probe finds it without us
+            // running the installer.
             binary: "runghc",
             version_args: &["--version"],
             install: Some(InstallHint {
-                manager: "ghcup".into(),
-                command: "curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh -s -- -y".into(),
-                description: "Installs GHC + cabal + HLS via GHCup, the official Haskell installer. The `-y` flag accepts the defaults non-interactively. No password needed.".into(),
+                manager: "brew".into(),
+                command: "brew install ghc".into(),
+                description: "Installs GHC (which provides `runghc`) via Homebrew. ~30 sec, no password needed. If you'd rather have the full GHCup ecosystem (cabal + HLS + stack), install it manually from https://www.haskell.org/ghcup/.".into(),
                 ..Default::default()
             }),
         }),
@@ -576,6 +594,15 @@ pub(crate) fn find_binary_all(name: &str) -> Vec<String> {
         // installed via the curl-bash one-liner won't be found by
         // `which` on a fresh shell. Look for it explicitly.
         format!("{home}/.local/share/solana/install/active_release/bin/{name}"),
+        // GHCup's install location. Users who installed Haskell via
+        // GHCup (the `curl ... | sh` one-liner from haskell.org/ghcup)
+        // get binaries here, NOT on the standard Homebrew PATH. Without
+        // this entry, a working GHCup install would still report
+        // "missing" in the probe and we'd offer to brew-install on top.
+        format!("{home}/.ghcup/bin/{name}"),
+        // Cabal's user-install bin dir, in case `runghc` ever resolves
+        // there (rare — usually GHCup symlinks into `~/.ghcup/bin`).
+        format!("{home}/.cabal/bin/{name}"),
     ];
     for p in &candidates {
         if std::path::Path::new(p).exists() && !out.iter().any(|q| q == p) {
@@ -626,6 +653,12 @@ pub(crate) fn broadened_path() -> String {
     let mut parts: Vec<String> = extra.iter().map(|s| s.to_string()).collect();
     parts.push(cargo_bin);
     parts.push(solana_bin);
+    // GHCup user install (Haskell). Symmetric with Solana — the GHCup
+    // installer only modifies shell rc files, not the GUI process's
+    // env, so we add the dir explicitly so `runghc` resolves at probe +
+    // run time regardless of how the user launched the app.
+    parts.push(format!("{home}/.ghcup/bin"));
+    parts.push(format!("{home}/.cabal/bin"));
     if !existing.is_empty() {
         parts.push(existing);
     }

@@ -230,6 +230,19 @@ export interface Course {
   /// = downloadable on demand. Set on installed courses too so the
   /// Library can sort core books to the front of the shelf.
   tier?: "core" | "remote";
+  /// When true, the course assumes the learner will connect a
+  /// hardware wallet (currently: Ledger only). Setting this:
+  ///   - Mounts the LedgerStatusPill in the lesson view header so
+  ///     the learner can connect / see status anywhere in the course.
+  ///   - Lets `device-action` markdown fences in readings work
+  ///     (they're harmless without a connection but most verbs
+  ///     need one).
+  ///   - Allows individual exercises in this course to set
+  ///     `requiresDevice` and gate their solution behind a live
+  ///     APDU exchange with the connected device.
+  /// Currently used by `learning-ledger`. Other courses leave this
+  /// undefined and ignore the device-related affordances.
+  requiresDevice?: "ledger";
 }
 
 export interface Chapter {
@@ -242,10 +255,7 @@ export type Lesson =
   | ReadingLesson
   | ExerciseLesson
   | MixedLesson
-  | QuizLesson
-  | PuzzleLesson
-  | ClozeLesson
-  | MicroPuzzleLesson;
+  | QuizLesson;
 
 interface LessonBase {
   id: string;
@@ -359,6 +369,21 @@ export interface ExerciseLesson extends LessonBase {
    * lessons. See docs/evm-solana-runtime-design.md.
    */
   harness?: "evm" | "solana" | "bitcoin";
+  /**
+   * Building-blocks render data. When present, the lesson can be played
+   * in a tap-to-place / drag-to-place mode where the learner fills in
+   * holes in `blocks.template` from a pool of code blocks. Mobile
+   * always uses this mode when present; desktop offers a toggle
+   * between the editor and blocks. Verification synthesises source by
+   * replacing each `__SLOT_<id>__` marker with the placed block's
+   * code, then runs through the SAME `runFiles` pipeline editor mode
+   * uses — no parallel verifier.
+   *
+   * Auto-generated for every exercise by `scripts/generate-blocks.mjs`
+   * (LLM-assisted: picks pedagogically meaningful slots, drafts
+   * decoys from sibling lessons). Idempotent on solution+lesson hash.
+   */
+  blocks?: BlocksData;
 }
 
 /**
@@ -377,6 +402,146 @@ export interface MixedLesson extends LessonBase {
   difficulty?: Difficulty;
   topic?: string;
   harness?: "evm" | "solana" | "bitcoin";
+  /** See ExerciseLesson.blocks — same shape, same semantics. */
+  blocks?: BlocksData;
+}
+
+/**
+ * Building-blocks render data attached to an exercise. The learner sees
+ * `template` with the static portions filled in and `__SLOT_<id>__`
+ * holes for the rest; they pick from `pool` to fill each slot. The
+ * exercise's existing `solution` + `tests` are the source of truth —
+ * blocks data is just a different *render mode* of the same exercise.
+ *
+ * Source synthesis at verify time: walk `template`, replace every
+ * `__SLOT_<id>__` with the code of the block currently placed in
+ * that slot, then ship the assembled string through the standard
+ * `runFiles` pipeline. All slots filled correctly + tests pass =
+ * lesson complete (same completion criteria as editor mode).
+ */
+export interface BlocksData {
+  /**
+   * Canonical code with `__SLOT_<id>__` markers in place of the
+   * pieces the learner has to fill in. Everything else is read-only
+   * context (imports, function signatures, scaffolding the exercise
+   * provides). Markers can appear inline (`let x = __SLOT_init__;`)
+   * or block-level (one marker per logical statement).
+   */
+  template: string;
+  /**
+   * One entry per `__SLOT_<id>__` marker in `template`. Declares the
+   * canonical block id for each slot — used by the source
+   * synthesiser to know which block belongs where, and by the
+   * verifier to check correctness without running the full test
+   * suite (we still run the suite, but a structural check first
+   * gives instant per-slot feedback).
+   */
+  slots: BlockSlot[];
+  /**
+   * Every block the learner can pick from. Includes the correct
+   * blocks (one per slot, referenced by `BlockSlot.expectedBlockId`)
+   * plus optional decoys that look plausible but yield a wrong
+   * solution. The renderer shuffles at render time so retries don't
+   * show options in the same visual sequence.
+   */
+  pool: Block[];
+  /**
+   * Optional one-line intro shown above the blocks tray. Falls back
+   * to a verb-derived prompt ("Place each block in the right slot.")
+   * when missing.
+   */
+  prompt?: string;
+  /**
+   * Which file in the exercise's multi-file workbench this template
+   * belongs to. Defaults to the main runnable file (or the legacy
+   * single-file `starter`). Multi-file exercises that want blocks
+   * for more than one file should encode each file's blocks
+   * separately — for v1 we only support one file's worth of blocks
+   * per exercise.
+   */
+  fileName?: string;
+}
+
+export interface BlockSlot {
+  /// Stable id matching a `__SLOT_<id>__` marker in `template`.
+  /// Generated at build time so retries on the same lesson don't
+  /// regenerate ids (which would let learners memorise positions).
+  id: string;
+  /// Id of the block from `pool` that's the canonical fill. The
+  /// synthesiser consults this when running the test suite; the
+  /// per-slot structural check uses it for instant feedback.
+  expectedBlockId: string;
+  /// Optional one-word category for the slot's empty-state placeholder
+  /// ("statement", "expression", "keyword"). Purely cosmetic.
+  hint?: string;
+}
+
+export interface Block {
+  /// Stable id, referenced from `BlockSlot.expectedBlockId` and the
+  /// renderer's drag-source key.
+  id: string;
+  /// The code fragment shown on the block. Pre-formatted (matching
+  /// the indentation it should have when placed in the template's
+  /// slot). Verbatim insertion — the synthesiser does NOT reformat.
+  code: string;
+  /// True for decoy blocks that don't belong in any slot. Decoys
+  /// look plausible (sibling-lesson statements, common mistakes) but
+  /// yield a wrong solution if placed. Default false.
+  decoy?: boolean;
+}
+
+/**
+ * Synthesise the source string a learner's blocks placement
+ * represents. Walk `template`, replace each `__SLOT_<id>__` marker
+ * with either the placed block's `code` (when the slot has a
+ * placement) or `placeholder` (default `__BLANK__`, surfaced to the
+ * compiler as a syntax error if any slot is unfilled).
+ *
+ * Used by the BlocksView verifier (call with the learner's current
+ * placements before shipping to `runFiles`) and by tests / the
+ * auto-derive pipeline (call with the canonical placements derived
+ * from `slots[].expectedBlockId` to reconstruct the original
+ * solution and confirm the template + slots round-trip).
+ */
+export function assembleBlocksSource(
+  data: BlocksData,
+  placements: Record<string, string | undefined>,
+  placeholder = "__BLANK__",
+): string {
+  const blockById = new Map(data.pool.map((b) => [b.id, b]));
+  return data.template.replace(/__SLOT_([A-Za-z0-9_-]+)__/g, (_match, slotId) => {
+    const blockId = placements[slotId];
+    if (!blockId) return placeholder;
+    const block = blockById.get(blockId);
+    return block ? block.code : placeholder;
+  });
+}
+
+/**
+ * Whether every slot in `data` has a placement in `placements`. Used
+ * to gate the "Verify" button — no point shipping a half-filled
+ * template through the compiler. Doesn't check correctness; that's
+ * the verifier's job.
+ */
+export function isBlocksFullyPlaced(
+  data: BlocksData,
+  placements: Record<string, string | undefined>,
+): boolean {
+  return data.slots.every((s) => Boolean(placements[s.id]));
+}
+
+/**
+ * Whether every slot in `data` has its canonical block placed.
+ * Used for instant per-slot feedback BEFORE the user clicks Verify
+ * — green outline on correct slots, neutral on empty, red on wrong
+ * placements. The compile-based verifier still owns lesson
+ * completion; this is just visual reassurance during play.
+ */
+export function isBlocksAllCorrect(
+  data: BlocksData,
+  placements: Record<string, string | undefined>,
+): boolean {
+  return data.slots.every((s) => placements[s.id] === s.expectedBlockId);
 }
 
 /**
@@ -421,244 +586,23 @@ export function isQuiz(lesson: Lesson): lesson is QuizLesson {
   return lesson.kind === "quiz";
 }
 
-export function isPuzzle(lesson: Lesson): lesson is PuzzleLesson {
-  return lesson.kind === "puzzle";
-}
-
-export function isCloze(lesson: Lesson): lesson is ClozeLesson {
-  return lesson.kind === "cloze";
-}
-
-export function isMicroPuzzle(lesson: Lesson): lesson is MicroPuzzleLesson {
-  return lesson.kind === "micropuzzle";
-}
-
-/// Lesson kinds we hide from the desktop navigation surfaces (sidebar,
-/// library, command palette, profile recents). All three are explicitly
-/// mobile-first drill formats — block arrangement, cloze fill-in, single-
-/// line micro-cloze — designed for big tap targets on phone / Apple Watch.
-/// On desktop the same content is much better delivered as the underlying
-/// `ExerciseLesson` they auto-derive from.
-///
-/// IMPORTANT: completion records + XP / streak still credit these
-/// lessons across devices. We only drop them from VISIBLE lists; the
-/// stats hooks keep operating on the unfiltered course tree (see
-/// `App.tsx` — `coursesAll` vs `courses`).
-export const DESKTOP_HIDDEN_KINDS: ReadonlySet<Lesson["kind"]> = new Set<
-  Lesson["kind"]
->(["puzzle", "cloze", "micropuzzle"]);
-
-/// Returns a copy of `course` with `DESKTOP_HIDDEN_KINDS` lessons stripped
-/// from each chapter, and chapters that become empty dropped. Pure /
-/// referentially-stable when the input course's lesson set is unchanged
-/// (object-identity rebuilt only on actual filter changes), so wrapping
-/// the result in a `useMemo` keyed on the raw course list is cheap.
+/// Compatibility shim — was used to strip mobile-only lesson kinds
+/// (puzzle / cloze / micropuzzle) from the desktop nav surfaces. Those
+/// kinds have been retired in favour of `ExerciseLesson.blocks` (the
+/// unified blocks render mode), so the function is now an identity
+/// pass-through. Kept exported so existing call sites in App.tsx keep
+/// compiling without churn — those call sites can migrate to the raw
+/// course objects at their leisure.
 export function filterCourseForDesktop(course: Course): Course {
-  return {
-    ...course,
-    chapters: course.chapters
-      .map((ch) => ({
-        ...ch,
-        lessons: ch.lessons.filter((l) => !DESKTOP_HIDDEN_KINDS.has(l.kind)),
-      }))
-      .filter((ch) => ch.lessons.length > 0),
-  };
+  return course;
 }
 
-/**
- * Block-arrangement puzzle. Mobile-first lesson kind: the learner re-orders
- * a shuffled set of code blocks into the canonical sequence by tapping
- * blocks in a pool to add them to a "stage" stack, then validates against
- * `solutionOrder`. Designed so it works equally well on phone (large tap
- * targets) and Apple Watch (one block fits per row, scrollable list).
- *
- * Generated automatically by `scripts/generate-puzzles.mjs` from existing
- * `ExerciseLesson.solution` strings — every existing exercise grows a
- * puzzle counterpart for free, no per-lesson authoring. The auto-derive
- * script chooses granularity ("statement" for starter lessons, "line" for
- * advanced) and pulls 2-3 distractors from sibling lessons in the same
- * course.
- *
- * Validation is structural (compare the user's order against
- * `solutionOrder`), not by execution — the puzzle's job is to test whether
- * the learner understands the *shape* of the solution, not whether they
- * can run it.
- */
-export interface PuzzleLesson extends LessonBase {
-  kind: "puzzle";
-  language: LanguageId;
-  /**
-   * The shuffled pool of blocks the learner sees. Includes all correct
-   * blocks (in the canonical order BEFORE shuffling — UI shuffles at
-   * render time so the same lesson re-shuffles on retry) plus optional
-   * distractors. Each block carries its own id so we can track which
-   * one's been staged without index-into-array bookkeeping.
-   */
-  blocks: PuzzleBlock[];
-  /**
-   * The ordered list of block ids that, when staged in this exact order,
-   * forms the canonical solution. Reading these out of `blocks` and
-   * concatenating their `code` fields yields the original solution
-   * (modulo whitespace normalization). Length equals the number of
-   * non-distractor blocks.
-   */
-  solutionOrder: string[];
-  /**
-   * Source granularity — informational, lets the UI hint at chunk size
-   * ("Arrange these 8 statements" vs "Arrange these 12 lines"). The
-   * actual block sizes are encoded in `blocks[].code`; this is metadata.
-   */
-  granularity: "line" | "statement" | "function";
-  /**
-   * Optional inline narration the reader sees above the puzzle stage.
-   * Usually a one-line "Arrange the lines that ..." hint. Falls back to
-   * a generic prompt when missing.
-   */
-  prompt?: string;
-}
-
-export interface PuzzleBlock {
-  /// Stable identifier. Generated at puzzle-build time so retries on the
-  /// same puzzle don't regenerate ids (which would let learners cheat by
-  /// memorising "the third id is correct").
-  id: string;
-  /// The code fragment shown on the block. Pre-formatted; the UI renders
-  /// it verbatim with monospace + Shiki highlighting.
-  code: string;
-  /// True for distractor blocks that are NOT part of the solution. Distractors
-  /// are still pickable from the pool but staging them counts as a wrong
-  /// answer. Defaults to false; a missing flag = correct block.
-  distractor?: boolean;
-}
-
-/**
- * Cloze (fill-in-the-blank) lesson. The learner sees the canonical
- * code WITH the right shape but key tokens replaced by tappable slots.
- * Each slot offers ~3-4 options (the correct answer + sibling
- * identifiers / similar-looking keywords / common mistakes); picking
- * the right option for every slot completes the lesson.
- *
- * Why this exists alongside PuzzleLesson: arrangement puzzles work
- * for "do you know the SHAPE of the solution" but a 50-line solution
- * either becomes a 50-block puzzle (unreadable on phone) or gets
- * chunked into wall-of-code blocks. Cloze lets us drill on specific
- * tokens — function names, key keywords, the exact line that does
- * the work — without forcing learners to re-derive the entire
- * solution structure. Especially good for long solutions where the
- * shape is already obvious from context.
- *
- * Generated automatically by `scripts/generate-puzzles.mjs` from
- * existing exercise solutions, same idempotency rules as
- * PuzzleLesson (`__cloze` id suffix, re-runs are no-ops). Authors
- * can also hand-write them — the shape is small enough.
- */
-export interface ClozeLesson extends LessonBase {
-  kind: "cloze";
-  language: LanguageId;
-  /**
-   * Canonical code with `__SLOT_<id>__` markers where the blanks go.
-   * The id matches a `ClozeSlot.id` below. Markers are surrounded by
-   * regular code so the renderer can pretty-print + syntax-highlight
-   * the surrounding context exactly as in the canonical solution —
-   * only the slot positions become interactive chips.
-   */
-  template: string;
-  /**
-   * Per-slot options + the correct answer. Slot ordering in the
-   * array doesn't have to match the order they appear in `template`;
-   * the UI walks the template top-to-bottom and matches by id.
-   */
-  slots: ClozeSlot[];
-  /**
-   * Optional intro narration shown above the code block. Falls back
-   * to "Fill in the blanks." when missing.
-   */
-  prompt?: string;
-}
-
-export interface ClozeSlot {
-  /// Stable id, referenced from `template` markers. Generated at
-  /// build time so retries on the same lesson don't regenerate ids
-  /// (which would let a determined learner memorise positions).
-  id: string;
-  /// The correct fill-in. Display as-is; matched by exact string
-  /// equality (so authors should pre-format spacing / quoting).
-  answer: string;
-  /// All choices the learner picks from — must contain `answer` plus
-  /// 2-4 distractors. The renderer shuffles at render time so two
-  /// retries don't show options in the same visual slot order.
-  options: string[];
-  /// Optional one-word category for the chip label ("identifier",
-  /// "keyword", "literal"). Purely cosmetic; the chip's empty-state
-  /// uses it as the placeholder ("pick keyword").
-  hint?: string;
-}
-
-/**
- * Codecademy-style stack of single-line micro-puzzles. Each card is
- * one line of canonical code with 1-2 tappable blanks; the learner
- * fills the blanks from a small option set, gets instant feedback,
- * and moves to the next card. A lesson is a sequence of these
- * micro-puzzles, each drilling a single concept (function name,
- * key keyword, magic number).
- *
- * Why this exists alongside ClozeLesson: cloze puts the whole
- * solution on screen with multiple blanks scattered through it,
- * which is overwhelming on a phone (and doesn't fit on a watch).
- * Micro-puzzles flip the proportions — one line at a time, big
- * type, big tap targets, fast feedback. Same data shape works on
- * iPhone and Apple Watch since each card is self-contained.
- *
- * Authored, not auto-derived. The auto-cloze generator was good
- * for shape but bad for pedagogical signal — picking which tokens
- * matter requires understanding the lesson, which an LLM-or-author
- * pass does much better than regex heuristics. See
- * `scripts/generate-micropuzzles.mjs` for the LLM-assisted authoring
- * pipeline.
- *
- * Pre-rendered Shiki HTML lives in `lineHtml` so phone + watch don't
- * need to bundle a syntax highlighter at runtime — the build pre-
- * tokenises and the client just inlines the HTML around the slot
- * markers. This keeps the watch bundle tiny and renders are instant.
- */
-export interface MicroPuzzleLesson extends LessonBase {
-  kind: "micropuzzle";
-  language: LanguageId;
-  /// Stack of one-line cards. Authoring picks how many — usually
-  /// 4-12 per lesson, paced for a 1-3 minute drill session.
-  challenges: MicroPuzzleCard[];
-  /// Optional intro narration (markdown). Falls back to "Tap to fill
-  /// each blank." when missing.
-  prompt?: string;
-}
-
-export interface MicroPuzzleCard {
-  /// Stable card id. Used for keying React rows + tracking which
-  /// cards the learner has solved. Survives regeneration as long as
-  /// the line content stays the same (hash-derived).
-  id: string;
-  /// Canonical line of code with `__SLOT_<id>__` markers. The slot
-  /// ids match `blanks[].id` below.
-  line: string;
-  /// Pre-rendered Shiki HTML for `line` with slot markers replaced
-  /// by `<span data-mp-slot="<id>"></span>` placeholders. The
-  /// renderer measures these placeholders to position the inline
-  /// chip, so the syntax highlighting and the chip share the same
-  /// flow. Generated by the build step; absent in hand-authored
-  /// drafts (the renderer falls back to plain `<pre>` highlighting
-  /// in that case).
-  lineHtml?: string;
-  /// One-line natural-language hint shown above the card. Helps
-  /// the learner orient when the line alone doesn't tell them what
-  /// concept the card is testing. Optional but encouraged.
-  hint?: string;
-  /// One-line explanation revealed AFTER all blanks on the card are
-  /// correct. The "I learned something" payoff. Optional.
-  explanation?: string;
-  /// 1-2 blanks per card. More than two on a single line confuses
-  /// the eye + makes distractor sets feel arbitrary.
-  blanks: ClozeSlot[];
-}
+// Legacy mobile-first lesson kinds (`puzzle`, `cloze`, `micropuzzle`)
+// were retired when the unified BlocksData render mode landed. The
+// equivalent UX now lives on `ExerciseLesson.blocks` / `MixedLesson.blocks`
+// and renders identically on desktop + mobile via `BlocksView`. The
+// `scrub-legacy-block-kinds.mjs` script removed all such lessons from
+// staged + bundled + installed course packs in the same migration.
 
 /// Challenge packs and courses share the same shape — this is the single
 /// source of truth for which is which. Missing `packType` (legacy courses

@@ -32,6 +32,13 @@ anyhow = "1"
 zip = { version = "0.6", default-features = false, features = ["deflate"] }
 walkdir = "2"
 reqwest = { version = "0.12", features = ["json", "rustls-tls", "stream"], default-features = false }
+# Direct dep on rustls so we can install its default crypto provider
+# at app start (`rustls::crypto::ring::default_provider()`). rustls
+# 0.23+ refuses to auto-pick when more than one provider is linked,
+# and on iOS the resulting panic from reqwest's lazy init crashes the
+# webview process (blank screen, hard exit). Pinned to whatever the
+# transitive graph already resolves so we don't ship two copies.
+rustls = { version = "0.23", default-features = false, features = ["ring"] }
 parking_lot = "0.12"
 rand = "0.8"
 tokio = { version = "1", features = ["time", "sync", "macros"] }
@@ -68,6 +75,94 @@ tiny_http = "0.12"
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif"] }
 tauri-plugin-updater = "2.10.1"
 tauri-plugin-process = "2.3.1"
+
+# hidapi: cross-platform HID device access. Powers the Ledger
+# transport — macOS Wry's WebKit doesn't expose WebUSB/WebHID, so
+# desktop users (especially mac) reach the device through Tauri
+# commands wrapping this crate. Web build of Fishbones uses
+# `navigator.hid` directly and bypasses Rust entirely.
+#
+# Gated to desktop targets: hidapi-rs's build script panics with
+# "Unsupported target os for hidapi-rs" on iOS / Android, and there's
+# nothing useful it could do on those platforms anyway (USB-HID
+# access from a sandboxed app is not allowed). The matching
+# `mod ledger;` declaration in `lib.rs` carries the same cfg gate
+# so the iOS / Android lib doesn't try to use the missing crate.
+
+# ── Chain backends (Phase 5: in-process Rust runtimes for SVM/EVM/BTC) ──
+#
+# Each lesson can opt into a real chain runtime via `harness: "solana"`
+# / `"evm"` / `"bitcoin"` in its course JSON. The webview talks to
+# these crates exclusively through Tauri commands defined in
+# `src/chains/{svm,evm,bitcoin}.rs` — no chain bytes ever cross the
+# webview boundary as raw Rust types, only as JSON-serialised
+# snapshots.
+#
+# litesvm: in-process Solana VM (real BPF execution).
+# Pulls in roughly ~150 Solana / Anza crates transitively, which adds
+# ~30s to a clean Rust build. The Rust LTO pass at release time
+# strips unused symbols aggressively so binary growth is bounded
+# (~25MB on the macOS arm64 build measured in dev).
+litesvm = "0.11"
+# bs58: pubkey ↔ string round-trip for the JSON snapshot wire format.
+# Solana's Pubkey type uses base58 strings everywhere in user-facing
+# contexts; bs58 is the same crate Solana SDK uses internally.
+bs58 = "0.5"
+# Split Solana SDK crates. We pin to the same major (^3) range litesvm
+# 0.11 depends on so cargo's resolver doesn't pick conflicting copies.
+# The monolithic `solana-sdk` (v4) is what we'd reach for in a fresh
+# project, but it transitively pulls v4 of every split crate, which
+# conflicts with litesvm's v3 pins. Split-crate-only is also leaner
+# build-time-wise.
+solana-keypair = "3.1"
+solana-pubkey = "3"
+solana-signer = "3"
+solana-clock = "3"
+solana-instruction = "3"
+solana-message = "3"
+solana-transaction = "3"
+solana-system-interface = "2"
+
+# revm: in-process EVM (real opcode execution + gas accounting).
+# 38.x is the current major as of late 2025. The umbrella crate
+# re-exports revm-context, revm-database, revm-handler, etc. so we
+# don't need to pin the sub-crates individually.
+revm = { version = "38", default-features = false, features = ["std"] }
+# alloy-primitives: Address, U256, B256, Bytes — Ethereum's primitive
+# types. Used for the wire format + revm's context APIs. Keep
+# default-features off; we don't need RPC client / signer bits.
+alloy-primitives = { version = "1.5", default-features = false, features = ["std", "serde"] }
+# hex: simple hex encoding/decoding for Bytes ↔ String marshaling
+# in the snapshot wire format.
+hex = "0.4"
+
+# rust-bitcoin: in-process Bitcoin protocol primitives (Transaction,
+# Script, OutPoint, Network, bech32 address encoding). We pair it
+# with our own UTXO-set state machine in chains/bitcoin.rs rather
+# than running a real bitcoind child process — the architectural
+# pattern matches SVM (litesvm) and EVM (revm), gives us in-process
+# test execution without ~50MB of extra binary per platform, and
+# keeps the dock UI synchronous to JS.
+#
+# Trade-off: we can't `bitcoin-cli getbalance` against this chain
+# (no JSON-RPC server). That's acceptable for the learning-app
+# context — students use the in-app dock + their JS test code, not
+# an external CLI.
+#
+# Pin secp256k1 to ^0.29 to match what `bitcoin = 0.32.9` requires.
+# Newer secp256k1 (0.30+) breaks `bitcoin`'s API surface.
+bitcoin = "0.32"
+secp256k1 = { version = "0.29", features = ["rand"] }
+
+# Desktop-only deps. Target-cfg-gated rather than feature-gated so
+# `cargo build --target aarch64-apple-ios` simply skips them — no
+# need to thread a feature flag through every build invocation.
+[target.'cfg(not(any(target_os = "ios", target_os = "android")))'.dependencies]
+# hidapi: see the long comment in the regular `[dependencies]` block
+# above for context. iOS + Android can't run this crate (its build
+# script hard-fails on those targets), and the Ledger module that
+# uses it is gated to the same target set in `src/lib.rs`.
+hidapi = "2.6"
 
 [profile.release]
 opt-level = 3

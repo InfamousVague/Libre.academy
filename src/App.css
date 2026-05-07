@@ -232,6 +232,25 @@ button {
   min-width: 0;
 }
 
+/* Challenge-pack layout. Challenge lessons are exercise-first — the
+ * prose is a one-paragraph problem statement, not chapter narrative —
+ * so the reader pane shrinks to a slim explainer column and the
+ * workbench claims most of the row. The reader's text wrapping +
+ * scroll behaviour stays identical; only the column widths differ. */
+.fishbones__lesson--challenge .fishbones-reader {
+  flex: 0 0 auto;
+  width: 32%;
+  min-width: 280px;
+  max-width: 420px;
+}
+
+.fishbones__lesson--challenge .fishbones__lesson-workbench-wrap {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  max-width: none;
+}
+
 /* Wrapper around the missing-toolchain banner + Workbench on an
    exercise lesson. We took the Workbench's old width / margin rules
    and moved them here so the banner sits naturally above the
@@ -257,6 +276,50 @@ button {
   margin-left: 0;
   flex: 1;
   min-height: 0;
+}
+
+/* Editor / Blocks toggle. Sits above the workbench when the lesson
+   carries authored blocks data — when it doesn't, the toggle isn't
+   rendered at all (no point showing a control with one option).
+   Segmented-control look: a small inset background, two pill buttons,
+   the active one filled. Same warm-gold accent the TTS pill + cursor
+   highlight use so the design system stays coherent. */
+.fishbones__lesson-mode-toggle {
+  display: inline-flex;
+  gap: 0;
+  align-self: flex-start;
+  padding: 2px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--fb-radius-md);
+}
+
+.fishbones__lesson-mode-btn {
+  padding: 4px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: 0;
+  border-radius: calc(var(--fb-radius-md) - 2px);
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    color 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fishbones__lesson-mode-btn:hover {
+  color: var(--color-text-primary);
+}
+
+.fishbones__lesson-mode-btn--active {
+  background: var(--color-text-primary);
+  color: var(--color-bg-primary);
+}
+
+.fishbones__lesson-mode-btn--active:hover {
+  color: var(--color-bg-primary);
 }
 
 /* Floating-phone path for RN lessons: editor takes the full workbench

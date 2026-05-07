@@ -44,6 +44,20 @@ export function ProgressRing({
   const dashOffset =
     circumference * (1 - Math.max(0, Math.min(1, progress)));
   const isComplete = progress >= 1 && !hideCheckOnComplete;
+  // Auto-shrink the label so 3+ digit values (Level 100+) stay inside
+  // the ring instead of clipping at the edge. Bold tabular-nums digits
+  // run ~0.7em wide; subtract 2px breathing room so text doesn't kiss
+  // the ring stroke. Cap at whatever fits the ring's usable inner
+  // diameter, then floor at the labelScale-derived base size so short
+  // labels keep their original look.
+  const baseLabelFontPx = 11 * (labelScale ?? 1);
+  const baseSublabelFontPx = 9 * Math.min(labelScale ?? 1, 1.6);
+  const usableInner = Math.max(1, size - stroke * 2 - 2);
+  const labelChars = Math.max(1, label.length);
+  const labelFontPx = Math.min(
+    baseLabelFontPx,
+    usableInner / (labelChars * 0.7),
+  );
   // Sized in stroke units so the tick scales with the ring. The
   // viewBox coords are in pixels matching `size`, so this gives a
   // chunky-but-not-overpowering checkmark at every ring size from
@@ -105,11 +119,7 @@ export function ProgressRing({
       {!isComplete && (
         <span
           className="fishbones__progress-ring-label"
-          style={
-            labelScale && labelScale !== 1
-              ? { fontSize: `${11 * labelScale}px` }
-              : undefined
-          }
+          style={{ fontSize: `${labelFontPx}px` }}
         >
           {label}
           {sublabel && (
@@ -117,7 +127,7 @@ export function ProgressRing({
               className="fishbones__progress-ring-sublabel"
               style={
                 labelScale && labelScale !== 1
-                  ? { fontSize: `${9 * Math.min(labelScale, 1.6)}px` }
+                  ? { fontSize: `${baseSublabelFontPx}px` }
                   : undefined
               }
             >

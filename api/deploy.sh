@@ -231,6 +231,24 @@ fishbones.academy, www.fishbones.academy {
     try_files {path} {path}/ /index.html
     file_server
     encode zstd gzip
+
+    # CORS for /audio/*. The Fishbones desktop + iOS Tauri shells
+    # fetch the lesson-narration manifest + MP3 files cross-origin
+    # (the WebView's effective origin is \`tauri://localhost\` on
+    # iOS/Mac and \`http://tauri.localhost\` on Windows, neither of
+    # which is fishbones.academy). Without CORS the manifest fetch
+    # fails preflight, useLessonAudio gets null, and the speaker
+    # icon never appears in the app.
+    #
+    # Wildcard origin is safe — audio assets are public-read; CORS
+    # is purely about whether the JS layer can SEE the response,
+    # not about authentication.
+    @audio path /audio/*
+    header @audio Access-Control-Allow-Origin "*"
+    header @audio Access-Control-Allow-Methods "GET, HEAD, OPTIONS"
+    header @audio Access-Control-Allow-Headers "*"
+    header @audio Access-Control-Expose-Headers "Content-Length, Content-Range, Accept-Ranges"
+    header @audio Access-Control-Max-Age "86400"
 }
 
 # Tap relay (different product on the same VPS).

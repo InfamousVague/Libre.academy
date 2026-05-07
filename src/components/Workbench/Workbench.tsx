@@ -5,13 +5,15 @@ interface Props {
   editor: ReactNode;
   output: ReactNode;
   /// Editor's share of the workbench HEIGHT as a percentage (0–100).
-  /// Default 70 — "big editor, small console", the common case. Width
-  /// of the workbench is a separate state (see `widthStorageKey`) — both
-  /// are persisted independently so reshaping height doesn't reset
-  /// width or vice versa.
+  /// Default 75 — "big editor, small console". Width of the workbench
+  /// is a separate state (see `widthStorageKey`) — both are persisted
+  /// independently so reshaping height doesn't reset width or vice
+  /// versa.
   defaultEditorPct?: number;
-  /// Key used to persist the vertical (height) split. `-v2` suffix
-  /// because the default changed from 75 to 70.
+  /// Key used to persist the vertical (height) split. `-v3` suffix
+  /// because the default moved from 70 to 75 — bumping invalidates
+  /// users' previously-persisted custom heights once and lets them
+  /// pick up the new default; their next manual drag re-persists.
   storageKey?: string;
   /// Key used to persist the workbench's width as a percentage of its
   /// parent (the lesson pane). Separate key so a fresh install picks up
@@ -45,7 +47,12 @@ const MIN_OUTPUT_PCT = 10;
 /// Workbench width bounds as a percentage of the lesson pane width.
 /// Floor keeps the editor usable; ceiling keeps at least a slice of the
 /// reader visible so the learner can still reference the prose.
-const MIN_WORKBENCH_PCT = 28;
+// 18% on a 1180px window ≈ 212px — narrow but Monaco's gutter + a few
+// chars + the run-button row still fit. The CSS `min-width: 240px`
+// becomes the effective floor on smaller windows. Was 28% — too high
+// when the user wants the prose pane to dominate (e.g. reading lessons
+// where the editor is just a sandbox).
+const MIN_WORKBENCH_PCT = 18;
 const MAX_WORKBENCH_PCT = 72;
 
 /// Two-pane VERTICAL stack with a draggable horizontal divider for the
@@ -54,8 +61,8 @@ const MAX_WORKBENCH_PCT = 72;
 export default function Workbench({
   editor,
   output,
-  defaultEditorPct = 70,
-  storageKey = "kata:workbench-split-v2",
+  defaultEditorPct = 75,
+  storageKey = "kata:workbench-split-v3",
   widthStorageKey = "kata:workbench-width-v1",
   defaultWorkbenchPct = 48,
   fillWidth = false,

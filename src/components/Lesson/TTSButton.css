@@ -1,0 +1,144 @@
+/* Combined "lesson reading meta" pill — absorbs the old "X min
+   read" chip + the play/pause TTS button into one taller, friendlier
+   target. Sits in the lesson-meta row alongside the Glossary toggle
+   (still chip-sized) so the pill remains the primary affordance. */
+
+.fb-tts-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 14px 4px 4px; /* tight on the icon side, breathing on the text side */
+  border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.1));
+  border-radius: 999px;
+  background: var(--color-bg-secondary, #1a1a1f);
+  color: var(--color-text-secondary, #a4a4ad);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition:
+    background var(--fb-motion-quick, 120ms ease),
+    color var(--fb-motion-quick, 120ms ease),
+    border-color var(--fb-motion-quick, 120ms ease);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.fb-tts-pill:hover {
+  background: var(--color-bg-tertiary, #21262d);
+  color: var(--color-text-primary, #f5f5f7);
+  border-color: var(--color-border-strong, rgba(255, 255, 255, 0.18));
+}
+
+/* Static variant — when there's no audio for the lesson. Reads as
+   a quiet "X min read" chip without affording press. Matches the
+   playable shape so the row stays balanced visually. */
+.fb-tts-pill--static {
+  cursor: default;
+  padding: 4px 12px 4px 8px;
+  gap: 6px;
+}
+.fb-tts-pill--static:hover {
+  background: var(--color-bg-secondary, #1a1a1f);
+  color: var(--color-text-secondary, #a4a4ad);
+  border-color: var(--color-border-default, rgba(255, 255, 255, 0.1));
+}
+
+/* Active states — playing OR mid-track-paused both surface the
+   warm gold accent used elsewhere for "in-progress" affordances
+   (the completion-tier frames). Mid-track gets a softer treatment
+   so a paused listener doesn't feel they've stopped doing anything. */
+.fb-tts-pill--playing {
+  background: rgba(214, 185, 105, 0.18);
+  color: #efe2b3;
+  border-color: rgba(214, 185, 105, 0.55);
+}
+.fb-tts-pill--playing:hover {
+  background: rgba(214, 185, 105, 0.28);
+  border-color: rgba(214, 185, 105, 0.75);
+}
+.fb-tts-pill--mid:not(.fb-tts-pill--playing) {
+  color: var(--color-text-primary, #f5f5f7);
+  border-color: rgba(214, 185, 105, 0.32);
+}
+
+/* Progress-ring wrapper. 32×32 with the icon absolute-centered. */
+.fb-tts-pill__ring {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.fb-tts-pill__ring-svg {
+  /* Rotate so the arc grows from 12 o'clock clockwise. SVG default
+     starts at 3 o'clock; -90° rotation snaps it to the top. */
+  transform: rotate(-90deg);
+  display: block;
+}
+
+.fb-tts-pill__ring-track {
+  stroke: var(--color-border-default, rgba(255, 255, 255, 0.12));
+}
+
+.fb-tts-pill__ring-fill {
+  /* Filled portion of the ring. Currentcolor inherits the pill's
+     foreground colour so the ring matches the playing/idle palette
+     without per-state overrides. */
+  stroke: currentColor;
+  /* Smooth animate the offset on each timeupdate tick. ~250ms is
+     long enough to feel intentional, short enough that a 4× speed
+     scrub still tracks the cursor. */
+  transition: stroke-dashoffset 250ms linear;
+}
+
+/* Center icon over the SVG ring. The Icon component renders an
+   inline SVG; we wrap it in a span we can absolute-position. */
+.fb-tts-pill__icon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* Loader spin while the MP3 is fetching from the CDN on first play. */
+.fb-tts-pill--loading .fb-tts-pill__icon svg {
+  animation: fb-tts-spin 0.9s linear infinite;
+}
+
+@keyframes fb-tts-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fb-tts-pill__text {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Phone-narrow layouts: hide the time text; the ring + icon is
+   enough for very tight rows. The aria-label still announces the
+   full state for screen readers. */
+@media (max-width: 380px) {
+  .fb-tts-pill__text {
+    display: none;
+  }
+  .fb-tts-pill {
+    padding: 4px;
+  }
+  .fb-tts-pill--static .fb-tts-pill__text {
+    /* Static (read-time) variant on phone keeps the text — without
+       the play affordance the icon alone is meaningless. */
+    display: inline;
+  }
+}

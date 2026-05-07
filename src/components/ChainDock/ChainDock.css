@@ -168,6 +168,19 @@
 .chain-dock__grid {
   display: grid;
   grid-template-columns: 1.4fr 1fr 1.5fr;
+  /* Pin the single row to the full grid height. Without this the
+   * row defaults to `auto` and sizes to the tallest cell's content,
+   * which on a fresh chain (Accounts has 2 lines of empty-state,
+   * Programs/Txs have 1 line each) leaves the bottom ~half of the
+   * grid empty — and the grid's `background: var(--color-border-default)`
+   * (the hairline divider colour) shows through as a gray strip
+   * beneath the panels. `1fr` makes the row fill, the cells stretch
+   * to the row, the panels flex to the cells, and each panel's
+   * `chain-dock__panel-body` (with `flex: 1`) fills out with
+   * `bg-primary`. No effect on docks where Accounts already has
+   * enough content to push the row tall — the row is `max(1fr,
+   * content)` so content can't be clipped. */
+  grid-template-rows: minmax(0, 1fr);
   /* Hairline dividers between the three sub-panels — same vertical
    * line you'd see between editor and output in the workbench. */
   gap: 1px;

@@ -38,28 +38,142 @@ export function findLesson(course: Course | null, lessonId: string | undefined):
   return null;
 }
 
-/// Show the ChainDock when the lesson actively interacts with the
-/// EVM (`harness: "evm"`) OR when the lesson is a Solidity / Vyper
-/// exercise that compiles to bytecode. Other lessons in EVM courses
-/// (the chapter introduction reading, JS-only encoding drills) skip
-/// the dock — it'd just be noise above non-chain content.
-export function shouldShowEvmDock(lesson: Lesson, _course: Course): boolean {
+/// Coding lessons are exercise + mixed (both have a runnable test
+/// suite). Reading + quiz are not — the dock would just be noise
+/// above the prose / multiple-choice.
+function isCodingLesson(lesson: Lesson): boolean {
+  return lesson.kind === "exercise" || lesson.kind === "mixed";
+}
+
+/// Show the ChainDock when the lesson is a CODING lesson (exercise
+/// or mixed) AND any of:
+///   - it opts into the EVM harness directly
+///   - it's a Solidity / Vyper lesson (legacy compile-only path)
+///   - the course it lives in contains any EVM-harness lesson
+///   - the chain has live activity (a previous run left state)
+///
+/// Show the ChainDock (EVM) when:
+///   - the lesson explicitly opts into the EVM harness
+///     (`harness: "evm"`), OR
+///   - the lesson is written in Solidity or Vyper (smart-contract
+///     languages always benefit from the chain context), OR
+///   - the parent course is an Ethereum-flavoured CHALLENGE PACK
+///     (`packType === "challenges"` AND the course id mentions
+///     ethereum / evm / solidity / vyper) and the lesson is a
+///     coding lesson.
+///
+/// We DON'T trigger on:
+///   - Plain JS / prose lessons inside the `mastering-ethereum` book.
+///     The book has 95+ exercises but only ~21 are chain-aware; the
+///     rest are JS / cryptography / off-chain math that don't deploy
+///     anything — the dock would be silent chrome on those.
+///   - "course has any EVM lesson" or "chain had prior activity".
+///     Both were too broad — same sticky-dock problem the BTC dock
+///     had: once any past run left state, the dock followed the user
+///     across every coding lesson everywhere.
+///
+/// Reading + quiz lessons are still excluded everywhere.
+export function shouldShowEvmDock(
+  lesson: Lesson,
+  course: Course,
+  // `_opts` retained for API compatibility with the legacy
+  // `hasActivity` signal, but no longer drives the decision.
+  _opts?: { hasActivity?: boolean },
+): boolean {
+  if (!isCodingLesson(lesson)) return false;
   if ("harness" in lesson && lesson.harness === "evm") return true;
-  // Solidity/Vyper lessons typically compile to EVM bytecode even
-  // without the explicit harness flag (legacy compile-only path).
   if ("language" in lesson) {
     const lang = (lesson as { language?: string }).language;
     if (lang === "solidity" || lang === "vyper") return true;
   }
+  if (
+    course.packType === "challenges" &&
+    /ethereum|evm|solidity|vyper/i.test(course.id)
+  ) {
+    return true;
+  }
   return false;
 }
 
-/// Show the BitcoinChainDock when the lesson opts into the Bitcoin
-/// harness. Unlike the EVM dock, we don't auto-show on a "language"
-/// match — every Bitcoin lesson today is JavaScript, and JS lessons
-/// in unrelated courses (e.g. JavaScript Challenges) shouldn't get a
-/// chain dock above them.
-export function shouldShowBitcoinDock(lesson: Lesson, _course: Course): boolean {
+/// Show the BitcoinChainDock when:
+///   - the lesson explicitly opts into the Bitcoin harness
+///     (`harness: "bitcoin"`), OR
+///   - the parent course is a Bitcoin-flavoured CHALLENGE PACK
+///     (`packType === "challenges"` AND the course id mentions
+///     bitcoin) and the lesson is a coding lesson.
+///
+/// We DON'T trigger on:
+///   - Plain JS / prose lessons inside the `mastering-bitcoin` book.
+///     These are reading material with toy snippets, not chain-aware
+///     work — the dock would just be silent chrome.
+///   - "course has any bitcoin lesson" or "chain had prior activity".
+///     Both were too broad — once the chain had any state from a
+///     past run, the dock followed the user across every coding
+///     lesson in every course, which is what the user reported as
+///     "showing all over the place".
+///
+/// Reading + quiz lessons are still excluded everywhere.
+export function shouldShowBitcoinDock(
+  lesson: Lesson,
+  course: Course,
+  // `_opts` retained for API compatibility with the legacy
+  // `hasActivity` signal, but no longer drives the decision.
+  _opts?: { hasActivity?: boolean },
+): boolean {
+  if (!isCodingLesson(lesson)) return false;
   if ("harness" in lesson && lesson.harness === "bitcoin") return true;
+  if (
+    course.packType === "challenges" &&
+    /bitcoin/i.test(course.id)
+  ) {
+    return true;
+  }
+  return false;
+}
+
+// `courseHasEvmHarness` was removed alongside the `hasActivity`
+// fallback — the dock is now strictly per-lesson + per-EVM-challenge-
+// pack. Same rationale as the BTC dock below: a single chain-aware
+// lesson buried in a 95-lesson book shouldn't drag the dock onto
+// the other 70+ pure-JS prose lessons.
+
+// `courseHasBitcoinHarness` was removed when `shouldShowBitcoinDock`
+// dropped its course-wide fallback (it triggered on every coding
+// lesson inside `mastering-bitcoin`, which is a book of mostly-prose
+// lessons that don't deploy / mine anything). The dock is now
+// strictly per-lesson + per-bitcoin-challenge-pack.
+
+/// Show the SvmDock when:
+///   - the lesson explicitly opts into the Solana harness
+///     (`harness: "solana"`), OR
+///   - the parent course is a Solana-flavoured CHALLENGE PACK
+///     (`packType === "challenges"` AND the course id mentions
+///     solana / svm) and the lesson is a coding lesson.
+///
+/// Same tightened pattern the EVM and BTC docks adopted: no sticky
+/// activity flag, no "course has any solana lesson" fallback. A
+/// single chain-aware lesson buried in a multi-topic book shouldn't
+/// drag the dock onto every other coding lesson in that book.
+///
+/// LiteSVM is desktop-only (Rust napi addon), so callers should
+/// gate on the desktop-build flag too — this helper only answers
+/// "should the dock render IF we can run it", not "is the runtime
+/// available". The web build's "this lesson needs the desktop app"
+/// path catches Solana lessons before any of the dock UI mounts.
+export function shouldShowSvmDock(
+  lesson: Lesson,
+  course: Course,
+  // `_opts` retained for parity with the EVM/BTC helpers (and a
+  // future hasActivity signal) but no longer drives the decision.
+  _opts?: { hasActivity?: boolean },
+): boolean {
+  if (!isCodingLesson(lesson)) return false;
+  if ("harness" in lesson && lesson.harness === "solana") return true;
+  if (
+    course.packType === "challenges" &&
+    /solana|svm/i.test(course.id)
+  ) {
+    return true;
+  }
   return false;
 }

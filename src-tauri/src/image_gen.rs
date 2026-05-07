@@ -193,9 +193,12 @@ pub async fn generate_cover_art(
     std::fs::write(&final_path, &bytes).map_err(|e| format!("write cover: {e}"))?;
 
     // OpenAI returns 1024×1536 PNGs (~3.5 MB). The UI renders at 170-
-    // 260px wide; keeping the native size burns disk and ~5x base64
-    // payload on every `load_course_cover` IPC. Downsample in place.
-    crate::ingest::downsample_cover_in_place(&final_path);
+    // 260px wide; keeping the native size burns disk and pays a base64
+    // tax on every `load_course_cover` IPC. Optimise to 480×720 JPEG
+    // q85 (~50-100 KB) — `optimize_cover_in_place` deletes the source
+    // PNG and returns the new `cover.jpg` path.
+    let final_path = crate::ingest::optimize_cover_in_place(&final_path)
+        .unwrap_or(final_path);
 
     let fetched_at = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)

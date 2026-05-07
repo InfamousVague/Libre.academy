@@ -667,7 +667,7 @@ pub async fn run_haskell(code: String) -> SubprocessResult {
         &[],
         "haskell",
         "hs",
-        "install GHC via GHCup (`curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh`).",
+        "install GHC via Homebrew (`brew install ghc`).",
         code,
     )
 }

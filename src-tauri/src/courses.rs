@@ -77,7 +77,11 @@ pub fn courses_dir(app: &tauri::AppHandle) -> anyhow::Result<PathBuf> {
 /// installs converge to the new "TRPL + Mastering Ethereum +
 /// challenges" default. User-imported packs are preserved (only ids
 /// in seed_ids get the prune).
-const SEED_VERSION: u32 = 9;
+// Bumped to 10 alongside the mobile-side `should_seed_pack` override
+// (auto-installs every bundled pack on mobile so phones converge to
+// the same shelf desktop has). Existing installs re-evaluate the
+// per-pack filter on the next launch and pull in the expanded set.
+const SEED_VERSION: u32 = 10;
 
 /// Ids that previously shipped via `resources/bundled-packs/` but have
 /// since been retired. On a SEED_VERSION bump, ensure_seed deletes
@@ -116,12 +120,32 @@ const RETIRED_PACK_IDS: &[&str] = &[
 /// auto-imported on first launch. Keep in lockstep with the
 /// LEGACY_STARTER_IDS allow-list in src/data/webSeedCourses.ts so
 /// desktop + web seed the same minimal default set.
+#[cfg(not(mobile))]
 fn should_seed_pack(filename: &str) -> bool {
     let stem = filename.trim_end_matches(".fishbones").trim_end_matches(".kata");
     matches!(
         stem,
         "the-rust-programming-language" | "mastering-ethereum"
     ) || stem.contains("challenge")
+}
+
+/// Mobile-build override. On phones we auto-install EVERY bundled
+/// pack, not just the curated default set. Reasons:
+///   1. The phone has no Discover / catalog browser today, so the
+///      learner can't manually install a missing book the way they
+///      can on desktop.
+///   2. The desktop user almost always picks up the phone expecting
+///      to read whatever's on their laptop's shelf. Without a sync
+///      protocol that streams "what's installed on my other device,"
+///      the next-best heuristic is "ship everything we have."
+///   3. Storage on iOS is plentiful relative to a few hundred MB of
+///      .fishbones archives; sync is more expensive than redundant
+///      copies for our scale.
+/// Retired pack ids still get filtered out via RETIRED_PACK_IDS in
+/// the caller.
+#[cfg(mobile)]
+fn should_seed_pack(_filename: &str) -> bool {
+    true
 }
 
 /// Import any `.fishbones` / `.kata` archives bundled under

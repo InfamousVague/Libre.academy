@@ -164,9 +164,11 @@ pub fn extract_epub_cover_impl(
     }
 
     // EPUB covers come through at the publisher's source resolution —
-    // often 1600×2400+ and multi-megabyte. Downsample to the UI's max
-    // render size in place so we don't bloat disk + the IPC payload.
-    crate::ingest::downsample_cover_in_place(&final_path);
+    // often 1600×2400+ and multi-megabyte. Optimise to 480×720 JPEG
+    // q85 in place — the helper writes `cover.jpg` and deletes the
+    // scratch `cover.png`, returning the canonical path.
+    let final_path = crate::ingest::optimize_cover_in_place(&final_path)
+        .unwrap_or(final_path);
 
     let fetched_at = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)

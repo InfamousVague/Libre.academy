@@ -4,6 +4,18 @@
   gap: 18px;
 }
 
+/* TTS chip lives in its own row at the very top of the prose. We
+   don't sticky-pin it on mobile because the long prose-scroll
+   experience is the primary path; if the learner wants to pause
+   they can scroll back to the top. (A floating playback bar is on
+   the V2 list — see scripts/generate-lesson-audio.mjs for the
+   bigger TTS roadmap.) */
+.m-reader__tts {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: -6px;
+}
+
 .m-reader__prose {
   font-size: 16px;
   line-height: 1.6;
@@ -191,5 +203,34 @@
     opacity: 1;
     transform: none;
     animation: none;
+  }
+}
+
+
+/* Narration cursor on mobile — same warm-gold ribbon as desktop,
+   tuned a bit larger because phone reading happens at a closer
+   visual distance and the highlight needs to be glanceable without
+   intent. Scoped under .m-reader__prose so it never bleeds into
+   non-prose elements. */
+.m-reader__prose [data-tts-block].fb-tts-current {
+  position: relative;
+  background: linear-gradient(
+    90deg,
+    rgba(214, 185, 105, 0.14) 0%,
+    rgba(214, 185, 105, 0.06) 70%,
+    transparent 100%
+  );
+  border-left: 3px solid rgba(214, 185, 105, 0.65);
+  padding-left: 12px;
+  margin-left: -15px;
+  border-radius: 0 4px 4px 0;
+  transition:
+    background 320ms ease,
+    border-color 320ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .m-reader__prose [data-tts-block].fb-tts-current {
+    transition: none;
   }
 }

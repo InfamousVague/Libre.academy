@@ -29,9 +29,6 @@ function iconForKind(kind: Lesson["kind"]) {
       return helpCircle;
     case "exercise":
     case "mixed":
-    case "puzzle":
-    case "cloze":
-    case "micropuzzle":
     default:
       return codeIcon;
   }
@@ -157,13 +154,7 @@ export default function MobileOutline({
                               ? "Reading"
                               : l.kind === "quiz"
                                 ? "Quiz"
-                                : l.kind === "puzzle"
-                                  ? "Puzzle"
-                                  : l.kind === "cloze"
-                                    ? "Cloze"
-                                    : l.kind === "micropuzzle"
-                                      ? "Drill"
-                                      : "Exercise"}
+                                : "Exercise"}
                           </span>
                         </span>
                       </button>

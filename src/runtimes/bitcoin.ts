@@ -39,6 +39,13 @@ async function resolveChain(
   try {
     const svc = await import("../lib/bitcoin/chainService");
     const { chain } = await svc.getOrCreateBitcoinChain();
+    // Reset the chain to its pristine first-build state at the top
+    // of every Run so test assertions like "account[0] has 50 BTC"
+    // stay deterministic across Runs. The chain service's pristine
+    // snapshot is captured at chain-creation time and survives Runs
+    // — only the historical `recentTxs` / `recentBlocks` accumulators
+    // (visible in the dock) carry over, NOT the live state.
+    svc.revertToPristine();
     return chain;
   } catch (e) {
     if (typeof window !== "undefined") {
@@ -116,23 +123,29 @@ export async function runBitcoin(
         });
       });
 
-  // Tests run sequentially with snapshot/revert around each body.
-  // Same pattern as evm.ts — per-test isolation means a test that
-  // mines 100 blocks doesn't push the next test's "current height"
-  // off the expected value.
+  // Tests run sequentially with revert-BEFORE-each-test isolation.
+  // We delegate the reset to `revertToPristine` from the chain
+  // service rather than holding a snapshot id locally — the harness
+  // DELETES a snapshot id from its ring after `revert(id)`
+  // consumes it, so a locally-held `initialSnap` would only work
+  // once; tests 2..N would no-op and run against accumulated state.
+  // `revertToPristine` re-snapshots the pristine point on every
+  // call so it's safe to invoke repeatedly.
+  //
+  // We don't revert AFTER the last test, so the chain is left in
+  // whatever state the test produced. The dock's mempool / accounts
+  // / UTXOs panels then reflect what actually happened. Historical
+  // recentTxs / recentBlocks accumulate across tests / Runs.
+  const svc = await import("../lib/bitcoin/chainService");
   let prev: Promise<unknown> = Promise.resolve();
   const wrappedBody =
     (body: () => void | Promise<void>) => async (): Promise<void> => {
-      const snapId = chain.snapshot();
-      try {
-        await body();
-      } finally {
-        try {
-          chain.revert(snapId);
-        } catch {
-          /* swallow — revert failure shouldn't mask the outcome */
-        }
-      }
+      svc.revertToPristine();
+      // No finally: we INTENTIONALLY leave the chain dirty after the
+      // body so the next test (or, after the final test, the dock)
+      // sees the mutations. The next test's revertToPristine handles
+      // cleanup; an exception here propagates to fail the test.
+      await body();
     };
   const wrappedTest = (
     name: string,

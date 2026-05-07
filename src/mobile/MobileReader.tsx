@@ -4,12 +4,21 @@
 /// popovers, no inline sandboxes, no enrichment chrome — readability
 /// over richness on a 6" screen.
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { renderMarkdown } from "../components/Lesson/markdown";
+import TTSButton from "../components/Lesson/TTSButton";
+import { estimateReadingMinutes } from "../components/Lesson/readingTime";
+import { stopLessonAudio, useLessonAudio } from "../hooks/useLessonAudio";
+import { useLessonReadCursor } from "../hooks/useLessonReadCursor";
 import "./MobileReader.css";
 
 interface Props {
   body: string;
+  /// Lesson id — drives the TTS button's audio lookup against the
+  /// pre-generated manifest. When the manifest doesn't have a
+  /// matching entry the button silently doesn't render, so it's
+  /// safe to always pass.
+  lessonId?: string;
   /// Retained for prop-shape compatibility with the dispatch but no
   /// longer wired to a button — the lesson's bottom Next nav now
   /// owns "mark complete + advance" across every lesson kind, same
@@ -17,8 +26,33 @@ interface Props {
   onContinue?: () => void;
 }
 
-export default function MobileReader({ body }: Props) {
+export default function MobileReader({ body, lessonId }: Props) {
   const [html, setHtml] = useState<string | null>(null);
+  // Reuse the desktop reader's word-count heuristic so the meta-pill
+  // shows a consistent "X min read" estimate across surfaces.
+  const readingMinutes = useMemo(() => estimateReadingMinutes(body || ""), [body]);
+
+  // ── TTS narration cursor (mobile) ────────────────────────────────
+  // Mobile's scroll container is the document/page itself, since the
+  // reader fills the viewport. We feed `document.scrollingElement`
+  // to the cursor hook so user-scroll detection works against the
+  // actual scroller. The cursor hook owns class application + a
+  // viewport-checked auto-scroll, all keyed off the rendered `html`
+  // string (no MutationObserver — see useLessonReadCursor for why).
+  const [articleEl, setArticleEl] = useState<HTMLElement | null>(null);
+  const audio = useLessonAudio(lessonId);
+  const audioProgress = audio.available ? audio.progress : 0;
+  const audioPlaying = audio.available ? audio.isPlaying : false;
+  useLessonReadCursor({
+    scrollContainer:
+      typeof document !== "undefined"
+        ? (document.scrollingElement as HTMLElement | null)
+        : null,
+    article: articleEl,
+    html,
+    progress: audioProgress,
+    isPlaying: audioPlaying,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -29,6 +63,27 @@ export default function MobileReader({ body }: Props) {
       cancelled = true;
     };
   }, [body]);
+
+  // Imperatively populate the article's innerHTML when it changes.
+  // See the comment on the `<article>` element below for why we do
+  // this instead of using `dangerouslySetInnerHTML`.
+  // useLayoutEffect so the children are present before paint — with
+  // useEffect there'd be a frame of empty article on first render.
+  useLayoutEffect(() => {
+    if (!articleEl || html == null) return;
+    if (articleEl.innerHTML !== html) {
+      articleEl.innerHTML = html;
+    }
+  }, [articleEl, html]);
+
+  // Stop the singleton TTS player when this reader unmounts (the
+  // user navigated away from the lesson). Without it the narration
+  // keeps playing in the background after a lesson change.
+  useEffect(() => {
+    return () => {
+      stopLessonAudio();
+    };
+  }, [lessonId]);
 
   // Skeleton-while-loading: render a 4-line shimmer block that
   // matches typical paragraph + heading rhythm so the layout
@@ -54,7 +109,22 @@ export default function MobileReader({ body }: Props) {
 
   return (
     <div className="m-reader">
+      {/* Combined narration + read-time pill at the top of the
+          prose. Falls back to a static "X min read" chip when no
+          audio is available, so the meta strip is never empty.
+          Audio-driven state (play/pause + circular progress ring +
+          "M:SS left") takes over the moment the lesson has a
+          manifest entry. */}
+      {lessonId && (
+        <div className="m-reader__tts">
+          <TTSButton
+            lessonId={lessonId}
+            estimatedReadMinutes={readingMinutes}
+          />
+        </div>
+      )}
       <article
+        ref={setArticleEl}
         // `m-reader__prose--enter` arms the staggered fade-rise
         // animation on the article's direct children (paragraphs,
         // headings, code blocks). The CSS uses a per-child delay
@@ -62,9 +132,12 @@ export default function MobileReader({ body }: Props) {
         // popping in as one block. `prefers-reduced-motion` short-
         // circuits the animation in the same stylesheet.
         className="m-reader__prose m-reader__prose--enter"
-        // Body is markdown rendered to sanitized HTML by markdown-it +
-        // Shiki — same pipeline desktop uses.
-        dangerouslySetInnerHTML={{ __html: html }}
+        // innerHTML is set imperatively in the [articleEl, html]
+        // effect below — `dangerouslySetInnerHTML` here would pass a
+        // fresh object literal every render and React rebuilds the
+        // article's children even when the underlying string is
+        // unchanged, detaching the TTS cursor's highlight on every
+        // audio timeupdate.
       />
     </div>
   );

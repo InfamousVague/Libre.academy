@@ -33,18 +33,12 @@ import type { RunResult, LogLine, TestResult } from "./types";
 ///   - precompile-based EIPs that require post-Cancun forks
 ///   - websocket transport (WS isn't useful in a single-page test)
 
-import { hexToBytes } from "@ethereumjs/util";
-import { keccak_256 } from "@noble/hashes/sha3";
-import { sha256 } from "@noble/hashes/sha2";
-import {
-  encodeAbiParameters,
-  decodeAbiParameters,
-  type Abi,
-} from "viem";
+import { type Abi } from "viem";
 
 import { loadSolc, buildSolcInput } from "./solidity";
 import { stringify } from "./evm/helpers";
 import { expect } from "./evm/expect";
+import { makeTestRequire } from "./evm/testRequire";
 import { buildChain } from "./evm/buildChain";
 import type {
   Hex,
@@ -239,126 +233,13 @@ export async function runEvm(
       );
   };
 
-
   // Minimal `require()` shim for EVM tests that imported lessons
   // were generated against. Supports the small surface the course
   // tests actually use — full Node `crypto` / `ethers` would pull
-  // megabytes into the worker without value here.
-  const testRequire = (name: string): unknown => {
-    if (name === "crypto") {
-      return {
-        createHash(algo: string) {
-          if (algo !== "sha256") {
-            throw new Error(`crypto.createHash: only sha256 is shimmed (got ${algo})`);
-          }
-          let buf: Uint8Array | null = null;
-          const chunks: Uint8Array[] = [];
-          return {
-            update(data: Uint8Array | string) {
-              const bytes =
-                typeof data === "string"
-                  ? new TextEncoder().encode(data)
-                  : data;
-              chunks.push(bytes);
-              return this;
-            },
-            digest(enc?: "hex") {
-              const total = chunks.reduce((n, c) => n + c.length, 0);
-              const merged = new Uint8Array(total);
-              let off = 0;
-              for (const c of chunks) {
-                merged.set(c, off);
-                off += c.length;
-              }
-              buf = sha256(merged);
-              if (enc === "hex") {
-                return Array.from(buf, (b) =>
-                  b.toString(16).padStart(2, "0"),
-                ).join("");
-              }
-              // Buffer-like object that can `.toString('hex')`
-              return Object.assign(buf, {
-                toString(e?: string) {
-                  if (e === "hex" || e === undefined) {
-                    return Array.from(buf as Uint8Array, (b) =>
-                      b.toString(16).padStart(2, "0"),
-                    ).join("");
-                  }
-                  return new TextDecoder().decode(buf as Uint8Array);
-                },
-              });
-            },
-          };
-        },
-      };
-    }
-    if (name === "ethers") {
-      return {
-        AbiCoder: class {
-          encode(types: string[], values: unknown[]): Hex {
-            return encodeAbiParameters(
-              types.map((t) => ({ type: t })),
-              values as readonly unknown[],
-            ) as Hex;
-          }
-          decode(types: string[], data: Hex): unknown[] {
-            return decodeAbiParameters(
-              types.map((t) => ({ type: t })),
-              data,
-            ) as unknown[];
-          }
-        },
-        keccak256(data: Uint8Array | string): Hex {
-          const bytes =
-            typeof data === "string"
-              ? hexToBytes(data as Hex)
-              : data;
-          return ("0x" +
-            Array.from(keccak_256(bytes), (b) =>
-              b.toString(16).padStart(2, "0"),
-            ).join("")) as Hex;
-        },
-        solidityPacked(types: string[], values: unknown[]): Hex {
-          // Mirror ethers.solidityPacked: tightly-packed encoding of
-          // each (type, value) pair without abi-encoding length prefixes.
-          let out = "0x";
-          for (let i = 0; i < types.length; i++) {
-            const t = types[i];
-            const v = values[i];
-            if (t === "bytes32") {
-              const h = (v as string).toLowerCase().replace(/^0x/, "");
-              out += h.padStart(64, "0");
-            } else if (t === "address") {
-              const h = (v as string).toLowerCase().replace(/^0x/, "");
-              out += h.padStart(40, "0");
-            } else if (/^uint(\d+)?$/.test(t) || /^int(\d+)?$/.test(t)) {
-              const m = t.match(/^(?:u?int)(\d+)?$/);
-              const bits = m && m[1] ? parseInt(m[1], 10) : 256;
-              const hexLen = bits / 4;
-              const bn = BigInt(v as string | number | bigint);
-              out += bn.toString(16).padStart(hexLen, "0");
-            } else if (t === "bool") {
-              out += v ? "01" : "00";
-            } else if (t === "string" || t === "bytes") {
-              const bytes =
-                typeof v === "string" && t === "string"
-                  ? new TextEncoder().encode(v)
-                  : typeof v === "string"
-                    ? hexToBytes(v as Hex)
-                    : (v as Uint8Array);
-              out += Array.from(bytes, (b) =>
-                b.toString(16).padStart(2, "0"),
-              ).join("");
-            } else {
-              throw new Error(`solidityPacked: unsupported type ${t}`);
-            }
-          }
-          return out as Hex;
-        },
-      };
-    }
-    throw new Error(`require(${JSON.stringify(name)}) is not supported in EVM tests`);
-  };
+  // megabytes into the worker without value here. Implementation
+  // lives in `./evm/testRequire.ts` so the headless CLI verifier
+  // can share the same shim (see `scripts/verify-evm-course.mjs`).
+  const testRequire = makeTestRequire();
 
   try {
     const AsyncFunction = Object.getPrototypeOf(async function () {})

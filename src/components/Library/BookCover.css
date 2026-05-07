@@ -17,6 +17,14 @@
   transition:
     transform 0.18s ease-out,
     border-color var(--fb-motion-snappy);
+  /* Container-query root. Children that need to scale with the
+   * card's actual rendered size (the percent-complete number, the
+   * cartouche offset) read from `cqw` (1cqw = 1% of the card's
+   * inline width) instead of fixed px / rem units. Without this,
+   * the percent text drifts off the cartouche when the same card
+   * renders at shelf vs grid sizes, mobile vs desktop. */
+  container-type: inline-size;
+  container-name: fb-book;
 }
 
 .fishbones-book:hover {
@@ -282,11 +290,11 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  /* Rounded square (not a circle) so the badge reads as an "icon
-     tile" the way Simple-Icons grids and macOS app icons do, and
-     pairs visually with the rounded-pill release-status tag on
-     the opposite corner. */
-  border-radius: var(--fb-radius-md);
+  /* Perfect circle — language icon sits as a circular medallion in
+     the corner. Pairs with the rounded-pill release-status tag on
+     the opposite corner: pill ↔ disc reads as "two related but
+     distinct chip types". */
+  border-radius: 50%;
   background: rgba(15, 15, 22, 0.72);
   /* Brand colour for the SVG via the inline custom property set on
      the element — vivid against the dark glass and matches the
@@ -579,3 +587,4 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+

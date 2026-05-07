@@ -2,28 +2,19 @@
 /// right specialised view:
 ///   - reading          → <MobileReader />
 ///   - quiz             → <MobileQuiz />
-///   - puzzle           → <MobilePuzzle />
-///   - exercise / mixed → <MobilePuzzle /> (synthesise blocks from
-///                                          `solution` on the fly)
+///   - exercise / mixed → <BlocksView /> (always — mobile has no
+///                                          editor mode)
 ///
 /// The header (back arrow + course title + chapter label) is shared
 /// across all three so navigation feels uniform.
 
 import { useState } from "react";
-import type { Course, Lesson, PuzzleBlock } from "../data/types";
-import {
-  isCloze,
-  isExerciseKind,
-  isMicroPuzzle,
-  isPuzzle,
-  isQuiz,
-} from "../data/types";
+import type { Course, Lesson } from "../data/types";
+import { isExerciseKind, isQuiz } from "../data/types";
 import MobileReader from "./MobileReader";
 import MobileQuiz from "./MobileQuiz";
-import MobilePuzzle from "./MobilePuzzle";
-import MobileCloze from "./MobileCloze";
-import MobileMicroPuzzle from "./MobileMicroPuzzle";
 import MobileOutline from "./MobileOutline";
+import BlocksView from "../components/Blocks/BlocksView";
 import { Icon } from "@base/primitives/icon";
 import { chevronLeft } from "@base/primitives/icon/icons/chevron-left";
 import { chevronRight } from "@base/primitives/icon/icons/chevron-right";
@@ -42,39 +33,6 @@ interface Props {
   onNext?: () => void;
   onJump: (chapterIndex: number, lessonIndex: number) => void;
   isCompleted: boolean;
-}
-
-/// Synthesise puzzle blocks from an exercise's `solution` string.
-/// Splits on non-empty lines, keeping comments + blank-line groupings
-/// rough — fine for the tap-to-arrange puzzle UX which is testing
-/// "do you know what shape the solution has", not whitespace pedantry.
-function blocksFromSolution(solution: string): {
-  blocks: PuzzleBlock[];
-  solutionOrder: string[];
-} {
-  const lines = solution.split("\n");
-  const blocks: PuzzleBlock[] = [];
-  const solutionOrder: string[] = [];
-  let buf: string[] = [];
-  const flush = () => {
-    if (buf.length === 0) return;
-    const code = buf.join("\n");
-    const id = `b${blocks.length}`;
-    blocks.push({ id, code });
-    solutionOrder.push(id);
-    buf = [];
-  };
-  for (const raw of lines) {
-    const line = raw.replace(/\s+$/, "");
-    if (line.trim() === "") {
-      // Blank line ends the current block (statement boundary).
-      flush();
-    } else {
-      buf.push(line);
-    }
-  }
-  flush();
-  return { blocks, solutionOrder };
 }
 
 export default function MobileLesson({
@@ -152,56 +110,21 @@ export default function MobileLesson({
         {isQuiz(lesson) && (
           <MobileQuiz key={lesson.id} lesson={lesson} onComplete={onComplete} />
         )}
-        {isPuzzle(lesson) && (
-          <MobilePuzzle
-            key={lesson.id}
-            blocks={lesson.blocks}
-            solutionOrder={lesson.solutionOrder}
-            prompt={lesson.prompt}
-            onComplete={onComplete}
-            isCompleted={isCompleted}
-          />
-        )}
-        {isCloze(lesson) && (
-          <MobileCloze
-            key={lesson.id}
-            template={lesson.template}
-            slots={lesson.slots}
-            prompt={lesson.prompt}
-            onComplete={onComplete}
-            isCompleted={isCompleted}
-          />
-        )}
-        {isMicroPuzzle(lesson) && (
-          <MobileMicroPuzzle
-            key={lesson.id}
-            challenges={lesson.challenges}
-            language={lesson.language}
-            prompt={lesson.prompt}
-            isCompleted={isCompleted}
-            // Auto-mark + advance when the learner solves the last
-            // card — feels like a quiz finishing on a correct
-            // answer rather than requiring an extra Next tap.
-            onComplete={onComplete}
-          />
-        )}
         {isExerciseKind(lesson) && (
-          (() => {
-            const { blocks, solutionOrder } = blocksFromSolution(lesson.solution);
-            return (
-              <MobilePuzzle
-                key={lesson.id}
-                blocks={blocks}
-                solutionOrder={solutionOrder}
-                prompt={lesson.body}
-                onComplete={onComplete}
-                isCompleted={isCompleted}
-              />
-            );
-          })()
+          // Mobile is always blocks-only — typing on a 6" screen is
+          // brutal, so the editor mode never renders here. Lessons
+          // without authored blocks data render an in-place note
+          // (BlocksView shows the "not authored yet" message); the
+          // generator pipeline will fill them in.
+          <BlocksView key={lesson.id} lesson={lesson} onComplete={onComplete} />
         )}
         {lesson.kind === "reading" && (
-          <MobileReader key={lesson.id} body={lesson.body} onContinue={onComplete} />
+          <MobileReader
+            key={lesson.id}
+            lessonId={lesson.id}
+            body={lesson.body}
+            onContinue={onComplete}
+          />
         )}
       </div>
 

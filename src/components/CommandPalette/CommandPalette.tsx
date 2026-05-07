@@ -3,7 +3,6 @@ import { Icon } from "@base/primitives/icon";
 import { search as searchIcon } from "@base/primitives/icon/icons/search";
 import { libraryBig } from "@base/primitives/icon/icons/library-big";
 import { bookOpen } from "@base/primitives/icon/icons/book-open";
-import { fileText } from "@base/primitives/icon/icons/file-text";
 import { terminal } from "@base/primitives/icon/icons/terminal";
 import { settings as settingsIcon } from "@base/primitives/icon/icons/settings";
 import { sparkles } from "@base/primitives/icon/icons/sparkles";
@@ -47,7 +46,6 @@ interface CommandPaletteProps {
     openLibrary?: () => void;
     openPlayground?: () => void;
     openProfile?: () => void;
-    openDocs?: () => void;
     openSettings?: () => void;
     importBook?: () => void;
     askAi?: () => void;
@@ -134,18 +132,6 @@ export default function CommandPalette({
         icon: userRoundCog,
         onSelect: () => {
           actions.openProfile?.();
-          onClose();
-        },
-      });
-    if (actions.openDocs)
-      out.push({
-        id: "action:docs",
-        kind: "action",
-        label: "Open docs",
-        hint: "In-app documentation",
-        icon: fileText,
-        onSelect: () => {
-          actions.openDocs?.();
           onClose();
         },
       });

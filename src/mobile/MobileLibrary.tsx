@@ -1,7 +1,19 @@
-/// Mobile library — book-cover tiles + a language filter strip.
-/// Two-column grid of 2:3 portrait covers. Loads cover artwork via
-/// `useCourseCover` (same hook the desktop shelf uses), with a typed
-/// fallback tile for courses without a cover.
+/// Mobile library — sectioned into "Books" + "Challenges" exactly
+/// like the desktop CourseLibrary. Two view modes the learner can
+/// flip between in the header:
+///
+///   - **grid** (default): info-dense `<CourseCard>` rows showing
+///     title / author / status / progress meter. Same component the
+///     desktop grid mode uses; on phone we render single-column.
+///   - **covers**: 2:3 portrait `<BookCover>` tiles in a 2-col grid.
+///     The visual that ships on book covers — completion-tier frames,
+///     language badge, release pill, title overlay.
+///
+/// The two modes mirror desktop's view-mode toggle so a learner who
+/// picked one preference on the laptop sees the same on the phone
+/// (preference is stored under a separate key — different form
+/// factor, different default — but the COMPONENTS rendered are
+/// identical).
 ///
 /// Filter strip is a single horizontal-scroll row of language pills —
 /// no difficulty or topic axis on phone, since most learners on mobile
@@ -9,10 +21,19 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { Course, LanguageId } from "../data/types";
-import { useCourseCover, prefetchCovers } from "../hooks/useCourseCover";
+import { isChallengePack } from "../data/types";
+import { prefetchCovers } from "../hooks/useCourseCover";
+import { useLocalStorageState } from "../hooks/useLocalStorageState";
 import { Icon } from "@base/primitives/icon";
 import { search as searchIcon } from "@base/primitives/icon/icons/search";
+import { layoutGrid as gridIcon } from "@base/primitives/icon/icons/layout-grid";
+import { libraryBig as coversIcon } from "@base/primitives/icon/icons/library-big";
+import BookCover from "../components/Library/BookCover";
+import CourseCard from "../components/Library/CourseCard";
 import "./MobileLibrary.css";
+
+type ViewMode = "grid" | "covers";
+const VIEW_MODE_KEY = "fishbones.mobile.libraryViewMode";
 
 interface Props {
   courses: Course[];
@@ -82,6 +103,19 @@ export default function MobileLibrary({
   onOpenSearch,
 }: Props) {
   const [filter, setFilter] = useState<LanguageId | "all">("all");
+  /// Persisted view-mode preference. Default "grid" so the first-time
+  /// experience matches the desktop default; a learner who flips to
+  /// "covers" gets that preference back across launches via
+  /// localStorage. Stored under a mobile-specific key so the desktop's
+  /// preference doesn't bleed across form factors.
+  const [viewMode, setViewMode] = useLocalStorageState<ViewMode>(
+    VIEW_MODE_KEY,
+    "grid",
+    {
+      serialize: (v) => v,
+      deserialize: (raw) => (raw === "covers" ? "covers" : "grid"),
+    },
+  );
 
   // Prefetch every course's cover on first paint so scrolling doesn't
   // trigger a fetch storm. Same pattern desktop CourseLibrary uses.
@@ -107,6 +141,30 @@ export default function MobileLibrary({
     return courses.filter((c) => c.language === filter);
   }, [courses, filter]);
 
+  /// Group filtered courses by KIND — "Books" (long-form prose with
+  /// chapters and exercises) up top, "Challenges" (per-language
+  /// exercise packs) at the bottom. Mirrors the desktop
+  /// CourseLibrary's section structure so the visual layout reads
+  /// the same on phone vs desktop. A learner who knows where to find
+  /// the Bitcoin book in the desktop library finds it in the same
+  /// pile when they pick up the phone.
+  const sections = useMemo(() => {
+    const books: Course[] = [];
+    const challenges: Course[] = [];
+    for (const c of filtered) {
+      if (isChallengePack(c)) challenges.push(c);
+      else books.push(c);
+    }
+    const out: Array<{ key: string; label: string; rows: Course[] }> = [];
+    if (books.length > 0) {
+      out.push({ key: "books", label: "Books", rows: books });
+    }
+    if (challenges.length > 0) {
+      out.push({ key: "challenges", label: "Challenges", rows: challenges });
+    }
+    return out;
+  }, [filtered]);
+
   return (
     <div className="m-lib">
       <header className="m-lib__head">
@@ -116,16 +174,47 @@ export default function MobileLibrary({
             {courses.length} course{courses.length === 1 ? "" : "s"}
           </p>
         </div>
-        {onOpenSearch && (
-          <button
-            type="button"
-            className="m-lib__search"
-            onClick={onOpenSearch}
-            aria-label="Search"
+        <div className="m-lib__head-actions">
+          {/* View-mode toggle: grid (info-dense cards, default) vs.
+              covers (2:3 cover tiles). Mirrors desktop's view toggle
+              just at phone scale. */}
+          <div
+            className="m-lib__viewtoggle"
+            role="group"
+            aria-label="View mode"
           >
-            <Icon icon={searchIcon} size="sm" color="currentColor" />
-          </button>
-        )}
+            <button
+              type="button"
+              className={`m-lib__viewbtn${viewMode === "grid" ? " m-lib__viewbtn--active" : ""}`}
+              onClick={() => setViewMode("grid")}
+              aria-pressed={viewMode === "grid"}
+              aria-label="Grid view"
+              title="Grid view"
+            >
+              <Icon icon={gridIcon} size="sm" color="currentColor" />
+            </button>
+            <button
+              type="button"
+              className={`m-lib__viewbtn${viewMode === "covers" ? " m-lib__viewbtn--active" : ""}`}
+              onClick={() => setViewMode("covers")}
+              aria-pressed={viewMode === "covers"}
+              aria-label="Covers view"
+              title="Covers view"
+            >
+              <Icon icon={coversIcon} size="sm" color="currentColor" />
+            </button>
+          </div>
+          {onOpenSearch && (
+            <button
+              type="button"
+              className="m-lib__search"
+              onClick={onOpenSearch}
+              aria-label="Search"
+            >
+              <Icon icon={searchIcon} size="sm" color="currentColor" />
+            </button>
+          )}
+        </div>
       </header>
 
       {availableLangs.length > 1 && (
@@ -163,65 +252,63 @@ export default function MobileLibrary({
         </nav>
       )}
 
-      <ul className="m-lib__grid" role="list">
-        {filtered.map((c) => {
-          const { ch, ls, total, done } = nextLessonOf(c, completed);
-          const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-          return (
-            <li key={c.id} className="m-lib__cell">
-              <button
-                type="button"
-                className="m-lib__tile"
-                onClick={() => onOpenLesson(c, ch, ls)}
-                aria-label={`${c.title}, ${pct}% complete`}
-              >
-                <CoverArt course={c} />
-                <span className="m-lib__tile-info">
-                  <span className="m-lib__tile-title">{c.title}</span>
-                  <span className="m-lib__tile-meta">
-                    {labelFor(c.language)} · {pct}%
-                  </span>
-                </span>
-                <span
-                  className="m-lib__tile-bar"
-                  aria-hidden
-                  style={{ "--m-lib-pct": `${pct}%` } as React.CSSProperties}
-                />
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+      {sections.map((sec) => (
+        <section
+          key={sec.key}
+          className={`m-lib__section m-lib__section--${sec.key}`}
+          aria-label={sec.label}
+        >
+          <header className="m-lib__section-head">
+            <h2 className="m-lib__section-title">{sec.label}</h2>
+            <span className="m-lib__section-count">{sec.rows.length}</span>
+          </header>
+          {viewMode === "grid" ? (
+            // Info-dense single-column list of CourseCards. Same
+            // component the desktop grid mode renders; on phone the
+            // grid collapses to one column so each card gets full
+            // width for title / author / progress meter.
+            <ul className="m-lib__cardlist" role="list">
+              {sec.rows.map((c) => {
+                const { ch, ls, total, done } = nextLessonOf(c, completed);
+                const pct = total > 0 ? done / total : 0;
+                return (
+                  <li key={c.id} className="m-lib__cardcell">
+                    <CourseCard
+                      course={c}
+                      total={total}
+                      done={done}
+                      pct={pct}
+                      onOpen={() => onOpenLesson(c, ch, ls)}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            // 2:3 portrait cover tiles, two columns. The cover-art
+            // experience.
+            <ul className="m-lib__grid" role="list">
+              {sec.rows.map((c) => {
+                const { ch, ls, total, done } = nextLessonOf(c, completed);
+                const pct = total > 0 ? done / total : 0;
+                return (
+                  <li key={c.id} className="m-lib__cell">
+                    <BookCover
+                      course={c}
+                      progress={pct}
+                      onOpen={() => onOpenLesson(c, ch, ls)}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      ))}
     </div>
   );
 }
 
-interface CoverProps {
-  course: Course;
-}
-
-function CoverArt({ course }: CoverProps) {
-  const url = useCourseCover(course.id, course.coverFetchedAt);
-  if (url) {
-    return (
-      <span
-        className="m-lib__cover"
-        style={{ backgroundImage: `url(${JSON.stringify(url)})` }}
-        aria-hidden
-      />
-    );
-  }
-  // Fallback: a typed cover with the course's first letter on the
-  // language's accent shade. Cheap to render and informative without a
-  // network round-trip.
-  const initial = (course.title || "?").charAt(0).toUpperCase();
-  return (
-    <span
-      className="m-lib__cover m-lib__cover--fallback"
-      data-lang={course.language}
-      aria-hidden
-    >
-      {initial}
-    </span>
-  );
-}
+// Old `CoverArt` helper removed — its responsibilities (cover load,
+// fallback tile, language tint) are now handled by the shared
+// `<BookCover>` component which mobile uses identically to desktop.

@@ -57,7 +57,7 @@ const COMING_SOON: Record<string, ComingSoon> = {
   },
   haskell: {
     label: "Haskell runtime — coming soon",
-    hint: "GHC + runghc installs via GHCup (`curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh`). Web build will route to a sandboxed compile service in a future iteration; until then, install on the host.",
+    hint: "GHC (which provides `runghc`) installs via Homebrew (`brew install ghc`). Power users wanting cabal/HLS/stack as well can run GHCup (`curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh`). Web build will route to a sandboxed compile service in a future iteration; until then, install on the host.",
     hostToolchain: true,
   },
   scala: {

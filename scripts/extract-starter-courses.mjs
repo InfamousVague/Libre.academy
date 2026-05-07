@@ -425,21 +425,23 @@ async function main() {
       await writeFile(outFile, courseJson, "utf-8");
       const info = await stat(outFile);
 
-      // Cover art — three-tier lookup, first match wins:
+      // Cover art — four-tier lookup, first match wins:
       //   1. cover-overrides/<pack-id>.png — manual designer drop-in.
       //      Lets us replace stale or missing in-zip covers without
       //      re-zipping the .fishbones (which often invalidates the
       //      pack's checksum on disk). Also accepts cover-overrides/
       //      <course-id>.png for callers who keep overrides keyed
       //      to the in-zip course id rather than the pack filename.
-      //   2. cover.png inside the .fishbones zip — the historical
-      //      home for course artwork, set when the pack was first
-      //      authored.
-      //   3. synthesiseCover() — language-tinted gradient + caption.
+      //   2. cover.jpg inside the .fishbones zip — the modern
+      //      optimised form (480×720 q85, ~50-100 KB) produced by
+      //      `optimize-covers.mjs` and the Rust ingest pipeline.
+      //   3. cover.png inside the .fishbones zip — the legacy form
+      //      for archives that haven't been migrated yet.
+      //   4. synthesiseCover() — language-tinted gradient + caption.
       //      Last-resort so the library shelf still reads as a
       //      continuous design rather than a mix of real covers +
       //      missing-image squares.
-      // All three converge on the same 480px JPEG q78 output so
+      // All four converge on the same 480px JPEG q78 output so
       // downstream consumers (web manifest, kata library shelf) don't
       // care which path produced it.
       //
@@ -460,7 +462,8 @@ async function main() {
         : existsSync(courseOverride)
           ? courseOverride
           : null;
-      const inZipPath = join(work, "cover.png");
+      const inZipJpgPath = join(work, "cover.jpg");
+      const inZipPngPath = join(work, "cover.png");
       // Manifest references the pack-id JPEG so existing tooling
       // (catalog grid, library shelf desktop) keeps resolving. The
       // course-id copy is the duplicate written below.
@@ -471,9 +474,12 @@ async function main() {
       if (overridePath && resizeCover(overridePath, dst)) {
         coverFile = candidate;
         coverSource = "override";
-      } else if (existsSync(inZipPath) && resizeCover(inZipPath, dst)) {
+      } else if (existsSync(inZipJpgPath) && resizeCover(inZipJpgPath, dst)) {
         coverFile = candidate;
-        coverSource = "pack";
+        coverSource = "pack-jpg";
+      } else if (existsSync(inZipPngPath) && resizeCover(inZipPngPath, dst)) {
+        coverFile = candidate;
+        coverSource = "pack-png";
       } else if (synthesizeCover(course.language || "javascript", course.title || id, dst)) {
         coverFile = candidate;
         coverSource = "synth";

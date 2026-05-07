@@ -19,12 +19,66 @@
   color: var(--color-text-tertiary, #6b7180);
 }
 
-/* The Bitcoin dock has 5 panels rather than the EVM dock's 3.
-   On wide layouts we stack them as 2 cols + 3 cols; on narrow
-   layouts they collapse to one column like the EVM dock. */
+/* The Bitcoin dock has 5 panels (Accounts spans both rows on the
+   left; Mempool + Recent Txs in row 1; Blocks + UTXOs in row 2)
+   rather than the EVM dock's 3-in-a-row. The shared `.chain-dock`
+   rule pins banner height to 200px which is fine for one row of
+   panels but crushes Bitcoin's second row.
+
+   Height is now a learner-controlled resize, driven by the
+   `--btc-dock-height` CSS variable the component writes from
+   `useLocalStorageState("fb.btc-dock.height", 180)`. Default 180px
+   is "half" of the un-resizable 360px we shipped pre-resize so the
+   dock sits more compactly above lessons; the bottom drag handle
+   lets the learner expand up to 600px when scrolling block lists
+   gets cramped. */
+.btc-dock {
+  height: var(--btc-dock-height, 180px);
+  min-height: var(--btc-dock-height, 180px);
+  max-height: var(--btc-dock-height, 180px);
+  flex: 0 0 var(--btc-dock-height, 180px);
+  /* Make room at the bottom for the resize-handle strip without
+     letting it overlap the panel scroll areas. The handle itself
+     is positioned absolutely against the dock root, so we just need
+     enough padding for it to land cleanly. */
+  position: relative;
+}
+.btc-dock.chain-dock--popout {
+  /* Popout window keeps its 100vh treatment from the shared rule —
+     overrides the variable-driven banner sizing. */
+  height: 100vh;
+  min-height: 100vh;
+  max-height: 100vh;
+  flex: 1 1 auto;
+}
+
+/* Invisible bottom-edge drag target. Sits over the dock's existing
+   1px border (from the shared `.chain-dock` rule) so the visible
+   chrome is unchanged from the pre-resize design — the only
+   indication that the edge is grippable is the `ns-resize` cursor
+   on hover. 6px tall is enough surface area for an accidental
+   pointer drop to land cleanly without the strip becoming visible
+   chrome. */
+.btc-dock__resize-handle {
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* Straddle the bottom border (3px above, 3px below) so the
+     existing 1px line sits at the visual center of the drag area. */
+  bottom: -3px;
+  height: 6px;
+  cursor: ns-resize;
+  background: transparent;
+  /* Sits above the panel grid so the drag target stays reachable
+     even when a panel scroll bumps up against it. */
+  z-index: 4;
+}
+
 .btc-dock__grid {
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1.2fr);
-  grid-template-rows: auto auto;
+  /* Two equal-height rows so Blocks + UTXOs get the same vertical
+     budget as Mempool + Recent Txs in the row above. */
+  grid-template-rows: 1fr 1fr;
 }
 
 @media (max-width: 980px) {

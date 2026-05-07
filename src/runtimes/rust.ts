@@ -180,7 +180,7 @@ function buildResult(
 /// ordinary functions at the top level; the test file's #[test] functions
 /// go into a `#[cfg(test)] mod kata_tests { ... }` block that imports the
 /// parent scope via `use super::*;`.
-function joinCodeAndTests(userCode: string, testCode: string): string {
+export function joinCodeAndTests(userCode: string, testCode: string): string {
   // Ensure the file has a main() so cargo run / test is happy even if the
   // user's starter didn't include one.
   const mainFallback = /\bfn\s+main\s*\(/.test(userCode) ? "" : "\nfn main() {}\n";
@@ -208,7 +208,7 @@ function indent(s: string, n: number): string {
 /// `stdout` is `string | undefined | null` defensively — the Playground
 /// sometimes returns an envelope without it, and a `.split` call on
 /// undefined was the original "parseTestResults crashed" symptom.
-function parseTestResults(stdout: string | undefined | null): TestResult[] {
+export function parseTestResults(stdout: string | undefined | null): TestResult[] {
   if (!stdout) return [];
   const lines = stdout.split("\n");
   const results: TestResult[] = [];

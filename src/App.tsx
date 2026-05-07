@@ -14,6 +14,8 @@ import TopBar from "./components/TopBar/TopBar";
 import TreesView from "./components/Trees/TreesView";
 import EvmDockBanner from "./components/ChainDock/EvmDockBanner";
 import BitcoinDockBanner from "./components/BitcoinChainDock/BitcoinDockBanner";
+import SvmDockBanner from "./components/SvmDock/SvmDockBanner";
+import ChallengeFrame from "./components/ChallengeFrame/ChallengeFrame";
 import LessonView from "./components/Lesson/LessonView";
 import {
   findNeighbors,
@@ -21,6 +23,7 @@ import {
   findLesson,
   shouldShowEvmDock,
   shouldShowBitcoinDock,
+  shouldShowSvmDock,
 } from "./lessonHelpers";
 import { useLocalStorageState } from "./hooks/useLocalStorageState";
 import ImportDialog from "./components/dialogs/ImportDialog/ImportDialog";
@@ -38,8 +41,6 @@ import CourseSettingsModal from "./components/dialogs/CourseSettings/CourseSetti
 import FloatingIngestPanel from "./components/IngestPanel/FloatingIngestPanel";
 import ProfileView from "./components/Profile/ProfileView";
 import PlaygroundView from "./components/Playground/PlaygroundView";
-import DocsView from "./components/Docs/DocsView";
-import { FISHBONES_DOCS } from "./docs/pages";
 import { isWeb, isMobile } from "./lib/platform";
 import DownloadButton from "./components/DownloadButton/DownloadButton";
 import GeneratePackDialog from "./components/dialogs/ChallengePack/GeneratePackDialog";
@@ -62,6 +63,7 @@ import {
   emitEvent as emitVerifierEvent,
 } from "./lib/verify/bus";
 import { useProgress } from "./hooks/useProgress";
+import { useChainActivity } from "./hooks/useChainActivity";
 import { useFishbonesCloud } from "./hooks/useFishbonesCloud";
 import { useRealtimeSync } from "./hooks/useRealtimeSync";
 import FirstLaunchPrompt from "./components/dialogs/SignInDialog/FirstLaunchPrompt";
@@ -419,7 +421,9 @@ export default function App() {
   const [celebrateAt, setCelebrateAt] = useState(0);
   function markCompletedAndCelebrate(courseId: string, lessonId: string) {
     const key = `${courseId}:${lessonId}`;
-    if (!completed.has(key)) setCelebrateAt(Date.now());
+    if (!completed.has(key)) {
+      setCelebrateAt(Date.now());
+    }
     markCompleted(courseId, lessonId);
     // Mirror to the cloud via the realtime sync hook. Coalesces by
     // (course, lesson) inside the hook so bulk completions (e.g. a
@@ -441,6 +445,13 @@ export default function App() {
   // we hide from the desktop nav. See `filterCourseForDesktop` doc in
   // data/types.ts.
   const stats = useStreakAndXp(history, coursesAll);
+
+  /// Reactive flags for "is there transaction state on either
+  /// in-process chain right now?" Used to gate the EVM and Bitcoin
+  /// dock visibility on lesson view AND on the Playground — once a
+  /// learner runs a chain lesson, the dock follows them across
+  /// views until they hit Reset.
+  const chainActivity = useChainActivity();
 
   /// Per-course "last opened" timestamps for the sidebar carousel. Stored
   /// in localStorage so recent-first ordering survives an app restart.
@@ -482,19 +493,8 @@ export default function App() {
     | "playground"
     | "library"
     | "discover"
-    | "docs"
     | "trees"
   >("library");
-
-  /// Active docs page id. Lifted to App-level so the main Sidebar can
-  /// render the docs section/page nav AND DocsView can render the
-  /// matching body — both as controlled views over a single source of
-  /// truth. Without this lift we'd be back to two sidebars trying to
-  /// stay in sync. Default to the first page of the first section so
-  /// opening the docs route doesn't drop us on a blank pane.
-  const [docsActiveId, setDocsActiveId] = useState<string>(
-    () => FISHBONES_DOCS[0]?.pages[0]?.id ?? "welcome",
-  );
 
   /// Challenge-pack generation dialog visibility. Opened from the Profile
   /// page's "Generate challenge pack" CTA; runs through useIngestRun when
@@ -1099,13 +1099,6 @@ export default function App() {
           onSettings={() => setSettingsOpen(true)}
           onTrees={() => setView("trees")}
           onPlayground={() => setView("playground")}
-          onDocs={() => setView("docs")}
-          // Docs nav is rendered IN this Sidebar (replaces the
-          // course tree) when view === "docs", so we pass the same
-          // active-id state DocsView reads. Outside docs view we
-          // pass undefined so the sidebar reverts to course mode.
-          docsActiveId={view === "docs" ? docsActiveId : undefined}
-          onDocsSelect={setDocsActiveId}
           activeView={view}
           onExportCourse={exportCourse}
           onDeleteCourse={deleteCourseFromLibrary}
@@ -1138,11 +1131,6 @@ export default function App() {
                 setView("courses");
               }}
               onInstallMissingCourses={handleInstallMissingPathCourses}
-            />
-          ) : view === "docs" ? (
-            <DocsView
-              activeId={docsActiveId}
-              onActiveIdChange={setDocsActiveId}
             />
           ) : view === "library" || view === "discover" ? (
             // Library + Discover both render through CourseLibrary —
@@ -1282,14 +1270,32 @@ export default function App() {
                   account balances, recent deploys, and tx flow as
                   their tests run. Hides automatically when the
                   active lesson is non-EVM. */}
-              {shouldShowEvmDock(activeLesson, activeCourse) && (
-                <EvmDockBanner />
-              )}
+              {shouldShowEvmDock(activeLesson, activeCourse, {
+                hasActivity: chainActivity.evm,
+              }) && <EvmDockBanner />}
               {/* Bitcoin equivalent — UTXO/mempool/blocks/recent
-                  tx panels above any lesson with `harness: "bitcoin"`. */}
-              {shouldShowBitcoinDock(activeLesson, activeCourse) && (
-                <BitcoinDockBanner />
+                  tx panels above any lesson with `harness: "bitcoin"`,
+                  any lesson in a Bitcoin-flavored course, or any
+                  view at all once the chain has live state. */}
+              {shouldShowBitcoinDock(activeLesson, activeCourse, {
+                hasActivity: chainActivity.bitcoin,
+              }) && <BitcoinDockBanner />}
+              {/* Solana equivalent — slot/SOL/programs/recent tx
+                  panels above any lesson with `harness: "solana"`,
+                  or any coding lesson inside a Solana challenge
+                  pack. Desktop-only (LiteSVM is a Rust napi addon)
+                  but the gating helper doesn't enforce that — the
+                  web build's "this lesson needs the desktop app"
+                  path catches Solana lessons before this mounts. */}
+              {shouldShowSvmDock(activeLesson, activeCourse) && (
+                <SvmDockBanner />
               )}
+              {/* Challenge-pack frame — quiet 1-row strip showing
+                  the pack name, difficulty tier, topic chip and
+                  position-in-tier when the active lesson belongs
+                  to a challenges course. Renders null otherwise so
+                  it's safe to mount unconditionally. */}
+              <ChallengeFrame course={activeCourse} lesson={activeLesson} />
               <LessonView
               // Key on course+lesson so the editor/code state and quiz answers
               // fully reset when navigating via Prev/Next — otherwise React
@@ -1297,6 +1303,8 @@ export default function App() {
               key={`${activeCourse.id}:${activeLesson.id}`}
               courseId={activeCourse.id}
               courseLanguage={activeCourse.language}
+              courseRequiresDevice={activeCourse.requiresDevice}
+              isChallenge={activeCourse.packType === "challenges"}
               lesson={activeLesson}
               neighbors={findNeighbors(activeCourse, activeLesson.id)}
               isCompleted={completed.has(`${activeCourse.id}:${activeLesson.id}`)}
@@ -1572,7 +1580,6 @@ export default function App() {
           openLibrary: () => setView("library"),
           openPlayground: () => setView("playground"),
           openProfile: () => setView("profile"),
-          openDocs: () => setView("docs"),
           openSettings: () => setSettingsOpen(true),
           importBook: () => setImportOpen(true),
           // Triggering "ask AI" from the palette dispatches the same

@@ -8,6 +8,7 @@
 //!   - (future) `run_cargo_local`, `course_fs`.
 
 mod ai_chat;
+mod chains;
 mod courses;
 mod diagnostics;
 mod docs_crawl;
@@ -15,6 +16,12 @@ mod epub_ingest;
 mod image_gen;
 mod ingest;
 mod ingest_cache;
+// Ledger HID transport — desktop only. iOS / Android lack USB-HID
+// access from app-sandboxed processes, and `hidapi-rs`'s build script
+// hard-fails on those targets. Gating the module here AND the
+// `hidapi` crate in Cargo.toml keeps the mobile builds clean.
+#[cfg(not(any(target_os = "ios", target_os = "android")))]
+mod ledger;
 mod llm;
 mod mobile_dev;
 mod native_runners;
@@ -147,6 +154,21 @@ async fn start_oauth<R: tauri::Runtime>(
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // rustls 0.23+ refuses to auto-pick a default crypto provider when
+    // more than one (ring / aws-lc-rs) is linked into the binary —
+    // callers have to call `install_default()` exactly once at
+    // process start. Without this, the first reqwest HTTPS client
+    // built inside our `tauri://` custom-protocol handler panics with
+    // `No provider set` (originating from
+    // `reqwest::async_impl::client::default_rustls_crypto_provider`),
+    // which on iOS surfaces as the app launching to a blank screen
+    // and hard-crashing the WKWebView process. Installing ring as the
+    // default keeps behaviour identical to rustls's pre-0.23 default.
+    // The error path (provider already installed) is benign — we
+    // ignore the Result so a hot-reload that re-runs `run()` doesn't
+    // double-install.
+    let _ = rustls::crypto::ring::default_provider().install_default();
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_deep_link::init())
@@ -184,6 +206,21 @@ pub fn run() {
             // which drops every in-flight reqwest future (tokio::select!
             // inside call_llm).
             app.manage(llm::IngestCancel::default());
+
+            // Chain backends — see `chains.rs` for the architecture
+            // overview. Each chain holds an `Arc<Mutex<...>>` registered
+            // here so commands in `chains/<name>.rs` can `State<'_, ...>`
+            // into them. Phases 5a-c wired SVM; Phase 5d.1 adds EVM;
+            // Bitcoin lands in 5e.
+            app.manage(std::sync::Arc::new(parking_lot::Mutex::new(
+                chains::svm::SvmState::new(),
+            )) as chains::svm::SharedSvm);
+            app.manage(std::sync::Arc::new(parking_lot::Mutex::new(
+                chains::evm::EvmState::new(),
+            )) as chains::evm::SharedEvm);
+            app.manage(std::sync::Arc::new(parking_lot::Mutex::new(
+                chains::bitcoin::BitcoinState::new(),
+            )) as chains::bitcoin::SharedBtc);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -260,6 +297,71 @@ pub fn run() {
             sveltekit_runner::current_sveltekit_url,
             ai_chat::ai_chat_start_ollama,
             ai_chat::ai_chat_pull_model,
+            // Ledger HID transport — desktop-only (the module + the
+            // hidapi crate are gated to non-iOS/Android targets in
+            // Cargo.toml + lib.rs above). Mobile builds register
+            // nothing under these names; the frontend never calls
+            // them on mobile (LedgerStatusPill + DeviceAction render
+            // disabled affordances when WebHID + ledger transport
+            // are both unavailable).
+            #[cfg(not(any(target_os = "ios", target_os = "android")))]
+            ledger::ledger_list_devices,
+            #[cfg(not(any(target_os = "ios", target_os = "android")))]
+            ledger::ledger_open,
+            #[cfg(not(any(target_os = "ios", target_os = "android")))]
+            ledger::ledger_close,
+            #[cfg(not(any(target_os = "ios", target_os = "android")))]
+            ledger::ledger_is_open,
+            #[cfg(not(any(target_os = "ios", target_os = "android")))]
+            ledger::ledger_send_apdu,
+            #[cfg(not(any(target_os = "ios", target_os = "android")))]
+            ledger::ledger_start_watcher,
+            #[cfg(not(any(target_os = "ios", target_os = "android")))]
+            ledger::ledger_stop_watcher,
+            // Chain backends. Bitcoin lands in 5e.
+            // SVM (Phases 5a + 5b + 5b+):
+            chains::svm::svm_init,
+            chains::svm::svm_get_snapshot,
+            chains::svm::svm_reset,
+            chains::svm::svm_balance,
+            chains::svm::svm_airdrop,
+            chains::svm::svm_transfer,
+            chains::svm::svm_warp_slot,
+            chains::svm::svm_warp_time,
+            chains::svm::svm_send_tx,
+            chains::svm::svm_deploy_program,
+            chains::svm::svm_toolchain_status,
+            chains::svm::svm_build_bpf,
+            // EVM (Phases 5d.1 + 5d.2 + 5d.3):
+            chains::evm::evm_init,
+            chains::evm::evm_get_snapshot,
+            chains::evm::evm_reset,
+            chains::evm::evm_balance,
+            chains::evm::evm_set_balance,
+            chains::evm::evm_send_tx,
+            chains::evm::evm_call,
+            chains::evm::evm_get_code,
+            chains::evm::evm_mine,
+            chains::evm::evm_warp,
+            chains::evm::evm_block_number,
+            chains::evm::evm_block_timestamp,
+            chains::evm::evm_snapshot,
+            chains::evm::evm_revert,
+            // Bitcoin (Phases 5e.1 + 5e.2 + 5e.3):
+            chains::bitcoin::btc_init,
+            chains::bitcoin::btc_get_snapshot,
+            chains::bitcoin::btc_reset,
+            chains::bitcoin::btc_balance,
+            chains::bitcoin::btc_utxos,
+            chains::bitcoin::btc_send,
+            chains::bitcoin::btc_broadcast,
+            chains::bitcoin::btc_mine,
+            chains::bitcoin::btc_flush_mempool,
+            chains::bitcoin::btc_snapshot,
+            chains::bitcoin::btc_revert,
+            chains::bitcoin::btc_get_tx,
+            chains::bitcoin::btc_get_height,
+            chains::bitcoin::btc_mempool,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

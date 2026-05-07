@@ -757,6 +757,23 @@
   letter-spacing: 0.5px;
   color: var(--color-text-tertiary);
   font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Completed badge — gold text + crown glyph. The shade is a warm
+ * burnished gold (#d4a64a) chosen to read as celebratory on the
+ * dark library background while staying within the otherwise
+ * monochrome palette. The crown SVG inherits `currentColor` so the
+ * icon matches the text without a separate fill rule. */
+.fishbones-library-card-status--completed {
+  color: #d4a64a;
+}
+
+.fishbones-library-card-status-icon {
+  flex-shrink: 0;
+  margin-top: -1px;
 }
 
 .fishbones-library-card-title {

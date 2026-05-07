@@ -265,6 +265,24 @@ export function getSnapshot(): EvmChainSnapshot {
   return state.snapshot;
 }
 
+/// True if the singleton EVM chain has had any user-visible
+/// activity — at least one tx (deploy, call, value-transfer, or
+/// faucet hit), OR a deployed contract, OR the block number has
+/// advanced past genesis. Mirrors `bitcoinChainHasActivity` so the
+/// dock visibility logic can use a uniform "is there something to
+/// see?" predicate across both chains.
+///
+/// Accounts is NOT a signal — the harness pre-seeds default
+/// accounts on init; a fresh chain has accounts but no txs.
+export function evmChainHasActivity(
+  snap: EvmChainSnapshot = state.snapshot,
+): boolean {
+  if (snap.txs.length > 0) return true;
+  if (snap.contracts.length > 0) return true;
+  if (snap.blockNumber > 0n) return true;
+  return false;
+}
+
 // ── Faucet ──────────────────────────────────────────────────────
 
 export interface FaucetResult {

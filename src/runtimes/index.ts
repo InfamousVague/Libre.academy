@@ -40,6 +40,12 @@ const DESKTOP_ONLY_REASONS: Record<string, string> = {
   swift: "Needs Swift toolchain — macOS only. Get the desktop app to run Swift lessons.",
   sveltekit:
     "SvelteKit lessons run via a real Node.js dev server bundled with the desktop app.",
+  // Pseudo-language used only as a key for the desktop-only banner
+  // when `harness: "solana"` short-circuits below — the lesson's
+  // declared language is JS/TS, but the BLOCKING dependency is
+  // LiteSVM (Rust napi), not the JS runtime itself.
+  solana:
+    "Solana lessons run an in-process LiteSVM (Rust napi addon) bundled with the desktop app.",
 };
 
 /// Desktop-only runtimes (Swift, the native-toolchain pack, SvelteKit's
@@ -210,10 +216,11 @@ export async function runFiles(
   lessonId?: string,
   /// Opts in to a richer test harness for chain-aware lessons.
   /// "evm" routes Solidity / Vyper through @ethereumjs/vm so tests
-  /// can deploy + call contracts; "solana" (planned) routes Rust
-  /// through LiteSVM; "bitcoin" routes JavaScript through an
-  /// in-process UTXO chain shell with @scure/btc-signer for tx
-  /// construction and @bitauth/libauth for Script execution.
+  /// can deploy + call contracts; "solana" routes JS/TS through
+  /// the long-lived LiteSVM singleton in `lib/svm/chainService`
+  /// (Rust napi — desktop-only); "bitcoin" routes JavaScript
+  /// through an in-process UTXO chain shell with @scure/btc-signer
+  /// for tx construction and @bitauth/libauth for Script execution.
   /// Undefined keeps the legacy compile-and-check behavior so
   /// existing exercises don't regress.
   harness?: "evm" | "solana" | "bitcoin",
@@ -317,6 +324,24 @@ export async function runFiles(
     (language === "javascript" || language === "typescript")
   ) {
     return (await import("./bitcoin")).runBitcoin(files, testCode);
+  }
+  // Solana harness — opt-in for JS/TS lessons that drive an
+  // in-process LiteSVM. The runtime exposes `svm` (the wrapped
+  // `SvmHarness` from `lib/svm/chainService` so dock state stays
+  // coherent across runs) plus the `@solana/kit` namespace as
+  // `kit` for instruction-building. Desktop-only — LiteSVM is a
+  // Rust napi addon. The web build has its own `canRun(language)`
+  // gate above for js/ts (which always passes), so we have to
+  // short-circuit here when the harness is the blocker, not the
+  // language.
+  if (
+    harness === "solana" &&
+    (language === "javascript" || language === "typescript")
+  ) {
+    if (isWeb) {
+      return desktopOnlyResult("solana", DESKTOP_ONLY_REASONS.solana);
+    }
+    return (await import("./solana")).runSolana(files, testCode);
   }
   // Auto-route: the LLM sometimes tags a React Native lesson's
   // `language` as "javascript" / "typescript" because JSX transpiles

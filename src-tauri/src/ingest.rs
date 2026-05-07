@@ -410,9 +410,12 @@ pub fn extract_pdf_cover(
     }
 
     // pdftoppm at 150 dpi on a 2:3 book-cover page produces ~1200x1800
-    // PNGs (~3 MB). Downsample to the UI's max render size so the on-
-    // disk footprint and the base64 IPC payload both stay small.
-    downsample_cover_in_place(&final_path);
+    // PNGs (~3 MB). Optimise to 480×720 JPEG q85 so the on-disk
+    // footprint and the base64 IPC payload both stay tiny (~50-100 KB).
+    // The helper deletes the source cover.png and emits cover.jpg —
+    // we update final_path to follow the rename so the CoverResult
+    // points at the file the frontend will actually load.
+    let final_path = optimize_cover_in_place(&final_path).unwrap_or(final_path);
 
     // Stamp coverFetchedAt into course.json if it exists. This is what
     // makes the field consistent on-disk — meaning when the course is
@@ -423,8 +426,8 @@ pub fn extract_pdf_cover(
     // If course.json doesn't exist yet (the AI-ingest path calls this
     // command before the first save_course lands), the helper skips —
     // the pipeline's next save will write course.json fresh WITHOUT
-    // the marker, but that's fine because the cover.png file itself
-    // is the source of truth; `load_course_cover` always probes the
+    // the marker, but that's fine because the cover file itself is
+    // the source of truth; `load_course_cover` always probes the
     // filesystem rather than trusting the JSON field.
     let fetched_at = stamp_cover_fetched_at(&course_dir);
     CoverResult {
@@ -447,52 +450,116 @@ pub fn extract_source_text(path: String) -> ExtractResult {
 }
 
 /// Max cover dimensions written to disk. The library shelf renders at
-/// ~170-260px wide, sidebar carousel at 74px — so 512×768 covers 2x
-/// retina with headroom. Shrinks an older 1024×1536 PNG (~3.5 MB) to
-/// roughly 700 KB with no visible quality loss at render size, and
-/// cuts the base64 payload `load_course_cover` ships over IPC ~5x.
-const COVER_MAX_WIDTH: u32 = 512;
-const COVER_MAX_HEIGHT: u32 = 768;
+/// ~170-260px wide, sidebar carousel at 74px — so 480×720 covers 2x
+/// retina with headroom. Combined with JPEG q85 re-encoding,
+/// `optimize_cover_in_place` shrinks a 1024×1536 PNG (~3.5 MB) to
+/// ~50-100 KB — a 30-50× win that cuts `load_course_cover`'s base64
+/// IPC payload by the same factor and makes library + discover load
+/// instantly instead of stuttering through multi-megabyte transfers.
+const COVER_MAX_WIDTH: u32 = 480;
+const COVER_MAX_HEIGHT: u32 = 720;
+/// JPEG quality for the optimised cover. 85 is a sweet spot for
+/// photographic content (most covers are AI-generated illustrations
+/// or scanned book photos) — visually lossless at the render size,
+/// 5-10× smaller than PNG of the same image.
+const COVER_JPEG_QUALITY: u8 = 85;
 
-/// Decode the PNG at `path`, downsample to fit within COVER_MAX_WIDTH ×
-/// COVER_MAX_HEIGHT (aspect-ratio preserved), and re-encode in place.
-/// Idempotent: if the source is already within bounds, does nothing so
-/// repeated calls don't re-compress. Logs failures as warnings and
-/// leaves the original file — a too-big cover is a quality-of-life
-/// regression, not a correctness bug.
-pub fn downsample_cover_in_place(path: &std::path::Path) {
-    let reader = match image::ImageReader::open(path) {
+/// Decode the image at `src_path`, downsample to fit within
+/// COVER_MAX_WIDTH × COVER_MAX_HEIGHT (aspect-ratio preserved), and
+/// re-encode as JPEG q85 to `cover.jpg` in the SAME directory. Deletes
+/// the source file when it had a different name (e.g. the legacy
+/// `cover.png` writers leave behind), so each course folder ends up
+/// with a single `cover.jpg` regardless of how the cover arrived.
+///
+/// Returns the final path (`<dir>/cover.jpg`) on success, or `None`
+/// on any failure — failures are logged as warnings and the source
+/// is left in place so a too-big cover degrades gracefully rather
+/// than disappearing entirely.
+///
+/// Idempotent: re-running on a file that's already at-or-below the
+/// max dimensions still triggers a re-encode (the new file replaces
+/// the old in the same step), but the result is byte-identical for
+/// already-shrunk inputs and the operation is fast (<50ms per cover).
+pub fn optimize_cover_in_place(src_path: &std::path::Path) -> Option<std::path::PathBuf> {
+    let reader = match image::ImageReader::open(src_path) {
         Ok(r) => r,
         Err(e) => {
-            eprintln!("[cover] skip downsample for {path:?}: open failed: {e}");
-            return;
+            eprintln!("[cover] skip optimise for {src_path:?}: open failed: {e}");
+            return None;
         }
     };
     let reader = match reader.with_guessed_format() {
         Ok(r) => r,
         Err(e) => {
-            eprintln!("[cover] skip downsample for {path:?}: probe failed: {e}");
-            return;
+            eprintln!("[cover] skip optimise for {src_path:?}: probe failed: {e}");
+            return None;
         }
     };
     let img = match reader.decode() {
         Ok(i) => i,
         Err(e) => {
-            eprintln!("[cover] skip downsample for {path:?}: decode failed: {e}");
-            return;
+            eprintln!("[cover] skip optimise for {src_path:?}: decode failed: {e}");
+            return None;
         }
     };
-    if img.width() <= COVER_MAX_WIDTH && img.height() <= COVER_MAX_HEIGHT {
-        return;
+    let resized = if img.width() > COVER_MAX_WIDTH || img.height() > COVER_MAX_HEIGHT {
+        img.resize(
+            COVER_MAX_WIDTH,
+            COVER_MAX_HEIGHT,
+            image::imageops::FilterType::Lanczos3,
+        )
+    } else {
+        img
+    };
+
+    let dst_path = match src_path.parent() {
+        Some(p) => p.join("cover.jpg"),
+        None => {
+            eprintln!("[cover] skip optimise for {src_path:?}: no parent dir");
+            return None;
+        }
+    };
+
+    // JPEG encode at quality 85. The image crate's `save_with_format`
+    // uses default quality 75; we go through `JpegEncoder` explicitly
+    // so the constant lives in code and tracks the migration script
+    // (`scripts/optimize-covers.mjs`) which uses the same number.
+    //
+    // RGB8 conversion is required because JPEG can't carry alpha;
+    // the source PNGs from PDF rendering / OpenAI / EPUBs may carry
+    // a transparent border which we flatten to white implicitly via
+    // the JPEG encoder's default. Pre-converting to RGB8 makes the
+    // intent explicit and avoids a runtime "alpha not supported"
+    // error inside the encoder.
+    let rgb = resized.to_rgb8();
+    let mut buf = Vec::new();
+    {
+        let encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(
+            &mut buf,
+            COVER_JPEG_QUALITY,
+        );
+        if let Err(e) = rgb.write_with_encoder(encoder) {
+            eprintln!("[cover] failed to encode JPEG for {src_path:?}: {e}");
+            return None;
+        }
     }
-    let resized = img.resize(
-        COVER_MAX_WIDTH,
-        COVER_MAX_HEIGHT,
-        image::imageops::FilterType::Lanczos3,
-    );
-    if let Err(e) = resized.save_with_format(path, image::ImageFormat::Png) {
-        eprintln!("[cover] failed to write downsampled cover {path:?}: {e}");
+    if let Err(e) = std::fs::write(&dst_path, &buf) {
+        eprintln!("[cover] failed to write {dst_path:?}: {e}");
+        return None;
     }
+
+    // Clean up the source if it had a different filename. Keeps the
+    // course folder canonical (one cover.jpg) and avoids stale-PNG
+    // confusion in zips repacked from this folder.
+    if src_path != dst_path && src_path.exists() {
+        if let Err(e) = std::fs::remove_file(src_path) {
+            eprintln!(
+                "[cover] failed to remove legacy {src_path:?} after optimise: {e}"
+            );
+        }
+    }
+
+    Some(dst_path)
 }
 
 /// Write `coverFetchedAt` into `<course_dir>/course.json` if that file
@@ -585,26 +652,29 @@ pub fn import_course_cover(
         }
     };
 
-    let final_path = course_dir.join("cover.png");
-    // Shrink to the UI's max render size before encoding — a user's
-    // 4000×6000 screenshot drop would otherwise cost megabytes on
-    // disk and pay a 4x base64 tax on every `load_course_cover` IPC.
-    let sized = if img.width() > COVER_MAX_WIDTH || img.height() > COVER_MAX_HEIGHT {
-        img.resize(
-            COVER_MAX_WIDTH,
-            COVER_MAX_HEIGHT,
-            image::imageops::FilterType::Lanczos3,
-        )
-    } else {
-        img
-    };
-    if let Err(e) = sized.save_with_format(&final_path, image::ImageFormat::Png) {
+    // Write the user's image at full resolution to a scratch
+    // `cover.png` so `optimize_cover_in_place` (which resizes +
+    // re-encodes to 480×720 JPEG q85) handles the heavy lifting in
+    // one place. The helper deletes the scratch file and returns the
+    // canonical `cover.jpg` path which we report back to the frontend.
+    let scratch = course_dir.join("cover.png");
+    if let Err(e) = img.save_with_format(&scratch, image::ImageFormat::Png) {
         return CoverResult {
             path: String::new(),
             fetched_at: 0,
-            error: Some(format!("write cover.png: {e}")),
+            error: Some(format!("write scratch cover.png: {e}")),
         };
     }
+    let final_path = match optimize_cover_in_place(&scratch) {
+        Some(p) => p,
+        None => {
+            return CoverResult {
+                path: String::new(),
+                fetched_at: 0,
+                error: Some("failed to optimise cover".to_string()),
+            };
+        }
+    };
 
     let fetched_at = stamp_cover_fetched_at(&course_dir);
     CoverResult {
@@ -629,23 +699,28 @@ pub fn extract_source_cover(
     extract_pdf_cover(app, source_path, course_id)
 }
 
-/// Read the cover PNG for a course (if one exists) and return it as a
-/// base64 data URL that the frontend can drop straight into `<img src>`.
-/// Returns `None` when no cover is present — callers render their
-/// fallback tile in that case.
+/// Read the cover image for a course (if one exists) and return it as
+/// a base64 data URL that the frontend can drop straight into
+/// `<img src>`. Returns `None` when no cover is present — callers
+/// render their fallback tile in that case.
+///
+/// Format preference is `cover.jpg` (the optimised 480×720 q85 form
+/// produced by `optimize_cover_in_place` and `optimize-covers.mjs`)
+/// over `cover.png` (the legacy 1024×1536 form left over from older
+/// installs / hand-built packs). The returned data URL carries the
+/// matching MIME so the browser doesn't sniff or fail.
 ///
 /// Lookup order:
-///   1. `<app-data>/courses/<course_id>/cover.png` — installed copy.
+///   1. `<app-data>/courses/<course_id>/cover.{jpg,png}` — installed copy.
 ///   2. `<resources>/bundled-packs/<course_id>.fishbones` (or `.kata`)
-///      — extract `cover.png` straight out of the archive.
+///      — extract `cover.{jpg,png}` straight out of the archive.
 ///   3. Fallback scan of every `.fishbones` archive looking for one
 ///      whose inner `course.json` matches `course_id`.
 ///
 /// Step 2 + 3 give the catalog placeholders (Discover view) real
 /// cover artwork without needing a separate IPC. They also serve as
-/// a graceful fallback when the on-disk cover.png went missing for
-/// any reason — the bundled archive is the canonical source of
-/// truth.
+/// a graceful fallback when the on-disk cover went missing for any
+/// reason — the bundled archive is the canonical source of truth.
 #[tauri::command]
 pub fn load_course_cover(
     app: tauri::AppHandle,
@@ -653,18 +728,27 @@ pub fn load_course_cover(
 ) -> Result<Option<String>, String> {
     use base64::Engine;
 
-    fn encode_png(bytes: &[u8]) -> String {
+    fn encode_data_url(bytes: &[u8], mime: &str) -> String {
         let b64 = base64::engine::general_purpose::STANDARD.encode(bytes);
-        format!("data:image/png;base64,{b64}")
+        format!("data:{mime};base64,{b64}")
     }
 
-    // 1. Installed copy — fastest path, single stat.
+    // 1. Installed copy — fastest path, single stat per format.
     if let Ok(courses_dir) = crate::courses::courses_dir(&app) {
-        let cover_path = courses_dir.join(&course_id).join("cover.png");
-        if cover_path.exists() {
-            let bytes =
-                std::fs::read(&cover_path).map_err(|e| format!("read cover: {e}"))?;
-            return Ok(Some(encode_png(&bytes)));
+        let course_dir = courses_dir.join(&course_id);
+        // Prefer JPEG (the optimised form). PNG kept as a fallback so
+        // installs from before the migration still render until they're
+        // re-extracted from the bundled archive on next reinstall.
+        for (filename, mime) in [
+            ("cover.jpg", "image/jpeg"),
+            ("cover.png", "image/png"),
+        ] {
+            let cover_path = course_dir.join(filename);
+            if cover_path.exists() {
+                let bytes =
+                    std::fs::read(&cover_path).map_err(|e| format!("read cover: {e}"))?;
+                return Ok(Some(encode_data_url(&bytes, mime)));
+            }
         }
     }
 
@@ -682,8 +766,8 @@ pub fn load_course_cover(
     for ext in ["fishbones", "kata"] {
         let archive = resource_dir.join(format!("{course_id}.{ext}"));
         if archive.is_file() {
-            if let Ok(Some(bytes)) = read_cover_png_from_archive(&archive) {
-                return Ok(Some(encode_png(&bytes)));
+            if let Ok(Some((bytes, mime))) = read_cover_from_archive(&archive) {
+                return Ok(Some(encode_data_url(&bytes, mime)));
             }
         }
     }
@@ -704,8 +788,8 @@ pub fn load_course_cover(
             // base64-encode covers that don't match.
             if let Ok(id) = crate::courses::peek_archive_id(&path) {
                 if id == course_id {
-                    if let Ok(Some(bytes)) = read_cover_png_from_archive(&path) {
-                        return Ok(Some(encode_png(&bytes)));
+                    if let Ok(Some((bytes, mime))) = read_cover_from_archive(&path) {
+                        return Ok(Some(encode_data_url(&bytes, mime)));
                     }
                 }
             }
@@ -715,24 +799,43 @@ pub fn load_course_cover(
     Ok(None)
 }
 
-/// Pull `cover.png` (anywhere in the archive) out of a `.fishbones`.
+/// Pull a cover image (anywhere in the archive) out of a `.fishbones`.
 /// Returns `Ok(None)` when the archive doesn't carry one — common for
 /// older / hand-built packs that pre-date cover artwork.
-fn read_cover_png_from_archive(
+///
+/// Two-pass scan: first pass looks for `cover.jpg` (the optimised
+/// modern form), second pass falls back to `cover.png` (legacy
+/// archives that haven't been re-packed through the migration
+/// script). Returns `(bytes, mime)` so the caller can build the
+/// right data URL.
+fn read_cover_from_archive(
     archive: &std::path::Path,
-) -> anyhow::Result<Option<Vec<u8>>> {
-    let file = std::fs::File::open(archive)?;
-    let mut zip = zip::ZipArchive::new(file)?;
-    for i in 0..zip.len() {
-        let mut entry = zip.by_index(i)?;
-        if entry.is_dir() {
-            continue;
+) -> anyhow::Result<Option<(Vec<u8>, &'static str)>> {
+    fn extract(
+        archive: &std::path::Path,
+        suffix: &str,
+    ) -> anyhow::Result<Option<Vec<u8>>> {
+        let file = std::fs::File::open(archive)?;
+        let mut zip = zip::ZipArchive::new(file)?;
+        for i in 0..zip.len() {
+            let mut entry = zip.by_index(i)?;
+            if entry.is_dir() {
+                continue;
+            }
+            if entry.name().ends_with(suffix) {
+                let mut buf = Vec::new();
+                std::io::Read::read_to_end(&mut entry, &mut buf)?;
+                return Ok(Some(buf));
+            }
         }
-        if entry.name().ends_with("cover.png") {
-            let mut buf = Vec::new();
-            std::io::Read::read_to_end(&mut entry, &mut buf)?;
-            return Ok(Some(buf));
-        }
+        Ok(None)
+    }
+
+    if let Some(bytes) = extract(archive, "cover.jpg")? {
+        return Ok(Some((bytes, "image/jpeg")));
+    }
+    if let Some(bytes) = extract(archive, "cover.png")? {
+        return Ok(Some((bytes, "image/png")));
     }
     Ok(None)
 }

@@ -120,6 +120,10 @@ const LEGACY_STARTER_IDS: ReadonlyArray<string> = [
   "svelte-5-complete",
   "javascript-crash-course",
   "challenges-reactnative-visual",
+  // V10 — Learning Zig retired in favour of in-house "A to Zig"
+  // course. Listed here so returning visitors who had it seeded see
+  // it removed on next launch.
+  "learning-zig",
 ];
 
 /// Resolve a starter-courses path relative to the active build's base
@@ -183,7 +187,16 @@ function starterUrl(path: string): string {
 /// browser but no longer auto-seed on first visit. Returning
 /// visitors who had the V8 seed get the dropped books removed
 /// (they're in the retired list now) on next launch.
-const SEED_VERSION = 9;
+///
+/// V10 — Catalog cleanup: retired Learning Zig (replaced by the
+/// in-house "A to Zig" course) plus eight other books removed
+/// 2026-05-07 (eloquent-javascript, modern-javascript-tutorial,
+/// you-don-t-know-js-yet, python-crash-course,
+/// crafting-interpreters-javascript, learning-react-native,
+/// fluent-react, three-js-and-a-frame). All nine are listed in
+/// LEGACY_STARTER_IDS so the prune step actually removes them
+/// from returning visitors' IndexedDB.
+const SEED_VERSION = 10;
 
 /// Run the web seed if it hasn't run yet OR if the persisted
 /// `SEED_VERSION` is older than the current build's. Idempotent +
