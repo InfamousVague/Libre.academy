@@ -29,6 +29,7 @@ import { pause as pauseIcon } from "@base/primitives/icon/icons/pause";
 import { loader } from "@base/primitives/icon/icons/loader";
 import { clock as clockIcon } from "@base/primitives/icon/icons/clock";
 import { useLessonAudio } from "../../hooks/useLessonAudio";
+import { useLessonAudioFallback } from "../../hooks/useLessonAudioFallback";
 import "./TTSButton.css";
 
 interface Props {
@@ -38,6 +39,13 @@ interface Props {
   /// before audio metadata has loaded so the user has a sense of
   /// duration immediately.
   estimatedReadMinutes?: number;
+  /// Lesson body markdown — fed into the Web Speech API fallback
+  /// when no ElevenLabs MP3 exists for this lesson. Optional for
+  /// backwards compat (callers that haven't been updated still get
+  /// the static "X min read" chip when ElevenLabs is missing), but
+  /// supplying it gives the listener a working speaker icon backed
+  /// by the platform's built-in voices.
+  fallbackText?: string;
   /// Optional className passthrough for parent-scoped styling.
   className?: string;
 }
@@ -55,14 +63,27 @@ function fmtTime(sec: number | null): string {
 export default function TTSButton({
   lessonId,
   estimatedReadMinutes,
+  fallbackText,
   className,
 }: Props) {
-  const audio = useLessonAudio(lessonId);
+  // Two narration sources, evaluated in priority order:
+  //
+  //   1. ElevenLabs MP3 via the CDN manifest — the high-quality path.
+  //      Uses an HTMLAudioElement, exact duration, real seek, IndexedDB
+  //      caching, the works.
+  //   2. Web Speech API on the lesson body — a free in-browser
+  //      fallback for lessons not in the manifest (which, post-VPS
+  //      audio-dir-wipe, is currently every lesson). Lower fidelity
+  //      but Apple's Siri-quality voices read it surprisingly well,
+  //      and the consumer of this component doesn't need to care
+  //      which path is in use — both expose the same interface.
+  const cdn = useLessonAudio(lessonId);
+  const fallback = useLessonAudioFallback(lessonId, fallbackText);
+  const audio = cdn.available ? cdn : fallback;
 
-  // No audio in the manifest for this lesson — render as a static
-  // reading-time chip so the meta row still has one element instead
-  // of two (avoids "X min read" + missing speaker icon, which left
-  // empty whitespace where the affordance should be).
+  // No narration source available AND no reading-time hint — render
+  // nothing. With reading-time, a static chip stands in so the meta
+  // strip isn't an awkward empty pocket.
   if (!audio.available) {
     if (typeof estimatedReadMinutes === "number" && estimatedReadMinutes > 0) {
       return (

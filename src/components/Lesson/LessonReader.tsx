@@ -21,6 +21,7 @@ import InlineSandbox from "./InlineSandbox";
 import TTSButton from "./TTSButton";
 import { estimateReadingMinutes } from "./readingTime";
 import { stopLessonAudio, useLessonAudio } from "../../hooks/useLessonAudio";
+import { stopFallbackNarration } from "../../hooks/useLessonAudioFallback";
 import { useLessonReadCursor } from "../../hooks/useLessonReadCursor";
 import DeviceAction from "../Ledger/DeviceAction";
 import LedgerStatusPill from "../Ledger/LedgerStatusPill";
@@ -465,10 +466,14 @@ export default function LessonReader({
   // Stop the singleton TTS player when the user navigates to a
   // different lesson or unmounts the reader entirely. Without this
   // the narration of the previous lesson keeps playing while the
-  // new one's prose is on screen — disorienting.
+  // new one's prose is on screen — disorienting. Both narration
+  // sources (ElevenLabs CDN audio + Web Speech API fallback) own
+  // independent singletons, so we tear down both unconditionally —
+  // the unused one no-ops cleanly.
   useEffect(() => {
     return () => {
       stopLessonAudio();
+      stopFallbackNarration();
     };
   }, [lesson.id]);
 
@@ -570,6 +575,7 @@ export default function LessonReader({
                     ? minutesRemaining
                     : 0
               }
+              fallbackText={lesson.body}
             />
             {/* Hardware-wallet chip — only mounts when the parent
                 course is flagged `requiresDevice`. Sits inline with

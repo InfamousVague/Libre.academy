@@ -9,6 +9,7 @@ import { renderMarkdown } from "../components/Lesson/markdown";
 import TTSButton from "../components/Lesson/TTSButton";
 import { estimateReadingMinutes } from "../components/Lesson/readingTime";
 import { stopLessonAudio, useLessonAudio } from "../hooks/useLessonAudio";
+import { stopFallbackNarration } from "../hooks/useLessonAudioFallback";
 import { useLessonReadCursor } from "../hooks/useLessonReadCursor";
 import "./MobileReader.css";
 
@@ -78,10 +79,14 @@ export default function MobileReader({ body, lessonId }: Props) {
 
   // Stop the singleton TTS player when this reader unmounts (the
   // user navigated away from the lesson). Without it the narration
-  // keeps playing in the background after a lesson change.
+  // keeps playing in the background after a lesson change. Tear
+  // down BOTH narration paths — ElevenLabs CDN audio and the Web
+  // Speech API fallback — since either could be the active source
+  // for this lesson.
   useEffect(() => {
     return () => {
       stopLessonAudio();
+      stopFallbackNarration();
     };
   }, [lessonId]);
 
@@ -120,6 +125,7 @@ export default function MobileReader({ body, lessonId }: Props) {
           <TTSButton
             lessonId={lessonId}
             estimatedReadMinutes={readingMinutes}
+            fallbackText={body}
           />
         </div>
       )}
