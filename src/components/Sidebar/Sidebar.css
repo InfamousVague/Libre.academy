@@ -521,7 +521,7 @@
   padding: 6px 10px 6px 8px;
   font-size: 12.5px;
   font-weight: 500;
-  gap: 8px;
+  gap: 7px;
 }
 
 .fishbones__lesson-name {
@@ -534,13 +534,16 @@
 /* Unified lesson status slot: a circle that houses the lesson-kind icon
    (book / code / help-circle). The icon is always shown; only the circle's
    fill and icon color change between states. Same 16x16 footprint across
-   states so the title column stays aligned. */
+   states so the title column stays aligned. The container intentionally
+   stays a touch larger than the icon glyph so the colored ring (especially
+   the difficulty tints + the box-shadow halo on `--active`) reads as the
+   primary element; the glyph inside is a contextual whisper. */
 .fishbones__lesson-status {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
   border-radius: 50%;
   transition: background 0.2s ease, border-color 0.2s ease, color var(--fb-motion-snappy),
@@ -551,7 +554,7 @@
    just above the border color so it registers as a hint rather than a
    focal point — the circle is the main element, the glyph is a whisper. */
 .fishbones__lesson-status--pending {
-  border: 1.5px solid var(--color-border-default);
+  border: 1.25px solid var(--color-border-default);
   background: transparent;
   color: var(--color-text-disabled, rgba(255, 255, 255, 0.22));
 }
@@ -564,17 +567,17 @@
 /* Active: brighter ring + halo + the icon turns up one notch toward
    visible (but still not the full-contrast treatment that "done" gets). */
 .fishbones__lesson-status--active {
-  border: 1.5px solid var(--color-text-secondary);
+  border: 1.25px solid var(--color-text-secondary);
   background: transparent;
   color: var(--color-text-secondary);
-  box-shadow: 0 0 0 3px var(--color-bg-tertiary);
+  box-shadow: 0 0 0 2px var(--color-bg-tertiary);
 }
 
 /* Done: filled white circle with a black kind icon inside — inverted
    colors flag completion at a glance without losing the what-kind cue. */
 .fishbones__lesson-status--done {
   background: var(--color-text-primary);
-  border: 1.5px solid var(--color-text-primary);
+  border: 1.25px solid var(--color-text-primary);
   color: var(--color-bg-primary);
 }
 
