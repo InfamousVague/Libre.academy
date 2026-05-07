@@ -16,6 +16,18 @@
   flex-direction: column;
   gap: 14px;
   font-family: var(--font-body, system-ui);
+  /* Slots inside the Workbench's editor slot — fill the height the
+     parent gives us, scroll internally when content (long template,
+     big block tray) overruns. Prevents the "blocks section is too
+     long and the toggle jumps" reflow when switching modes — the
+     overall workbench height is governed by the same persisted
+     split editor mode uses, regardless of how tall the blocks
+     content actually is. */
+  height: 100%;
+  min-height: 0;
+  padding: 12px 14px;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .fb-blocks--error {
@@ -25,24 +37,35 @@
   color: var(--color-text-secondary);
 }
 
-/* Header row: hosts the Editor / Blocks mode toggle on the left
-   (mirrors the same control in EditorPane so switching feels
-   symmetric across the two surfaces) and the optional prompt
-   narration on the right. Wraps onto two lines on narrow screens. */
+/* Header bar — mirrors `.fishbones-editor-header`'s chrome
+   (bg-secondary fill + border-bottom + 6×12 padding) so swapping
+   between editor and blocks modes feels like swapping which body
+   sits beneath a shared header bar. The negative margin breaks
+   the bar out of the parent's 12×14 padding so it spans the
+   workbench editor-slot edge-to-edge and sits flush against the
+   top edge — visually identical to how the editor's header sits
+   above its codemirror surface. The prompt narration moves to a
+   sibling line below the header (see `.fb-blocks__prompt`) so the
+   header row can stay a single horizontal control strip. */
 .fb-blocks__header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  justify-content: space-between;
+  padding: 6px 12px;
+  margin: -12px -14px 0;
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border-default);
 }
 
+/* Prompt narration on its own line below the header bar. No flex
+   context anymore — it's a regular block paragraph that fills the
+   parent's content width and wraps naturally. */
 .fb-blocks__prompt {
   margin: 0;
   font-size: 14px;
   color: var(--color-text-secondary);
-  flex: 1;
-  min-width: 0;
 }
 
 .fb-blocks__mode {

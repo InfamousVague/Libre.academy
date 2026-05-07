@@ -57,6 +57,7 @@ import {
 } from "../../lib/workbenchFiles";
 import { runFiles, type RunResult } from "../../runtimes";
 import OutputPane from "../Output/OutputPane";
+import Workbench from "../Workbench/Workbench";
 import {
   highlightChip,
   highlightTemplate,
@@ -565,13 +566,19 @@ function BlocksViewInner({
       ) ?? null
     : null;
 
-  return (
-    <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
-      <div
-        className={
-          "fb-blocks" + (justPassed ? " fb-blocks--passed" : "")
-        }
-      >
+  // The interactive content (template + pool + verify controls)
+  // lives in the Workbench's editor slot; the OutputPane lives in
+  // its output slot. Sharing storage keys with editor mode means
+  // the persisted height-split + width carry over across the
+  // toggle, so flipping Editor ↔ Blocks doesn't reflow the
+  // workbench container. Long templates scroll inside the editor
+  // slot rather than expanding the parent.
+  const blocksTopHalf = (
+    <div
+      className={
+        "fb-blocks" + (justPassed ? " fb-blocks--passed" : "")
+      }
+    >
         {/* Off-screen polite live region for screen-reader feedback.
             React updates the text whenever a placement, removal, or
             verify outcome happens, and assistive tech announces it
@@ -579,15 +586,18 @@ function BlocksViewInner({
         <span className="fb-blocks__sr-live" role="status" aria-live="polite">
           {liveMessage}
         </span>
-        {/* Header row: Editor/Blocks toggle on the left (mirrors the
-            same control in EditorPane so switching feels symmetric),
-            optional prompt narration on the right. Only renders when
-            the parent provided the toggle wiring (i.e. desktop with
-            authored blocks data) — mobile + lessons without blocks
-            data hide the row entirely. */}
-        {(onExerciseModeChange || blocks.prompt) && (
+        {/* Header bar — same chrome as EditorPane's header
+            (bg-secondary + border-bottom) so switching modes feels
+            visually contained. Only the Editor/Blocks toggle lives
+            here now; the optional prompt narration moves to its own
+            line below the header so the row stays a single horizontal
+            control strip rather than a wrap-prone toggle+prose mix.
+            Hidden when neither the toggle nor a prompt would render
+            (lessons without blocks data + non-desktop callers without
+            mode wiring). */}
+        {onExerciseModeChange && (
           <div className="fb-blocks__header">
-            {exerciseMode && onExerciseModeChange ? (
+            {exerciseMode && (
               <div
                 className="fb-blocks__mode"
                 role="group"
@@ -620,13 +630,16 @@ function BlocksViewInner({
                   Blocks
                 </button>
               </div>
-            ) : (
-              <span aria-hidden />
-            )}
-            {blocks.prompt && (
-              <p className="fb-blocks__prompt">{blocks.prompt}</p>
             )}
           </div>
+        )}
+        {/* Prompt narration sits on its own line below the header
+            bar — frees the header row to stay a single-line control
+            strip even when the prompt is long, and gives the prose
+            comfortable horizontal space without competing with the
+            toggle's right edge. */}
+        {blocks.prompt && (
+          <p className="fb-blocks__prompt">{blocks.prompt}</p>
         )}
 
         <pre className="fb-blocks__template shiki" aria-label="Code template">
@@ -729,13 +742,23 @@ function BlocksViewInner({
           )}
         </div>
 
-        <OutputPane
-          result={result}
-          running={running}
-          language={lesson.language}
-          testsExpected={!!lesson.tests}
-        />
-      </div>
+    </div>
+  );
+
+  return (
+    <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
+      <Workbench
+        widthControlsParent
+        editor={blocksTopHalf}
+        output={
+          <OutputPane
+            result={result}
+            running={running}
+            language={lesson.language}
+            testsExpected={!!lesson.tests}
+          />
+        }
+      />
 
       <DragOverlay>
         {activeBlock ? (
