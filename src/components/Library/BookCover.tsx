@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { Icon } from "@base/primitives/icon";
 import { rocket } from "@base/primitives/icon/icons/rocket";
 import { flaskConical } from "@base/primitives/icon/icons/flask-conical";
@@ -85,7 +85,7 @@ interface Props {
 /// The progress bar sits flush to the bottom of the card and the title
 /// fades in from a dark gradient so it stays legible against any cover
 /// photo. Hover nudges the card up a few pixels + deepens the shadow.
-export default function BookCover({
+function BookCoverImpl({
   course,
   progress,
   onOpen,
@@ -370,6 +370,14 @@ export default function BookCover({
     </button>
   );
 }
+
+/// Memo-wrapped — the library re-renders BookCovers for every shelf
+/// row on every filter / sort / search keystroke. Without this each
+/// pass walks every cover's render function (which touches a few
+/// stateful pieces — image-load, ribbon hover, etc.) even when the
+/// course props haven't changed.
+const BookCover = memo(BookCoverImpl);
+export default BookCover;
 
 /// Release-status label for a single course tile. The editorial
 /// pipeline runs `UNREVIEWED` (drafts; bottom of the library) \u2192

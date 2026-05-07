@@ -1,0 +1,128 @@
+{
+  "template": "\nconst std = @import(\"std\");\n\npub fn wordFrequency(alloc: std.mem.Allocator, text: []const u8) !std.StringHashMap(u32) {\n    var map: std.StringHashMap(u32) = .init(alloc);\n    errdefer map.deinit();\n\n    var iter = std.mem.__SLOT_tokenize__(u8, text, ' ');\n    while (iter.next()) |word| {\n        const r = try map.__SLOT_method__(word);\n        if (r.__SLOT_check__) {\n            r.value_ptr.* += __SLOT_inc__;\n        } else {\n            r.value_ptr.* = __SLOT_init__;\n        }\n    }\n    return map;\n}\n",
+  "slots": [
+    {
+      "id": "tokenize",
+      "expectedBlockId": "slot_tokenize",
+      "hint": "tokenizer"
+    },
+    {
+      "id": "method",
+      "expectedBlockId": "slot_method",
+      "hint": "lookup"
+    },
+    {
+      "id": "check",
+      "expectedBlockId": "slot_check",
+      "hint": "flag"
+    },
+    {
+      "id": "inc",
+      "expectedBlockId": "slot_inc",
+      "hint": "increment"
+    },
+    {
+      "id": "init",
+      "expectedBlockId": "slot_init",
+      "hint": "initial"
+    }
+  ],
+  "pool": [
+    {
+      "id": "slot_tokenize",
+      "code": "tokenizeScalar"
+    },
+    {
+      "id": "decoy_tokenize_0",
+      "code": "splitScalar",
+      "decoy": true
+    },
+    {
+      "id": "decoy_tokenize_1",
+      "code": "split",
+      "decoy": true
+    },
+    {
+      "id": "decoy_tokenize_2",
+      "code": "tokenize",
+      "decoy": true
+    },
+    {
+      "id": "slot_method",
+      "code": "getOrPut"
+    },
+    {
+      "id": "decoy_method_0",
+      "code": "get",
+      "decoy": true
+    },
+    {
+      "id": "decoy_method_1",
+      "code": "put",
+      "decoy": true
+    },
+    {
+      "id": "decoy_method_2",
+      "code": "getOrPutValue",
+      "decoy": true
+    },
+    {
+      "id": "slot_check",
+      "code": "found_existing"
+    },
+    {
+      "id": "decoy_check_0",
+      "code": "exists",
+      "decoy": true
+    },
+    {
+      "id": "decoy_check_1",
+      "code": "found",
+      "decoy": true
+    },
+    {
+      "id": "decoy_check_2",
+      "code": "is_new",
+      "decoy": true
+    },
+    {
+      "id": "slot_inc",
+      "code": "1"
+    },
+    {
+      "id": "decoy_inc_0",
+      "code": "2",
+      "decoy": true
+    },
+    {
+      "id": "decoy_inc_1",
+      "code": "0",
+      "decoy": true
+    },
+    {
+      "id": "decoy_inc_2",
+      "code": "word.len",
+      "decoy": true
+    },
+    {
+      "id": "slot_init",
+      "code": "1"
+    },
+    {
+      "id": "decoy_init_0",
+      "code": "0",
+      "decoy": true
+    },
+    {
+      "id": "decoy_init_1",
+      "code": "2",
+      "decoy": true
+    },
+    {
+      "id": "decoy_init_2",
+      "code": "word.len",
+      "decoy": true
+    }
+  ],
+  "prompt": "Build a word frequency counter using a StringHashMap."
+}

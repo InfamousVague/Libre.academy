@@ -1,0 +1,104 @@
+{
+  "template": "\nconst std = @import(\"std\");\n\npub fn gcd(a: u32, b: u32) u32 {\n    if (__SLOT_condition__) return __SLOT_base_case__;\n    return gcd(__SLOT_first_arg__, __SLOT_second_arg__);\n}\n",
+  "slots": [
+    {
+      "id": "condition",
+      "expectedBlockId": "slot_condition",
+      "hint": "base-case"
+    },
+    {
+      "id": "base_case",
+      "expectedBlockId": "slot_base_case",
+      "hint": "return-value"
+    },
+    {
+      "id": "first_arg",
+      "expectedBlockId": "slot_first_arg",
+      "hint": "argument"
+    },
+    {
+      "id": "second_arg",
+      "expectedBlockId": "slot_second_arg",
+      "hint": "expression"
+    }
+  ],
+  "pool": [
+    {
+      "id": "slot_condition",
+      "code": "b == 0"
+    },
+    {
+      "id": "decoy_condition_0",
+      "code": "a == 0",
+      "decoy": true
+    },
+    {
+      "id": "decoy_condition_1",
+      "code": "b == 1",
+      "decoy": true
+    },
+    {
+      "id": "decoy_condition_2",
+      "code": "a < b",
+      "decoy": true
+    },
+    {
+      "id": "slot_base_case",
+      "code": "a"
+    },
+    {
+      "id": "decoy_base_case_0",
+      "code": "b",
+      "decoy": true
+    },
+    {
+      "id": "decoy_base_case_1",
+      "code": "0",
+      "decoy": true
+    },
+    {
+      "id": "decoy_base_case_2",
+      "code": "1",
+      "decoy": true
+    },
+    {
+      "id": "slot_first_arg",
+      "code": "b"
+    },
+    {
+      "id": "decoy_first_arg_0",
+      "code": "a",
+      "decoy": true
+    },
+    {
+      "id": "decoy_first_arg_1",
+      "code": "a % b",
+      "decoy": true
+    },
+    {
+      "id": "decoy_first_arg_2",
+      "code": "b % a",
+      "decoy": true
+    },
+    {
+      "id": "slot_second_arg",
+      "code": "a % b"
+    },
+    {
+      "id": "decoy_second_arg_0",
+      "code": "b % a",
+      "decoy": true
+    },
+    {
+      "id": "decoy_second_arg_1",
+      "code": "a - b",
+      "decoy": true
+    },
+    {
+      "id": "decoy_second_arg_2",
+      "code": "a / b",
+      "decoy": true
+    }
+  ],
+  "prompt": "Fill in the blanks to implement Euclid's recursive GCD algorithm."
+}

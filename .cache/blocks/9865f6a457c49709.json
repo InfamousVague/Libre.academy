@@ -1,0 +1,104 @@
+{
+  "template": "\nconst std = @import(\"std\");\n\npub fn sumArray(nums: []const i32) i64 {\n    var __SLOT_acc__: __SLOT_acc_type__ = __SLOT_init__;\n    for (nums) |n| {\n        __SLOT_acc__ __SLOT_op__ n;\n    }\n    return __SLOT_acc__;\n}\n",
+  "slots": [
+    {
+      "id": "acc",
+      "expectedBlockId": "slot_acc",
+      "hint": "accumulator"
+    },
+    {
+      "id": "acc_type",
+      "expectedBlockId": "slot_acc_type",
+      "hint": "type"
+    },
+    {
+      "id": "init",
+      "expectedBlockId": "slot_init",
+      "hint": "initial"
+    },
+    {
+      "id": "op",
+      "expectedBlockId": "slot_op",
+      "hint": "operator"
+    }
+  ],
+  "pool": [
+    {
+      "id": "slot_acc",
+      "code": "total"
+    },
+    {
+      "id": "decoy_acc_0",
+      "code": "sum",
+      "decoy": true
+    },
+    {
+      "id": "decoy_acc_1",
+      "code": "result",
+      "decoy": true
+    },
+    {
+      "id": "decoy_acc_2",
+      "code": "count",
+      "decoy": true
+    },
+    {
+      "id": "slot_acc_type",
+      "code": "i64"
+    },
+    {
+      "id": "decoy_acc_type_0",
+      "code": "i32",
+      "decoy": true
+    },
+    {
+      "id": "decoy_acc_type_1",
+      "code": "u64",
+      "decoy": true
+    },
+    {
+      "id": "decoy_acc_type_2",
+      "code": "usize",
+      "decoy": true
+    },
+    {
+      "id": "slot_init",
+      "code": "0"
+    },
+    {
+      "id": "decoy_init_0",
+      "code": "1",
+      "decoy": true
+    },
+    {
+      "id": "decoy_init_1",
+      "code": "nums.len",
+      "decoy": true
+    },
+    {
+      "id": "decoy_init_2",
+      "code": "null",
+      "decoy": true
+    },
+    {
+      "id": "slot_op",
+      "code": "+="
+    },
+    {
+      "id": "decoy_op_0",
+      "code": "=",
+      "decoy": true
+    },
+    {
+      "id": "decoy_op_1",
+      "code": "+",
+      "decoy": true
+    },
+    {
+      "id": "decoy_op_2",
+      "code": "-=",
+      "decoy": true
+    }
+  ],
+  "prompt": "Fill in the blanks to accumulate the sum with the right type and operator."
+}

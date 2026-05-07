@@ -1,0 +1,128 @@
+{
+  "template": "\nconst std = @import(\"std\");\n\n__SLOT_visibility__ fn __SLOT_func_name__() __SLOT_return_type__ {\n    __SLOT_return_kw__ __SLOT_greeting__;\n}\n",
+  "slots": [
+    {
+      "id": "visibility",
+      "expectedBlockId": "slot_visibility",
+      "hint": "modifier"
+    },
+    {
+      "id": "func_name",
+      "expectedBlockId": "slot_func_name",
+      "hint": "identifier"
+    },
+    {
+      "id": "return_type",
+      "expectedBlockId": "slot_return_type",
+      "hint": "type"
+    },
+    {
+      "id": "return_kw",
+      "expectedBlockId": "slot_return_kw",
+      "hint": "keyword"
+    },
+    {
+      "id": "greeting",
+      "expectedBlockId": "slot_greeting",
+      "hint": "string"
+    }
+  ],
+  "pool": [
+    {
+      "id": "slot_visibility",
+      "code": "pub"
+    },
+    {
+      "id": "decoy_visibility_0",
+      "code": "export",
+      "decoy": true
+    },
+    {
+      "id": "decoy_visibility_1",
+      "code": "const",
+      "decoy": true
+    },
+    {
+      "id": "decoy_visibility_2",
+      "code": "var",
+      "decoy": true
+    },
+    {
+      "id": "slot_func_name",
+      "code": "introduceMyself"
+    },
+    {
+      "id": "decoy_func_name_0",
+      "code": "introduce",
+      "decoy": true
+    },
+    {
+      "id": "decoy_func_name_1",
+      "code": "greet",
+      "decoy": true
+    },
+    {
+      "id": "decoy_func_name_2",
+      "code": "sayHello",
+      "decoy": true
+    },
+    {
+      "id": "slot_return_type",
+      "code": "[]const u8"
+    },
+    {
+      "id": "decoy_return_type_0",
+      "code": "[]u8",
+      "decoy": true
+    },
+    {
+      "id": "decoy_return_type_1",
+      "code": "const u8",
+      "decoy": true
+    },
+    {
+      "id": "decoy_return_type_2",
+      "code": "string",
+      "decoy": true
+    },
+    {
+      "id": "slot_return_kw",
+      "code": "return"
+    },
+    {
+      "id": "decoy_return_kw_0",
+      "code": "yield",
+      "decoy": true
+    },
+    {
+      "id": "decoy_return_kw_1",
+      "code": "emit",
+      "decoy": true
+    },
+    {
+      "id": "decoy_return_kw_2",
+      "code": "give",
+      "decoy": true
+    },
+    {
+      "id": "slot_greeting",
+      "code": "\"Hi, my name is Zig!\""
+    },
+    {
+      "id": "decoy_greeting_0",
+      "code": "\"Hello, I am Zig!\"",
+      "decoy": true
+    },
+    {
+      "id": "decoy_greeting_1",
+      "code": "\"Hi, my name is Zig\"",
+      "decoy": true
+    },
+    {
+      "id": "decoy_greeting_2",
+      "code": "\"My name is Zig!\"",
+      "decoy": true
+    }
+  ],
+  "prompt": "Build a function that returns a personal greeting."
+}

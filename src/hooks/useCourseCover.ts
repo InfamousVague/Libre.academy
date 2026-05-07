@@ -86,11 +86,18 @@ function fetchCover(courseId: string, cacheBust?: number): Promise<Resolved> {
   return p;
 }
 
-/// Prime the cache for a batch of courses. Resolves when every IPC
-/// has settled (success OR failure — failures cache as `null` so the
+/// Prime the cache for a batch of courses. Resolves when the batch
+/// IPC settles (success OR failure — failures cache as `null` so the
 /// caller's fallback tile renders). Returns the number of covers
-/// actually fetched (cache hits are excluded from the count so the
-/// library's "loading N covers" label stays honest on re-opens).
+/// actually fetched (cache hits are excluded so the library's
+/// "loading N covers" label stays honest on re-opens).
+///
+/// One IPC for the whole batch instead of N parallel invokes —
+/// Tauri's command pipeline serialises through a single dispatcher
+/// even when JS fires Promise.all, so per-message overhead used to
+/// dominate library cold start. The batch endpoint
+/// (`load_course_covers`) does the same per-cover resolution server-
+/// side and returns one map.
 export async function prefetchCovers(
   entries: Array<{ courseId: string; cacheBust?: number }>,
 ): Promise<number> {
@@ -99,19 +106,48 @@ export async function prefetchCovers(
   // here. Returning 0 keeps the library's "loading N covers"
   // label honest (no covers were fetched, because none needed to
   // be). Skipping this stops the kata invoke stub from throwing
-  // "TAURI_UNAVAILABLE: load_course_cover" once per course on
+  // "TAURI_UNAVAILABLE: load_course_covers" once per course on
   // page boot, which (caught or not) bloats the Safari console.
   if (isWeb) return 0;
 
-  let fetched = 0;
-  await Promise.all(
-    entries.map(async (e) => {
-      const key = cacheKey(e.courseId, e.cacheBust);
-      if (!resolved.has(key) && !inflight.has(key)) fetched += 1;
-      await fetchCover(e.courseId, e.cacheBust);
-    }),
-  );
-  return fetched;
+  // Filter out anything already resolved or in-flight — one fewer
+  // course to ship across the bridge.
+  const needed: Array<{ courseId: string; cacheBust?: number; key: string }> =
+    [];
+  for (const e of entries) {
+    const key = cacheKey(e.courseId, e.cacheBust);
+    if (resolved.has(key) || inflight.has(key)) continue;
+    needed.push({ ...e, key });
+  }
+  if (needed.length === 0) return 0;
+
+  // Mark every "needed" entry as in-flight against the same shared
+  // promise so per-card mounts that fire before this resolves dedupe
+  // onto it instead of firing their own single-course IPCs.
+  const ids = needed.map((e) => e.courseId);
+  const batch = (async () => {
+    try {
+      return await invoke<Record<string, string | null>>("load_course_covers", {
+        courseIds: ids,
+      });
+    } catch {
+      return null;
+    }
+  })();
+  for (const e of needed) {
+    inflight.set(
+      e.key,
+      batch.then((map) => {
+        const url = map ? (map[e.courseId] ?? null) : null;
+        resolved.set(e.key, url);
+        inflight.delete(e.key);
+        notify(e.key);
+        return url;
+      }),
+    );
+  }
+  await batch;
+  return needed.length;
 }
 
 export function useCourseCover(

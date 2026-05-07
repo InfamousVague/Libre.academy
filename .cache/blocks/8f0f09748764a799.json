@@ -1,0 +1,104 @@
+{
+  "template": "\nconst std = @import(\"std\");\n\npub const Counter = struct {\n    value: u32 = __SLOT_default__,\n\n    pub fn increment(self: __SLOT_self_mut__) void {\n        self.value += 1;\n    }\n\n    pub fn get(self: Counter) __SLOT_return_type__ {\n        return __SLOT_return_expr__;\n    }\n};\n",
+  "slots": [
+    {
+      "id": "default",
+      "expectedBlockId": "slot_default",
+      "hint": "initial"
+    },
+    {
+      "id": "self_mut",
+      "expectedBlockId": "slot_self_mut",
+      "hint": "pointer"
+    },
+    {
+      "id": "return_type",
+      "expectedBlockId": "slot_return_type",
+      "hint": "type"
+    },
+    {
+      "id": "return_expr",
+      "expectedBlockId": "slot_return_expr",
+      "hint": "field"
+    }
+  ],
+  "pool": [
+    {
+      "id": "slot_default",
+      "code": "0"
+    },
+    {
+      "id": "decoy_default_0",
+      "code": "1",
+      "decoy": true
+    },
+    {
+      "id": "decoy_default_1",
+      "code": "null",
+      "decoy": true
+    },
+    {
+      "id": "decoy_default_2",
+      "code": "undefined",
+      "decoy": true
+    },
+    {
+      "id": "slot_self_mut",
+      "code": "*Counter"
+    },
+    {
+      "id": "decoy_self_mut_0",
+      "code": "Counter",
+      "decoy": true
+    },
+    {
+      "id": "decoy_self_mut_1",
+      "code": "&Counter",
+      "decoy": true
+    },
+    {
+      "id": "decoy_self_mut_2",
+      "code": "*const Counter",
+      "decoy": true
+    },
+    {
+      "id": "slot_return_type",
+      "code": "u32"
+    },
+    {
+      "id": "decoy_return_type_0",
+      "code": "void",
+      "decoy": true
+    },
+    {
+      "id": "decoy_return_type_1",
+      "code": "u64",
+      "decoy": true
+    },
+    {
+      "id": "decoy_return_type_2",
+      "code": "i32",
+      "decoy": true
+    },
+    {
+      "id": "slot_return_expr",
+      "code": "self.value"
+    },
+    {
+      "id": "decoy_return_expr_0",
+      "code": "value",
+      "decoy": true
+    },
+    {
+      "id": "decoy_return_expr_1",
+      "code": "self",
+      "decoy": true
+    },
+    {
+      "id": "decoy_return_expr_2",
+      "code": "Counter.value",
+      "decoy": true
+    }
+  ],
+  "prompt": "Complete the Counter struct with a default value, mutable increment method, and immutable get method."
+}

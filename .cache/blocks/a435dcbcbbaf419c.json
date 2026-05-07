@@ -1,0 +1,80 @@
+{
+  "template": "\nconst std = @import(\"std\");\n\npub fn allocateAndFill(allocator: std.mem.Allocator, n: usize, value: i32) ![]i32 {\n    const buf = __SLOT_alloc_call__;\n    for (buf) |*c| {\n        __SLOT_deref__ = value;\n    }\n    return __SLOT_return_val__;\n}\n",
+  "slots": [
+    {
+      "id": "alloc_call",
+      "expectedBlockId": "slot_alloc_call",
+      "hint": "allocation"
+    },
+    {
+      "id": "deref",
+      "expectedBlockId": "slot_deref",
+      "hint": "pointer"
+    },
+    {
+      "id": "return_val",
+      "expectedBlockId": "slot_return_val",
+      "hint": "identifier"
+    }
+  ],
+  "pool": [
+    {
+      "id": "slot_alloc_call",
+      "code": "try allocator.alloc(i32, n)"
+    },
+    {
+      "id": "decoy_alloc_call_0",
+      "code": "allocator.alloc(i32, n)",
+      "decoy": true
+    },
+    {
+      "id": "decoy_alloc_call_1",
+      "code": "try allocator.create(i32)",
+      "decoy": true
+    },
+    {
+      "id": "decoy_alloc_call_2",
+      "code": "try allocator.alloc(u32, n)",
+      "decoy": true
+    },
+    {
+      "id": "slot_deref",
+      "code": "c.*"
+    },
+    {
+      "id": "decoy_deref_0",
+      "code": "c",
+      "decoy": true
+    },
+    {
+      "id": "decoy_deref_1",
+      "code": "*c",
+      "decoy": true
+    },
+    {
+      "id": "decoy_deref_2",
+      "code": "buf.*",
+      "decoy": true
+    },
+    {
+      "id": "slot_return_val",
+      "code": "buf"
+    },
+    {
+      "id": "decoy_return_val_0",
+      "code": "c",
+      "decoy": true
+    },
+    {
+      "id": "decoy_return_val_1",
+      "code": "&buf",
+      "decoy": true
+    },
+    {
+      "id": "decoy_return_val_2",
+      "code": "buf.*",
+      "decoy": true
+    }
+  ],
+  "prompt": "Allocate a slice and fill it with a value, returning the allocated memory to the caller."
+}

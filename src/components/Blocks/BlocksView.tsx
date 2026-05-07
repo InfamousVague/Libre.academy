@@ -89,6 +89,13 @@ interface Props {
   /// blocks mode. Mobile doesn't surface an editor so it can
   /// safely ignore this.
   onSolutionAccepted?: (files: import("../../data/types").WorkbenchFile[]) => void;
+  /// Mirror of the editor's mode toggle — surfaced inside the
+  /// blocks header so a learner who solved (or got stuck) in blocks
+  /// can flip to the free-form editor without scrolling out of the
+  /// workbench. Mobile leaves this undefined; the toggle never
+  /// renders there.
+  exerciseMode?: "editor" | "blocks";
+  onExerciseModeChange?: (mode: "editor" | "blocks") => void;
 }
 
 /// Map from slot id → currently-placed block id (or undefined if
@@ -139,6 +146,8 @@ export default function BlocksView({
   storageKey,
   onComplete,
   onSolutionAccepted,
+  exerciseMode,
+  onExerciseModeChange,
 }: Props) {
   const blocks = lesson.blocks;
   // Pure guard — if a lesson without blocks data hits this view, we
@@ -160,6 +169,8 @@ export default function BlocksView({
       storageKey={storageKey}
       onComplete={onComplete}
       onSolutionAccepted={onSolutionAccepted}
+      exerciseMode={exerciseMode}
+      onExerciseModeChange={onExerciseModeChange}
     />
   );
 }
@@ -168,7 +179,15 @@ interface InnerProps extends Props {
   blocks: BlocksData;
 }
 
-function BlocksViewInner({ lesson, blocks, storageKey, onComplete, onSolutionAccepted }: InnerProps) {
+function BlocksViewInner({
+  lesson,
+  blocks,
+  storageKey,
+  onComplete,
+  onSolutionAccepted,
+  exerciseMode,
+  onExerciseModeChange,
+}: InnerProps) {
   const persistKey = `fb:blocks:${storageKey ?? lesson.id}`;
   const [placements, setPlacements] = useState<Placements>(() => {
     // Persist the in-progress placements per lesson so the learner
@@ -560,7 +579,55 @@ function BlocksViewInner({ lesson, blocks, storageKey, onComplete, onSolutionAcc
         <span className="fb-blocks__sr-live" role="status" aria-live="polite">
           {liveMessage}
         </span>
-        {blocks.prompt && <p className="fb-blocks__prompt">{blocks.prompt}</p>}
+        {/* Header row: Editor/Blocks toggle on the left (mirrors the
+            same control in EditorPane so switching feels symmetric),
+            optional prompt narration on the right. Only renders when
+            the parent provided the toggle wiring (i.e. desktop with
+            authored blocks data) — mobile + lessons without blocks
+            data hide the row entirely. */}
+        {(onExerciseModeChange || blocks.prompt) && (
+          <div className="fb-blocks__header">
+            {exerciseMode && onExerciseModeChange ? (
+              <div
+                className="fb-blocks__mode"
+                role="group"
+                aria-label="Exercise mode"
+              >
+                <button
+                  type="button"
+                  className={
+                    "fb-blocks__mode-btn" +
+                    (exerciseMode === "editor"
+                      ? " fb-blocks__mode-btn--active"
+                      : "")
+                  }
+                  onClick={() => onExerciseModeChange("editor")}
+                  aria-pressed={exerciseMode === "editor"}
+                >
+                  Editor
+                </button>
+                <button
+                  type="button"
+                  className={
+                    "fb-blocks__mode-btn" +
+                    (exerciseMode === "blocks"
+                      ? " fb-blocks__mode-btn--active"
+                      : "")
+                  }
+                  onClick={() => onExerciseModeChange("blocks")}
+                  aria-pressed={exerciseMode === "blocks"}
+                >
+                  Blocks
+                </button>
+              </div>
+            ) : (
+              <span aria-hidden />
+            )}
+            {blocks.prompt && (
+              <p className="fb-blocks__prompt">{blocks.prompt}</p>
+            )}
+          </div>
+        )}
 
         <pre className="fb-blocks__template shiki" aria-label="Code template">
           {renderedLines.map((line, lineIdx) => (
@@ -672,7 +739,21 @@ function BlocksViewInner({ lesson, blocks, storageKey, onComplete, onSolutionAcc
 
       <DragOverlay>
         {activeBlock ? (
-          <div className="fb-blocks__chip fb-blocks__chip--ghost">
+          <div
+            className={
+              "fb-blocks__chip fb-blocks__chip--ghost" +
+              // When dragging from a slot, the source chip has zero
+              // padding + transparent background (`--placed` style).
+              // Without matching the ghost to that, the overlay renders
+              // a wider boxed chip and sits offset from where the
+              // source actually was — reads as "the drag preview is
+              // misaligned from the cursor." Match the variant so the
+              // visual size stays identical to the source.
+              (activeDragId?.startsWith(DRAG_FROM_SLOT)
+                ? " fb-blocks__chip--placed"
+                : "")
+            }
+          >
             <code>
               <ChipCode
                 code={activeBlock.code}

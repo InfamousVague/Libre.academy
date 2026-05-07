@@ -25,10 +25,58 @@
   color: var(--color-text-secondary);
 }
 
+/* Header row: hosts the Editor / Blocks mode toggle on the left
+   (mirrors the same control in EditorPane so switching feels
+   symmetric across the two surfaces) and the optional prompt
+   narration on the right. Wraps onto two lines on narrow screens. */
+.fb-blocks__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
 .fb-blocks__prompt {
   margin: 0;
   font-size: 14px;
   color: var(--color-text-secondary);
+  flex: 1;
+  min-width: 0;
+}
+
+.fb-blocks__mode {
+  display: inline-flex;
+  gap: 0;
+  padding: 2px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--fb-radius-sm);
+  flex-shrink: 0;
+}
+
+.fb-blocks__mode-btn {
+  padding: 2px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: 0;
+  border-radius: calc(var(--fb-radius-sm) - 2px);
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    color 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fb-blocks__mode-btn:hover:not(.fb-blocks__mode-btn--active) {
+  color: var(--color-text-primary);
+}
+
+.fb-blocks__mode-btn--active {
+  background: var(--color-text-primary);
+  color: var(--color-bg-primary);
 }
 
 /* ── Template ──────────────────────────────────────────────────── */
@@ -164,8 +212,13 @@
   font-size: 13px;
   line-height: 1.4;
   white-space: nowrap;
+  /* DO NOT add `transform` to the transition list. dnd-kit applies
+     a per-frame `transform: translate3d(...)` to the chip while
+     dragging — if CSS interpolates that, the chip lags ~80ms behind
+     the cursor, which reads as "drag is broken / chip doesn't line
+     up with the mouse." Box-shadow + border-color are fine to ease;
+     they're not touched during drag. */
   transition:
-    transform 80ms ease,
     box-shadow 120ms ease,
     border-color 120ms ease;
   -webkit-tap-highlight-color: transparent;

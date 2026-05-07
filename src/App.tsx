@@ -95,16 +95,12 @@ export default function App() {
     hydrating,
   } = useCourses();
 
-  // Desktop hides drill-style lesson kinds (puzzle / cloze / micropuzzle)
-  // from every navigation surface — they're mobile/watch-first formats
-  // designed for big tap targets, and on desktop the underlying
-  // `ExerciseLesson` they auto-derive from is the better presentation.
-  // Stats and completion records still credit drill completions; we keep
-  // `coursesAll` around for `useStreakAndXp` so XP / streak stay correct
-  // across devices. Every other downstream consumer (Sidebar, Library,
-  // CommandPalette, ProfileView, tab tracker, lesson lookup) gets the
-  // filtered list — see `filterCourseForDesktop` in data/types.ts for
-  // the rule.
+  // `filterCourseForDesktop` used to strip mobile-only drill lesson
+  // kinds (puzzle / cloze / micropuzzle) from every desktop nav
+  // surface. Those kinds were retired in favour of the unified
+  // BlocksData render mode — the helper is now an identity
+  // pass-through kept only for ABI compatibility. Eventually we
+  // collapse this to `const courses = coursesAll;`.
   const courses = useMemo(
     () => coursesAll.map(filterCourseForDesktop),
     [coursesAll],
@@ -1012,10 +1008,14 @@ export default function App() {
         }`}
         aria-hidden={coursesLoaded}
       >
-        {/* Ambient halftone-dot gradient sits behind the spinner so
-            the cold-start screen doesn't read as a flat black rectangle.
-            Drifts on a 22s loop; honors prefers-reduced-motion. */}
-        <DottedGradientBg />
+        {/* Boot screen is intentionally a flat surface — just the
+            spinner against the app's `--color-bg-primary`. The
+            DottedGradientBg drift used to live here but was loud
+            for a screen the learner only sees for a beat at app
+            cold-start; the always-on corner gradient (rendered via
+            the sibling `<DottedGradientBg variant="corner" />` at
+            the App shell level) carries the visual identity for
+            every other screen. */}
         <FishbonesLoader label="loading Fishbones…" />
       </div>
 
@@ -1213,12 +1213,14 @@ export default function App() {
                   ) : (
                     <>
                       <button
+                        type="button"
                         className="fishbones__welcome-primary"
                         onClick={() => setImportOpen(true)}
                       >
                         Import a PDF
                       </button>
                       <button
+                        type="button"
                         className="fishbones__welcome-secondary"
                         onClick={() => setSettingsOpen(true)}
                       >

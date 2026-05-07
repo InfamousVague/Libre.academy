@@ -9,10 +9,11 @@
 /// so progress, streak/XP, and account state flow through the existing
 /// storage and relay backends without per-platform branches.
 
-import { useLayoutEffect, useMemo, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { useCourses } from "../hooks/useCourses";
 import { useProgress } from "../hooks/useProgress";
 import { useFishbonesCloud } from "../hooks/useFishbonesCloud";
+import { useRealtimeSync } from "../hooks/useRealtimeSync";
 import { useStreakAndXp } from "../hooks/useStreakAndXp";
 import type { Course, Lesson } from "../data/types";
 import MobileLibrary from "./MobileLibrary";
@@ -38,6 +39,71 @@ export default function MobileApp() {
   const { completed, history, markCompleted, resetProgress } = useProgress();
   const cloud = useFishbonesCloud();
   const stats = useStreakAndXp(history, courses);
+
+  /// Real-time cross-device sync. Identical wiring to the desktop
+  /// App.tsx — pulls progress / solutions / settings on sign-in,
+  /// subscribes to the relay's WS bus, and exposes debounced push
+  /// helpers that `markCompleted` below feeds into. Without this
+  /// the phone stayed silent on the sync bus: the desktop's writes
+  /// landed but the phone never echoed its own back, so a lesson
+  /// marked complete on the phone never showed up on the desktop
+  /// (and vice-versa).
+  const realtime = useRealtimeSync({
+    cloud,
+    applyProgress: useCallback(
+      (rows: Array<{ course_id: string; lesson_id: string }>) => {
+        for (const r of rows) markCompleted(r.course_id, r.lesson_id);
+      },
+      [markCompleted],
+    ),
+    applySolutions: useCallback(
+      (
+        rows: Array<{ course_id: string; lesson_id: string; content: string }>,
+      ) => {
+        // Persist into the same workbench-localStorage key the desktop
+        // uses, so the next mount of the lesson picks up the synced
+        // version. Mobile doesn't render the workbench tab strip —
+        // lessons run via a single solution string — but the storage
+        // key shape is shared and deterministic.
+        for (const r of rows) {
+          try {
+            const key = `kata:workbench:v1:${r.course_id}:${r.lesson_id}`;
+            const previous = localStorage.getItem(key);
+            const sig = previous
+              ? (JSON.parse(previous) as { signature?: string }).signature ??
+                ""
+              : "";
+            const parsed = JSON.parse(r.content) as unknown;
+            const files = Array.isArray(parsed) ? parsed : null;
+            if (!files) continue;
+            localStorage.setItem(
+              key,
+              JSON.stringify({
+                signature: sig,
+                files,
+                savedAt: Date.now(),
+              }),
+            );
+          } catch {
+            /* swallow — best-effort sync */
+          }
+        }
+      },
+      [],
+    ),
+    applySettings: useCallback(
+      (rows: Array<{ key: string; value: string }>) => {
+        for (const r of rows) {
+          try {
+            localStorage.setItem(r.key, r.value);
+          } catch {
+            /* swallow */
+          }
+        }
+      },
+      [],
+    ),
+  });
   const [view, setView] = useState<View>("library");
   const [active, setActive] = useState<ActiveLesson | null>(null);
   const [signInOpen, setSignInOpen] = useState(false);
@@ -114,6 +180,15 @@ export default function MobileApp() {
   const onComplete = () => {
     if (!active || !lesson) return;
     void markCompleted(active.course.id, lesson.id);
+    // Mirror to the realtime sync bus so the desktop (and other phones
+    // signed into the same account) see this lesson tick green within
+    // a network round-trip. Coalesced + fire-and-forget — the local
+    // mark already succeeded, the relay echo is best-effort.
+    realtime.pushProgress({
+      course_id: active.course.id,
+      lesson_id: lesson.id,
+      completed_at: new Date().toISOString(),
+    });
     goNext();
   };
 

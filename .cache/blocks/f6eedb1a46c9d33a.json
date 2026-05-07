@@ -1,0 +1,80 @@
+{
+  "template": "\nconst std = @import(\"std\");\n\npub fn isPowerOfTwo(comptime n: u64) bool {\n    return n != __SLOT_zero__ and (n & (n - __SLOT_offset__)) == __SLOT_result__;\n}\n",
+  "slots": [
+    {
+      "id": "zero",
+      "expectedBlockId": "slot_zero",
+      "hint": "zero-check"
+    },
+    {
+      "id": "offset",
+      "expectedBlockId": "slot_offset",
+      "hint": "offset"
+    },
+    {
+      "id": "result",
+      "expectedBlockId": "slot_result",
+      "hint": "expected"
+    }
+  ],
+  "pool": [
+    {
+      "id": "slot_zero",
+      "code": "0"
+    },
+    {
+      "id": "decoy_zero_0",
+      "code": "1",
+      "decoy": true
+    },
+    {
+      "id": "decoy_zero_1",
+      "code": "null",
+      "decoy": true
+    },
+    {
+      "id": "decoy_zero_2",
+      "code": "false",
+      "decoy": true
+    },
+    {
+      "id": "slot_offset",
+      "code": "1"
+    },
+    {
+      "id": "decoy_offset_0",
+      "code": "0",
+      "decoy": true
+    },
+    {
+      "id": "decoy_offset_1",
+      "code": "2",
+      "decoy": true
+    },
+    {
+      "id": "decoy_offset_2",
+      "code": "n",
+      "decoy": true
+    },
+    {
+      "id": "slot_result",
+      "code": "0"
+    },
+    {
+      "id": "decoy_result_0",
+      "code": "1",
+      "decoy": true
+    },
+    {
+      "id": "decoy_result_1",
+      "code": "n",
+      "decoy": true
+    },
+    {
+      "id": "decoy_result_2",
+      "code": "true",
+      "decoy": true
+    }
+  ],
+  "prompt": "Fill in the power-of-two bit trick using the classic `n & (n - 1)` pattern."
+}

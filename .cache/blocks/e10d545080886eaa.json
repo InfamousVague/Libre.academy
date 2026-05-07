@@ -1,0 +1,152 @@
+{
+  "template": "\nconst std = @import(\"std\");\n\npub fn swap(a: *i32, b: *i32) void {\n    const __SLOT_tmp_decl__ = __SLOT_read_a__;\n    __SLOT_write_a__ = __SLOT_read_b__;\n    __SLOT_write_b__ = __SLOT_tmp_val__;\n}\n",
+  "slots": [
+    {
+      "id": "tmp_decl",
+      "expectedBlockId": "slot_tmp_decl",
+      "hint": "variable"
+    },
+    {
+      "id": "read_a",
+      "expectedBlockId": "slot_read_a",
+      "hint": "dereference"
+    },
+    {
+      "id": "write_a",
+      "expectedBlockId": "slot_write_a",
+      "hint": "dereference"
+    },
+    {
+      "id": "read_b",
+      "expectedBlockId": "slot_read_b",
+      "hint": "dereference"
+    },
+    {
+      "id": "write_b",
+      "expectedBlockId": "slot_write_b",
+      "hint": "dereference"
+    },
+    {
+      "id": "tmp_val",
+      "expectedBlockId": "slot_tmp_val",
+      "hint": "variable"
+    }
+  ],
+  "pool": [
+    {
+      "id": "slot_tmp_decl",
+      "code": "tmp"
+    },
+    {
+      "id": "decoy_tmp_decl_0",
+      "code": "temp",
+      "decoy": true
+    },
+    {
+      "id": "decoy_tmp_decl_1",
+      "code": "t",
+      "decoy": true
+    },
+    {
+      "id": "decoy_tmp_decl_2",
+      "code": "swap_tmp",
+      "decoy": true
+    },
+    {
+      "id": "slot_read_a",
+      "code": "a.*"
+    },
+    {
+      "id": "decoy_read_a_0",
+      "code": "*a",
+      "decoy": true
+    },
+    {
+      "id": "decoy_read_a_1",
+      "code": "a",
+      "decoy": true
+    },
+    {
+      "id": "decoy_read_a_2",
+      "code": "&a",
+      "decoy": true
+    },
+    {
+      "id": "slot_write_a",
+      "code": "a.*"
+    },
+    {
+      "id": "decoy_write_a_0",
+      "code": "*a",
+      "decoy": true
+    },
+    {
+      "id": "decoy_write_a_1",
+      "code": "a",
+      "decoy": true
+    },
+    {
+      "id": "decoy_write_a_2",
+      "code": "&a",
+      "decoy": true
+    },
+    {
+      "id": "slot_read_b",
+      "code": "b.*"
+    },
+    {
+      "id": "decoy_read_b_0",
+      "code": "*b",
+      "decoy": true
+    },
+    {
+      "id": "decoy_read_b_1",
+      "code": "b",
+      "decoy": true
+    },
+    {
+      "id": "decoy_read_b_2",
+      "code": "&b",
+      "decoy": true
+    },
+    {
+      "id": "slot_write_b",
+      "code": "b.*"
+    },
+    {
+      "id": "decoy_write_b_0",
+      "code": "*b",
+      "decoy": true
+    },
+    {
+      "id": "decoy_write_b_1",
+      "code": "b",
+      "decoy": true
+    },
+    {
+      "id": "decoy_write_b_2",
+      "code": "&b",
+      "decoy": true
+    },
+    {
+      "id": "slot_tmp_val",
+      "code": "tmp"
+    },
+    {
+      "id": "decoy_tmp_val_0",
+      "code": "a.*",
+      "decoy": true
+    },
+    {
+      "id": "decoy_tmp_val_1",
+      "code": "b.*",
+      "decoy": true
+    },
+    {
+      "id": "decoy_tmp_val_2",
+      "code": "temp",
+      "decoy": true
+    }
+  ],
+  "prompt": "Fill in the blanks to swap two values using pointer dereferencing."
+}

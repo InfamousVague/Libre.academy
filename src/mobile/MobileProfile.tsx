@@ -103,11 +103,13 @@ const LANG_LABELS: Partial<Record<LanguageId, string>> = {
 const XP_PER_KIND: Record<string, number> = {
   reading: 5,
   quiz: 10,
+  exercise: 20,
+  mixed: 20,
+  // Retired lesson kinds — kept for backward compat with completion
+  // records logged before the blocks-mode migration.
   cloze: 10,
   micropuzzle: 10,
   puzzle: 15,
-  exercise: 20,
-  mixed: 20,
 };
 
 function timeAgo(unixSeconds: number): string {

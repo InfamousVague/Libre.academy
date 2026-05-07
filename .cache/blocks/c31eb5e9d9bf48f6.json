@@ -1,0 +1,128 @@
+{
+  "template": "\nconst std = @import(\"std\");\n\npub fn fibonacciCountBelow(limit: u64) u32 {\n    var a: u64 = __SLOT_init_a__;\n    var b: u64 = __SLOT_init_b__;\n    var count: u32 = __SLOT_init_count__;\n    while (__SLOT_condition__) {\n        count += 1;\n        const next = __SLOT_next_expr__;\n        a = b;\n        b = next;\n    }\n    return count;\n}\n\n",
+  "slots": [
+    {
+      "id": "init_a",
+      "expectedBlockId": "slot_init_a",
+      "hint": "first"
+    },
+    {
+      "id": "init_b",
+      "expectedBlockId": "slot_init_b",
+      "hint": "second"
+    },
+    {
+      "id": "init_count",
+      "expectedBlockId": "slot_init_count",
+      "hint": "counter"
+    },
+    {
+      "id": "condition",
+      "expectedBlockId": "slot_condition",
+      "hint": "loop_test"
+    },
+    {
+      "id": "next_expr",
+      "expectedBlockId": "slot_next_expr",
+      "hint": "fibonacci_sum"
+    }
+  ],
+  "pool": [
+    {
+      "id": "slot_init_a",
+      "code": "0"
+    },
+    {
+      "id": "decoy_init_a_0",
+      "code": "1",
+      "decoy": true
+    },
+    {
+      "id": "decoy_init_a_1",
+      "code": "limit",
+      "decoy": true
+    },
+    {
+      "id": "decoy_init_a_2",
+      "code": "b",
+      "decoy": true
+    },
+    {
+      "id": "slot_init_b",
+      "code": "1"
+    },
+    {
+      "id": "decoy_init_b_0",
+      "code": "0",
+      "decoy": true
+    },
+    {
+      "id": "decoy_init_b_1",
+      "code": "2",
+      "decoy": true
+    },
+    {
+      "id": "decoy_init_b_2",
+      "code": "a",
+      "decoy": true
+    },
+    {
+      "id": "slot_init_count",
+      "code": "0"
+    },
+    {
+      "id": "decoy_init_count_0",
+      "code": "1",
+      "decoy": true
+    },
+    {
+      "id": "decoy_init_count_1",
+      "code": "2",
+      "decoy": true
+    },
+    {
+      "id": "decoy_init_count_2",
+      "code": "limit",
+      "decoy": true
+    },
+    {
+      "id": "slot_condition",
+      "code": "a < limit"
+    },
+    {
+      "id": "decoy_condition_0",
+      "code": "b < limit",
+      "decoy": true
+    },
+    {
+      "id": "decoy_condition_1",
+      "code": "a <= limit",
+      "decoy": true
+    },
+    {
+      "id": "decoy_condition_2",
+      "code": "count < limit",
+      "decoy": true
+    },
+    {
+      "id": "slot_next_expr",
+      "code": "a + b"
+    },
+    {
+      "id": "decoy_next_expr_0",
+      "code": "b + a",
+      "decoy": true
+    },
+    {
+      "id": "decoy_next_expr_1",
+      "code": "a + 1",
+      "decoy": true
+    },
+    {
+      "id": "decoy_next_expr_2",
+      "code": "b + 1",
+      "decoy": true
+    }
+  ],
+  "prompt": "Fill in the Fibonacci generator logic to count numbers below the limit."
+}

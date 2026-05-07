@@ -799,6 +799,37 @@ pub fn load_course_cover(
     Ok(None)
 }
 
+/// Batch variant of `load_course_cover` — takes a list of course ids
+/// and returns a map of id → data-URL (or `null` for courses without
+/// covers). Library mount calls this with every visible course id
+/// up front, then walks the result to populate the per-card cover
+/// cache. ONE round-trip across the IPC bus instead of N parallel
+/// invokes, which cuts library cold-start by hundreds of ms in
+/// practice — even though Promise.all dispatched the originals in
+/// parallel, Tauri 2's command pipeline serialises through a single
+/// dispatcher and the per-message overhead adds up.
+///
+/// File reads are still sequential server-side; on SSDs that's a few
+/// ms total for the typical library size and isn't worth a thread-
+/// pool. Bumping to rayon::par_iter() is an option if libraries grow
+/// past ~100 courses.
+#[tauri::command]
+pub fn load_course_covers(
+    app: tauri::AppHandle,
+    course_ids: Vec<String>,
+) -> Result<std::collections::HashMap<String, Option<String>>, String> {
+    let mut out = std::collections::HashMap::with_capacity(course_ids.len());
+    for id in course_ids {
+        // Reuse the single-cover path so the resolution rules
+        // (installed → bundled-by-name → bundled-by-id) stay in one
+        // place. Errors fall through as `None` — the per-card UI's
+        // fallback tile renders for any course missing a cover.
+        let value = load_course_cover(app.clone(), id.clone()).unwrap_or(None);
+        out.insert(id, value);
+    }
+    Ok(out)
+}
+
 /// Pull a cover image (anywhere in the archive) out of a `.fishbones`.
 /// Returns `Ok(None)` when the archive doesn't carry one — common for
 /// older / hand-built packs that pre-date cover artwork.

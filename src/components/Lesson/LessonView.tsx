@@ -560,40 +560,12 @@ export default function LessonView({
               onInstalled={() => setTcRefresh((n) => n + 1)}
             />
           )}
-          {exerciseHasBlocks && (
-            // Editor / Blocks toggle. Only renders when the lesson
-            // ships authored blocks data — without it, the toggle
-            // would land the learner in a broken view. Stored per
-            // lesson so each learner's preference is sticky.
-            <div className="fishbones__lesson-mode-toggle" role="group" aria-label="Exercise mode">
-              <button
-                type="button"
-                className={
-                  "fishbones__lesson-mode-btn" +
-                  (effectiveExerciseMode === "editor"
-                    ? " fishbones__lesson-mode-btn--active"
-                    : "")
-                }
-                onClick={() => setExerciseMode("editor")}
-                aria-pressed={effectiveExerciseMode === "editor"}
-              >
-                Editor
-              </button>
-              <button
-                type="button"
-                className={
-                  "fishbones__lesson-mode-btn" +
-                  (effectiveExerciseMode === "blocks"
-                    ? " fishbones__lesson-mode-btn--active"
-                    : "")
-                }
-                onClick={() => setExerciseMode("blocks")}
-                aria-pressed={effectiveExerciseMode === "blocks"}
-              >
-                Blocks
-              </button>
-            </div>
-          )}
+          {/* Editor / Blocks toggle moved INTO the editor's header
+              (and BlocksView's prompt row when in blocks mode), so
+              the workbench-wrap no longer renders a standalone
+              toggle here. The mode prop is passed through to
+              whichever view is mounted; both views show the same
+              segmented control so switching feels symmetric. */}
           {effectiveExerciseMode === "blocks" ? (
             // Blocks mode owns its own template/pool/output layout —
             // no Workbench split, no EditorPane. Verification still
@@ -609,6 +581,10 @@ export default function LessonView({
               lesson={lesson as ExerciseLesson | MixedLesson}
               onComplete={onComplete}
               onSolutionAccepted={(blockFiles) => setFiles(blockFiles)}
+              exerciseMode={effectiveExerciseMode}
+              onExerciseModeChange={
+                exerciseHasBlocks ? setExerciseMode : undefined
+              }
             />
           ) : useFloatingPhone ? (
             // RN-course path — editor takes the full workbench width
@@ -629,6 +605,12 @@ export default function LessonView({
                 onReset={handleReset}
                 onRevealSolution={handleRevealSolution}
                 onPopOut={handlePopOut}
+                exerciseMode={
+                  exerciseHasBlocks ? effectiveExerciseMode : undefined
+                }
+                onExerciseModeChange={
+                  exerciseHasBlocks ? setExerciseMode : undefined
+                }
               />
             </div>
           ) : (
@@ -646,6 +628,12 @@ export default function LessonView({
                   onReset={handleReset}
                   onRevealSolution={handleRevealSolution}
                   onPopOut={handlePopOut}
+                  exerciseMode={
+                    exerciseHasBlocks ? effectiveExerciseMode : undefined
+                  }
+                  onExerciseModeChange={
+                    exerciseHasBlocks ? setExerciseMode : undefined
+                  }
                 />
               }
               output={

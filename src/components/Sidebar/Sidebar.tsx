@@ -459,6 +459,7 @@ export default function Sidebar({
           <div className="fishbones__context-menu-label">{menu.courseTitle}</div>
           {onCourseSettings && (
             <button
+              type="button"
               className="fishbones__context-menu-item"
               onClick={() => {
                 onCourseSettings(menu.courseId);
@@ -473,6 +474,7 @@ export default function Sidebar({
           )}
           {onExportCourse && (
             <button
+              type="button"
               className="fishbones__context-menu-item"
               onClick={() => {
                 onExportCourse(menu.courseId, menu.courseTitle);
@@ -491,6 +493,7 @@ export default function Sidebar({
               Settings/Export rows, NOT like the Delete row. */}
           {onResetCourse && (
             <button
+              type="button"
               className="fishbones__context-menu-item"
               onClick={() => {
                 onResetCourse(menu.courseId);
@@ -508,6 +511,7 @@ export default function Sidebar({
               {/* Separator between non-destructive and destructive actions. */}
               <div className="fishbones__context-menu-sep" aria-hidden />
               <button
+                type="button"
                 className="fishbones__context-menu-item fishbones__context-menu-item--danger"
                 onClick={() => {
                   onDeleteCourse(menu.courseId, menu.courseTitle);
@@ -533,6 +537,7 @@ export default function Sidebar({
         >
           <div className="fishbones__context-menu-label">{chapterMenu.chapterTitle}</div>
           <button
+            type="button"
             className="fishbones__context-menu-item"
             onClick={() => {
               onResetChapter(chapterMenu.courseId, chapterMenu.lessonIds);
@@ -556,6 +561,7 @@ export default function Sidebar({
         >
           <div className="fishbones__context-menu-label">{lessonMenu.lessonTitle}</div>
           <button
+            type="button"
             className="fishbones__context-menu-item"
             onClick={() => {
               onResetLesson(lessonMenu.courseId, lessonMenu.lessonId);

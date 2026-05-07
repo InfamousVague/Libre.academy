@@ -1,3 +1,8 @@
+import { useState } from "react";
+import { Icon } from "@base/primitives/icon";
+import { copy as copyIcon } from "@base/primitives/icon/icons/copy";
+import { check as checkIcon } from "@base/primitives/icon/icons/check";
+
 const MODEL_OPTIONS: Array<{ id: string; label: string; hint: string }> = [
   {
     id: "claude-sonnet-4-5",
@@ -33,6 +38,28 @@ export default function AiPane({
   model,
   onModelChange,
 }: AiPaneProps) {
+  // Per-field "just copied" flash. Keyed so the Anthropic + OpenAI
+  // copy buttons each get their own check-mark moment without
+  // stomping each other.
+  const [copiedKey, setCopiedKey] = useState<null | "anthropic" | "openai">(
+    null,
+  );
+
+  const copy = async (which: "anthropic" | "openai", value: string) => {
+    if (!value) return;
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedKey(which);
+      window.setTimeout(() => {
+        setCopiedKey((cur) => (cur === which ? null : cur));
+      }, 1400);
+    } catch {
+      // Clipboard write may fail without user-gesture permission
+      // (Tauri WebKit on macOS sometimes rejects). Silent — the
+      // user can still select+copy from the input field manually.
+    }
+  };
+
   return (
     <section>
       <h3 className="fishbones-settings-section">AI-assisted ingest</h3>
@@ -43,15 +70,41 @@ export default function AiPane({
       </p>
       <label className="fishbones-settings-field">
         <span className="fishbones-settings-label">Anthropic API key</span>
-        <input
-          type="password"
-          className="fishbones-settings-input"
-          value={apiKey}
-          onChange={(e) => onApiKeyChange(e.target.value)}
-          placeholder="sk-ant-..."
-          spellCheck={false}
-          autoComplete="off"
-        />
+        <div className="fishbones-settings-input-row">
+          <input
+            type="password"
+            className="fishbones-settings-input"
+            value={apiKey}
+            onChange={(e) => onApiKeyChange(e.target.value)}
+            placeholder="sk-ant-..."
+            spellCheck={false}
+            autoComplete="off"
+          />
+          <button
+            type="button"
+            className="fishbones-settings-input-copy"
+            onClick={() => void copy("anthropic", apiKey)}
+            disabled={!apiKey}
+            aria-label={
+              copiedKey === "anthropic"
+                ? "Copied"
+                : "Copy Anthropic API key to clipboard"
+            }
+            title={
+              apiKey
+                ? copiedKey === "anthropic"
+                  ? "Copied!"
+                  : "Copy to clipboard"
+                : "Add a key first"
+            }
+          >
+            <Icon
+              icon={copiedKey === "anthropic" ? checkIcon : copyIcon}
+              size="xs"
+              color="currentColor"
+            />
+          </button>
+        </div>
       </label>
       <p className="fishbones-settings-note">
         Stored at <code>&lt;app_data_dir&gt;/settings.json</code>. Never
@@ -99,15 +152,41 @@ export default function AiPane({
       </p>
       <label className="fishbones-settings-field">
         <span className="fishbones-settings-label">OpenAI API key</span>
-        <input
-          type="password"
-          className="fishbones-settings-input"
-          value={openaiKey}
-          onChange={(e) => onOpenaiKeyChange(e.target.value)}
-          placeholder="sk-..."
-          spellCheck={false}
-          autoComplete="off"
-        />
+        <div className="fishbones-settings-input-row">
+          <input
+            type="password"
+            className="fishbones-settings-input"
+            value={openaiKey}
+            onChange={(e) => onOpenaiKeyChange(e.target.value)}
+            placeholder="sk-..."
+            spellCheck={false}
+            autoComplete="off"
+          />
+          <button
+            type="button"
+            className="fishbones-settings-input-copy"
+            onClick={() => void copy("openai", openaiKey)}
+            disabled={!openaiKey}
+            aria-label={
+              copiedKey === "openai"
+                ? "Copied"
+                : "Copy OpenAI API key to clipboard"
+            }
+            title={
+              openaiKey
+                ? copiedKey === "openai"
+                  ? "Copied!"
+                  : "Copy to clipboard"
+                : "Add a key first"
+            }
+          >
+            <Icon
+              icon={copiedKey === "openai" ? checkIcon : copyIcon}
+              size="xs"
+              color="currentColor"
+            />
+          </button>
+        </div>
       </label>
       <p className="fishbones-settings-note">
         Stored next to the Anthropic key in{" "}

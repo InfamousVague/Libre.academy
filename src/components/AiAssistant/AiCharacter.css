@@ -51,13 +51,12 @@
     box-shadow 0.25s ease-out,
     filter 0.25s ease-out;
   will-change: transform;
-}
-
-/* Animated hue rotation on the gradient ring. Subtle on idle, faster
-   on streaming/celebrating. The hue-rotate filter only touches the
-   ring (the inner face is white, hue-rotate has no effect on neutral
-   colors) so the icon stays its true black. */
-.fishbones-ai-character {
+  /* Animated hue rotation on the gradient ring. Subtle on idle, faster
+     on streaming/celebrating (which adds a second animation on the
+     transform/box-shadow axes — they don't conflict because each
+     animation touches different properties). The hue-rotate filter
+     only affects the saturated ring; the inner white face is neutral
+     so the icon stays black. */
   animation: fishbones-ai-hue var(--orb-shift) linear infinite;
 }
 

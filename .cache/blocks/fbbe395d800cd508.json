@@ -1,0 +1,128 @@
+{
+  "template": "\nconst std = @import(\"std\");\n\npub fn countVowels(s: []const u8) u32 {\n    var count: u32 = 0;\n    __SLOT_loop_for__ (s) |c| {\n        __SLOT_switch_kw__ (c) {\n            'a', 'e', 'i', 'o', 'u',\n            'A', 'E', 'I', 'O', 'U' => __SLOT_increment__,\n            __SLOT_else_case__ => {},\n        }\n    }\n    return __SLOT_return_val__;\n}\n",
+  "slots": [
+    {
+      "id": "loop_for",
+      "expectedBlockId": "slot_loop_for",
+      "hint": "keyword"
+    },
+    {
+      "id": "switch_kw",
+      "expectedBlockId": "slot_switch_kw",
+      "hint": "keyword"
+    },
+    {
+      "id": "increment",
+      "expectedBlockId": "slot_increment",
+      "hint": "expression"
+    },
+    {
+      "id": "else_case",
+      "expectedBlockId": "slot_else_case",
+      "hint": "keyword"
+    },
+    {
+      "id": "return_val",
+      "expectedBlockId": "slot_return_val",
+      "hint": "identifier"
+    }
+  ],
+  "pool": [
+    {
+      "id": "slot_loop_for",
+      "code": "for"
+    },
+    {
+      "id": "decoy_loop_for_0",
+      "code": "while",
+      "decoy": true
+    },
+    {
+      "id": "decoy_loop_for_1",
+      "code": "foreach",
+      "decoy": true
+    },
+    {
+      "id": "decoy_loop_for_2",
+      "code": "each",
+      "decoy": true
+    },
+    {
+      "id": "slot_switch_kw",
+      "code": "switch"
+    },
+    {
+      "id": "decoy_switch_kw_0",
+      "code": "match",
+      "decoy": true
+    },
+    {
+      "id": "decoy_switch_kw_1",
+      "code": "case",
+      "decoy": true
+    },
+    {
+      "id": "decoy_switch_kw_2",
+      "code": "if",
+      "decoy": true
+    },
+    {
+      "id": "slot_increment",
+      "code": "count += 1"
+    },
+    {
+      "id": "decoy_increment_0",
+      "code": "count + 1",
+      "decoy": true
+    },
+    {
+      "id": "decoy_increment_1",
+      "code": "count++",
+      "decoy": true
+    },
+    {
+      "id": "decoy_increment_2",
+      "code": "count = count + 1",
+      "decoy": true
+    },
+    {
+      "id": "slot_else_case",
+      "code": "else"
+    },
+    {
+      "id": "decoy_else_case_0",
+      "code": "default",
+      "decoy": true
+    },
+    {
+      "id": "decoy_else_case_1",
+      "code": "_",
+      "decoy": true
+    },
+    {
+      "id": "decoy_else_case_2",
+      "code": "otherwise",
+      "decoy": true
+    },
+    {
+      "id": "slot_return_val",
+      "code": "count"
+    },
+    {
+      "id": "decoy_return_val_0",
+      "code": "s",
+      "decoy": true
+    },
+    {
+      "id": "decoy_return_val_1",
+      "code": "c",
+      "decoy": true
+    },
+    {
+      "id": "decoy_return_val_2",
+      "code": "0",
+      "decoy": true
+    }
+  ],
+  "prompt": "Fill in the blanks to count vowels using a for-loop and switch statement."
+}

@@ -838,19 +838,18 @@ export default function CourseLibrary({
                         done={e.done}
                         pct={e.pct}
                         onOpen={() => onOpen(e.course.id)}
-                        onExport={
-                          onExport
-                            ? () => onExport(e.course.id, e.course.title)
-                            : undefined
-                        }
-                        onDelete={
-                          onDelete
-                            ? () => onDelete(e.course.id, e.course.title)
-                            : undefined
-                        }
                         onContextMenu={
-                          onExport || onDelete || onSettings
-                            ? (ev) => ctxMenu.show(e.course, ev)
+                          // Right-click surfaces the same context
+                          // menu the BookCover view uses — Reinstall /
+                          // Export / Settings / Reset / Delete. The
+                          // grid card no longer renders inline action
+                          // buttons; the menu is the single action
+                          // surface.
+                          onExport || onDelete || onSettings || onUpdateCourse
+                            ? (ev) =>
+                                ctxMenu.show(e.course, ev, {
+                                  hasUpdate: !!updates[e.course.id],
+                                })
                             : undefined
                         }
                         // Discover-mode: install affordance per
@@ -865,22 +864,10 @@ export default function CourseLibrary({
                             ? () => void handleInstallClick(e.course.id)
                             : undefined
                         }
-                        // Library-mode: always-on reinstall (re-extract
-                        // bundled archive). Same handler as the
-                        // BookCover update badge — onUpdateCourse —
-                        // surfaced explicitly as a button so users
-                        // don't have to wait for an upstream-changed
-                        // signal to re-apply.
                         hasUpdate={
                           !e.course.placeholder &&
                           !!onUpdateCourse &&
                           !!updates[e.course.id]
-                        }
-                        updating={updatingIds.has(e.course.id)}
-                        onReinstall={
-                          !e.course.placeholder && onUpdateCourse
-                            ? () => void handleUpdateClick(e.course.id)
-                            : undefined
                         }
                       />
                     ))}

@@ -1,0 +1,128 @@
+{
+  "template": "\nconst std = @import(\"std\");\n\npub const Rect = struct { w: f64, h: f64 };\n\npub const Shape = union(enum) {\n    circle: f64,\n    square: f64,\n    rectangle: Rect,\n};\n\npub fn area(s: Shape) f64 {\n    return __SLOT_switch_expr__ {\n        __SLOT_circle_arm__ => |r| std.math.pi * r * r,\n        __SLOT_square_arm__ => |side| side * side,\n        __SLOT_rectangle_arm__ => |rect| __SLOT_rect_area__,\n    };\n}\n",
+  "slots": [
+    {
+      "id": "switch_expr",
+      "expectedBlockId": "slot_switch_expr",
+      "hint": "keyword"
+    },
+    {
+      "id": "circle_arm",
+      "expectedBlockId": "slot_circle_arm",
+      "hint": "variant"
+    },
+    {
+      "id": "square_arm",
+      "expectedBlockId": "slot_square_arm",
+      "hint": "variant"
+    },
+    {
+      "id": "rectangle_arm",
+      "expectedBlockId": "slot_rectangle_arm",
+      "hint": "variant"
+    },
+    {
+      "id": "rect_area",
+      "expectedBlockId": "slot_rect_area",
+      "hint": "expression"
+    }
+  ],
+  "pool": [
+    {
+      "id": "slot_switch_expr",
+      "code": "switch (s)"
+    },
+    {
+      "id": "decoy_switch_expr_0",
+      "code": "if (s)",
+      "decoy": true
+    },
+    {
+      "id": "decoy_switch_expr_1",
+      "code": "match (s)",
+      "decoy": true
+    },
+    {
+      "id": "decoy_switch_expr_2",
+      "code": "switch s",
+      "decoy": true
+    },
+    {
+      "id": "slot_circle_arm",
+      "code": ".circle"
+    },
+    {
+      "id": "decoy_circle_arm_0",
+      "code": ".Circle",
+      "decoy": true
+    },
+    {
+      "id": "decoy_circle_arm_1",
+      "code": "circle",
+      "decoy": true
+    },
+    {
+      "id": "decoy_circle_arm_2",
+      "code": ".radius",
+      "decoy": true
+    },
+    {
+      "id": "slot_square_arm",
+      "code": ".square"
+    },
+    {
+      "id": "decoy_square_arm_0",
+      "code": ".Square",
+      "decoy": true
+    },
+    {
+      "id": "decoy_square_arm_1",
+      "code": "square",
+      "decoy": true
+    },
+    {
+      "id": "decoy_square_arm_2",
+      "code": ".side",
+      "decoy": true
+    },
+    {
+      "id": "slot_rectangle_arm",
+      "code": ".rectangle"
+    },
+    {
+      "id": "decoy_rectangle_arm_0",
+      "code": ".Rectangle",
+      "decoy": true
+    },
+    {
+      "id": "decoy_rectangle_arm_1",
+      "code": "rectangle",
+      "decoy": true
+    },
+    {
+      "id": "decoy_rectangle_arm_2",
+      "code": ".rect",
+      "decoy": true
+    },
+    {
+      "id": "slot_rect_area",
+      "code": "rect.w * rect.h"
+    },
+    {
+      "id": "decoy_rect_area_0",
+      "code": "rect.w + rect.h",
+      "decoy": true
+    },
+    {
+      "id": "decoy_rect_area_1",
+      "code": "rect.h * rect.w",
+      "decoy": true
+    },
+    {
+      "id": "decoy_rect_area_2",
+      "code": "w * h",
+      "decoy": true
+    }
+  ],
+  "prompt": "Complete the tagged union switch to calculate area for each shape variant."
+}

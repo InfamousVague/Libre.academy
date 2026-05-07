@@ -1,0 +1,80 @@
+{
+  "template": "\nconst std = @import(\"std\");\n\npub fn safeGet(nums: []const i32, i: usize) ?i32 {\n    return if (i __SLOT_op__ nums.len) nums[__SLOT_idx__] else __SLOT_fallback__;\n}\n",
+  "slots": [
+    {
+      "id": "op",
+      "expectedBlockId": "slot_op",
+      "hint": "comparison"
+    },
+    {
+      "id": "idx",
+      "expectedBlockId": "slot_idx",
+      "hint": "index"
+    },
+    {
+      "id": "fallback",
+      "expectedBlockId": "slot_fallback",
+      "hint": "default"
+    }
+  ],
+  "pool": [
+    {
+      "id": "slot_op",
+      "code": "<"
+    },
+    {
+      "id": "decoy_op_0",
+      "code": "<=",
+      "decoy": true
+    },
+    {
+      "id": "decoy_op_1",
+      "code": ">",
+      "decoy": true
+    },
+    {
+      "id": "decoy_op_2",
+      "code": "==",
+      "decoy": true
+    },
+    {
+      "id": "slot_idx",
+      "code": "i"
+    },
+    {
+      "id": "decoy_idx_0",
+      "code": "0",
+      "decoy": true
+    },
+    {
+      "id": "decoy_idx_1",
+      "code": "nums.len",
+      "decoy": true
+    },
+    {
+      "id": "decoy_idx_2",
+      "code": "i - 1",
+      "decoy": true
+    },
+    {
+      "id": "slot_fallback",
+      "code": "null"
+    },
+    {
+      "id": "decoy_fallback_0",
+      "code": "0",
+      "decoy": true
+    },
+    {
+      "id": "decoy_fallback_1",
+      "code": "undefined",
+      "decoy": true
+    },
+    {
+      "id": "decoy_fallback_2",
+      "code": "nums[0]",
+      "decoy": true
+    }
+  ],
+  "prompt": "Fill in the safe array access pattern using an if expression."
+}

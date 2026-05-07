@@ -15,8 +15,14 @@
   cursor: pointer;
   font-family: inherit;
   transition:
-    transform 0.18s ease-out,
-    border-color var(--fb-motion-snappy);
+    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color var(--fb-motion-snappy),
+    box-shadow 0.22s ease-out;
+  /* Mount animation — same fade-rise the grid cards use, slightly
+     longer dwell because covers are visually denser and the eye
+     needs a beat to register them. `both` keeps the resting state
+     at full opacity once the keyframes finish. */
+  animation: fb-book-rise 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
   /* Container-query root. Children that need to scale with the
    * card's actual rendered size (the percent-complete number, the
    * cartouche offset) read from `cqw` (1cqw = 1% of the card's
@@ -28,8 +34,39 @@
 }
 
 .fishbones-book:hover {
-  transform: translateY(-3px);
+  transform: translateY(-3px) scale(1.012);
   border-color: var(--color-border-strong);
+  /* Soft lift shadow, scaled with the translate so the elevation
+     reads physically. Using `-8px` Y on the inset radius keeps the
+     shadow tight on top + open at the bottom — the card looks
+     lifted, not floating. */
+  box-shadow: 0 6px 18px -8px rgba(0, 0, 0, 0.45);
+}
+
+.fishbones-book:active {
+  transform: translateY(-1px) scale(1);
+  transition-duration: 0.08s;
+}
+
+@keyframes fb-book-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fishbones-book {
+    animation: none;
+  }
+  .fishbones-book:hover,
+  .fishbones-book:active {
+    transform: none;
+  }
 }
 
 .fishbones-book:focus-visible {

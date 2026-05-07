@@ -1,0 +1,128 @@
+{
+  "template": "\nconst std = @import(\"std\");\n\npub fn reverseInPlace(nums: []i32) void {\n    const len = __SLOT_len_expr__;\n    var i: usize = 0;\n    while (__SLOT_condition__) : (i += 1) {\n        const tmp = __SLOT_tmp_init__;\n        nums[i] = __SLOT_first_swap__;\n        __SLOT_second_swap__ = tmp;\n    }\n}\n",
+  "slots": [
+    {
+      "id": "len_expr",
+      "expectedBlockId": "slot_len_expr",
+      "hint": "length"
+    },
+    {
+      "id": "condition",
+      "expectedBlockId": "slot_condition",
+      "hint": "loop-bound"
+    },
+    {
+      "id": "tmp_init",
+      "expectedBlockId": "slot_tmp_init",
+      "hint": "element"
+    },
+    {
+      "id": "first_swap",
+      "expectedBlockId": "slot_first_swap",
+      "hint": "index"
+    },
+    {
+      "id": "second_swap",
+      "expectedBlockId": "slot_second_swap",
+      "hint": "index"
+    }
+  ],
+  "pool": [
+    {
+      "id": "slot_len_expr",
+      "code": "nums.len"
+    },
+    {
+      "id": "decoy_len_expr_0",
+      "code": "nums.size",
+      "decoy": true
+    },
+    {
+      "id": "decoy_len_expr_1",
+      "code": "len(nums)",
+      "decoy": true
+    },
+    {
+      "id": "decoy_len_expr_2",
+      "code": "nums.length",
+      "decoy": true
+    },
+    {
+      "id": "slot_condition",
+      "code": "i < len / 2"
+    },
+    {
+      "id": "decoy_condition_0",
+      "code": "i < len",
+      "decoy": true
+    },
+    {
+      "id": "decoy_condition_1",
+      "code": "i <= len / 2",
+      "decoy": true
+    },
+    {
+      "id": "decoy_condition_2",
+      "code": "i < len - 1",
+      "decoy": true
+    },
+    {
+      "id": "slot_tmp_init",
+      "code": "nums[i]"
+    },
+    {
+      "id": "decoy_tmp_init_0",
+      "code": "nums[len - i]",
+      "decoy": true
+    },
+    {
+      "id": "decoy_tmp_init_1",
+      "code": "nums[0]",
+      "decoy": true
+    },
+    {
+      "id": "decoy_tmp_init_2",
+      "code": "i",
+      "decoy": true
+    },
+    {
+      "id": "slot_first_swap",
+      "code": "nums[len - 1 - i]"
+    },
+    {
+      "id": "decoy_first_swap_0",
+      "code": "nums[len - i]",
+      "decoy": true
+    },
+    {
+      "id": "decoy_first_swap_1",
+      "code": "nums[len - i - 1]",
+      "decoy": true
+    },
+    {
+      "id": "decoy_first_swap_2",
+      "code": "tmp",
+      "decoy": true
+    },
+    {
+      "id": "slot_second_swap",
+      "code": "nums[len - 1 - i]"
+    },
+    {
+      "id": "decoy_second_swap_0",
+      "code": "nums[i]",
+      "decoy": true
+    },
+    {
+      "id": "decoy_second_swap_1",
+      "code": "nums[len - i]",
+      "decoy": true
+    },
+    {
+      "id": "decoy_second_swap_2",
+      "code": "tmp",
+      "decoy": true
+    }
+  ],
+  "prompt": "Complete the in-place reversal using the two-pointer swap pattern."
+}

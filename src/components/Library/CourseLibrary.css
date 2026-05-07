@@ -721,11 +721,51 @@
   border: 1px solid var(--color-border-default);
   border-radius: 10px;
   overflow: hidden;
-  transition: border-color var(--fb-motion-snappy), transform 0.1s ease;
+  transition:
+    border-color var(--fb-motion-snappy),
+    transform 0.16s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.18s ease;
+  /* Mount animation — short fade + slight rise from below. Each
+     card runs through this once on first paint; subsequent re-renders
+     don't re-trigger because the animation is `forwards` and only
+     plays on initial mount via the keyframes' from-state. */
+  animation: fb-library-card-rise 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .fishbones-library-card:hover {
   border-color: var(--color-border-strong);
+  /* Subtle lift on hover — communicates clickability without the
+     loud Material-style elevation jump. */
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px -8px rgba(0, 0, 0, 0.35);
+}
+
+.fishbones-library-card:active {
+  /* Snap back to baseline on press — gives the click a tactile
+     bottoming-out feel before the navigation kicks in. */
+  transform: translateY(0);
+  transition-duration: 0.06s;
+}
+
+@keyframes fb-library-card-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fishbones-library-card {
+    animation: none;
+  }
+  .fishbones-library-card:hover,
+  .fishbones-library-card:active {
+    transform: none;
+  }
 }
 
 .fishbones-library-card-main {
@@ -774,6 +814,45 @@
 .fishbones-library-card-status-icon {
   flex-shrink: 0;
   margin-top: -1px;
+}
+
+/* Update-available marker. A small filled dot — replaces the bigger
+   "Update" button the card used to render. Placed in the header
+   between the language chip and the status text, far quieter than a
+   button but still visible at a glance. The user reaches the actual
+   reinstall action via right-click → Reinstall in the context menu.
+   Subtle pulse so the eye catches it on freshly-loaded library
+   views; turns off under reduced-motion. */
+.fishbones-library-card-update-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(214, 185, 105, 0.95);
+  box-shadow: 0 0 0 0 rgba(214, 185, 105, 0.55);
+  flex-shrink: 0;
+  animation: fb-card-update-pulse 2.4s ease-in-out infinite;
+  /* Push it next to the status text rather than far-right with the
+     header's space-between — it should read as "update tag on the
+     status" not "secondary chip on the language". */
+  margin-left: auto;
+  margin-right: 2px;
+}
+
+@keyframes fb-card-update-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(214, 185, 105, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(214, 185, 105, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fishbones-library-card-update-dot {
+    animation: none;
+    box-shadow: none;
+  }
 }
 
 .fishbones-library-card-title {

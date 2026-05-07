@@ -1,0 +1,104 @@
+{
+  "template": "\nconst std = @import(\"std\");\n\npub fn celsiusToFahrenheit(c: f64) f64 {\n    return __SLOT_param__ * __SLOT_nine__ / __SLOT_five__ + __SLOT_offset__;\n}\n",
+  "slots": [
+    {
+      "id": "param",
+      "expectedBlockId": "slot_param",
+      "hint": "variable"
+    },
+    {
+      "id": "nine",
+      "expectedBlockId": "slot_nine",
+      "hint": "numerator"
+    },
+    {
+      "id": "five",
+      "expectedBlockId": "slot_five",
+      "hint": "denominator"
+    },
+    {
+      "id": "offset",
+      "expectedBlockId": "slot_offset",
+      "hint": "constant"
+    }
+  ],
+  "pool": [
+    {
+      "id": "slot_param",
+      "code": "c"
+    },
+    {
+      "id": "decoy_param_0",
+      "code": "std",
+      "decoy": true
+    },
+    {
+      "id": "decoy_param_1",
+      "code": "f64",
+      "decoy": true
+    },
+    {
+      "id": "decoy_param_2",
+      "code": "temp",
+      "decoy": true
+    },
+    {
+      "id": "slot_nine",
+      "code": "9.0"
+    },
+    {
+      "id": "decoy_nine_0",
+      "code": "9",
+      "decoy": true
+    },
+    {
+      "id": "decoy_nine_1",
+      "code": "5.0",
+      "decoy": true
+    },
+    {
+      "id": "decoy_nine_2",
+      "code": "1.8",
+      "decoy": true
+    },
+    {
+      "id": "slot_five",
+      "code": "5.0"
+    },
+    {
+      "id": "decoy_five_0",
+      "code": "5",
+      "decoy": true
+    },
+    {
+      "id": "decoy_five_1",
+      "code": "9.0",
+      "decoy": true
+    },
+    {
+      "id": "decoy_five_2",
+      "code": "2.0",
+      "decoy": true
+    },
+    {
+      "id": "slot_offset",
+      "code": "32.0"
+    },
+    {
+      "id": "decoy_offset_0",
+      "code": "32",
+      "decoy": true
+    },
+    {
+      "id": "decoy_offset_1",
+      "code": "0.0",
+      "decoy": true
+    },
+    {
+      "id": "decoy_offset_2",
+      "code": "100.0",
+      "decoy": true
+    }
+  ],
+  "prompt": "Fill in the blanks to convert Celsius to Fahrenheit using the formula F = C × 9/5 + 32."
+}

@@ -170,6 +170,34 @@ button {
   margin-left: 10px;
 }
 
+/* Route-swap micro-animation. `.fishbones__main` switches between
+   ProfileView / PlaygroundView / TreesView / CourseLibrary /
+   LessonView depending on `view` state. React tears down the old
+   component and mounts the new one, which means the direct child
+   gets a fresh DOM node — CSS animations replay on each new node, so
+   targeting `> *` cross-fades on every route change without any JSX
+   plumbing. Honor reduced-motion via the media query below. */
+.fishbones__main > * {
+  animation: fb-route-fade 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes fb-route-fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fishbones__main > * {
+    animation: none;
+  }
+}
+
 /* Mobile body: drop the desktop margin-left and reserve space at the
    top for the iOS status bar / dynamic island, plus bottom padding so
    the MobileTabBar (~70px) doesn't occlude scrollable content. */

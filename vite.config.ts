@@ -127,9 +127,15 @@ export default defineConfig(async () => ({
         ]
       : [],
   },
-  // Split Monaco out into its own bundle chunk in prod so it doesn't
-  // bloat the main app bundle (Monaco is ~3 MB minified). Keeps initial
-  // app load lean and gives us a clean lever for lazy-loading later.
+  // Split heavy deps out into their own chunks in prod so they don't
+  // bloat the main app bundle. Keeps initial app load lean — the
+  // library + sidebar paths never import these chunks, so Vite only
+  // ships them when a lesson actually mounts.
+  //
+  //   - monaco: ~3 MB minified, only the editor needs it.
+  //   - shiki: ~300 KB minified including default themes; the lesson
+  //     reader + blocks view use it for syntax highlighting, but
+  //     library / settings / profile don't touch it.
   build: {
     // Web build lands in `dist-web/` so it doesn't clobber the
     // Tauri-consumed `dist/` directory. The Cloudflare Pages deploy
@@ -139,6 +145,7 @@ export default defineConfig(async () => ({
       output: {
         manualChunks: {
           monaco: ["monaco-editor"],
+          shiki: ["shiki"],
         },
       },
     },

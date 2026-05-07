@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { Course } from "../../data/types";
 import LanguageChip from "../LanguageChip/LanguageChip";
 
@@ -21,8 +22,11 @@ interface Props {
   done: number;
   pct: number;
   onOpen: () => void;
-  onExport?: () => void;
-  onDelete?: () => void;
+  /// Right-click handler — surfaces the card's context menu
+  /// (Reinstall / Export / Settings / Reset / Delete). The parent
+  /// `CourseLibrary` opens its own context menu component with the
+  /// full action set; this card no longer renders inline buttons
+  /// for those actions to keep the grid visually clean.
   onContextMenu?: (e: React.MouseEvent) => void;
   /// Discover-mode flag — swaps the progress meter for an Install
   /// button (or "Installing…" spinner). Passed through from the
@@ -31,31 +35,25 @@ interface Props {
   placeholder?: boolean;
   installing?: boolean;
   onInstall?: () => void;
-  /// Library-mode update affordance. When set, the card shows a
-  /// "Reinstall" button (or "Update" tinted variant if `hasUpdate`
-  /// is also true). Same handler signature as `onUpdateCourse`
-  /// upstream, just renamed at the boundary so this component
-  /// speaks "reinstall".
+  /// Update-available indicator — a small dot in the card header
+  /// when an updated bundled archive is on disk. Replaces the
+  /// loud "Update" button the card used to render; the actual
+  /// reinstall action now lives in the right-click context menu
+  /// only, surfaced upstream via `onUpdateCourse`.
   hasUpdate?: boolean;
-  updating?: boolean;
-  onReinstall?: () => void;
 }
 
-export default function CourseCard({
+function CourseCardImpl({
   course,
   total,
   done,
   pct,
   onOpen,
-  onExport,
-  onDelete,
   onContextMenu,
   placeholder,
   installing,
   onInstall,
   hasUpdate,
-  updating,
-  onReinstall,
 }: Props) {
   const chapters = course.chapters.length;
   const isCompleted = pct === 1;
@@ -92,6 +90,7 @@ export default function CourseCard({
         </div>
         <div className="fishbones-library-card-actions">
           <button
+            type="button"
             className="fishbones-library-card-action fishbones-library-card-action--install"
             onClick={(e) => {
               e.stopPropagation();
@@ -109,9 +108,20 @@ export default function CourseCard({
 
   return (
     <div className="fishbones-library-card" onContextMenu={onContextMenu}>
-      <button className="fishbones-library-card-main" onClick={onOpen}>
+      <button
+        type="button"
+        className="fishbones-library-card-main"
+        onClick={onOpen}
+      >
         <div className="fishbones-library-card-header">
           <LanguageChip language={course.language} size="sm" />
+          {hasUpdate && (
+            <span
+              className="fishbones-library-card-update-dot"
+              aria-label="Update available — right-click for actions"
+              title="Update available — right-click for actions"
+            />
+          )}
           <span
             className={
               isCompleted
@@ -152,53 +162,15 @@ export default function CourseCard({
           {done}/{total} lessons · {chapters} chapter{chapters === 1 ? "" : "s"}
         </div>
       </button>
-      <div className="fishbones-library-card-actions">
-        {onReinstall && (
-          <button
-            className={`fishbones-library-card-action ${
-              hasUpdate ? "fishbones-library-card-action--update" : ""
-            }`}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (!updating) onReinstall();
-            }}
-            disabled={updating}
-            title={
-              updating
-                ? "Reinstalling…"
-                : hasUpdate
-                  ? "Update available — reapply bundled archive"
-                  : "Reinstall — re-extract bundled archive"
-            }
-          >
-            {updating ? "Reinstalling…" : hasUpdate ? "Update" : "Reinstall"}
-          </button>
-        )}
-        {onExport && (
-          <button
-            className="fishbones-library-card-action"
-            onClick={(e) => {
-              e.stopPropagation();
-              onExport();
-            }}
-            title="Export as .fishbones archive"
-          >
-            Export
-          </button>
-        )}
-        {onDelete && (
-          <button
-            className="fishbones-library-card-action fishbones-library-card-action--danger"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
-            }}
-            title="Delete this course from disk"
-          >
-            Delete
-          </button>
-        )}
-      </div>
     </div>
   );
 }
+
+/// Memo-wrapped because the library re-renders on every filter / sort /
+/// search keystroke; without this each of those re-renders walks every
+/// card's render function even when its props haven't changed. The
+/// default shallow-equal works — every prop is a primitive, a stable
+/// course-object reference, or a stable callback (parent uses
+/// `useCallback` on the per-card handlers).
+const CourseCard = memo(CourseCardImpl);
+export default CourseCard;

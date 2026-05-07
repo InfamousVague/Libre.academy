@@ -4,11 +4,14 @@
 // configured before any Editor component mounts. See lib/monaco/setup.ts
 // for the full rationale (signed-production CDN-load issue).
 import "../../lib/monaco/setup";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Editor from "@monaco-editor/react";
 import { Icon } from "@base/primitives/icon";
 import { arrowLeft } from "@base/primitives/icon/icons/arrow-left";
 import { arrowRight } from "@base/primitives/icon/icons/arrow-right";
+import { chevronDown } from "@base/primitives/icon/icons/chevron-down";
+import { rotateCcw } from "@base/primitives/icon/icons/rotate-ccw";
+import { eye } from "@base/primitives/icon/icons/eye";
 import "@base/primitives/icon/icon.css";
 import type { FileLanguage, LanguageId, WorkbenchFile } from "../../data/types";
 import { useActiveTheme } from "../../theme/useActiveTheme";
@@ -94,6 +97,13 @@ interface Props {
   /// (e.g. when the EditorPane is already rendered inside the popped-out
   /// window).
   onPopOut?: () => void;
+  /// Exercise render-mode toggle, surfaced inline in the editor header
+  /// when the lesson ships authored blocks data. When omitted, no
+  /// toggle renders. The toggle replaces the previous language label
+  /// in the header — it's the more useful affordance for learners
+  /// switching between editor + blocks during a lesson.
+  exerciseMode?: "editor" | "blocks";
+  onExerciseModeChange?: (mode: "editor" | "blocks") => void;
 }
 
 const MONACO_LANGUAGES: Record<FileLanguage, string> = {
@@ -162,9 +172,10 @@ const MONACO_LANGUAGES: Record<FileLanguage, string> = {
   plaintext: "plaintext",
 };
 
-/// Left half of the workbench. Wraps Monaco with a small header (language +
-/// hint / reset / reveal / run / pop-out buttons) and a collapsible hint
-/// panel that shows progressively as the learner asks for help.
+/// Left half of the workbench. Wraps Monaco with a small header
+/// (Editor/Blocks toggle when blocks data exists, plus a Help split-
+/// button + Pop-out + Run cluster) and a collapsible hint panel that
+/// shows progressively as the learner asks for help.
 export default function EditorPane({
   language,
   files,
@@ -176,7 +187,14 @@ export default function EditorPane({
   onReset,
   onRevealSolution,
   onPopOut,
+  exerciseMode,
+  onExerciseModeChange,
 }: Props) {
+  // `language` no longer renders as a header label (the slot is now
+  // the Editor/Blocks toggle when present). Kept as a prop for
+  // tooltip purposes + future use; reference the variable here so
+  // TS doesn't flag it as unused.
+  void language;
   // Guard: activeIndex can briefly be out-of-range during file-list swaps
   // (e.g. reveal-solution replacing the whole array). Clamp to a valid
   // position so Monaco doesn't receive an undefined value.
@@ -191,6 +209,30 @@ export default function EditorPane({
   const [currentIdx, setCurrentIdx] = useState(0);
   const [open, setOpen] = useState(false);
   const [confirmingReveal, setConfirmingReveal] = useState(false);
+  // Help split-button dropdown — when open, exposes Reset + Reveal
+  // solution. Click-outside + Escape dismiss the menu (mirrors the
+  // pattern in components/Library/AddCourseButton.tsx).
+  const [helpMenuOpen, setHelpMenuOpen] = useState(false);
+  const helpRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!helpMenuOpen) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (!helpRef.current) return;
+      if (e.target instanceof Node && helpRef.current.contains(e.target)) {
+        return;
+      }
+      setHelpMenuOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setHelpMenuOpen(false);
+    };
+    window.addEventListener("mousedown", onDocClick);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("mousedown", onDocClick);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [helpMenuOpen]);
   const activeTheme = useActiveTheme();
   const monacoTheme = MONACO_THEME_BY_APP_THEME[activeTheme];
 
@@ -234,40 +276,145 @@ export default function EditorPane({
 
   const multiFile = files.length > 1;
 
+  // The help cluster collapses Hint/Reset/Solution into one
+  // split-button: Hint is the primary face (the most-used learning
+  // affordance), the chevron opens a dropdown with Reset + Reveal
+  // solution. Mirrors the AddCourseButton pattern in the library
+  // header. Renders only when at least one of the three is
+  // available; the chevron-only fallback (no hints, only reset /
+  // solution) keeps the menu reachable via "More" labelling.
+  const showHelpCluster = hasHints || !!onReset || !!onRevealSolution;
+  const hasMenuItems = !!onReset || !!onRevealSolution;
+
   return (
     <div className="fishbones-editor">
       <div className="fishbones-editor-header">
-        <span className="fishbones-editor-language">{language}</span>
+        {/* Left side: Editor / Blocks mode toggle when the lesson
+            ships authored blocks data. Replaces the previous static
+            language label — the toggle is more useful in-context. */}
+        {exerciseMode && onExerciseModeChange ? (
+          <div className="fishbones-editor-mode" role="group" aria-label="Exercise mode">
+            <button
+              type="button"
+              className={
+                "fishbones-editor-mode-btn" +
+                (exerciseMode === "editor"
+                  ? " fishbones-editor-mode-btn--active"
+                  : "")
+              }
+              onClick={() => onExerciseModeChange("editor")}
+              aria-pressed={exerciseMode === "editor"}
+            >
+              Editor
+            </button>
+            <button
+              type="button"
+              className={
+                "fishbones-editor-mode-btn" +
+                (exerciseMode === "blocks"
+                  ? " fishbones-editor-mode-btn--active"
+                  : "")
+              }
+              onClick={() => onExerciseModeChange("blocks")}
+              aria-pressed={exerciseMode === "blocks"}
+            >
+              Blocks
+            </button>
+          </div>
+        ) : (
+          // Empty placeholder so the header's space-between still
+          // pushes the action cluster right when no mode toggle
+          // shows.
+          <span aria-hidden />
+        )}
         <div className="fishbones-editor-actions">
-          {hasHints && (
-            <button
-              className="fishbones-editor-button fishbones-editor-hint"
-              onClick={onHintClick}
-              title="Reveal a progressively more specific hint"
-            >
-              hint {revealed}/{hints!.length}
-            </button>
-          )}
-          {onReset && (
-            <button
-              className="fishbones-editor-button"
-              onClick={onReset}
-              title="Restore the starter code"
-            >
-              reset
-            </button>
-          )}
-          {onRevealSolution && (
-            <button
-              className="fishbones-editor-button"
-              onClick={() => setConfirmingReveal(true)}
-              title="Overwrite your code with the reference solution"
-            >
-              solution
-            </button>
+          {showHelpCluster && (
+            <div className="fishbones-editor-help" ref={helpRef}>
+              <div className="fishbones-editor-help-split">
+                <button
+                  type="button"
+                  className="fishbones-editor-help-main"
+                  onClick={hasHints ? onHintClick : undefined}
+                  disabled={!hasHints}
+                  title={
+                    hasHints
+                      ? "Reveal a progressively more specific hint"
+                      : hasMenuItems
+                        ? "No hints for this lesson — use the menu for reset / solution"
+                        : "No hints, reset, or solution for this lesson"
+                  }
+                >
+                  {hasHints ? `hint ${revealed}/${hints!.length}` : "help"}
+                </button>
+                {hasMenuItems && (
+                  <button
+                    type="button"
+                    className="fishbones-editor-help-caret"
+                    onClick={() => setHelpMenuOpen((v) => !v)}
+                    aria-expanded={helpMenuOpen}
+                    aria-haspopup="menu"
+                    aria-label="More help options"
+                    title="More help options"
+                  >
+                    <Icon icon={chevronDown} size="xs" color="currentColor" />
+                  </button>
+                )}
+              </div>
+              {helpMenuOpen && hasMenuItems && (
+                <div
+                  className="fishbones-editor-help-menu"
+                  role="menu"
+                  aria-label="Help options"
+                >
+                  {onReset && (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="fishbones-editor-help-item"
+                      onClick={() => {
+                        setHelpMenuOpen(false);
+                        onReset();
+                      }}
+                    >
+                      <Icon icon={rotateCcw} size="xs" color="currentColor" />
+                      <span className="fishbones-editor-help-item-body">
+                        <span className="fishbones-editor-help-item-title">
+                          Reset
+                        </span>
+                        <span className="fishbones-editor-help-item-hint">
+                          Restore the starter code
+                        </span>
+                      </span>
+                    </button>
+                  )}
+                  {onRevealSolution && (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="fishbones-editor-help-item fishbones-editor-help-item--danger"
+                      onClick={() => {
+                        setHelpMenuOpen(false);
+                        setConfirmingReveal(true);
+                      }}
+                    >
+                      <Icon icon={eye} size="xs" color="currentColor" />
+                      <span className="fishbones-editor-help-item-body">
+                        <span className="fishbones-editor-help-item-title">
+                          Reveal solution
+                        </span>
+                        <span className="fishbones-editor-help-item-hint">
+                          Overwrite your code with the reference
+                        </span>
+                      </span>
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           )}
           {onPopOut && (
             <button
+              type="button"
               className="fishbones-editor-button"
               onClick={onPopOut}
               title="Open editor + console in a separate window"
@@ -275,7 +422,11 @@ export default function EditorPane({
               ⇱
             </button>
           )}
-          <button className="fishbones-editor-button fishbones-editor-run" onClick={onRun}>
+          <button
+            type="button"
+            className="fishbones-editor-button fishbones-editor-run"
+            onClick={onRun}
+          >
             run
           </button>
         </div>

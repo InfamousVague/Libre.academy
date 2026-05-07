@@ -22,7 +22,7 @@
 /// keyboard + tap state. Token-level rendering keeps everything in
 /// React's tree without an imperative-DOM second pass.
 
-import { codeToTokens, type ThemedToken } from "shiki";
+import { codeToTokens, type BundledLanguage, type ThemedToken } from "shiki";
 import type { LanguageId } from "../../data/types";
 
 /// Theme used everywhere in the app's reading + workbench surfaces.
@@ -112,9 +112,8 @@ export async function highlightTemplate(
 
   let tokenized: ThemedToken[][];
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await codeToTokens(prepared, {
-      lang: shikiLang(language) as any,
+      lang: shikiLang(language) as BundledLanguage,
       theme: SHIKI_THEME,
     });
     tokenized = result.tokens;
@@ -203,9 +202,8 @@ export async function highlightChip(
   if (!code.trim()) return [{ kind: "text", content: code }];
   let tokenized: ThemedToken[][];
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await codeToTokens(code, {
-      lang: shikiLang(language) as any,
+      lang: shikiLang(language) as BundledLanguage,
       theme: SHIKI_THEME,
     });
     tokenized = result.tokens;

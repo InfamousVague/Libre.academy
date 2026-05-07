@@ -186,13 +186,11 @@ function readUrlOverride(): string | null {
 }
 
 function envRelayUrl(): string {
-  // Vite-time inline (build-time): VITE_FISHBONES_RELAY_URL. We try
-  // the import.meta.env path first; fall back to the default if it's
-  // not declared at build time.
-  type EnvShape = { VITE_FISHBONES_RELAY_URL?: string };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const env = (import.meta as any).env as EnvShape | undefined;
-  return env?.VITE_FISHBONES_RELAY_URL ?? DEFAULT_RELAY_URL;
+  // Vite-time inline (build-time): VITE_FISHBONES_RELAY_URL. Vite
+  // augments `import.meta.env` via vite-env.d.ts, so the access is
+  // typed without a cast — falls back to the default when the var
+  // isn't declared at build time.
+  return import.meta.env.VITE_FISHBONES_RELAY_URL ?? DEFAULT_RELAY_URL;
 }
 
 export function useFishbonesCloud(): UseFishbonesCloud {

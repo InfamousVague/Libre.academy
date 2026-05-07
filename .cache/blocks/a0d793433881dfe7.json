@@ -1,0 +1,104 @@
+{
+  "template": "\nconst std = @import(\"std\");\n\npub fn bubbleSort(nums: []i32) void {\n    if (nums.len < 2) return;\n    var swapped = __SLOT_init__;\n    while (__SLOT_outer_cond__) {\n        swapped = false;\n        var i: usize = 0;\n        while (i < nums.len - 1) : (i += 1) {\n            if (nums[i] __SLOT_cmp__ nums[i + 1]) {\n                const tmp = nums[i];\n                nums[i] = nums[i + 1];\n                nums[i + 1] = tmp;\n                swapped = __SLOT_flag__;\n            }\n        }\n    }\n}\n",
+  "slots": [
+    {
+      "id": "init",
+      "expectedBlockId": "slot_init",
+      "hint": "initial"
+    },
+    {
+      "id": "outer_cond",
+      "expectedBlockId": "slot_outer_cond",
+      "hint": "condition"
+    },
+    {
+      "id": "cmp",
+      "expectedBlockId": "slot_cmp",
+      "hint": "comparison"
+    },
+    {
+      "id": "flag",
+      "expectedBlockId": "slot_flag",
+      "hint": "flag"
+    }
+  ],
+  "pool": [
+    {
+      "id": "slot_init",
+      "code": "true"
+    },
+    {
+      "id": "decoy_init_0",
+      "code": "false",
+      "decoy": true
+    },
+    {
+      "id": "decoy_init_1",
+      "code": "null",
+      "decoy": true
+    },
+    {
+      "id": "decoy_init_2",
+      "code": "undefined",
+      "decoy": true
+    },
+    {
+      "id": "slot_outer_cond",
+      "code": "swapped"
+    },
+    {
+      "id": "decoy_outer_cond_0",
+      "code": "!swapped",
+      "decoy": true
+    },
+    {
+      "id": "decoy_outer_cond_1",
+      "code": "true",
+      "decoy": true
+    },
+    {
+      "id": "decoy_outer_cond_2",
+      "code": "i < nums.len",
+      "decoy": true
+    },
+    {
+      "id": "slot_cmp",
+      "code": ">"
+    },
+    {
+      "id": "decoy_cmp_0",
+      "code": "<",
+      "decoy": true
+    },
+    {
+      "id": "decoy_cmp_1",
+      "code": ">=",
+      "decoy": true
+    },
+    {
+      "id": "decoy_cmp_2",
+      "code": "==",
+      "decoy": true
+    },
+    {
+      "id": "slot_flag",
+      "code": "true"
+    },
+    {
+      "id": "decoy_flag_0",
+      "code": "false",
+      "decoy": true
+    },
+    {
+      "id": "decoy_flag_1",
+      "code": "i",
+      "decoy": true
+    },
+    {
+      "id": "decoy_flag_2",
+      "code": "1",
+      "decoy": true
+    }
+  ],
+  "prompt": "Fill in the bubble sort loop conditions and swap logic."
+}

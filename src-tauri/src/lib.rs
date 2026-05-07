@@ -250,6 +250,7 @@ pub fn run() {
             ingest::extract_source_cover,
             ingest::import_course_cover,
             ingest::load_course_cover,
+            ingest::load_course_covers,
             ingest::stat_file,
             ingest::extract_pdf_images,
             docs_crawl::crawl_docs_site,

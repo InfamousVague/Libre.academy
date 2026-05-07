@@ -22,15 +22,18 @@ import "./ProfileView.css";
 /// Per-lesson XP — MUST stay in sync with useStreakAndXp + MobileProfile.
 /// Kept duplicated (not imported) because the hook only exports computed
 /// totals, not the per-kind map. If we ever add a kind, update all three
-/// in the same commit.
+/// in the same commit. (Legacy `cloze` / `micropuzzle` / `puzzle` kinds
+/// are retired — their XP values stay only as no-op fallbacks for
+/// completion records that pre-date the migration.)
 const XP_PER_KIND = {
   reading: 5,
   quiz: 10,
+  exercise: 20,
+  mixed: 20,
+  // Retained for backward-compat with already-recorded completions.
   cloze: 10,
   micropuzzle: 10,
   puzzle: 15,
-  exercise: 20,
-  mixed: 20,
 } as const;
 
 /// Stat-tile accent palette. Each tone shows up as the tile's left-edge
