@@ -10,6 +10,7 @@ import { Icon } from "@base/primitives/icon";
 import { libraryBig } from "@base/primitives/icon/icons/library-big";
 import "@base/primitives/icon/icon.css";
 import Sidebar from "./components/Sidebar/Sidebar";
+import NavigationRail from "./components/NavigationRail/NavigationRail";
 import TopBar from "./components/TopBar/TopBar";
 import TreesView from "./components/Trees/TreesView";
 import EvmDockBanner from "./components/ChainDock/EvmDockBanner";
@@ -70,6 +71,10 @@ import SignInDialog from "./components/dialogs/SignInDialog/SignInDialog";
 import { useCourses } from "./hooks/useCourses";
 import { useRecentCourses } from "./hooks/useRecentCourses";
 import { useStreakAndXp } from "./hooks/useStreakAndXp";
+import {
+  LIBRARY_INSTALLED_IDS_KEY,
+  serializeLibraryAllowlist,
+} from "./lib/librarySync";
 import {
   savePersistedTabs,
   validateTabsAgainstCourses,
@@ -406,6 +411,52 @@ export default function App() {
       window.removeEventListener("fishbones:workbench-persisted", handler);
     };
   }, [realtime]);
+
+  /// Publish the desktop's installed-course-id list so the mobile /
+  /// web build can mirror it. Both surfaces participate in this
+  /// sync — desktop is treated as the authoritative writer (its
+  /// bundled-packs are the user's explicit installation choice,
+  /// every local change pushes immediately) while mobile defers
+  /// until it sees a cloud baseline so its 19-course default seed
+  /// doesn't clobber a user's curated desktop library on first
+  /// sign-in. See `lib/librarySync.ts` for the full rationale.
+  ///
+  /// Only runs once `useCourses` has resolved (so we don't publish a
+  /// transient empty list during cold-start) and only when signed in
+  /// (no point pushing if the relay won't echo it). Coalesces via a
+  /// "did the serialised list change?" ref so re-renders that don't
+  /// touch the course list are free; the ref is hydrated from
+  /// localStorage on mount so a hot-reload doesn't re-fire the same
+  /// payload the relay already has.
+  const lastPublishedLibraryRef = useRef<string | null>(
+    (() => {
+      try {
+        return localStorage.getItem(LIBRARY_INSTALLED_IDS_KEY);
+      } catch {
+        return null;
+      }
+    })(),
+  );
+  useEffect(() => {
+    if (!coursesLoaded || !cloud.signedIn) return;
+    const ids = coursesAll.map((c) => c.id);
+    const serialized = serializeLibraryAllowlist(ids);
+    if (serialized === lastPublishedLibraryRef.current) return;
+    lastPublishedLibraryRef.current = serialized;
+    // Mirror into localStorage so a cold-start before the cloud
+    // round-trips still has the latest snapshot to read on the next
+    // boot (matches the pattern applySettings uses on inbound rows).
+    try {
+      localStorage.setItem(LIBRARY_INSTALLED_IDS_KEY, serialized);
+    } catch {
+      /* swallow */
+    }
+    realtime.pushSetting({
+      key: LIBRARY_INSTALLED_IDS_KEY,
+      value: serialized,
+      updated_at: new Date().toISOString(),
+    });
+  }, [coursesAll, coursesLoaded, cloud.signedIn, realtime]);
 
   /// Timestamp of the last fresh completion (transition from incomplete →
   /// complete). Drives the AI tutor's happy-celebration loop. Plain
@@ -1028,8 +1079,10 @@ export default function App() {
         stats={stats}
         history={history}
         onOpenProfile={() => setView("profile")}
-        sidebarCollapsed={sidebarCollapsed}
-        onToggleSidebar={() => setSidebarCollapsed((v) => !v)}
+        // Sidebar-collapse toggle moved out of the topbar and into
+        // the navigation rail's bottom cluster (NavigationRail.tsx).
+        // `sidebarCollapsed` + `onToggleSidebar` no longer flow
+        // through TopBar — the rail owns that affordance now.
         // Cloud-sync account row in the stats dropdown. The chip stays
         // hidden while the cloud hook is still booting (`user === null`,
         // briefly during the `me` refetch); once it lands we pass a
@@ -1069,6 +1122,16 @@ export default function App() {
       />
 
       <div className="fishbones__body">
+        <NavigationRail
+          activeView={view}
+          onLibrary={() => setView("library")}
+          onDiscover={() => setView("discover")}
+          onTrees={() => setView("trees")}
+          onPlayground={() => setView("playground")}
+          onSettings={() => setSettingsOpen(true)}
+          onToggleSidebar={() => setSidebarCollapsed((v) => !v)}
+          sidebarCollapsed={sidebarCollapsed}
+        />
         <Sidebar
           courses={courses}
           activeCourseId={view === "courses" ? activeCourse?.id : undefined}

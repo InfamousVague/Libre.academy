@@ -9,12 +9,25 @@
 /// so progress, streak/XP, and account state flow through the existing
 /// storage and relay backends without per-platform branches.
 
-import { useCallback, useLayoutEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useCourses } from "../hooks/useCourses";
 import { useProgress } from "../hooks/useProgress";
 import { useFishbonesCloud } from "../hooks/useFishbonesCloud";
 import { useRealtimeSync } from "../hooks/useRealtimeSync";
 import { useStreakAndXp } from "../hooks/useStreakAndXp";
+import {
+  LIBRARY_INSTALLED_IDS_KEY,
+  parseLibraryAllowlist,
+  reconcilePerception,
+  serializeLibraryAllowlist,
+} from "../lib/librarySync";
 import type { Course, Lesson } from "../data/types";
 import MobileLibrary from "./MobileLibrary";
 import MobileLesson from "./MobileLesson";
@@ -35,9 +48,37 @@ interface ActiveLesson {
 }
 
 export default function MobileApp() {
-  const { courses, loaded, hydrateCourse } = useCourses();
+  const { courses: coursesAll, loaded, hydrateCourse } = useCourses();
   const { completed, history, markCompleted, resetProgress } = useProgress();
   const cloud = useFishbonesCloud();
+
+  /// Cross-device library allowlist. Hydrated from localStorage on
+  /// mount (so a cold-start before the cloud round-trips still shows
+  /// the right set), updated by the realtime settings sync, and used
+  /// to filter the visible course list. Null means "no published
+  /// allowlist yet — render every local course" (mobile fresh-launch
+  /// before any device has signed in).
+  const [libraryAllowlist, setLibraryAllowlist] = useState<Set<string> | null>(
+    () => {
+      try {
+        return parseLibraryAllowlist(localStorage.getItem(LIBRARY_INSTALLED_IDS_KEY));
+      } catch {
+        return null;
+      }
+    },
+  );
+
+  /// Visible course list = intersection of local IndexedDB courses
+  /// and the cloud-synced allowlist. The allowlist exists so a phone
+  /// that bootstrapped from the 19-course web seed doesn't display
+  /// books the user removed on their desktop. When no allowlist has
+  /// been published yet (fresh account), pass through unchanged so
+  /// the user still sees something to start with.
+  const courses = useMemo(() => {
+    if (!libraryAllowlist) return coursesAll;
+    return coursesAll.filter((c) => libraryAllowlist.has(c.id));
+  }, [coursesAll, libraryAllowlist]);
+
   const stats = useStreakAndXp(history, courses);
 
   /// Real-time cross-device sync. Identical wiring to the desktop
@@ -99,11 +140,56 @@ export default function MobileApp() {
           } catch {
             /* swallow */
           }
+          // The library allowlist piggybacks on the settings sync.
+          // Re-parse and lift into React state so the visible-courses
+          // memo invalidates and the library re-renders against the
+          // freshly-pulled set without a focus-refresh round-trip.
+          if (r.key === LIBRARY_INSTALLED_IDS_KEY) {
+            setLibraryAllowlist(parseLibraryAllowlist(r.value));
+          }
         }
       },
       [],
     ),
   });
+
+  /// Mobile-side library push. Bidirectional by design — when the
+  /// user adds or removes a course locally (e.g. a future "import
+  /// course" path), we want desktop to learn about it. Gated on
+  /// `libraryAllowlist !== null` so the 19-course first-launch seed
+  /// doesn't clobber a desktop user's curated list before we've even
+  /// pulled their value: mobile waits to see the cloud baseline,
+  /// then reconciles by adding / removing only the IDs that actually
+  /// changed locally vs the previous snapshot. That way a user
+  /// installing a new course on the phone EXTENDS the cloud set
+  /// instead of replacing it with the phone's local subset.
+  const previousLocalIdsRef = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    if (!loaded) return;
+    const localIds = coursesAll.map((c) => c.id);
+    const previous = previousLocalIdsRef.current;
+    previousLocalIdsRef.current = new Set(localIds);
+    // First observation of the local list — initialise the ref but
+    // don't push (we haven't seen any user action yet, just the
+    // bootloader handing us the seed).
+    if (previous === null) return;
+    if (!cloud.signedIn || !libraryAllowlist) return;
+    const next = reconcilePerception(libraryAllowlist, localIds, previous);
+    const serializedNext = serializeLibraryAllowlist(next);
+    const serializedCurrent = serializeLibraryAllowlist(libraryAllowlist);
+    if (serializedNext === serializedCurrent) return;
+    setLibraryAllowlist(next);
+    try {
+      localStorage.setItem(LIBRARY_INSTALLED_IDS_KEY, serializedNext);
+    } catch {
+      /* swallow */
+    }
+    realtime.pushSetting({
+      key: LIBRARY_INSTALLED_IDS_KEY,
+      value: serializedNext,
+      updated_at: new Date().toISOString(),
+    });
+  }, [coursesAll, loaded, cloud.signedIn, libraryAllowlist, realtime]);
   const [view, setView] = useState<View>("library");
   const [active, setActive] = useState<ActiveLesson | null>(null);
   const [signInOpen, setSignInOpen] = useState(false);

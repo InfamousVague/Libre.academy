@@ -148,6 +148,15 @@ export default function MobileLibrary({
   /// the same on phone vs desktop. A learner who knows where to find
   /// the Bitcoin book in the desktop library finds it in the same
   /// pile when they pick up the phone.
+  ///
+  /// Within each section we float "active" courses (any progress >0,
+  /// not yet 100%) to the top — the books the learner is currently
+  /// working on shouldn't be buried below pristine ones. Untouched
+  /// courses sort next, and fully-completed courses sink to the
+  /// bottom of the section since the learner is unlikely to revisit
+  /// them. Stable within each tier (i.e. the underlying `filtered`
+  /// order is preserved) so the visual order doesn't churn between
+  /// renders.
   const sections = useMemo(() => {
     const books: Course[] = [];
     const challenges: Course[] = [];
@@ -155,6 +164,16 @@ export default function MobileLibrary({
       if (isChallengePack(c)) challenges.push(c);
       else books.push(c);
     }
+    const tier = (c: Course): number => {
+      const { total, done } = nextLessonOf(c, completed);
+      if (total === 0) return 1; // "no lessons yet" — treat as untouched
+      if (done >= total) return 2; // fully complete — sink to bottom
+      if (done > 0) return 0; // actively in progress — float to top
+      return 1; // untouched
+    };
+    const sortByActivity = (a: Course, b: Course) => tier(a) - tier(b);
+    books.sort(sortByActivity);
+    challenges.sort(sortByActivity);
     const out: Array<{ key: string; label: string; rows: Course[] }> = [];
     if (books.length > 0) {
       out.push({ key: "books", label: "Books", rows: books });
@@ -163,7 +182,7 @@ export default function MobileLibrary({
       out.push({ key: "challenges", label: "Challenges", rows: challenges });
     }
     return out;
-  }, [filtered]);
+  }, [filtered, completed]);
 
   return (
     <div className="m-lib">
