@@ -61,35 +61,70 @@ export interface AudioManifest {
 }
 
 /// Module-scope cache shared across every consumer of the hooks.
-/// `manifestPromise` is the in-flight fetch; once it resolves we
-/// keep the result around for the lifetime of the page.
+/// `manifestPromise` is the in-flight fetch; once it resolves
+/// SUCCESSFULLY we keep the result around for the lifetime of the
+/// page. Failures (null result) are NOT cached — without that
+/// distinction, a transient pre-upload failure (when /audio/manifest.json
+/// 404s and Caddy falls through to index.html, so r.json() throws)
+/// would stick a null in the slot and every subsequent render would
+/// re-receive it without retrying. Re-uploading the manifest then
+/// felt like "the new audio isn't being picked up", because the
+/// hook never re-fetched.
 let manifestPromise: Promise<AudioManifest | null> | null = null;
 let manifest: AudioManifest | null = null;
+
+/// Force the next consumer to refetch the manifest. Useful after a
+/// known upload event, or for a future "refresh audio" button. The
+/// no-cache fetch (below) makes this rarely necessary in practice —
+/// failures already self-heal — but having an explicit invalidation
+/// path keeps things predictable.
+export function invalidateAudioManifest(): void {
+  manifest = null;
+  manifestPromise = null;
+}
 
 async function fetchManifest(): Promise<AudioManifest | null> {
   if (manifest) return manifest;
   if (manifestPromise) return manifestPromise;
-  manifestPromise = (async () => {
+  const inflight = (async () => {
     try {
       const r = await fetch(MANIFEST_URL, {
-        // Cache-bust at the network layer if the CDN serves stale.
-        // The manifest itself has short cache headers; this just
-        // ensures `fetch` honours them rather than reading from the
-        // memory cache.
-        cache: "default",
+        // `cache: "reload"` bypasses the HTTP cache and always hits
+        // the network. The manifest is tiny (~20-30KB) and fetched
+        // once per page session, so the network round-trip is cheap;
+        // in exchange we never serve a stale browser-cached SPA HTML
+        // response that landed there before the audio dir was
+        // populated. A previous version used "default" which let
+        // iOS Safari hold onto the old 1.5KB HTML body indefinitely.
+        cache: "reload",
       });
       if (!r.ok) return null;
+      const ct = r.headers.get("content-type") ?? "";
+      // Sanity check: when the file doesn't exist, Caddy's SPA
+      // fallback returns index.html with a 200 status. Reject any
+      // non-JSON content type so we don't try to parse HTML and
+      // cache a null result.
+      if (!ct.toLowerCase().includes("json")) return null;
       const json = (await r.json()) as AudioManifest;
-      manifest = json;
       return json;
     } catch {
-      // Offline / CORS / 404 — fall through silently. The hook's
-      // `available: false` branch hides the speaker icon, so a missing
-      // manifest just means "no audio yet" without erroring.
+      // Offline / CORS / non-JSON body — fall through silently. The
+      // hook's `available: false` branch hides the speaker icon, so
+      // a missing manifest just means "no audio yet" without erroring.
       return null;
     }
   })();
-  return manifestPromise;
+  manifestPromise = inflight;
+  const result = await inflight;
+  if (result) {
+    manifest = result;
+  } else {
+    // Don't cache failures — let the next consumer retry. Without
+    // this clear, a transient null sticks for the page lifetime
+    // even after the underlying CDN starts serving the manifest.
+    manifestPromise = null;
+  }
+  return result;
 }
 
 /// React hook returning the manifest once it loads, or `null` while
