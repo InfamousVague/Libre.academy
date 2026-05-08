@@ -89,6 +89,19 @@
   filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.4));
 }
 
+/* On hover, halve the strand-jump cycle so the helix visibly leans
+   into the cursor — 16s idle → 8s on hover. The DnaHelix component
+   sets `--fb-dna-speed` as an inline style on its root, so we have
+   to override with `!important` to beat inline specificity. The
+   8s value is hardcoded rather than calc()'d off the inline value
+   because CSS calc can't reach into a variable that's already
+   resolved on the same element; if the idle speed in
+   AiCharacter.tsx changes, this hover value should track to half
+   of it. */
+.fishbones-ai-character:hover .fb-dna {
+  --fb-dna-speed: 8s !important;
+}
+
 
 /* ---- Keyframes ------------------------------------------------- */
 
