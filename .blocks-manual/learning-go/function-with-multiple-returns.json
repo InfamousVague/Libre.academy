@@ -1,0 +1,46 @@
+{
+  "template": "package main\n\nimport (\n\t\"errors\"\n\t\"fmt\"\n)\n\n// splitAndSum divides nums at pivot and returns sums of each half.\n// Returns an error if pivot is out of bounds.\nfunc splitAndSum(nums []int, pivot int) [[SLOT return_sig]] {\n\tif pivot < 0 || pivot >= len(nums) {\n\t\treturn 0, 0, [[SLOT err_construct]](\"pivot out of bounds\")\n\t}\n\tleftSum := 0\n\tfor i := 0; i < pivot; i++ {\n\t\tleftSum += nums[i]\n\t}\n\trightSum := 0\n\tfor i := pivot; i < len(nums); i++ {\n\t\trightSum += nums[i]\n\t}\n\treturn leftSum, rightSum, [[SLOT nil_kw]]\n}\n\nfunc main() {\n\tleft, right, err := splitAndSum([]int{1, 2, 3, 4, 5}, 2)\n\tif [[SLOT err_check]] {\n\t\tfmt.Println(\"Error:\", err)\n\t} else {\n\t\tfmt.Println(\"Left:\", left, \"Right:\", right)\n\t}\n}",
+  "slots": [
+    {
+      "name": "return_sig",
+      "answer": "(int, int, error)",
+      "hint": "signature",
+      "decoys": [
+        "(int, int)",
+        "(int, error)",
+        "(int, int, string)"
+      ]
+    },
+    {
+      "name": "err_construct",
+      "answer": "errors.New",
+      "hint": "errors",
+      "decoys": [
+        "fmt.Errorf",
+        "errors.Wrap",
+        "panic"
+      ]
+    },
+    {
+      "name": "nil_kw",
+      "answer": "nil",
+      "hint": "literal",
+      "decoys": [
+        "null",
+        "0",
+        "false"
+      ]
+    },
+    {
+      "name": "err_check",
+      "answer": "err != nil",
+      "hint": "condition",
+      "decoys": [
+        "err == nil",
+        "err",
+        "!err"
+      ]
+    }
+  ],
+  "prompt": "Wire up the multi-return signature, the error constructor, the nil success-return, and the error check."
+}

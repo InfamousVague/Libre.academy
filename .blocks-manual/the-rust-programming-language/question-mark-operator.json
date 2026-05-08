@@ -1,0 +1,46 @@
+{
+  "template": "use std::fs::File;\nuse std::io::{self, Read};\n\n/// Reads a username from \"hello.txt\" and returns it.\n/// Propagates any IO errors to the caller.\npub fn read_username_from_file() -> [[SLOT result_type]] {\n    let mut username_file = [[SLOT open_q]];\n    let mut username = String::new();\n    [[SLOT read_q]];\n    [[SLOT ok_return]]\n}\n\nfn main() {\n    match read_username_from_file() {\n        Ok(username) => println!(\"Username: {username}\"),\n        Err(e) => println!(\"Error reading username: {e}\"),\n    }\n}\n",
+  "slots": [
+    {
+      "name": "result_type",
+      "answer": "Result<String, io::Error>",
+      "hint": "type",
+      "decoys": [
+        "String",
+        "Option<String>",
+        "Result<String, Error>"
+      ]
+    },
+    {
+      "name": "open_q",
+      "answer": "File::open(\"hello.txt\")?",
+      "hint": "?",
+      "decoys": [
+        "File::open(\"hello.txt\")",
+        "File::open(\"hello.txt\")?.unwrap()",
+        "try!(File::open(\"hello.txt\"))"
+      ]
+    },
+    {
+      "name": "read_q",
+      "answer": "username_file.read_to_string(&mut username)?",
+      "hint": "?",
+      "decoys": [
+        "username_file.read_to_string(&mut username)",
+        "username_file.read(&mut username)?",
+        "read_to_string(&mut username)?"
+      ]
+    },
+    {
+      "name": "ok_return",
+      "answer": "Ok(username)",
+      "hint": "return",
+      "decoys": [
+        "username",
+        "Some(username)",
+        "return username;"
+      ]
+    }
+  ],
+  "prompt": "Pick the Result type, the two ?-operator calls, and the Ok return."
+}

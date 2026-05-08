@@ -1,0 +1,46 @@
+{
+  "template": "package main\n\nimport (\n\t\"strings\"\n)\n\n// ParseGoMod extracts the module name from a go.mod file's contents.\nfunc ParseGoMod(contents string) string {\n\tlines := strings.[[SLOT split_fn]](contents, \"\\n\")\n\tfor _, line := range lines {\n\t\tline = strings.[[SLOT trim_fn]](line)\n\t\tif line == \"\" {\n\t\t\tcontinue\n\t\t}\n\t\tif strings.[[SLOT prefix_check]](line, [[SLOT prefix_str]]) {\n\t\t\treturn strings.TrimPrefix(line, \"module \")\n\t\t}\n\t}\n\treturn \"\"\n}\n\nfunc main() {\n\tgomod := \"module hello_world\\n\\ngo 1.20\\n\"\n\tresult := ParseGoMod(gomod)\n\tprintln(result)\n}\n",
+  "slots": [
+    {
+      "name": "split_fn",
+      "answer": "Split",
+      "hint": "stringutil",
+      "decoys": [
+        "SplitN",
+        "Fields",
+        "SplitAfter"
+      ]
+    },
+    {
+      "name": "trim_fn",
+      "answer": "TrimSpace",
+      "hint": "stringutil",
+      "decoys": [
+        "Trim",
+        "TrimLeft",
+        "TrimRight"
+      ]
+    },
+    {
+      "name": "prefix_check",
+      "answer": "HasPrefix",
+      "hint": "stringutil",
+      "decoys": [
+        "HasSuffix",
+        "Contains",
+        "EqualFold"
+      ]
+    },
+    {
+      "name": "prefix_str",
+      "answer": "\"module \"",
+      "hint": "literal",
+      "decoys": [
+        "\"module\"",
+        "\"go \"",
+        "\"package \""
+      ]
+    }
+  ],
+  "prompt": "Fill in the strings package functions and the module-line prefix."
+}

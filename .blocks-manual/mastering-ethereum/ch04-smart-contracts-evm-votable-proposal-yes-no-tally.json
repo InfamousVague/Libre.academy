@@ -1,0 +1,46 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.26;\n\ncontract Proposal {\n    uint256 public yesVotes;\n    uint256 public noVotes;\n    mapping(address => bool) public hasVoted;\n\n    error AlreadyVoted();\n\n    function vote(bool support) external {\n        if ([[SLOT voted_check]]) revert AlreadyVoted();\n        [[SLOT mark_voted]]\n        [[SLOT tally_branch]]\n    }\n\n    function winning() external view returns (bool) {\n        return [[SLOT winning_check]];\n    }\n}\n",
+  "slots": [
+    {
+      "name": "voted_check",
+      "answer": "hasVoted[msg.sender]",
+      "hint": "predicate",
+      "decoys": [
+        "hasVoted[tx.origin]",
+        "voters[msg.sender]",
+        "hasVoted[msg.sender] == false"
+      ]
+    },
+    {
+      "name": "mark_voted",
+      "answer": "hasVoted[msg.sender] = true;",
+      "hint": "set",
+      "decoys": [
+        "hasVoted[msg.sender] = false;",
+        "voters[msg.sender] = true;",
+        "hasVoted[tx.origin] = true;"
+      ]
+    },
+    {
+      "name": "tally_branch",
+      "answer": "if (support) {\n            yesVotes++;\n        } else {\n            noVotes++;\n        }",
+      "hint": "branch",
+      "decoys": [
+        "if (support) yesVotes++; noVotes++;",
+        "support ? yesVotes++ : noVotes++;",
+        "if (!support) yesVotes++; else noVotes++;"
+      ]
+    },
+    {
+      "name": "winning_check",
+      "answer": "yesVotes > noVotes",
+      "hint": "predicate",
+      "decoys": [
+        "yesVotes >= noVotes",
+        "yesVotes < noVotes",
+        "noVotes > yesVotes"
+      ]
+    }
+  ],
+  "prompt": "Pick the voted check, the mark, the tally branch, and the winning check."
+}

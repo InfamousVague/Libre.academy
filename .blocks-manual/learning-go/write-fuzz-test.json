@@ -1,0 +1,46 @@
+{
+  "template": "package main\n\nimport (\n\t\"errors\"\n\t\"strconv\"\n)\n\n// ParseInt converts a string to an integer, returning an error for invalid input.\nfunc ParseInt(s string) (int, error) {\n\tif [[SLOT empty_check]] { return [[SLOT error_zero]], errors.New([[SLOT error_msg]]) }\n\treturn [[SLOT parse_fn]](s)\n}\n",
+  "slots": [
+    {
+      "name": "empty_check",
+      "answer": "s == \"\"",
+      "hint": "condition",
+      "decoys": [
+        "s == nil",
+        "s == \"0\"",
+        "*s == 0"
+      ]
+    },
+    {
+      "name": "error_zero",
+      "answer": "0",
+      "hint": "literal",
+      "decoys": [
+        "-1",
+        "nil",
+        "1"
+      ]
+    },
+    {
+      "name": "error_msg",
+      "answer": "\"empty string\"",
+      "hint": "literal",
+      "decoys": [
+        "\"invalid input\"",
+        "\"parse error\"",
+        "\"empty\""
+      ]
+    },
+    {
+      "name": "parse_fn",
+      "answer": "strconv.Atoi",
+      "hint": "stdlib",
+      "decoys": [
+        "strconv.ParseInt",
+        "strconv.Itoa",
+        "fmt.Sscanf"
+      ]
+    }
+  ],
+  "prompt": "Drop in the empty-string guard, the zero return, the error message, and the parse function."
+}

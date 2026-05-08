@@ -1,0 +1,36 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.26;\n\ncontract SimpleToken {\n    mapping(address => uint256) public balanceOf;\n    uint256 public totalSupply;\n\n    event Transfer(address indexed from, address indexed to, uint256 value);\n\n    error InsufficientBalance();\n\n    function mint(address to, uint256 amount) external {\n        [[SLOT mint_inc]]\n        [[SLOT supply_inc]]\n        [[SLOT mint_event]]\n    }\n\n    function transfer(address to, uint256 amount) external {\n        if (balanceOf[msg.sender] < amount) revert InsufficientBalance();\n        balanceOf[msg.sender] -= amount;\n        balanceOf[to] += amount;\n        emit Transfer(msg.sender, to, amount);\n    }\n}\n",
+  "slots": [
+    {
+      "name": "mint_inc",
+      "answer": "balanceOf[to] += amount;",
+      "hint": "balance",
+      "decoys": [
+        "balanceOf[msg.sender] += amount;",
+        "balanceOf[to] = amount;",
+        "_balances[to] += amount;"
+      ]
+    },
+    {
+      "name": "supply_inc",
+      "answer": "totalSupply += amount;",
+      "hint": "supply",
+      "decoys": [
+        "totalSupply = amount;",
+        "_totalSupply += amount;",
+        "totalSupply -= amount;"
+      ]
+    },
+    {
+      "name": "mint_event",
+      "answer": "emit Transfer(address(0), to, amount);",
+      "hint": "event",
+      "decoys": [
+        "emit Transfer(to, address(0), amount);",
+        "emit Mint(to, amount);",
+        "Transfer(address(0), to, amount);"
+      ]
+    }
+  ],
+  "prompt": "Pick the balance bump, supply bump, and the mint Transfer event."
+}

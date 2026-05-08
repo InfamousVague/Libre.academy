@@ -1,0 +1,36 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\ncontract Namehash {\n    function namehash(string memory name) public pure returns (bytes32 node) {\n        bytes memory b = bytes(name);\n        if (b.length == 0) return bytes32(0);\n\n        // Count labels\n        uint256 dotCount = 0;\n        for (uint256 i = 0; i < b.length; i++) if ([[SLOT dot_check]]) dotCount++;\n        uint256 labels = dotCount + 1;\n\n        // Materialise label hashes left-to-right.\n        bytes32[] memory hashes = new bytes32[](labels);\n        uint256 start = 0;\n        uint256 idx = 0;\n        for (uint256 i = 0; i < b.length; i++) {\n            if (b[i] == 0x2e) {\n                hashes[idx++] = [[SLOT label_hash]];\n                start = i + 1;\n            }\n        }\n        hashes[idx] = keccak256(_slice(b, start, b.length));\n\n        // Fold right-to-left.\n        node = bytes32(0);\n        uint256 labelIndex = labels;\n        while (labelIndex > 0) {\n            labelIndex--;\n            node = [[SLOT fold_hash]];\n        }\n    }\n\n    function _slice(bytes memory b, uint256 from, uint256 to) private pure returns (bytes memory out) {\n        out = new bytes(to - from);\n        for (uint256 i = 0; i < out.length; i++) out[i] = b[from + i];\n    }\n}\n",
+  "slots": [
+    {
+      "name": "dot_check",
+      "answer": "b[i] == 0x2e",
+      "hint": "predicate",
+      "decoys": [
+        "b[i] == \".\"",
+        "b[i] == 0x2f",
+        "b[i] != 0x2e"
+      ]
+    },
+    {
+      "name": "label_hash",
+      "answer": "keccak256(_slice(b, start, i))",
+      "hint": "hash",
+      "decoys": [
+        "keccak256(b)",
+        "keccak256(abi.encodePacked(_slice(b, start, i)))",
+        "_slice(b, start, i)"
+      ]
+    },
+    {
+      "name": "fold_hash",
+      "answer": "keccak256(abi.encodePacked(node, hashes[labelIndex]))",
+      "hint": "hash",
+      "decoys": [
+        "keccak256(abi.encode(node, hashes[labelIndex]))",
+        "keccak256(abi.encodePacked(hashes[labelIndex], node))",
+        "keccak256(node)"
+      ]
+    }
+  ],
+  "prompt": "Pick the dot byte check, the per-label hash, and the right-fold hash."
+}

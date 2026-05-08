@@ -1,0 +1,46 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.26;\n\ncontract PermitToken {\n    string public constant name = \"PermitToken\";\n    string public constant version = \"1\";\n    uint256 public immutable chainId;\n    \n    mapping(address => uint256) public balances;\n    mapping(address => mapping(address => uint256)) public allowances;\n    mapping(address => uint256) public nonces;\n    \n    event Approval(address indexed owner, address indexed spender, uint256 value);\n    event Transfer(address indexed from, address indexed to, uint256 value);\n    \n    bytes32 public constant PERMIT_TYPEHASH = keccak256(\n        \"Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)\"\n    );\n    \n    constructor(uint256 _chainId) {\n        chainId = _chainId;\n    }\n    \n    function mint(address to, uint256 amount) external {\n        balances[to] += amount;\n        emit Transfer(address(0), to, amount);\n    }\n    \n    function DOMAIN_SEPARATOR() public view returns (bytes32) {\n        return keccak256(\n            abi.encode(\n                keccak256(\"EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)\"),\n                keccak256(bytes(name)),\n                keccak256(bytes(version)),\n                chainId,\n                address(this)\n            )\n        );\n    }\n    \n    function permit(\n        address owner,\n        address spender,\n        uint256 value,\n        uint256 deadline,\n        uint8 v,\n        bytes32 r,\n        bytes32 s\n    ) external {\n        require([[SLOT deadline_check]], \"permit expired\");\n        \n        bytes32 structHash = keccak256(\n            abi.encode(PERMIT_TYPEHASH, owner, spender, value, nonces[owner], deadline)\n        );\n        \n        bytes32 digest = keccak256(\n            abi.encodePacked(\"\\x19\\x01\", DOMAIN_SEPARATOR(), structHash)\n        );\n        \n        address signer = [[SLOT recover_call]];\n        require([[SLOT sig_check]], \"invalid signature\");\n        \n        [[SLOT nonce_inc]]\n        allowances[owner][spender] = value;\n        emit Approval(owner, spender, value);\n    }\n    \n    function transferFrom(address from, address to, uint256 amount) external returns (bool) {\n        require(allowances[from][msg.sender] >= amount, \"insufficient allowance\");\n        require(balances[from] >= amount, \"insufficient balance\");\n        \n        allowances[from][msg.sender] -= amount;\n        balances[from] -= amount;\n        balances[to] += amount;\n        \n        emit Transfer(from, to, amount);\n        return true;\n    }\n}\n",
+  "slots": [
+    {
+      "name": "deadline_check",
+      "answer": "block.timestamp <= deadline",
+      "hint": "predicate",
+      "decoys": [
+        "block.timestamp >= deadline",
+        "block.number <= deadline",
+        "deadline <= block.timestamp"
+      ]
+    },
+    {
+      "name": "recover_call",
+      "answer": "ecrecover(digest, v, r, s)",
+      "hint": "ecdsa",
+      "decoys": [
+        "ecrecover(digest, r, s, v)",
+        "ecdsa(digest, v, r, s)",
+        "keccak256(digest, v, r, s)"
+      ]
+    },
+    {
+      "name": "sig_check",
+      "answer": "signer == owner && signer != address(0)",
+      "hint": "predicate",
+      "decoys": [
+        "signer == owner",
+        "signer != address(0)",
+        "owner == address(0)"
+      ]
+    },
+    {
+      "name": "nonce_inc",
+      "answer": "nonces[owner]++;",
+      "hint": "replay",
+      "decoys": [
+        "nonces[spender]++;",
+        "nonces[owner] = 0;",
+        "nonces[owner] += value;"
+      ]
+    }
+  ],
+  "prompt": "Pick the deadline check, ecrecover, signer check, and nonce increment."
+}

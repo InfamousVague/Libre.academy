@@ -1,0 +1,36 @@
+{
+  "template": "use std::collections::HashMap;\n\n/// Counts how many times each word appears in the text.\n/// Words are separated by whitespace.\npub fn count_words(text: &str) -> HashMap<String, i32> {\n    let mut map = HashMap::new();\n    for word in [[SLOT split_call]] {\n        let count = [[SLOT entry_call]];\n        [[SLOT incr]]\n    }\n    map\n}\n\nfn main() {\n    let text = \"hello world wonderful world\";\n    let counts = count_words(text);\n    println!(\"{:?}\", counts);\n}\n",
+  "slots": [
+    {
+      "name": "split_call",
+      "answer": "text.split_whitespace()",
+      "hint": "iter",
+      "decoys": [
+        "text.split(\" \")",
+        "text.split_ascii_whitespace()",
+        "text.words()"
+      ]
+    },
+    {
+      "name": "entry_call",
+      "answer": "map.entry(word.to_string()).or_insert(0)",
+      "hint": "entry",
+      "decoys": [
+        "map.get_or_insert(word.to_string(), 0)",
+        "map.entry(word).or_insert(0)",
+        "map.entry(word.to_string()).or_default()"
+      ]
+    },
+    {
+      "name": "incr",
+      "answer": "*count += 1;",
+      "hint": "mutation",
+      "decoys": [
+        "count += 1;",
+        "*count = *count + 1;",
+        "count.add(1);"
+      ]
+    }
+  ],
+  "prompt": "Pick the split_whitespace iter, the entry+or_insert pattern, and the deref-increment."
+}

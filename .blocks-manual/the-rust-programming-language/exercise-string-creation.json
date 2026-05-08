@@ -1,0 +1,26 @@
+{
+  "template": "pub fn greet() -> String {\n    let mut s = [[SLOT str_from]];\n    [[SLOT push_call]]\n    s\n}\n\nfn main() {\n    println!(\"{}\", greet());\n}\n",
+  "slots": [
+    {
+      "name": "str_from",
+      "answer": "String::from(\"hello\")",
+      "hint": "constructor",
+      "decoys": [
+        "\"hello\".to_string()",
+        "String::new(\"hello\")",
+        "String(\"hello\")"
+      ]
+    },
+    {
+      "name": "push_call",
+      "answer": "s.push_str(\", world!\");",
+      "hint": "string-op",
+      "decoys": [
+        "s.push(\", world!\");",
+        "s += \", world!\";",
+        "s.append(\", world!\");"
+      ]
+    }
+  ],
+  "prompt": "Pick the String::from constructor and the push_str append."
+}

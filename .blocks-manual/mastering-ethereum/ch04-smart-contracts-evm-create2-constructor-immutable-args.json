@@ -1,0 +1,46 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.26;\n\ncontract Vault {\n    address public immutable owner;\n\n    constructor(address _owner) {\n        owner = _owner;\n    }\n}\n\ncontract VaultFactory {\n    function deploy(bytes32 salt, address owner) external returns (address) {\n        Vault vault = [[SLOT create2_call]];\n        return address(vault);\n    }\n\n    function predict(bytes32 salt, address owner) public view returns (address) {\n        bytes memory bytecode = abi.encodePacked(\n            [[SLOT init_code]],\n            abi.encode(owner)\n        );\n        bytes32 hash = keccak256(\n            abi.encodePacked(\n                [[SLOT ff_byte]],\n                address(this),\n                salt,\n                keccak256(bytecode)\n            )\n        );\n        return [[SLOT addr_cast]];\n    }\n}\n",
+  "slots": [
+    {
+      "name": "create2_call",
+      "answer": "new Vault{salt: salt}(owner)",
+      "hint": "create2",
+      "decoys": [
+        "new Vault(owner)",
+        "new Vault{value: 0}(owner)",
+        "new Vault{salt: 0}(owner)"
+      ]
+    },
+    {
+      "name": "init_code",
+      "answer": "type(Vault).creationCode",
+      "hint": "type-helper",
+      "decoys": [
+        "type(Vault).runtimeCode",
+        "Vault.creationCode",
+        "address(Vault).code"
+      ]
+    },
+    {
+      "name": "ff_byte",
+      "answer": "bytes1(0xff)",
+      "hint": "literal",
+      "decoys": [
+        "0xff",
+        "bytes32(0xff)",
+        "bytes1(0xfe)"
+      ]
+    },
+    {
+      "name": "addr_cast",
+      "answer": "address(uint160(uint256(hash)))",
+      "hint": "cast",
+      "decoys": [
+        "address(hash)",
+        "address(uint160(hash))",
+        "address(uint256(hash))"
+      ]
+    }
+  ],
+  "prompt": "Pick the CREATE2 invocation, the init code, the 0xff byte, and the hash→address cast."
+}

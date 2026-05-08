@@ -1,0 +1,36 @@
+{
+  "template": "def extract_quoted(text)\n  text.[[SLOT scan_method]]([[SLOT regex_pattern]])\n      .[[SLOT flatten_call]]\nend",
+  "slots": [
+    {
+      "name": "scan_method",
+      "answer": "scan",
+      "hint": "regex",
+      "decoys": [
+        "match",
+        "gsub",
+        "split"
+      ]
+    },
+    {
+      "name": "regex_pattern",
+      "answer": "/\"((?:\\\\.|[^\\\\\"])*)\"/",
+      "hint": "regex",
+      "decoys": [
+        "/\".*\"/",
+        "/\"([^\"]+)\"/",
+        "/[^\"]+/"
+      ]
+    },
+    {
+      "name": "flatten_call",
+      "answer": "flatten",
+      "hint": "transform",
+      "decoys": [
+        "compact",
+        "uniq",
+        "to_a"
+      ]
+    }
+  ],
+  "prompt": "Pick the regex method, the quoted-string pattern, and the flatten step."
+}

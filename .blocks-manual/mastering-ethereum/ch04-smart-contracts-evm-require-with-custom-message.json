@@ -1,0 +1,36 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.26;\n\ncontract AgeVerifier {\n    uint256 public minimumAge;\n\n    constructor(uint256 _minimumAge) {\n        require([[SLOT init_pos]], \"Invalid minimum\");\n        minimumAge = _minimumAge;\n    }\n\n    function checkAge(uint256 age) external view returns (bool) {\n        require([[SLOT age_check]], [[SLOT young_msg]]);\n        return true;\n    }\n\n    function setMinimumAge(uint256 newMin) external {\n        require(newMin > 0, \"Invalid minimum\");\n        minimumAge = newMin;\n    }\n}\n",
+  "slots": [
+    {
+      "name": "init_pos",
+      "answer": "_minimumAge > 0",
+      "hint": "predicate",
+      "decoys": [
+        "_minimumAge >= 0",
+        "_minimumAge != 0",
+        "_minimumAge < 100"
+      ]
+    },
+    {
+      "name": "age_check",
+      "answer": "age >= minimumAge",
+      "hint": "predicate",
+      "decoys": [
+        "age > minimumAge",
+        "age == minimumAge",
+        "minimumAge >= age"
+      ]
+    },
+    {
+      "name": "young_msg",
+      "answer": "\"Too young\"",
+      "hint": "literal",
+      "decoys": [
+        "\"Underage\"",
+        "\"Invalid age\"",
+        "\"Min age failed\""
+      ]
+    }
+  ],
+  "prompt": "Pick the constructor positivity check, the age guard, and the error message."
+}

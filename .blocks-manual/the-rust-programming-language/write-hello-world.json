@@ -1,0 +1,26 @@
+{
+  "template": "pub fn greeting() -> [[SLOT ret_type]] {\n    [[SLOT msg]]\n}\n\nfn main() {\n    println!(\"{}\", greeting());\n}\n",
+  "slots": [
+    {
+      "name": "msg",
+      "answer": "\"Hello, world!\"",
+      "hint": "literal",
+      "decoys": [
+        "\"Hello world!\"",
+        "\"hello, world!\"",
+        "\"Goodbye, world!\""
+      ]
+    },
+    {
+      "name": "ret_type",
+      "answer": "&'static str",
+      "hint": "type",
+      "decoys": [
+        "String",
+        "&str",
+        "&'a str"
+      ]
+    }
+  ],
+  "prompt": "Pick the greeting and the static-str return type."
+}

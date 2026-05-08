@@ -1,0 +1,46 @@
+{
+  "template": "defmodule Solution do\n  @doc \"\"\"\n  Extracts width and height from a PNG binary header.\n  Returns {width, height}.\n  \"\"\"\n  def extract_dimensions(png_binary) do\n    # PNG signature (8 bytes) + chunk length (4 bytes) + [[SLOT ihdr]] (4 bytes) = 16 bytes offset\n    # Then width (4 bytes) and height (4 bytes)\n    <<_signature::[[SLOT sig_size]],\n      [[SLOT chunk_decl]],\n      \"IHDR\",\n      [[SLOT width_decl]],\n      height::unsigned-big-integer-size(32),\n      _rest::binary>> = png_binary\n    \n    {width, height}\n  end\nend",
+  "slots": [
+    {
+      "name": "sig_size",
+      "answer": "binary-size(8)",
+      "hint": "annotation",
+      "decoys": [
+        "binary-size(7)",
+        "binary-size(16)",
+        "8-bytes"
+      ]
+    },
+    {
+      "name": "chunk_decl",
+      "answer": "_chunk_length::32",
+      "hint": "binary",
+      "decoys": [
+        "_chunk_length::8",
+        "_chunk_length::binary-size(4)",
+        "_chunk_length::integer-32"
+      ]
+    },
+    {
+      "name": "ihdr",
+      "answer": "\"IHDR\"",
+      "hint": "literal",
+      "decoys": [
+        "\"PNG\"",
+        "\"HDR\"",
+        "\"IEND\""
+      ]
+    },
+    {
+      "name": "width_decl",
+      "answer": "width::unsigned-big-integer-size(32)",
+      "hint": "binary",
+      "decoys": [
+        "width::integer-size(32)",
+        "width::unsigned-little-integer-size(32)",
+        "width::unsigned-big-integer-size(16)"
+      ]
+    }
+  ],
+  "prompt": "Pick the binary annotations for the PNG header chunks."
+}

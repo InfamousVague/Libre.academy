@@ -1,0 +1,36 @@
+{
+  "template": "mod kitchen {\n    [[SLOT prep_pub]] {\n        [[SLOT chop_pub]]() -> &'static str {\n            \"Vegetables chopped\"\n        }\n\n        pub fn marinate_protein() -> &'static str {\n            \"Protein marinated\"\n        }\n    }\n\n    [[SLOT stove_pub]]() -> &'static str {\n        \"Stove heated\"\n    }\n}\n\npub fn prepare_meal() -> (String, String, String) {\n    let veggies = crate::kitchen::prep::chop_vegetables();\n    let protein = crate::kitchen::prep::marinate_protein();\n    let stove = crate::kitchen::heat_stove();\n    (veggies.to_string(), protein.to_string(), stove.to_string())\n}\n",
+  "slots": [
+    {
+      "name": "prep_pub",
+      "answer": "pub mod prep",
+      "hint": "module",
+      "decoys": [
+        "mod prep",
+        "pub fn prep",
+        "pub use prep"
+      ]
+    },
+    {
+      "name": "chop_pub",
+      "answer": "pub fn chop_vegetables",
+      "hint": "function",
+      "decoys": [
+        "fn chop_vegetables",
+        "pub mod chop_vegetables",
+        "pub static chop_vegetables"
+      ]
+    },
+    {
+      "name": "stove_pub",
+      "answer": "pub fn heat_stove",
+      "hint": "function",
+      "decoys": [
+        "fn heat_stove",
+        "pub mod heat_stove",
+        "pub static heat_stove"
+      ]
+    }
+  ],
+  "prompt": "Make prep, chop_vegetables, and heat_stove pub."
+}

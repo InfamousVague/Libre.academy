@@ -1,0 +1,46 @@
+{
+  "template": "function extract_quotes(text)\n  local results = [[SLOT init_results]]\n  local pattern = [[SLOT pattern]]\n  for match in text:[[SLOT iter]](pattern) do\n    local unescaped = match:gsub('\\\\(.)', [[SLOT unescape_replace]])\n    table.insert(results, unescaped)\n  end\n  return results\nend",
+  "slots": [
+    {
+      "name": "init_results",
+      "answer": "{}",
+      "hint": "table",
+      "decoys": [
+        "nil",
+        "\"\"",
+        "()"
+      ]
+    },
+    {
+      "name": "pattern",
+      "answer": "'\"([^\"\\\\]*(\\\\.[^\"\\\\]*)*)\"",
+      "hint": "regex",
+      "decoys": [
+        "'\"([^\"]*)\"'",
+        "'%b\"\"'",
+        "'(.-)'"
+      ]
+    },
+    {
+      "name": "iter",
+      "answer": "gmatch",
+      "hint": "method",
+      "decoys": [
+        "match",
+        "find",
+        "gsub"
+      ]
+    },
+    {
+      "name": "unescape_replace",
+      "answer": "'%1'",
+      "hint": "capture",
+      "decoys": [
+        "'%0'",
+        "'\\\\1'",
+        "'\\\\%1'"
+      ]
+    }
+  ],
+  "prompt": "Drop in the table init, the quoted-substring pattern, the iterator method, and the capture replacement."
+}

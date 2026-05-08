@@ -1,0 +1,46 @@
+{
+  "template": "defmodule Solution do\n  @doc \"\"\"\n  Decompresses a run-length encoded string with nested brackets.\n  \"\"\"\n  def decompress(s) do\n    {result, _} = parse(s, 0)\n    result\n  end\n\n  defp parse(s, pos) when pos >= String.length(s), do: {\"\", pos}\n\n  defp parse(s, pos) do\n    parse_segments(s, pos, \"\")\n  end\n\n  defp parse_segments(s, pos, acc) when pos >= String.length(s), do: {acc, pos}\n\n  defp parse_segments(s, pos, acc) do\n    char = String.at(s, pos)\n\n    cond do\n      [[SLOT close_bracket_check]] ->\n        {acc, pos}\n\n      [[SLOT digit_check]] ->\n        {num, new_pos} = parse_number(s, pos)\n        # Skip opening bracket\n        new_pos = new_pos + 1\n        {content, after_bracket} = parse(s, new_pos)\n        # Skip closing bracket\n        after_bracket = after_bracket + 1\n        repeated = [[SLOT repeat_call]]\n        parse_segments(s, after_bracket, acc <> repeated)\n\n      true ->\n        parse_segments(s, pos + 1, acc <> char)\n    end\n  end\n\n  defp parse_number(s, pos) do\n    parse_number(s, pos, 0)\n  end\n\n  defp parse_number(s, pos, acc) do\n    if pos < String.length(s) do\n      char = String.at(s, pos)\n      if char >= \"0\" and char <= \"9\" do\n        digit = [[SLOT to_int_call]]\n        parse_number(s, pos + 1, acc * 10 + digit)\n      else\n        {acc, pos}\n      end\n    else\n      {acc, pos}\n    end\n  end\nend",
+  "slots": [
+    {
+      "name": "close_bracket_check",
+      "answer": "char == \"]\"",
+      "hint": "predicate",
+      "decoys": [
+        "char == \"[\"",
+        "char == \")\"",
+        "char == \"}\""
+      ]
+    },
+    {
+      "name": "digit_check",
+      "answer": "char >= \"0\" and char <= \"9\"",
+      "hint": "range",
+      "decoys": [
+        "char in ?0..?9",
+        "char.isdigit",
+        "String.contains?(\"0123456789\", char)"
+      ]
+    },
+    {
+      "name": "repeat_call",
+      "answer": "String.duplicate(content, num)",
+      "hint": "string-op",
+      "decoys": [
+        "String.repeat(content, num)",
+        "Enum.repeat(content, num)",
+        "String.duplicate(num, content)"
+      ]
+    },
+    {
+      "name": "to_int_call",
+      "answer": "String.to_integer(char)",
+      "hint": "parse",
+      "decoys": [
+        "Integer.parse(char)",
+        "String.to_int(char)",
+        "Integer.from_string(char)"
+      ]
+    }
+  ],
+  "prompt": "Pick the bracket predicate, digit range check, repeat call, and digit-to-int parse."
+}

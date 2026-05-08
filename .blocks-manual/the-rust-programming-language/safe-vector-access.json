@@ -1,0 +1,36 @@
+{
+  "template": "pub fn build_vector() -> Vec<i32> {\n    let mut v = Vec::new();\n    v.push(10);\n    v.push(20);\n    v.push(30);\n    v\n}\n\npub fn safe_access(v: &Vec<i32>, index: usize) -> Option<i32> {\n    match [[SLOT get_call]] {\n        [[SLOT some_arm]]\n        [[SLOT none_arm]]\n    }\n}\n\nfn main() {\n    let v = build_vector();\n    println!(\"Index 1: {:?}\", safe_access(&v, 1));\n    println!(\"Index 10: {:?}\", safe_access(&v, 10));\n}\n",
+  "slots": [
+    {
+      "name": "get_call",
+      "answer": "v.get(index)",
+      "hint": "method",
+      "decoys": [
+        "v[index]",
+        "v.at(index)",
+        "v.fetch(index)"
+      ]
+    },
+    {
+      "name": "some_arm",
+      "answer": "Some(&value) => Some(value),",
+      "hint": "pattern",
+      "decoys": [
+        "Some(value) => Some(value),",
+        "Some(&value) => value,",
+        "Some(value) => *value,"
+      ]
+    },
+    {
+      "name": "none_arm",
+      "answer": "None => None,",
+      "hint": "pattern",
+      "decoys": [
+        "None => Some(0),",
+        "_ => None,",
+        "None => panic!(),"
+      ]
+    }
+  ],
+  "prompt": "Pick the .get() call and the Some/None match arms."
+}

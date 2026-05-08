@@ -1,0 +1,46 @@
+{
+  "template": "module Main where\n\nimport Control.Exception (try, SomeException, evaluate)\nimport System.IO (hSetBuffering, stdout, BufferMode(NoBuffering))\n\ndata Tree = [[SLOT tree_decl]]\n\nsumLeafPaths :: Tree -> Int\nsumLeafPaths tree = go 0 tree\n  where\n    [[SLOT empty_case]]\n    [[SLOT leaf_case]]\n    go acc (Node val left right) = [[SLOT branch_case]]\n\nmain :: IO ()\nmain = kataMain",
+  "slots": [
+    {
+      "name": "tree_decl",
+      "answer": "Empty | Node Int Tree Tree",
+      "hint": "adt",
+      "decoys": [
+        "Leaf | Node Int",
+        "Node Int (Tree, Tree)",
+        "Empty | Branch Int Tree Tree"
+      ]
+    },
+    {
+      "name": "empty_case",
+      "answer": "go acc Empty = 0",
+      "hint": "base",
+      "decoys": [
+        "go _ Empty = 0",
+        "go acc Empty = acc",
+        "go acc Empty = []"
+      ]
+    },
+    {
+      "name": "leaf_case",
+      "answer": "go acc (Node val Empty Empty) = acc + val",
+      "hint": "leaf",
+      "decoys": [
+        "go acc (Node val _ _) = acc + val",
+        "go _ (Node val Empty Empty) = val",
+        "go acc (Node val Empty Empty) = acc"
+      ]
+    },
+    {
+      "name": "branch_case",
+      "answer": "go (acc + val) left + go (acc + val) right",
+      "hint": "recurse",
+      "decoys": [
+        "go acc left + go acc right",
+        "go (acc + val) left",
+        "go val left + go val right"
+      ]
+    }
+  ],
+  "prompt": "Pick the ADT declaration and the three pattern-match cases."
+}

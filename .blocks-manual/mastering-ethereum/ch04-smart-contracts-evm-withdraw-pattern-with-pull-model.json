@@ -1,0 +1,36 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.26;\n\ncontract Vault {\n    mapping(address => uint256) public balances;\n\n    event Deposited(address indexed user, uint256 amount);\n    event Withdrawn(address indexed user, uint256 amount);\n\n    error InsufficientBalance();\n\n    function deposit() external payable {\n        [[SLOT deposit_inc]]\n        emit Deposited(msg.sender, msg.value);\n    }\n\n    function balanceOf(address user) external view returns (uint256) {\n        return balances[user];\n    }\n\n    function withdraw(uint256 amount) external {\n        if ([[SLOT withdraw_check]]) revert InsufficientBalance();\n        balances[msg.sender] -= amount;\n        emit Withdrawn(msg.sender, amount);\n        [[SLOT send_call]]\n        require(success, \"Transfer failed\");\n    }\n}\n",
+  "slots": [
+    {
+      "name": "deposit_inc",
+      "answer": "balances[msg.sender] += msg.value;",
+      "hint": "deposit",
+      "decoys": [
+        "balances[msg.sender] = msg.value;",
+        "balances[to] += msg.value;",
+        "balances[msg.sender] -= msg.value;"
+      ]
+    },
+    {
+      "name": "withdraw_check",
+      "answer": "balances[msg.sender] < amount",
+      "hint": "predicate",
+      "decoys": [
+        "balances[msg.sender] <= amount",
+        "balances[msg.sender] > amount",
+        "amount > balances[to]"
+      ]
+    },
+    {
+      "name": "send_call",
+      "answer": "(bool success, ) = msg.sender.call{value: amount}(\"\");",
+      "hint": "low-level",
+      "decoys": [
+        "msg.sender.transfer(amount);",
+        "(bool success, ) = address(this).call{value: amount}(\"\");",
+        "payable(msg.sender).send(amount);"
+      ]
+    }
+  ],
+  "prompt": "Pick the deposit increment, the balance check, and the low-level send."
+}

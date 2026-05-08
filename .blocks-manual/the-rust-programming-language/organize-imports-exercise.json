@@ -1,0 +1,36 @@
+{
+  "template": "mod back_of_house {\n    pub struct Breakfast {\n        pub toast: String,\n        seasonal_fruit: String,\n    }\n\n    impl Breakfast {\n        pub fn summer(toast: &str) -> Breakfast {\n            Breakfast {\n                toast: String::from(toast),\n                seasonal_fruit: String::from(\"peaches\"),\n            }\n        }\n    }\n\n    pub enum DietaryBreakfast {\n        Standard,\n        Vegan,\n        GlutenFree,\n    }\n}\n\n[[SLOT grouped_use]]\n[[SLOT io_use]]\n[[SLOT glob_use]]\n\npub fn order_breakfast() -> String {\n    let mut meal = Breakfast::summer(\"Rye\");\n    meal.toast = String::from(\"Wheat\");\n    meal.toast\n}\n\npub fn describe_diet(diet: DietBreakfast) -> &'static str {\n    match diet {\n        DietBreakfast::Standard => \"Standard breakfast with eggs and toast\",\n        DietBreakfast::Vegan => \"Plant-based breakfast with tofu scramble\",\n        DietBreakfast::GlutenFree => \"Gluten-free breakfast with rice cakes\",\n    }\n}\n\npub fn create_menu() -> HashMap<String, u32> {\n    HashMap::new()\n}\n",
+  "slots": [
+    {
+      "name": "grouped_use",
+      "answer": "use back_of_house::{Breakfast, DietaryBreakfast as DietBreakfast};",
+      "hint": "use",
+      "decoys": [
+        "use back_of_house::Breakfast; use back_of_house::DietaryBreakfast as DietBreakfast;",
+        "use back_of_house::*;",
+        "use back_of_house::{Breakfast as DietBreakfast, DietaryBreakfast};"
+      ]
+    },
+    {
+      "name": "io_use",
+      "answer": "use std::io::{self, Write};",
+      "hint": "use",
+      "decoys": [
+        "use std::io::Write;",
+        "use std::{io, Write};",
+        "use std::io::*;"
+      ]
+    },
+    {
+      "name": "glob_use",
+      "answer": "use std::collections::*;",
+      "hint": "use",
+      "decoys": [
+        "use std::collections;",
+        "use std::collections::HashMap;",
+        "use *;"
+      ]
+    }
+  ],
+  "prompt": "Pick the grouped use, the {self, Write} import, and the glob import."
+}

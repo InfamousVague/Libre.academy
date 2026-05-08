@@ -1,0 +1,36 @@
+{
+  "template": "/// Takes ownership of a String, appends \" world\" to it, and returns the modified String.\npub fn append_world([[SLOT mut_param]]) -> String {\n    [[SLOT push_call]]\n    s\n}\n\n/// Takes ownership of a String, prints it, then returns ownership back to the caller.\npub fn print_and_return(s: String) -> String {\n    println!(\"{s}\");\n    s\n}\n\nfn main() {\n    let s1 = String::from(\"hello\");\n    let s2 = append_world(s1);\n    println!(\"After append_world: {s2}\");\n\n    let s3 = String::from(\"ownership\");\n    [[SLOT ownership_chain]]\n    println!(\"Still have it: {s4}\");\n}\n",
+  "slots": [
+    {
+      "name": "mut_param",
+      "answer": "mut s: String",
+      "hint": "param",
+      "decoys": [
+        "s: String",
+        "&mut s: String",
+        "s: &mut String"
+      ]
+    },
+    {
+      "name": "push_call",
+      "answer": "s.push_str(\" world\");",
+      "hint": "string-op",
+      "decoys": [
+        "s += \" world\";",
+        "s.append(\" world\");",
+        "s.push(\" world\");"
+      ]
+    },
+    {
+      "name": "ownership_chain",
+      "answer": "let s4 = print_and_return(s3);",
+      "hint": "binding",
+      "decoys": [
+        "let s4 = &print_and_return(s3);",
+        "print_and_return(s3);",
+        "let s4 = print_and_return(&s3);"
+      ]
+    }
+  ],
+  "prompt": "Pick the mut-param, the push_str call, and the chained ownership binding."
+}

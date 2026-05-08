@@ -1,0 +1,46 @@
+{
+  "template": "const std = @import(\"std\");\n\npub fn parseStateMachine(commands: []const []const u8) !?[]const u8 {\n    var state: ?[]const u8 = null;\n    var counter: u32 = 0;\n\n    for (commands) |cmd| {\n        if (std.mem.eql(u8, cmd, \"START\")) {\n            if ([[SLOT start_already]]) return error.InvalidTransition;\n            state = \"READY\";\n        } else if (std.mem.startsWith(u8, cmd, \"PROCESS \")) {\n            if (state == null or std.mem.eql(u8, state.?, \"SHUTDOWN\")) return error.InvalidTransition;\n            const arg = [[SLOT arg_slice]];\n            const n = [[SLOT parse_int]] catch return error.InvalidCommand;\n            if (n == 0 or n > 1000) return error.InvalidCommand;\n            if ([[SLOT overflow_check]]) return error.CounterOverflow;\n            counter += n;\n            state = \"RUNNING\";\n        } else if (std.mem.eql(u8, cmd, \"STOP\")) {\n            if (state == null or !std.mem.eql(u8, state.?, \"RUNNING\")) return error.InvalidTransition;\n            state = \"READY\";\n        } else if (std.mem.eql(u8, cmd, \"SHUTDOWN\")) {\n            if (state == null or !std.mem.eql(u8, state.?, \"READY\")) return error.InvalidTransition;\n            state = null;\n        } else {\n            return error.InvalidCommand;\n        }\n    }\n\n    return state;\n}",
+  "slots": [
+    {
+      "name": "start_already",
+      "answer": "state != null",
+      "hint": "guard",
+      "decoys": [
+        "state == null",
+        "state == \"READY\"",
+        "counter > 0"
+      ]
+    },
+    {
+      "name": "arg_slice",
+      "answer": "cmd[8..]",
+      "hint": "slice",
+      "decoys": [
+        "cmd[7..]",
+        "cmd[9..]",
+        "cmd[\"PROCESS \".len..]"
+      ]
+    },
+    {
+      "name": "parse_int",
+      "answer": "std.fmt.parseInt(u32, arg, 10)",
+      "hint": "parse",
+      "decoys": [
+        "std.fmt.parse(u32, arg)",
+        "std.fmt.parseInt(arg, 10)",
+        "u32.parse(arg)"
+      ]
+    },
+    {
+      "name": "overflow_check",
+      "answer": "counter + n > 1000",
+      "hint": "limit",
+      "decoys": [
+        "counter > 1000",
+        "n > 1000",
+        "counter + n >= 1000"
+      ]
+    }
+  ],
+  "prompt": "Wire up the START guard, the PROCESS arg slice, the parseInt call, and the overflow check."
+}

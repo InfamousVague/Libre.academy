@@ -1,0 +1,46 @@
+{
+  "template": "[[SLOT trait_decl]] {\n    [[SLOT trait_method]]\n}\n\npub struct NewsArticle {\n    pub headline: String,\n    pub author: String,\n    pub location: String,\n}\n\n[[SLOT impl_decl]] {\n    fn summarize(&self) -> String {\n        [[SLOT summary_fmt]]\n    }\n}\n\nfn main() {\n    let article = NewsArticle {\n        headline: String::from(\"Penguins Win the Cup\"),\n        author: String::from(\"Iceburgh\"),\n        location: String::from(\"Pittsburgh, PA\"),\n    };\n    println!(\"{}\", article.summarize());\n}\n",
+  "slots": [
+    {
+      "name": "trait_decl",
+      "answer": "pub trait Summary",
+      "hint": "trait",
+      "decoys": [
+        "pub fn Summary",
+        "pub interface Summary",
+        "pub struct Summary"
+      ]
+    },
+    {
+      "name": "trait_method",
+      "answer": "fn summarize(&self) -> String;",
+      "hint": "method",
+      "decoys": [
+        "fn summarize(&self);",
+        "fn summarize() -> String;",
+        "fn summarize(self) -> String;"
+      ]
+    },
+    {
+      "name": "impl_decl",
+      "answer": "impl Summary for NewsArticle",
+      "hint": "impl",
+      "decoys": [
+        "impl NewsArticle",
+        "impl Summary",
+        "impl Summary<NewsArticle>"
+      ]
+    },
+    {
+      "name": "summary_fmt",
+      "answer": "format!(\"{}, by {} ({})\", self.headline, self.author, self.location)",
+      "hint": "format",
+      "decoys": [
+        "format!(\"{} by {}\", self.headline, self.author)",
+        "format!(\"{}, by {}\", self.headline, self.author)",
+        "self.headline.to_string()"
+      ]
+    }
+  ],
+  "prompt": "Pick the trait, its method signature, the impl, and the format-string body."
+}

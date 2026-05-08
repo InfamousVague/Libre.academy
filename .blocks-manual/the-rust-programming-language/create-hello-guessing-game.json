@@ -1,0 +1,16 @@
+{
+  "template": "fn main() {\n    println!([[SLOT msg]]);\n}\n",
+  "slots": [
+    {
+      "name": "msg",
+      "answer": "\"Hello, Guessing Game!\"",
+      "hint": "literal",
+      "decoys": [
+        "\"Hello, world!\"",
+        "\"Guessing Game\"",
+        "\"Hello!\""
+      ]
+    }
+  ],
+  "prompt": "Pick the greeting message."
+}

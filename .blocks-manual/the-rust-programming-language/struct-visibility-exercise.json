@@ -1,0 +1,46 @@
+{
+  "template": "mod back_of_house {\n    [[SLOT struct_pub]] {\n        [[SLOT toast_field]]\n        [[SLOT fruit_field]]\n    }\n\n    impl Breakfast {\n        [[SLOT summer_sig]] {\n            Breakfast {\n                toast: String::from(toast),\n                seasonal_fruit: String::from(\"peaches\"),\n            }\n        }\n    }\n}\n\npub fn order_breakfast() -> String {\n    let mut meal = back_of_house::Breakfast::summer(\"Rye\");\n    meal.toast = String::from(\"Wheat\");\n    meal.toast\n}\n",
+  "slots": [
+    {
+      "name": "struct_pub",
+      "answer": "pub struct Breakfast",
+      "hint": "visibility",
+      "decoys": [
+        "struct Breakfast",
+        "pub mod Breakfast",
+        "pub enum Breakfast"
+      ]
+    },
+    {
+      "name": "toast_field",
+      "answer": "pub toast: String,",
+      "hint": "field",
+      "decoys": [
+        "toast: String,",
+        "pub toast: &str,",
+        "pub toast: String;"
+      ]
+    },
+    {
+      "name": "fruit_field",
+      "answer": "seasonal_fruit: String,",
+      "hint": "field",
+      "decoys": [
+        "pub seasonal_fruit: String,",
+        "seasonal_fruit: &str,",
+        "seasonal_fruit: String;"
+      ]
+    },
+    {
+      "name": "summer_sig",
+      "answer": "pub fn summer(toast: &str) -> Breakfast",
+      "hint": "signature",
+      "decoys": [
+        "fn summer(toast: &str) -> Breakfast",
+        "pub fn summer(toast: String) -> Breakfast",
+        "pub fn summer(toast: &str) -> &Breakfast"
+      ]
+    }
+  ],
+  "prompt": "Pick the pub struct, the pub toast field, the private fruit field, and the summer signature."
+}

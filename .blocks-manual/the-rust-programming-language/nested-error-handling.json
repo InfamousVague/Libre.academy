@@ -1,0 +1,36 @@
+{
+  "template": "use std::fs::File;\nuse std::io::ErrorKind;\n\n/// Opens \"hello.txt\" if it exists, or creates it if not found.\n/// Panics on any other error.\npub fn open_or_create_file() -> File {\n    let file_result = File::open(\"hello.txt\");\n    \n    match file_result {\n        Ok(file) => file,\n        Err(error) => match error.kind() {\n            [[SLOT kind_notfound]] => match [[SLOT create_call]] {\n                Ok(fc) => fc,\n                [[SLOT create_err]]\n            },\n            other_error => {\n                panic!(\"Problem opening the file: {other_error:?}\");\n            }\n        },\n    }\n}\n\nfn main() {\n    let _file = open_or_create_file();\n    println!(\"File handle obtained successfully!\");\n}\n",
+  "slots": [
+    {
+      "name": "kind_notfound",
+      "answer": "ErrorKind::NotFound",
+      "hint": "kind",
+      "decoys": [
+        "ErrorKind::Missing",
+        "ErrorKind::NotExists",
+        "Error::NotFound"
+      ]
+    },
+    {
+      "name": "create_call",
+      "answer": "File::create(\"hello.txt\")",
+      "hint": "io",
+      "decoys": [
+        "File::open(\"hello.txt\")",
+        "File::new(\"hello.txt\")",
+        "fs::create(\"hello.txt\")"
+      ]
+    },
+    {
+      "name": "create_err",
+      "answer": "Err(e) => panic!(\"Problem creating the file: {e:?}\"),",
+      "hint": "arm",
+      "decoys": [
+        "Err(_) => panic!(\"Problem creating the file\"),",
+        "Err(e) => panic!(\"{e:?}\"),",
+        "Err(e) => println!(\"Problem creating the file: {e:?}\"),"
+      ]
+    }
+  ],
+  "prompt": "Pick the ErrorKind::NotFound, the File::create, and the create-err arm."
+}

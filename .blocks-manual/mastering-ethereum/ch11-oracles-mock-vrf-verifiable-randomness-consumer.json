@@ -1,0 +1,46 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.26;\n\ncontract MockVRFCoordinator {\n    uint256 private nextRequestId;\n    mapping(uint256 => address) private requests;\n\n    function requestRandomness(address consumer) external returns (uint256 requestId) {\n        requestId = [[SLOT req_inc]];\n        requests[requestId] = consumer;\n        return requestId;\n    }\n\n    function fulfillRandomness(uint256 requestId, uint256 randomWord) external {\n        address consumer = requests[requestId];\n        require([[SLOT consumer_check]], \"Invalid request\");\n        IVRFConsumer(consumer).rawFulfillRandomness(requestId, randomWord);\n    }\n}\n\ninterface IVRFConsumer {\n    function rawFulfillRandomness(uint256 requestId, uint256 randomWord) external;\n}\n\ncontract RandomDice {\n    address public immutable coordinator;\n    mapping(uint256 => uint256) public rolls;\n\n    event DiceRolled(address indexed roller, uint256 indexed requestId);\n    event DiceLanded(uint256 indexed requestId, uint256 result);\n\n    constructor(address _coordinator) {\n        coordinator = _coordinator;\n    }\n\n    function rollDice() external returns (uint256 requestId) {\n        requestId = MockVRFCoordinator(coordinator).requestRandomness(address(this));\n        emit DiceRolled(msg.sender, requestId);\n        return requestId;\n    }\n\n    function rawFulfillRandomness(uint256 requestId, uint256 randomWord) external {\n        require([[SLOT coord_check]], \"Only coordinator\");\n        uint256 result = [[SLOT dice_calc]];\n        rolls[requestId] = result;\n        emit DiceLanded(requestId, result);\n    }\n\n    function getRoll(uint256 requestId) external view returns (uint256) {\n        return rolls[requestId];\n    }\n}\n",
+  "slots": [
+    {
+      "name": "req_inc",
+      "answer": "nextRequestId++",
+      "hint": "post-inc",
+      "decoys": [
+        "++nextRequestId",
+        "nextRequestId += 1",
+        "nextRequestId"
+      ]
+    },
+    {
+      "name": "consumer_check",
+      "answer": "consumer != address(0)",
+      "hint": "predicate",
+      "decoys": [
+        "consumer == address(0)",
+        "consumer == msg.sender",
+        "requestId != 0"
+      ]
+    },
+    {
+      "name": "dice_calc",
+      "answer": "(randomWord % 6) + 1",
+      "hint": "math",
+      "decoys": [
+        "randomWord % 6",
+        "(randomWord % 7) + 1",
+        "randomWord / 6"
+      ]
+    },
+    {
+      "name": "coord_check",
+      "answer": "msg.sender == coordinator",
+      "hint": "predicate",
+      "decoys": [
+        "msg.sender != coordinator",
+        "tx.origin == coordinator",
+        "msg.sender == address(this)"
+      ]
+    }
+  ],
+  "prompt": "Pick the request id bump, the consumer guard, the dice math, and the coordinator check."
+}

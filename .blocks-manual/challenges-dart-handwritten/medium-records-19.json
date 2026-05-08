@@ -1,0 +1,46 @@
+{
+  "template": "List<[[SLOT record_type]]> mergeRanges(List<({int start, int end})> ranges) {\n  if (ranges.isEmpty) return [];\n  \n  var sorted = List<({int start, int end})>.from(ranges);\n  sorted.sort((a, b) => [[SLOT sort_compare]]);\n  \n  var merged = <({int start, int end})>[sorted[0]];\n  \n  for (var i = 1; i < sorted.length; i++) {\n    var current = sorted[i];\n    var last = merged.last;\n    \n    if ([[SLOT overlap_check]]) {\n      merged[merged.length - 1] = (start: last.start, end: [[SLOT max_end]]);\n    } else {\n      merged.add(current);\n    }\n  }\n  \n  return merged;\n}",
+  "slots": [
+    {
+      "name": "record_type",
+      "answer": "({int start, int end})",
+      "hint": "record",
+      "decoys": [
+        "Map<String, int>",
+        "(int, int)",
+        "Range"
+      ]
+    },
+    {
+      "name": "sort_compare",
+      "answer": "a.start.compareTo(b.start)",
+      "hint": "comparator",
+      "decoys": [
+        "b.start.compareTo(a.start)",
+        "a.compareTo(b)",
+        "a.start - b.start"
+      ]
+    },
+    {
+      "name": "overlap_check",
+      "answer": "current.start <= last.end",
+      "hint": "predicate",
+      "decoys": [
+        "current.start < last.end",
+        "current.start >= last.end",
+        "current.end <= last.start"
+      ]
+    },
+    {
+      "name": "max_end",
+      "answer": "current.end > last.end ? current.end : last.end",
+      "hint": "max",
+      "decoys": [
+        "current.end",
+        "last.end",
+        "(current.end + last.end) / 2"
+      ]
+    }
+  ],
+  "prompt": "Type the record, build the comparator, the overlap predicate, and the max-end ternary."
+}

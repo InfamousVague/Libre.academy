@@ -1,0 +1,56 @@
+{
+  "template": "-- Schema setup\nCREATE TABLE employees (\n  id INTEGER PRIMARY KEY,\n  name TEXT NOT NULL,\n  manager_id INTEGER,\n  salary INTEGER NOT NULL\n);\n\nINSERT INTO employees VALUES\n  (1, 'Alice', NULL, 150000),\n  (2, 'Bob', 1, 120000),\n  (3, 'Carol', 1, 110000),\n  (4, 'Dave', 2, 90000),\n  (5, 'Eve', 2, 85000);\n\n-- expect: 5 rows, {\"id\": 1, \"name\": \"Alice\", \"depth\": 0, \"subordinate_count\": 4, \"total_salary_cost\": 555000}\n-- expect: 5 rows, {\"id\": 2, \"name\": \"Bob\", \"depth\": 1, \"subordinate_count\": 2, \"total_salary_cost\": 295000}\n-- expect: 5 rows, {\"id\": 3, \"name\": \"Carol\", \"depth\": 1, \"subordinate_count\": 0, \"total_salary_cost\": 110000}\n-- expect: 5 rows, {\"id\": 4, \"name\": \"Dave\", \"depth\": 2, \"subordinate_count\": 0, \"total_salary_cost\": 90000}\n-- expect: 5 rows, {\"id\": 5, \"name\": \"Eve\", \"depth\": 2, \"subordinate_count\": 0, \"total_salary_cost\": 85000}\nWITH RECURSIVE\n  hierarchy AS (\n    SELECT id, name, manager_id, salary, [[SLOT init_depth_clause]]\n    FROM employees\n    WHERE [[SLOT null_check]]\n    UNION ALL\n    SELECT e.id, e.name, e.manager_id, e.salary, [[SLOT incr_clause]]\n    FROM employees e\n    JOIN hierarchy h ON e.manager_id = h.id\n  ),\n  subordinates AS (\n    SELECT h1.id AS manager_id, h2.id AS subordinate_id\n    FROM hierarchy h1\n    JOIN hierarchy h2 ON h2.depth > h1.depth\n    WHERE EXISTS (\n      WITH RECURSIVE path AS (\n        SELECT id, manager_id FROM employees WHERE id = h2.id\n        UNION ALL\n        SELECT e.id, e.manager_id FROM employees e JOIN path p ON e.id = p.manager_id\n      )\n      SELECT 1 FROM path WHERE id = h1.id\n    )\n  )\nSELECT\n  h.id,\n  h.name,\n  h.depth,\n  COALESCE((SELECT [[SLOT count_clause]] FROM subordinates WHERE manager_id = h.id), 0) AS subordinate_count,\n  h.salary + COALESCE((SELECT SUM(e2.salary) FROM subordinates s JOIN employees e2 ON s.subordinate_id = e2.id WHERE s.manager_id = h.id), 0) AS total_salary_cost\nFROM hierarchy h\n[[SLOT order_clause]];",
+  "slots": [
+    {
+      "name": "init_depth_clause",
+      "answer": "0 AS depth",
+      "hint": "seed",
+      "decoys": [
+        "1 AS depth",
+        "NULL AS depth",
+        "'root' AS depth"
+      ]
+    },
+    {
+      "name": "null_check",
+      "answer": "manager_id IS NULL",
+      "hint": "predicate",
+      "decoys": [
+        "manager_id IS NOT NULL",
+        "manager_id = 0",
+        "id = 1"
+      ]
+    },
+    {
+      "name": "incr_clause",
+      "answer": "h.depth + 1",
+      "hint": "recurse",
+      "decoys": [
+        "h.depth - 1",
+        "depth + 1",
+        "h.depth"
+      ]
+    },
+    {
+      "name": "count_clause",
+      "answer": "COUNT(*)",
+      "hint": "aggregate",
+      "decoys": [
+        "COUNT(id)",
+        "COUNT(DISTINCT id)",
+        "SUM(1)"
+      ]
+    },
+    {
+      "name": "order_clause",
+      "answer": "ORDER BY h.id",
+      "hint": "ordering",
+      "decoys": [
+        "ORDER BY h.depth",
+        "GROUP BY h.id",
+        "ORDER BY h.id DESC"
+      ]
+    }
+  ],
+  "prompt": "Wire up the recursive CTE seed, the root-row filter, the recursion step, the aggregator, and the final ordering."
+}

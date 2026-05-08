@@ -1,0 +1,46 @@
+{
+  "template": "use std::cmp::Ordering;\nuse std::io;\n\n#[derive(Debug, PartialEq, Eq)]\npub enum Outcome { TooSmall, TooBig, Win }\n\n/// Pure helper extracted from the loop body so tests can exercise the\n/// comparison branches without touching stdin or the rng.\npub fn decide(guess: u32, secret: u32) -> Outcome {\n    match guess.cmp(&secret) {\n        Ordering::Less => Outcome::TooSmall,\n        Ordering::Greater => Outcome::TooBig,\n        Ordering::Equal => Outcome::Win,\n    }\n}\n\nfn main() {\n    println!(\"Guess the number!\");\n\n    let secret_number: u32 = rand::random_range(1..=100);\n\n    [[SLOT loop_kw]]\n        println!(\"Please input your guess.\");\n\n        let mut guess = String::new();\n\n        io::stdin()\n            .read_line(&mut guess)\n            .expect(\"Failed to read line\");\n\n        let guess: u32 = match guess.trim().parse() {\n            [[SLOT ok_arm]]\n            [[SLOT err_arm]]\n        };\n\n        println!(\"You guessed: {guess}\");\n\n        match decide(guess, secret_number) {\n            Outcome::TooSmall => println!(\"Too small!\"),\n            Outcome::TooBig => println!(\"Too big!\"),\n            Outcome::Win => {\n                println!(\"You win!\");\n                [[SLOT break_stmt]]\n            }\n        }\n    }\n}\n",
+  "slots": [
+    {
+      "name": "loop_kw",
+      "answer": "loop {",
+      "hint": "keyword",
+      "decoys": [
+        "while true {",
+        "for _ in 0.. {",
+        "repeat {"
+      ]
+    },
+    {
+      "name": "ok_arm",
+      "answer": "Ok(num) => num,",
+      "hint": "result",
+      "decoys": [
+        "Ok(num) => continue,",
+        "Some(num) => num,",
+        "Ok(_) => num,"
+      ]
+    },
+    {
+      "name": "err_arm",
+      "answer": "Err(_) => continue,",
+      "hint": "result",
+      "decoys": [
+        "Err(e) => return,",
+        "Err(_) => break,",
+        "None => continue,"
+      ]
+    },
+    {
+      "name": "break_stmt",
+      "answer": "break;",
+      "hint": "control",
+      "decoys": [
+        "return;",
+        "continue;",
+        "panic!();"
+      ]
+    }
+  ],
+  "prompt": "Pick the loop keyword, the parse Ok/Err arms, and the break."
+}

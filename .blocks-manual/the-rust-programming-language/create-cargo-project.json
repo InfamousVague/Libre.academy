@@ -1,0 +1,36 @@
+{
+  "template": "pub fn project_info() -> Vec<&'static str> {\n    vec![\n        [[SLOT line1]],\n        [[SLOT line2]],\n        [[SLOT line3]],\n    ]\n}\n\nfn main() {\n    for line in project_info() {\n        println!(\"{}\", line);\n    }\n}\n",
+  "slots": [
+    {
+      "name": "line1",
+      "answer": "\"Project: hello_cargo\"",
+      "hint": "literal",
+      "decoys": [
+        "\"Name: hello_cargo\"",
+        "\"hello_cargo\"",
+        "\"Project hello_cargo\""
+      ]
+    },
+    {
+      "name": "line2",
+      "answer": "\"Version: 0.1.0\"",
+      "hint": "literal",
+      "decoys": [
+        "\"Version: 1.0.0\"",
+        "\"v0.1.0\"",
+        "\"0.1.0\""
+      ]
+    },
+    {
+      "name": "line3",
+      "answer": "\"Ready to build!\"",
+      "hint": "literal",
+      "decoys": [
+        "\"Build complete\"",
+        "\"Ready\"",
+        "\"Building...\""
+      ]
+    }
+  ],
+  "prompt": "Drop in the three info strings."
+}

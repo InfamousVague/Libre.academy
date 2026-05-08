@@ -1,0 +1,46 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.26;\n\ninterface IERC20 {\n    function transferFrom(address from, address to, uint256 amount) external returns (bool);\n    function transfer(address to, uint256 amount) external returns (bool);\n    function balanceOf(address account) external view returns (uint256);\n}\n\ncontract Vault {\n    IERC20 public immutable asset;\n    mapping(address => uint256) public balanceOf;\n    uint256 public totalSupply;\n\n    event Deposit(address indexed caller, uint256 assets, uint256 shares);\n    event Redeem(address indexed caller, uint256 shares, uint256 assets);\n\n    constructor(address _asset) {\n        asset = IERC20(_asset);\n    }\n\n    function deposit(uint256 assets) external returns (uint256 shares) {\n        shares = assets;\n        require([[SLOT pull_in]], \"transfer failed\");\n        [[SLOT shares_inc]]\n        totalSupply += shares;\n        emit Deposit(msg.sender, assets, shares);\n    }\n\n    function redeem(uint256 shares) external returns (uint256 assets) {\n        require([[SLOT share_check]], \"insufficient shares\");\n        assets = shares;\n        balanceOf[msg.sender] -= shares;\n        totalSupply -= shares;\n        require([[SLOT send_out]], \"transfer failed\");\n        emit Redeem(msg.sender, shares, assets);\n    }\n}\n\ncontract MockERC20 {\n    mapping(address => uint256) public balanceOf;\n    mapping(address => mapping(address => uint256)) public allowance;\n    uint256 public totalSupply;\n\n    function mint(address to, uint256 amount) external {\n        balanceOf[to] += amount;\n        totalSupply += amount;\n    }\n\n    function approve(address spender, uint256 amount) external returns (bool) {\n        allowance[msg.sender][spender] = amount;\n        return true;\n    }\n\n    function transferFrom(address from, address to, uint256 amount) external returns (bool) {\n        require(allowance[from][msg.sender] >= amount, \"insufficient allowance\");\n        require(balanceOf[from] >= amount, \"insufficient balance\");\n        allowance[from][msg.sender] -= amount;\n        balanceOf[from] -= amount;\n        balanceOf[to] += amount;\n        return true;\n    }\n\n    function transfer(address to, uint256 amount) external returns (bool) {\n        require(balanceOf[msg.sender] >= amount, \"insufficient balance\");\n        balanceOf[msg.sender] -= amount;\n        balanceOf[to] += amount;\n        return true;\n    }\n}\n",
+  "slots": [
+    {
+      "name": "pull_in",
+      "answer": "asset.transferFrom(msg.sender, address(this), assets)",
+      "hint": "transferFrom",
+      "decoys": [
+        "asset.transfer(address(this), assets)",
+        "asset.transferFrom(address(this), msg.sender, assets)",
+        "asset.approve(msg.sender, assets)"
+      ]
+    },
+    {
+      "name": "shares_inc",
+      "answer": "balanceOf[msg.sender] += shares;",
+      "hint": "balance",
+      "decoys": [
+        "balanceOf[msg.sender] = shares;",
+        "totalSupply += shares;",
+        "balanceOf[msg.sender] -= shares;"
+      ]
+    },
+    {
+      "name": "share_check",
+      "answer": "balanceOf[msg.sender] >= shares",
+      "hint": "predicate",
+      "decoys": [
+        "balanceOf[msg.sender] > shares",
+        "totalSupply >= shares",
+        "shares >= balanceOf[msg.sender]"
+      ]
+    },
+    {
+      "name": "send_out",
+      "answer": "asset.transfer(msg.sender, assets)",
+      "hint": "transfer",
+      "decoys": [
+        "asset.transferFrom(msg.sender, address(this), assets)",
+        "asset.transfer(address(this), assets)",
+        "payable(msg.sender).transfer(assets)"
+      ]
+    }
+  ],
+  "prompt": "Pick the pull-in, the share increment, the share check, and the redeem transfer."
+}

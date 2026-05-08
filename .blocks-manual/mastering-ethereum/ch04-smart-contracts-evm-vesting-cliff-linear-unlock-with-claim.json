@@ -1,0 +1,46 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.26;\n\ncontract TokenVesting {\n    address public immutable beneficiary;\n    uint256 public immutable start;\n    uint256 public immutable cliff;\n    uint256 public immutable duration;\n    uint256 public claimed;\n    uint256 private _balance;\n\n    event Deposited(address indexed from, uint256 amount);\n    event Claimed(address indexed beneficiary, uint256 amount);\n\n    error NotBeneficiary();\n    error NothingToClaim();\n\n    constructor(address _beneficiary, uint256 _start, uint256 _cliff, uint256 _duration) {\n        beneficiary = _beneficiary;\n        start = _start;\n        cliff = _cliff;\n        duration = _duration;\n    }\n\n    function deposit(uint256) external payable {\n        _balance += msg.value;\n        emit Deposited(msg.sender, msg.value);\n    }\n\n    function balance() public view returns (uint256) {\n        return _balance;\n    }\n\n    function vestedAmount() public view returns (uint256) {\n        if ([[SLOT before_cliff]]) return 0;\n        uint256 total = [[SLOT total_calc]];\n        if (block.timestamp >= start + duration) return total;\n        uint256 elapsed = block.timestamp - start;\n        return [[SLOT vested_calc]];\n    }\n\n    function claim() external {\n        if (msg.sender != beneficiary) revert NotBeneficiary();\n        uint256 amount = [[SLOT claimable]];\n        if (amount == 0) revert NothingToClaim();\n        claimed += amount;\n        _balance -= amount;\n        (bool ok, ) = msg.sender.call{value: amount}(\"\");\n        require(ok, \"send fail\");\n        emit Claimed(beneficiary, amount);\n    }\n}\n",
+  "slots": [
+    {
+      "name": "before_cliff",
+      "answer": "block.timestamp <= start + cliff",
+      "hint": "predicate",
+      "decoys": [
+        "block.timestamp >= start + cliff",
+        "block.timestamp < start",
+        "block.number <= start + cliff"
+      ]
+    },
+    {
+      "name": "total_calc",
+      "answer": "_balance + claimed",
+      "hint": "math",
+      "decoys": [
+        "_balance - claimed",
+        "_balance",
+        "claimed"
+      ]
+    },
+    {
+      "name": "vested_calc",
+      "answer": "(total * elapsed) / duration",
+      "hint": "math",
+      "decoys": [
+        "(total * duration) / elapsed",
+        "total / duration",
+        "total * elapsed"
+      ]
+    },
+    {
+      "name": "claimable",
+      "answer": "vestedAmount() - claimed",
+      "hint": "math",
+      "decoys": [
+        "vestedAmount() + claimed",
+        "vestedAmount()",
+        "claimed - vestedAmount()"
+      ]
+    }
+  ],
+  "prompt": "Pick the cliff guard, total math, vested ratio, and claimable diff."
+}

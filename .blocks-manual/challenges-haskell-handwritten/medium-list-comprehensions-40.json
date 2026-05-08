@@ -1,0 +1,46 @@
+{
+  "template": "module Main where\nimport Control.Exception (try, SomeException, evaluate)\nimport System.IO (hSetBuffering, stdout, BufferMode(NoBuffering))\n\npythagoreanTriples :: Int -> [(Int, Int, Int)]\npythagoreanTriples n = [(a, b, c) | c <- [[SLOT c_range]], b <- [[SLOT b_range]], a <- [[SLOT a_range]], [[SLOT pyth_pred]]]\n\nmain :: IO ()\nmain = kataMain",
+  "slots": [
+    {
+      "name": "c_range",
+      "answer": "[1..n]",
+      "hint": "range",
+      "decoys": [
+        "[1..n-1]",
+        "[2..n]",
+        "[0..n]"
+      ]
+    },
+    {
+      "name": "b_range",
+      "answer": "[1..c-1]",
+      "hint": "range",
+      "decoys": [
+        "[1..c]",
+        "[1..n]",
+        "[2..c-1]"
+      ]
+    },
+    {
+      "name": "a_range",
+      "answer": "[1..b-1]",
+      "hint": "range",
+      "decoys": [
+        "[1..b]",
+        "[1..c]",
+        "[1..n]"
+      ]
+    },
+    {
+      "name": "pyth_pred",
+      "answer": "a*a + b*b == c*c",
+      "hint": "predicate",
+      "decoys": [
+        "a^2 + b^2 == c^2",
+        "a + b == c",
+        "a*a + b*b <= c*c"
+      ]
+    }
+  ],
+  "prompt": "Pick the three nested ranges (note the strict a < b) and the Pythagorean predicate."
+}

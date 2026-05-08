@@ -1,0 +1,46 @@
+{
+  "template": "module Main where\nimport Control.Exception (try, SomeException, evaluate)\nimport System.IO (hSetBuffering, stdout, BufferMode(NoBuffering))\nimport Data.List (sort, nub)\n\nprimeFactorDecompositions :: Int -> [[Int]]\n[[SLOT base_case]]\nprimeFactorDecompositions n = [[SLOT dedup_pipeline]]\n  where\n    decompose 1 = [[]]\n    decompose m = \n      [[SLOT decompose_step]]\n    \n    divisors m = [[SLOT divisors_def]]\n\nmain :: IO ()\nmain = kataMain",
+  "slots": [
+    {
+      "name": "base_case",
+      "answer": "primeFactorDecompositions 1 = [[]]",
+      "hint": "base",
+      "decoys": [
+        "primeFactorDecompositions 1 = []",
+        "primeFactorDecompositions 0 = [[]]",
+        "primeFactorDecompositions 1 = [[1]]"
+      ]
+    },
+    {
+      "name": "dedup_pipeline",
+      "answer": "nub $ sort $ decompose n",
+      "hint": "compose",
+      "decoys": [
+        "sort $ nub $ decompose n",
+        "decompose n",
+        "nub (decompose n)"
+      ]
+    },
+    {
+      "name": "decompose_step",
+      "answer": "[m] : [sort (d:rest) | d <- divisors m, d > 1, d < m, rest <- decompose (m `div` d)]",
+      "hint": "recurse",
+      "decoys": [
+        "[sort (d:rest) | d <- divisors m, d > 1, d < m, rest <- decompose (m `div` d)]",
+        "[m] : [d:rest | d <- divisors m, rest <- decompose (m `div` d)]",
+        "[[m]]"
+      ]
+    },
+    {
+      "name": "divisors_def",
+      "answer": "[d | d <- [2..m], m `mod` d == 0]",
+      "hint": "comp",
+      "decoys": [
+        "[d | d <- [1..m], m `mod` d == 0]",
+        "[d | d <- [2..m], d `mod` m == 0]",
+        "[d | d <- [2..m-1], m `mod` d == 0]"
+      ]
+    }
+  ],
+  "prompt": "Pick the base case, the dedup pipeline, the recursive decompose step, and the divisors definition."
+}

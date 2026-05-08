@@ -1,0 +1,36 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.26;\n\ncontract AddressChecker {\n    error NotAContract();\n    error NotAnEOA();\n\n    function isContract(address addr) external view returns (bool) {\n        uint256 size;\n        assembly {\n            size := [[SLOT ext_size]]\n        }\n        [[SLOT is_contract]]\n    }\n\n    function requireContract(address addr) external view {\n        uint256 size;\n        assembly {\n            size := extcodesize(addr)\n        }\n        [[SLOT require_contract]]\n    }\n\n    function requireEOA(address addr) external view {\n        uint256 size;\n        assembly {\n            size := extcodesize(addr)\n        }\n        if (size > 0) revert NotAnEOA();\n    }\n}\n\ncontract Dummy {\n    // Helper contract for testing\n}\n",
+  "slots": [
+    {
+      "name": "ext_size",
+      "answer": "extcodesize(addr)",
+      "hint": "yul",
+      "decoys": [
+        "codesize()",
+        "extcodehash(addr)",
+        "addr.codesize"
+      ]
+    },
+    {
+      "name": "is_contract",
+      "answer": "return size > 0;",
+      "hint": "predicate",
+      "decoys": [
+        "return size != 0;",
+        "return size == 0;",
+        "return size > 1;"
+      ]
+    },
+    {
+      "name": "require_contract",
+      "answer": "if (size == 0) revert NotAContract();",
+      "hint": "guard",
+      "decoys": [
+        "if (size > 0) revert NotAContract();",
+        "if (size != 0) revert NotAContract();",
+        "require(size == 0);"
+      ]
+    }
+  ],
+  "prompt": "Pick the extcodesize call, the is-contract predicate, and the require-contract guard."
+}

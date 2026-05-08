@@ -1,0 +1,36 @@
+{
+  "template": "struct Book {\n    [[SLOT title_field]]\n    author: String,\n    pages: u32,\n}\n\nfn create_book(title: String, author: String, pages: u32) -> Book {\n    Book {\n        title,\n        author,\n        pages,\n    }\n}\n\nfn get_title([[SLOT book_param]]) -> &String {\n    [[SLOT title_ref]]\n}\n\nfn main() {\n    let book = create_book(\n        String::from(\"The Rust Programming Language\"),\n        String::from(\"Steve Klabnik\"),\n        552,\n    );\n    println!(\"Title: {}\", get_title(&book));\n}",
+  "slots": [
+    {
+      "name": "title_field",
+      "answer": "title: String,",
+      "hint": "field",
+      "decoys": [
+        "title: &str,",
+        "title: String;",
+        "pub title: String,"
+      ]
+    },
+    {
+      "name": "book_param",
+      "answer": "book: &Book",
+      "hint": "param",
+      "decoys": [
+        "book: Book",
+        "book: &mut Book",
+        "&book: Book"
+      ]
+    },
+    {
+      "name": "title_ref",
+      "answer": "&book.title",
+      "hint": "field-ref",
+      "decoys": [
+        "book.title",
+        "&book.author",
+        "book.title.clone()"
+      ]
+    }
+  ],
+  "prompt": "Pick the title field decl, the &Book parameter, and the &book.title return."
+}

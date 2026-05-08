@@ -1,0 +1,46 @@
+{
+  "template": "module Main where\nimport Control.Exception (try, SomeException, evaluate)\nimport System.IO (hSetBuffering, stdout, BufferMode(NoBuffering))\n\ninterleaveWith :: (a -> b -> c) -> [a] -> [b] -> [c]\n[[SLOT empty_left]]\ninterleaveWith f _ [] = []\ninterleaveWith f [x] ys = [[SLOT single_left]]\ninterleaveWith f xs [y] = [[SLOT single_right]]\ninterleaveWith f (x:xs) (y:ys) = [[SLOT recurse_step]]\n\nmain :: IO ()\nmain = kataMain",
+  "slots": [
+    {
+      "name": "empty_left",
+      "answer": "interleaveWith f [] _ = []",
+      "hint": "base-case",
+      "decoys": [
+        "interleaveWith _ [] _ = []",
+        "interleaveWith f [] ys = ys",
+        "interleaveWith f [] _ = error \"empty\""
+      ]
+    },
+    {
+      "name": "single_left",
+      "answer": "map (f x) ys",
+      "hint": "map",
+      "decoys": [
+        "map f ys",
+        "[f x y | y <- ys]",
+        "ys"
+      ]
+    },
+    {
+      "name": "single_right",
+      "answer": "map (flip f y) xs",
+      "hint": "map",
+      "decoys": [
+        "map (f y) xs",
+        "[f x y | x <- xs]",
+        "xs"
+      ]
+    },
+    {
+      "name": "recurse_step",
+      "answer": "f x y : interleaveWith f xs ys",
+      "hint": "cons",
+      "decoys": [
+        "interleaveWith f xs ys",
+        "f x y : f x y : interleaveWith f xs ys",
+        "[f x y] ++ interleaveWith f xs ys"
+      ]
+    }
+  ],
+  "prompt": "Wire up the empty-list base case, the singleton special cases, and the cons recurse."
+}

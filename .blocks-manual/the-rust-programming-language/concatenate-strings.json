@@ -1,0 +1,16 @@
+{
+  "template": "/// Builds the greeting \"Hello, Rust!\" using push_str and push.\npub fn build_greeting() -> String {\n    let mut s = String::from(\"Hello\");\n    s.push_str(\", \");\n    s.push_str(\"Rust\");\n    s.push('!');\n    s\n}\n\n/// Combines first, middle, and last names into a full name.\n/// Example: full_name(\"Ada\", \"Augusta\", \"Lovelace\") returns \"Ada Augusta Lovelace\"\npub fn full_name(first: &str, middle: &str, last: &str) -> String {\n    [[SLOT fmt_full]]\n}\n\nfn main() {\n    let greeting = build_greeting();\n    println!(\"{}\", greeting);\n    \n    let name = full_name(\"Ada\", \"Augusta\", \"Lovelace\");\n    println!(\"Full name: {}\", name);\n}\n",
+  "slots": [
+    {
+      "name": "fmt_full",
+      "answer": "format!(\"{first} {middle} {last}\")",
+      "hint": "format",
+      "decoys": [
+        "format!(\"{} {} {}\", first, middle, last)",
+        "first + \" \" + middle + \" \" + last",
+        "[first, middle, last].join(\" \")"
+      ]
+    }
+  ],
+  "prompt": "Pick the format! interpolation for full name."
+}

@@ -1,0 +1,16 @@
+{
+  "template": "#[derive(Debug, PartialEq)]\npub enum TrafficLight {\n    Red,\n    Yellow,\n    Green,\n}\n\npub fn create_lights() -> (TrafficLight, TrafficLight, TrafficLight) {\n    [[SLOT tuple_lit]]\n}\n\nfn main() {\n    let lights = create_lights();\n    println!(\"Created three traffic lights!\");\n}\n",
+  "slots": [
+    {
+      "name": "tuple_lit",
+      "answer": "(TrafficLight::Red, TrafficLight::Yellow, TrafficLight::Green)",
+      "hint": "tuple",
+      "decoys": [
+        "(Red, Yellow, Green)",
+        "[TrafficLight::Red, TrafficLight::Yellow, TrafficLight::Green]",
+        "(TrafficLight::Yellow, TrafficLight::Red, TrafficLight::Green)"
+      ]
+    }
+  ],
+  "prompt": "Pick the three-variant tuple literal."
+}

@@ -1,0 +1,46 @@
+{
+  "template": "defmodule Solution do\n  @doc \"\"\"\n  Extracts width and height from a PNG binary.\n  \"\"\"\n  def extract_dimensions(png_binary) do\n    <<_signature::[[SLOT sig_size]],\n      _chunk_length::[[SLOT chunk_size]],\n      [[SLOT ihdr]],\n      width::[[SLOT int_mod]],\n      height::unsigned-big-integer-size(32),\n      _rest::binary>> = png_binary\n    \n    {width, height}\n  end\nend",
+  "slots": [
+    {
+      "name": "sig_size",
+      "answer": "binary-size(8)",
+      "hint": "annotation",
+      "decoys": [
+        "binary-size(7)",
+        "binary-size(16)",
+        "8-bytes"
+      ]
+    },
+    {
+      "name": "chunk_size",
+      "answer": "binary-size(4)",
+      "hint": "annotation",
+      "decoys": [
+        "binary-size(8)",
+        "32",
+        "integer-size(4)"
+      ]
+    },
+    {
+      "name": "ihdr",
+      "answer": "\"IHDR\"",
+      "hint": "literal",
+      "decoys": [
+        "\"PNG\"",
+        "\"HDR\"",
+        "\"IEND\""
+      ]
+    },
+    {
+      "name": "int_mod",
+      "answer": "unsigned-big-integer-size(32)",
+      "hint": "annotation",
+      "decoys": [
+        "integer-size(32)",
+        "unsigned-little-integer-size(32)",
+        "unsigned-big-integer-size(16)"
+      ]
+    }
+  ],
+  "prompt": "Pick the binary annotations for the PNG header chunks."
+}

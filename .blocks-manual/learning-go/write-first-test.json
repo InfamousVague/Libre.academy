@@ -1,0 +1,36 @@
+{
+  "template": "package main\n\nfunc Double(n int) int {\n\t[[SLOT return_kw]] [[SLOT multiplicand]] * [[SLOT multiplier]]\n}\n",
+  "slots": [
+    {
+      "name": "return_kw",
+      "answer": "return",
+      "hint": "keyword",
+      "decoys": [
+        "func",
+        "var",
+        "if"
+      ]
+    },
+    {
+      "name": "multiplicand",
+      "answer": "n",
+      "hint": "param",
+      "decoys": [
+        "result",
+        "value",
+        "x"
+      ]
+    },
+    {
+      "name": "multiplier",
+      "answer": "2",
+      "hint": "constant",
+      "decoys": [
+        "1",
+        "0",
+        "10"
+      ]
+    }
+  ],
+  "prompt": "Build the doubling expression: return keyword, the parameter, the multiplier."
+}

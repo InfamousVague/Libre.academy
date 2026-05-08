@@ -1,0 +1,46 @@
+{
+  "template": "[[SLOT hashmap_use]]\n\n/// `back_of_house` module — kept inline because the playground\n/// can't see a sibling `src/back_of_house.rs` file. The lesson's\n/// privacy + `pub use` mechanics still apply within an inline mod.\nmod back_of_house {\n    pub struct Breakfast {\n        pub toast: String,\n        seasonal_fruit: String,\n    }\n\n    impl Breakfast {\n        pub fn summer(toast: &str) -> Breakfast {\n            Breakfast {\n                toast: String::from(toast),\n                seasonal_fruit: String::from(\"peaches\"),\n            }\n        }\n    }\n\n    pub enum DietaryBreakfast {\n        Standard,\n        Vegan,\n        GlutenFree,\n    }\n}\n\n[[SLOT grouped_use]]\n\npub fn order_breakfast() -> String {\n    let mut meal = Breakfast::summer(\"Rye\");\n    meal.toast = String::from(\"Wheat\");\n    meal.toast\n}\n\npub fn describe_diet(diet: DietBreakfast) -> &'static str {\n    match diet {\n        DietBreakfast::Standard => \"Standard breakfast with eggs and toast\",\n        DietBreakfast::Vegan => \"Plant-based breakfast with tofu scramble\",\n        DietBreakfast::GlutenFree => \"Gluten-free breakfast with rice cakes\",\n    }\n}\n\npub fn create_menu() -> [[SLOT ret_type]] {\n    [[SLOT hashmap_new]]\n}\n\nfn main() {\n    println!(\"Toast: {}\", order_breakfast());\n}\n",
+  "slots": [
+    {
+      "name": "hashmap_use",
+      "answer": "use std::collections::HashMap;",
+      "hint": "use",
+      "decoys": [
+        "use HashMap;",
+        "use std::HashMap;",
+        "use std::collections::*;"
+      ]
+    },
+    {
+      "name": "grouped_use",
+      "answer": "use back_of_house::{Breakfast, DietaryBreakfast as DietBreakfast};",
+      "hint": "use",
+      "decoys": [
+        "use back_of_house::Breakfast; use back_of_house::DietaryBreakfast as DietBreakfast;",
+        "use back_of_house::*;",
+        "use back_of_house::{Breakfast as DietBreakfast, DietaryBreakfast};"
+      ]
+    },
+    {
+      "name": "ret_type",
+      "answer": "HashMap<String, u32>",
+      "hint": "type",
+      "decoys": [
+        "HashMap<&str, u32>",
+        "HashMap<String, i32>",
+        "Vec<(String, u32)>"
+      ]
+    },
+    {
+      "name": "hashmap_new",
+      "answer": "HashMap::new()",
+      "hint": "constructor",
+      "decoys": [
+        "HashMap::default()",
+        "HashMap()",
+        "HashMap::with_capacity(0)"
+      ]
+    }
+  ],
+  "prompt": "Pick the HashMap import, the grouped use, the return type, and the constructor."
+}

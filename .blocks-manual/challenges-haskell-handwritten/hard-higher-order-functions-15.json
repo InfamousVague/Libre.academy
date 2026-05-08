@@ -1,0 +1,46 @@
+{
+  "template": "module Main where\nimport Control.Exception (try, SomeException, evaluate)\nimport System.IO (hSetBuffering, stdout, BufferMode(NoBuffering))\nimport Data.IORef\nimport Data.List (find)\n\nmemoizeWithTTL :: Eq a => Int -> (a -> b) -> IO (a -> IO b)\nmemoizeWithTTL ttl f = do\n  cacheRef <- [[SLOT init_cache]]\n  return $ \\arg -> do\n    (cache, count) <- readIORef cacheRef\n    let newCount = count + 1\n    let (newCache, shouldClear) = [[SLOT ttl_check]]\n                                  then ([], True)\n                                  else (cache, False)\n    case [[SLOT lookup_call]] of\n      Just (_, val) -> do\n        writeIORef cacheRef (newCache, if shouldClear then 1 else newCount)\n        return val\n      Nothing -> do\n        let result = f arg\n        let updatedCache = [[SLOT cache_cons]]\n        writeIORef cacheRef (updatedCache, if shouldClear then 1 else newCount)\n        return result\n\nmain :: IO ()\nmain = kataMain",
+  "slots": [
+    {
+      "name": "init_cache",
+      "answer": "newIORef ([], 0)",
+      "hint": "ioref",
+      "decoys": [
+        "newIORef []",
+        "newIORef ([], ttl)",
+        "newMVar ([], 0)"
+      ]
+    },
+    {
+      "name": "ttl_check",
+      "answer": "if newCount > ttl",
+      "hint": "guard",
+      "decoys": [
+        "if newCount >= ttl",
+        "if newCount == ttl",
+        "if newCount < ttl"
+      ]
+    },
+    {
+      "name": "lookup_call",
+      "answer": "find (\\(k, _) -> k == arg) newCache",
+      "hint": "find",
+      "decoys": [
+        "lookup arg newCache",
+        "filter (\\(k, _) -> k == arg) newCache",
+        "find ((== arg) . fst) newCache"
+      ]
+    },
+    {
+      "name": "cache_cons",
+      "answer": "(arg, result) : newCache",
+      "hint": "cons",
+      "decoys": [
+        "newCache ++ [(arg, result)]",
+        "(result, arg) : newCache",
+        "[(arg, result)]"
+      ]
+    }
+  ],
+  "prompt": "Pick the cache init, the TTL check, the lookup, and the cache prepend."
+}

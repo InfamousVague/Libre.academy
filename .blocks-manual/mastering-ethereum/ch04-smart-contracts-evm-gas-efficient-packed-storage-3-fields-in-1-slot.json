@@ -1,0 +1,46 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.26;\n\ncontract PackedData {\n    uint256 private packed;\n\n    function a() external view returns (uint80) {\n        return [[SLOT field_a]];\n    }\n\n    function b() external view returns (uint80) {\n        return [[SLOT field_b]];\n    }\n\n    function c() external view returns (uint80) {\n        return [[SLOT field_c]];\n    }\n\n    function setAll(uint80 _a, uint80 _b, uint80 _c) external {\n        packed = [[SLOT pack_all]];\n    }\n\n    function getAll() external view returns (uint80, uint80, uint80) {\n        uint256 p = packed;\n        return (uint80(p), uint80(p >> 80), uint80(p >> 160));\n    }\n\n    function incrementA() external {\n        uint256 p = packed;\n        unchecked {\n            uint80 newA = uint80(p) + 1;\n            packed = (p & ~uint256(type(uint80).max)) | uint256(newA);\n        }\n    }\n\n    function incrementB() external {\n        uint256 p = packed;\n        unchecked {\n            uint80 newB = uint80(p >> 80) + 1;\n            packed = (p & ~(uint256(type(uint80).max) << 80)) | (uint256(newB) << 80);\n        }\n    }\n\n    function incrementC() external {\n        uint256 p = packed;\n        unchecked {\n            uint80 newC = uint80(p >> 160) + 1;\n            packed = (p & ~(uint256(type(uint80).max) << 160)) | (uint256(newC) << 160);\n        }\n    }\n}\n",
+  "slots": [
+    {
+      "name": "field_a",
+      "answer": "uint80(packed)",
+      "hint": "cast",
+      "decoys": [
+        "uint80(packed >> 80)",
+        "uint256(packed)",
+        "packed & 0xff"
+      ]
+    },
+    {
+      "name": "field_b",
+      "answer": "uint80(packed >> 80)",
+      "hint": "shift",
+      "decoys": [
+        "uint80(packed)",
+        "uint80(packed >> 160)",
+        "uint80(packed << 80)"
+      ]
+    },
+    {
+      "name": "field_c",
+      "answer": "uint80(packed >> 160)",
+      "hint": "shift",
+      "decoys": [
+        "uint80(packed >> 80)",
+        "uint80(packed)",
+        "uint80(packed << 160)"
+      ]
+    },
+    {
+      "name": "pack_all",
+      "answer": "uint256(_a) | (uint256(_b) << 80) | (uint256(_c) << 160)",
+      "hint": "bitwise",
+      "decoys": [
+        "uint256(_a) + uint256(_b) + uint256(_c)",
+        "(_a, _b, _c)",
+        "uint256(_a) & uint256(_b) & uint256(_c)"
+      ]
+    }
+  ],
+  "prompt": "Pick the three field reads and the pack-all bit expression."
+}

@@ -1,0 +1,26 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.26;\n\ncontract VulnerableWallet {\n    address public owner;\n\n    constructor() { owner = msg.sender; }\n\n    function withdraw(uint256 amount) external {\n        require([[SLOT vuln_check]], \"Not owner\");\n        (bool success, ) = owner.call{value: amount}(\"\");\n        require(success, \"Transfer failed\");\n    }\n\n    receive() external payable {}\n}\n\ncontract SecureWallet {\n    address public owner;\n    error Unauthorized();\n\n    constructor() {\n        owner = msg.sender;\n    }\n\n    function withdraw(uint256 amount) external {\n        [[SLOT secure_check]]\n        (bool success, ) = owner.call{value: amount}(\"\");\n        require(success, \"Transfer failed\");\n    }\n\n    receive() external payable {}\n}\n\ncontract PhishingAttack {\n    function claim(address victim) external {\n        VulnerableWallet(payable(victim)).withdraw(1 ether);\n    }\n\n    function claimSecure(address victim) external {\n        SecureWallet(payable(victim)).withdraw(1 ether);\n    }\n}\n",
+  "slots": [
+    {
+      "name": "vuln_check",
+      "answer": "tx.origin == owner",
+      "hint": "vulnerable",
+      "decoys": [
+        "tx.origin != owner",
+        "msg.sender == owner",
+        "tx.origin == tx.sender"
+      ]
+    },
+    {
+      "name": "secure_check",
+      "answer": "if (msg.sender != owner) revert Unauthorized();",
+      "hint": "secure",
+      "decoys": [
+        "if (tx.origin != owner) revert Unauthorized();",
+        "if (msg.sender == owner) revert Unauthorized();",
+        "require(tx.origin == owner);"
+      ]
+    }
+  ],
+  "prompt": "Pick the vulnerable tx.origin check and the secure msg.sender guard."
+}

@@ -1,0 +1,46 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.26;\n\ninterface ICallback {\n    function oracleCallback(uint256 requestId, uint256 result) external;\n}\n\ncontract Oracle {\n    address public owner;\n    mapping(uint256 => address) public pendingRequests;\n    uint256 public nextRequestId = 1;\n\n    event DataRequested(uint256 indexed requestId, address indexed requester, string query);\n    event DataFulfilled(uint256 indexed requestId, uint256 result);\n\n    constructor() {\n        owner = msg.sender;\n    }\n\n    function requestData(string calldata query) external returns (uint256) {\n        uint256 requestId = nextRequestId;\n        pendingRequests[requestId] = msg.sender;\n        nextRequestId++;\n        emit DataRequested(requestId, msg.sender, query);\n        return requestId;\n    }\n\n    function fulfillRequest(uint256 requestId, uint256 result) external {\n        require([[SLOT owner_check]], \"only owner\");\n        address requester = pendingRequests[requestId];\n        require([[SLOT exists_check]], \"no pending request\");\n        [[SLOT del_req]]\n        [[SLOT cb_call]];\n        emit DataFulfilled(requestId, result);\n    }\n}\n\ncontract Client {\n    address public oracle;\n    uint256 public lastRequestId;\n    uint256 public lastResult;\n    mapping(uint256 => bool) public fulfilled;\n\n    event ResultReceived(uint256 indexed requestId, uint256 result);\n\n    constructor(address _oracle) {\n        oracle = _oracle;\n    }\n\n    function makeRequest(string calldata query) external {\n        lastRequestId = Oracle(oracle).requestData(query);\n    }\n\n    function oracleCallback(uint256 requestId, uint256 result) external {\n        require(msg.sender == oracle, \"only oracle\");\n        lastResult = result;\n        fulfilled[requestId] = true;\n        emit ResultReceived(requestId, result);\n    }\n}\n",
+  "slots": [
+    {
+      "name": "owner_check",
+      "answer": "msg.sender == owner",
+      "hint": "predicate",
+      "decoys": [
+        "msg.sender != owner",
+        "tx.origin == owner",
+        "msg.sender == address(this)"
+      ]
+    },
+    {
+      "name": "exists_check",
+      "answer": "requester != address(0)",
+      "hint": "predicate",
+      "decoys": [
+        "requester == address(0)",
+        "requester == msg.sender",
+        "requestId != 0"
+      ]
+    },
+    {
+      "name": "del_req",
+      "answer": "delete pendingRequests[requestId];",
+      "hint": "cleanup",
+      "decoys": [
+        "pendingRequests[requestId] = address(0);",
+        "delete pendingRequests;",
+        "pendingRequests[requestId] = 0;"
+      ]
+    },
+    {
+      "name": "cb_call",
+      "answer": "ICallback(requester).oracleCallback(requestId, result)",
+      "hint": "callback",
+      "decoys": [
+        "requester.call(requestId, result)",
+        "ICallback(msg.sender).oracleCallback(requestId, result)",
+        "ICallback(requester).oracleCallback(result, requestId)"
+      ]
+    }
+  ],
+  "prompt": "Pick the owner-only guard, the request existence check, the cleanup, and the callback."
+}

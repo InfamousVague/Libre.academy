@@ -1,0 +1,36 @@
+{
+  "template": "pub fn build_and_run_command() -> &'static str {\n    [[SLOT run_cmd]]\n}\n\npub fn compile_only_command() -> &'static str {\n    [[SLOT build_cmd]]\n}\n\npub fn quick_check_command() -> &'static str {\n    [[SLOT check_cmd]]\n}\n\nfn main() {\n    println!(\"Build & run:  {}\", build_and_run_command());\n    println!(\"Compile only: {}\", compile_only_command());\n    println!(\"Quick check:  {}\", quick_check_command());\n}\n",
+  "slots": [
+    {
+      "name": "run_cmd",
+      "answer": "\"cargo run\"",
+      "hint": "command",
+      "decoys": [
+        "\"cargo build && cargo run\"",
+        "\"rust run\"",
+        "\"cargo exec\""
+      ]
+    },
+    {
+      "name": "build_cmd",
+      "answer": "\"cargo build\"",
+      "hint": "command",
+      "decoys": [
+        "\"cargo compile\"",
+        "\"rust build\"",
+        "\"cargo make\""
+      ]
+    },
+    {
+      "name": "check_cmd",
+      "answer": "\"cargo check\"",
+      "hint": "command",
+      "decoys": [
+        "\"cargo verify\"",
+        "\"cargo lint\"",
+        "\"rustc check\""
+      ]
+    }
+  ],
+  "prompt": "Pick the cargo subcommands."
+}

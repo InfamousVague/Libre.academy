@@ -1,0 +1,36 @@
+{
+  "template": "pub enum TrafficLight {\n    Red,\n    Yellow,\n    Green,\n}\n\n/// Returns how many seconds to wait at the given traffic light.\npub fn wait_time(light: TrafficLight) -> u32 {\n    match light {\n        [[SLOT red_arm]]\n        [[SLOT yellow_arm]]\n        [[SLOT green_arm]]\n    }\n}\n\nfn main() {\n    println!(\"Red: {} seconds\", wait_time(TrafficLight::Red));\n    println!(\"Yellow: {} seconds\", wait_time(TrafficLight::Yellow));\n    println!(\"Green: {} seconds\", wait_time(TrafficLight::Green));\n}\n",
+  "slots": [
+    {
+      "name": "red_arm",
+      "answer": "TrafficLight::Red => 60,",
+      "hint": "arm",
+      "decoys": [
+        "TrafficLight::Red => 5,",
+        "Red => 60,",
+        "TrafficLight::Red => 30,"
+      ]
+    },
+    {
+      "name": "yellow_arm",
+      "answer": "TrafficLight::Yellow => 5,",
+      "hint": "arm",
+      "decoys": [
+        "TrafficLight::Yellow => 60,",
+        "Yellow => 5,",
+        "TrafficLight::Yellow => 0,"
+      ]
+    },
+    {
+      "name": "green_arm",
+      "answer": "TrafficLight::Green => 0,",
+      "hint": "arm",
+      "decoys": [
+        "TrafficLight::Green => 5,",
+        "Green => 0,",
+        "TrafficLight::Green => 60,"
+      ]
+    }
+  ],
+  "prompt": "Pick the three traffic-light wait-time arms."
+}

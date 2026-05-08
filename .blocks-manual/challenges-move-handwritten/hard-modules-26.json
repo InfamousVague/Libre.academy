@@ -1,0 +1,46 @@
+{
+  "template": "module challenge::vault {\n    struct Vault<T> has key {\n        owner: address,\n        data: T,\n    }\n\n    public fun new<T>(owner: address, data: T): Vault<T> {\n        [[SLOT vault_construct]]\n    }\n\n    public fun owner<T>(vault: &Vault<T>): address {\n        vault.owner\n    }\n\n    public fun borrow<T>(vault: &Vault<T>): &T {\n        [[SLOT borrow_ret]]\n    }\n\n    public fun update<T>(vault: &mut Vault<T>, new_data: T) {\n        vault.data = new_data;\n    }\n\n    public fun unwrap<T>(vault: Vault<T>): T {\n        let Vault { owner: _, data } = vault;\n        data\n    }\n}\n\nmodule challenge::access {\n    struct AdminCap has key, store {\n        id: u64,\n    }\n\n    public fun mint(id: u64): AdminCap {\n        AdminCap { id }\n    }\n\n    public fun verify(_cap: &AdminCap): bool {\n        true\n    }\n}\n\nmodule challenge::solution {\n    use challenge::vault::{Self, Vault};\n    use challenge::access::{Self, AdminCap};\n\n    const UNAUTHORIZED: u64 = 1;\n\n    public fun create_vault<T>(owner: address, data: T): Vault<T> {\n        vault::new(owner, data)\n    }\n\n    public fun read_vault<T>(vault: &Vault<T>, reader: address): &T {\n        assert!([[SLOT auth_check]], UNAUTHORIZED);\n        vault::borrow(vault)\n    }\n\n    public fun update_vault<T>(vault: &mut Vault<T>, cap: &AdminCap, new_data: T) {\n        assert!([[SLOT verify_check]], UNAUTHORIZED);\n        vault::update(vault, new_data);\n    }\n\n    public fun destroy_vault<T>(vault: Vault<T>, cap: &AdminCap): T {\n        assert!(access::verify(cap), UNAUTHORIZED);\n        vault::unwrap(vault)\n    }\n}",
+  "slots": [
+    {
+      "name": "vault_construct",
+      "answer": "Vault { owner, data }",
+      "hint": "constructor",
+      "decoys": [
+        "Vault { data, owner }",
+        "Vault::new(owner, data)",
+        "new Vault(owner, data)"
+      ]
+    },
+    {
+      "name": "borrow_ret",
+      "answer": "&vault.data",
+      "hint": "reference",
+      "decoys": [
+        "vault.data",
+        "&vault",
+        "&data"
+      ]
+    },
+    {
+      "name": "auth_check",
+      "answer": "vault::owner(vault) == reader",
+      "hint": "predicate",
+      "decoys": [
+        "vault::owner(vault) != reader",
+        "reader == vault.owner",
+        "owner == reader"
+      ]
+    },
+    {
+      "name": "verify_check",
+      "answer": "access::verify(cap)",
+      "hint": "predicate",
+      "decoys": [
+        "access::verify(_cap)",
+        "cap.verify()",
+        "verify(cap)"
+      ]
+    }
+  ],
+  "prompt": "Build the vault constructor, the borrow return, and the two access-control predicates."
+}

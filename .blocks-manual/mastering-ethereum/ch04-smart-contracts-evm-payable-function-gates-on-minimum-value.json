@@ -1,0 +1,46 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.26;\n\ncontract Donation {\n    uint256 public minimumDonation;\n    uint256 public totalDonations;\n\n    error DonationTooSmall();\n\n    event DonationReceived(address indexed donor, uint256 amount);\n\n    constructor() {\n        minimumDonation = [[SLOT min_donation]];\n    }\n\n    function donate() external payable {\n        if ([[SLOT underfunded]]) {\n            [[SLOT small_revert]]\n        }\n        totalDonations += msg.value;\n        emit DonationReceived(msg.sender, msg.value);\n    }\n\n    function withdraw(address payable recipient) external {\n        uint256 amount = [[SLOT self_balance]];\n        (bool success, ) = recipient.call{value: amount}(\"\");\n        require(success, \"Transfer failed\");\n    }\n}\n",
+  "slots": [
+    {
+      "name": "min_donation",
+      "answer": "0.01 ether",
+      "hint": "literal",
+      "decoys": [
+        "0.001 ether",
+        "1 ether",
+        "0.01 wei"
+      ]
+    },
+    {
+      "name": "underfunded",
+      "answer": "msg.value < minimumDonation",
+      "hint": "predicate",
+      "decoys": [
+        "msg.value <= minimumDonation",
+        "msg.value > minimumDonation",
+        "minimumDonation > msg.value"
+      ]
+    },
+    {
+      "name": "small_revert",
+      "answer": "revert DonationTooSmall();",
+      "hint": "revert",
+      "decoys": [
+        "revert(\"Too small\");",
+        "require(false);",
+        "throw DonationTooSmall();"
+      ]
+    },
+    {
+      "name": "self_balance",
+      "answer": "address(this).balance",
+      "hint": "balance",
+      "decoys": [
+        "address(this).value",
+        "this.balance",
+        "msg.value"
+      ]
+    }
+  ],
+  "prompt": "Pick the minimum donation, the underfunded check, the custom-error revert, and the contract balance."
+}

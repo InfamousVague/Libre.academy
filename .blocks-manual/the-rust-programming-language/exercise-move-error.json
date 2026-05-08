@@ -1,0 +1,16 @@
+{
+  "template": "pub fn print_both() {\n    let s1 = String::from(\"hello\");\n    [[SLOT clone_decl]]\n\n    println!(\"s1 = {}, s2 = {}\", s1, s2);\n}\n\nfn main() {\n    print_both();\n}\n",
+  "slots": [
+    {
+      "name": "clone_decl",
+      "answer": "let s2 = s1.clone();",
+      "hint": "ownership",
+      "decoys": [
+        "let s2 = &s1;",
+        "let s2 = s1;",
+        "let s2 = s1.copy();"
+      ]
+    }
+  ],
+  "prompt": "Pick the .clone() decl that fixes the move error."
+}

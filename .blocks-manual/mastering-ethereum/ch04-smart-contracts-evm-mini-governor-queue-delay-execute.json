@@ -1,0 +1,46 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.26;\n\nerror NotQueued();\nerror TimelockNotMet();\n\ncontract MiniGovernor {\n    mapping(bytes32 => uint256) public queuedTimestamps;\n    uint256 public constant DELAY = 2 days;\n\n    event Queued(bytes32 indexed id, address target, uint256 value, bytes data, uint256 executeAfter);\n    event Executed(bytes32 indexed id);\n    event Cancelled(bytes32 indexed id);\n\n    function queue(address target, uint256 value, bytes calldata data) external {\n        bytes32 id = getOperationId(target, value, data);\n        uint256 executeAfter = [[SLOT exec_after]];\n        queuedTimestamps[id] = executeAfter;\n        emit Queued(id, target, value, data, executeAfter);\n    }\n\n    function execute(address target, uint256 value, bytes calldata data) external payable {\n        bytes32 id = getOperationId(target, value, data);\n        uint256 executeAfter = queuedTimestamps[id];\n        if ([[SLOT not_queued]]) revert NotQueued();\n        if ([[SLOT not_ready]]) revert TimelockNotMet();\n        delete queuedTimestamps[id];\n        (bool success, ) = target.call{value: value}(data);\n        require(success, \"call failed\");\n        emit Executed(id);\n    }\n\n    function cancel(address target, uint256 value, bytes calldata data) external {\n        bytes32 id = getOperationId(target, value, data);\n        delete queuedTimestamps[id];\n        emit Cancelled(id);\n    }\n\n    function getOperationId(address target, uint256 value, bytes calldata data) public pure returns (bytes32) {\n        return [[SLOT op_id]];\n    }\n}\n\ncontract Target {\n    uint256 public value;\n    event ValueSet(uint256 newValue);\n\n    function setValue(uint256 _value) external {\n        value = _value;\n        emit ValueSet(_value);\n    }\n\n    receive() external payable {}\n}\n",
+  "slots": [
+    {
+      "name": "exec_after",
+      "answer": "block.timestamp + DELAY",
+      "hint": "stamp",
+      "decoys": [
+        "block.number + DELAY",
+        "block.timestamp + 2 days",
+        "block.timestamp - DELAY"
+      ]
+    },
+    {
+      "name": "not_queued",
+      "answer": "executeAfter == 0",
+      "hint": "predicate",
+      "decoys": [
+        "executeAfter != 0",
+        "executeAfter < block.timestamp",
+        "id == bytes32(0)"
+      ]
+    },
+    {
+      "name": "not_ready",
+      "answer": "block.timestamp < executeAfter",
+      "hint": "predicate",
+      "decoys": [
+        "block.timestamp >= executeAfter",
+        "block.timestamp <= executeAfter",
+        "block.number < executeAfter"
+      ]
+    },
+    {
+      "name": "op_id",
+      "answer": "keccak256(abi.encode(target, value, data))",
+      "hint": "hash",
+      "decoys": [
+        "keccak256(abi.encodePacked(target, value, data))",
+        "keccak256(abi.encode(target, data))",
+        "keccak256(target)"
+      ]
+    }
+  ],
+  "prompt": "Pick the execute-after stamp, the not-queued and not-ready guards, and the operation id."
+}

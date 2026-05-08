@@ -1,0 +1,46 @@
+{
+  "template": "const std = @import(\"std\");\n\npub const Shape = [[SLOT union_kw]] {\n    rectangle: struct { width: f32, height: f32 },\n    circle: struct { radius: f32 },\n    triangle: struct { base: f32, height: f32 },\n};\n\npub fn calculateArea(shape: Shape) f32 {\n    return switch (shape) {\n        .rectangle => |r| [[SLOT rect_area]],\n        .circle => |c| [[SLOT circle_area]],\n        .triangle => |t| [[SLOT tri_area]],\n    };\n}",
+  "slots": [
+    {
+      "name": "union_kw",
+      "answer": "union(enum)",
+      "hint": "tagged",
+      "decoys": [
+        "enum",
+        "struct",
+        "union"
+      ]
+    },
+    {
+      "name": "rect_area",
+      "answer": "r.width * r.height",
+      "hint": "formula",
+      "decoys": [
+        "r.width + r.height",
+        "r.width",
+        "2 * r.width * r.height"
+      ]
+    },
+    {
+      "name": "circle_area",
+      "answer": "std.math.pi * c.radius * c.radius",
+      "hint": "formula",
+      "decoys": [
+        "std.math.pi * c.radius",
+        "2 * std.math.pi * c.radius",
+        "c.radius * c.radius"
+      ]
+    },
+    {
+      "name": "tri_area",
+      "answer": "0.5 * t.base * t.height",
+      "hint": "formula",
+      "decoys": [
+        "t.base * t.height",
+        "(t.base + t.height) / 2",
+        "0.5 * (t.base + t.height)"
+      ]
+    }
+  ],
+  "prompt": "Pick the tagged-union keyword and the area formula for each shape."
+}

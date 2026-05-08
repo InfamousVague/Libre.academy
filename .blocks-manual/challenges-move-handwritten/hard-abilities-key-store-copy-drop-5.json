@@ -1,0 +1,46 @@
+{
+  "template": "module challenge::abilities {\n    struct Resource has [[SLOT resource_abilities]] {\n        value: u64,\n    }\n    \n    struct Capability<[[SLOT phantom_param]]> has [[SLOT cap_abilities]] {}\n    \n    struct MasterKey has [[SLOT key_abilities]] {}\n    \n    public fun create_resource(value: u64): Resource {\n        Resource { value }\n    }\n    \n    public fun issue_capability<T: store>(_resource: &Resource): Capability<Resource> {\n        Capability<Resource> {}\n    }\n    \n    public fun read_with_capability(cap: &Capability<Resource>): u64 {\n        // In real implementation, cap would reference the actual resource\n        // For this kata, we demonstrate the type system works correctly\n        let _ = cap;\n        42 // Simplified - real implementation would need resource access\n    }\n    \n    public fun consume_with_key(resource: Resource, _key: &MasterKey): u64 {\n        let Resource { value } = resource;\n        value\n    }\n    \n    #[test]\n    fun test_resource_creation() {\n        let res = create_resource(100);\n        let Resource { value } = res;\n        assert!(value == 100, 0);\n    }\n    \n    #[test]\n    fun test_capability_copy() {\n        let res = create_resource(42);\n        let cap = issue_capability(&res);\n        let cap2 = copy cap; // Must compile - cap has copy ability\n        let _ = cap;\n        let _ = cap2;\n        let Resource { value: _ } = res;\n    }\n    \n    #[test]\n    fun test_master_key_drop() {\n        let key = MasterKey {};\n        let res = create_resource(99);\n        let value = consume_with_key(res, &key);\n        assert!(value == 99, 1);\n        // key automatically dropped - has drop ability\n    }\n    \n    #[test]\n    fun test_consumption_with_key() {\n        let key = MasterKey {};\n        let res = create_resource(256);\n        let extracted = consume_with_key(res, &key);\n        assert!(extracted == 256, 2);\n    }\n}",
+  "slots": [
+    {
+      "name": "resource_abilities",
+      "answer": "store",
+      "hint": "abilities",
+      "decoys": [
+        "key",
+        "key, store",
+        "copy, drop"
+      ]
+    },
+    {
+      "name": "phantom_param",
+      "answer": "phantom T: store",
+      "hint": "generics",
+      "decoys": [
+        "T",
+        "T: copy",
+        "phantom T"
+      ]
+    },
+    {
+      "name": "cap_abilities",
+      "answer": "copy, store",
+      "hint": "abilities",
+      "decoys": [
+        "copy, drop",
+        "key, store",
+        "store"
+      ]
+    },
+    {
+      "name": "key_abilities",
+      "answer": "key, store, drop",
+      "hint": "abilities",
+      "decoys": [
+        "key",
+        "key, store",
+        "copy, store, drop"
+      ]
+    }
+  ],
+  "prompt": "Pick the correct ability sets for the Resource, Capability, and MasterKey."
+}

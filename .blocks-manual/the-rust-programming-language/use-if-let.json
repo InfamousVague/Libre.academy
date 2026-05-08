@@ -1,0 +1,16 @@
+{
+  "template": "/// Prints the inner value if Some, otherwise does nothing.\npub fn print_if_some(opt: Option<i32>) {\n    [[SLOT if_let]] {\n        println!(\"Value: {n}\");\n    }\n}\n\nfn main() {\n    print_if_some(Some(42));\n    print_if_some(None);\n}\n",
+  "slots": [
+    {
+      "name": "if_let",
+      "answer": "if let Some(n) = opt",
+      "hint": "control",
+      "decoys": [
+        "if Some(n) == opt",
+        "if let n = opt.unwrap()",
+        "match opt { Some(n) }"
+      ]
+    }
+  ],
+  "prompt": "Pick the if-let pattern."
+}

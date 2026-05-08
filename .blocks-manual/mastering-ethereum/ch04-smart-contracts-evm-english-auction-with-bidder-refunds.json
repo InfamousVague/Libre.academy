@@ -1,0 +1,46 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.26;\n\ncontract EnglishAuction {\n    address public seller;\n    uint256 public auctionEnd;\n    address public highestBidder;\n    uint256 public highestBid;\n    bool public withdrawn;\n\n    error AuctionEnded();\n    error BidTooLow();\n    error AuctionStillActive();\n    error AlreadyWithdrawn();\n    error OnlySeller();\n\n    constructor(address _seller, uint256 _duration) {\n        seller = _seller;\n        auctionEnd = block.timestamp + _duration;\n    }\n\n    function bid() external payable {\n        if ([[SLOT ended_check]]) revert AuctionEnded();\n        if ([[SLOT low_bid]]) revert BidTooLow();\n\n        address previousBidder = highestBidder;\n        uint256 previousBid = highestBid;\n\n        highestBidder = msg.sender;\n        highestBid = msg.value;\n\n        if (previousBidder != address(0)) {\n            [[SLOT refund_prev]]\n        }\n    }\n\n    function withdraw() external {\n        if (msg.sender != seller) revert OnlySeller();\n        if (block.timestamp < auctionEnd) revert AuctionStillActive();\n        if (withdrawn) revert AlreadyWithdrawn();\n\n        withdrawn = true;\n        [[SLOT settle]]\n    }\n\n    function getHighestBid() external view returns (address bidder, uint256 amount) {\n        return (highestBidder, highestBid);\n    }\n}\n",
+  "slots": [
+    {
+      "name": "ended_check",
+      "answer": "block.timestamp >= auctionEnd",
+      "hint": "predicate",
+      "decoys": [
+        "block.timestamp < auctionEnd",
+        "block.timestamp == auctionEnd",
+        "block.number >= auctionEnd"
+      ]
+    },
+    {
+      "name": "low_bid",
+      "answer": "msg.value <= highestBid",
+      "hint": "predicate",
+      "decoys": [
+        "msg.value < highestBid",
+        "msg.value > highestBid",
+        "msg.value == highestBid"
+      ]
+    },
+    {
+      "name": "refund_prev",
+      "answer": "payable(previousBidder).transfer(previousBid);",
+      "hint": "refund",
+      "decoys": [
+        "payable(previousBidder).send(previousBid);",
+        "previousBidder.transfer(previousBid);",
+        "payable(highestBidder).transfer(previousBid);"
+      ]
+    },
+    {
+      "name": "settle",
+      "answer": "payable(seller).transfer(highestBid);",
+      "hint": "send",
+      "decoys": [
+        "payable(highestBidder).transfer(highestBid);",
+        "seller.transfer(highestBid);",
+        "payable(seller).send(highestBid);"
+      ]
+    }
+  ],
+  "prompt": "Pick the ended check, low-bid guard, refund, and seller payout."
+}

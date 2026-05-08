@@ -1,0 +1,36 @@
+{
+  "template": "// Encode calldata for an ERC-20 transfer(to, amount) call.\n\nfunction encodeErc20Transfer(keccak256, to, amount) {\n  const sel = keccak256(Buffer.from([[SLOT fn_sig]], 'utf8')).slice(0, 8);\n\n  let addr = to.toLowerCase();\n  if (addr.startsWith('0x')) addr = addr.slice(2);\n  if (addr.length !== 40 || !/^[0-9a-f]{40}$/.test(addr)) {\n    throw new Error('to must be a 20-byte hex address');\n  }\n  const paddedAddr = [[SLOT addr_pad]];\n\n  const a = BigInt(amount);\n  if (a < 0n) throw new Error('amount cannot be negative');\n  if (a >= [[SLOT max_amount]]) throw new Error('amount overflow');\n  const paddedAmount = a.toString(16).padStart(64, '0');\n\n  return '0x' + sel + paddedAddr + paddedAmount;\n}\n\nmodule.exports = { encodeErc20Transfer };\n",
+  "slots": [
+    {
+      "name": "fn_sig",
+      "answer": "'transfer(address,uint256)'",
+      "hint": "literal",
+      "decoys": [
+        "'transfer(address,uint)'",
+        "'transfer(address)'",
+        "'transfer(uint256,address)'"
+      ]
+    },
+    {
+      "name": "addr_pad",
+      "answer": "addr.padStart(64, '0')",
+      "hint": "padding",
+      "decoys": [
+        "addr.padEnd(64, '0')",
+        "addr.padStart(40, '0')",
+        "addr.padStart(64, ' ')"
+      ]
+    },
+    {
+      "name": "max_amount",
+      "answer": "2n ** 256n",
+      "hint": "bigint",
+      "decoys": [
+        "2 ** 256",
+        "2n ** 255n",
+        "BigInt(2 ** 256)"
+      ]
+    }
+  ],
+  "prompt": "Pick the function signature, the 32-byte left-pad, and the 2^256 bigint."
+}

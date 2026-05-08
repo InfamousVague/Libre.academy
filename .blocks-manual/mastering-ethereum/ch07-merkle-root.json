@@ -1,0 +1,46 @@
+{
+  "template": "// Compute the root of a Merkle tree using OpenZeppelin's sorted-pair convention.\n\nfunction merkleRoot(keccak256, leaves) {\n  if (!Array.isArray(leaves) || leaves.length === 0) {\n    throw new Error('need at least one leaf');\n  }\n\n  let level = leaves.map((leaf) => keccak256(Buffer.from(leaf, 'utf8')));\n\n  const pairHash = (a, b) => {\n    const [lo, hi] = a < b ? [a, b] : [b, a];\n    const buf = Buffer.concat([Buffer.from(lo, 'hex'), Buffer.from(hi, 'hex')]);\n    return keccak256(buf);\n  };\n\n  while ([[SLOT loop_cond]]) {\n    const next = [];\n    for (let i = 0; i < level.length; i += 2) {\n      if ([[SLOT has_pair]]) {\n        next.push([[SLOT hash_pair]]);\n      } else {\n        next.push(level[i]);\n      }\n    }\n    [[SLOT level_swap]]\n  }\n  return level[0];\n}\n\nmodule.exports = { merkleRoot };\n",
+  "slots": [
+    {
+      "name": "loop_cond",
+      "answer": "level.length > 1",
+      "hint": "predicate",
+      "decoys": [
+        "level.length >= 1",
+        "level.length > 0",
+        "next.length > 1"
+      ]
+    },
+    {
+      "name": "has_pair",
+      "answer": "i + 1 < level.length",
+      "hint": "predicate",
+      "decoys": [
+        "i + 1 <= level.length",
+        "i < level.length - 1",
+        "i + 1 > level.length"
+      ]
+    },
+    {
+      "name": "hash_pair",
+      "answer": "pairHash(level[i], level[i + 1])",
+      "hint": "hash",
+      "decoys": [
+        "pairHash(level[i + 1], level[i])",
+        "keccak256(level[i] + level[i + 1])",
+        "pairHash(level[0], level[i])"
+      ]
+    },
+    {
+      "name": "level_swap",
+      "answer": "level = next;",
+      "hint": "swap",
+      "decoys": [
+        "next = level;",
+        "level = level.concat(next);",
+        "level = next.slice();"
+      ]
+    }
+  ],
+  "prompt": "Pick the outer loop cond, the pair-existence check, the pair hash, and the level swap."
+}

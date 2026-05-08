@@ -1,0 +1,46 @@
+{
+  "template": "const std = @import(\"std\");\n\npub const Expr = union(enum) {\n    number: i32,\n    add: [[SLOT add_struct]],\n    multiply: struct { left: *const Expr, right: *const Expr },\n};\n\npub fn eval(expr: Expr) i32 {\n    return switch (expr) {\n        .number => |n| [[SLOT num_eval]],\n        .add => |op| [[SLOT add_eval]],\n        .multiply => |op| [[SLOT mul_eval]],\n    };\n}\n",
+  "slots": [
+    {
+      "name": "add_struct",
+      "answer": "struct { left: *const Expr, right: *const Expr }",
+      "hint": "shape",
+      "decoys": [
+        "struct { left: Expr, right: Expr }",
+        "struct { *const Expr, *const Expr }",
+        "struct { left: i32, right: i32 }"
+      ]
+    },
+    {
+      "name": "num_eval",
+      "answer": "n",
+      "hint": "value",
+      "decoys": [
+        "0",
+        "op.value",
+        "expr"
+      ]
+    },
+    {
+      "name": "add_eval",
+      "answer": "eval(op.left.*) + eval(op.right.*)",
+      "hint": "recurse",
+      "decoys": [
+        "op.left + op.right",
+        "op.left.* + op.right.*",
+        "eval(op.left) + eval(op.right)"
+      ]
+    },
+    {
+      "name": "mul_eval",
+      "answer": "eval(op.left.*) * eval(op.right.*)",
+      "hint": "recurse",
+      "decoys": [
+        "op.left * op.right",
+        "op.left.* * op.right.*",
+        "eval(op.left) * eval(op.right)"
+      ]
+    }
+  ],
+  "prompt": "Build the add struct shape and the three switch arms of the recursive evaluator."
+}

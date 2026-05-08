@@ -1,0 +1,36 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.26;\n\ncontract MerkleAirdrop {\n    bytes32 public immutable merkleRoot;\n    mapping(address => bool) public claimed;\n\n    error AlreadyClaimed();\n    error InvalidProof();\n\n    constructor(bytes32 merkleRoot_) payable {\n        merkleRoot = merkleRoot_;\n    }\n\n    function claim(address account, uint256 amount, bytes32[] calldata proof) external {\n        if (claimed[account]) revert AlreadyClaimed();\n        bytes32 leaf = [[SLOT leaf_hash]];\n        bytes32 computedHash = leaf;\n        for (uint256 i = 0; i < proof.length; i++) {\n            bytes32 proofElement = proof[i];\n            if ([[SLOT order_check]]) {\n                computedHash = keccak256(abi.encodePacked(computedHash, proofElement));\n            } else {\n                computedHash = keccak256(abi.encodePacked(proofElement, computedHash));\n            }\n        }\n        if ([[SLOT root_check]]) revert InvalidProof();\n        claimed[account] = true;\n        payable(account).transfer(amount);\n    }\n\n    receive() external payable {}\n}\n",
+  "slots": [
+    {
+      "name": "leaf_hash",
+      "answer": "keccak256(abi.encodePacked(account, amount))",
+      "hint": "hash",
+      "decoys": [
+        "keccak256(abi.encode(account, amount))",
+        "keccak256(abi.encodePacked(amount, account))",
+        "keccak256(account)"
+      ]
+    },
+    {
+      "name": "order_check",
+      "answer": "computedHash < proofElement",
+      "hint": "predicate",
+      "decoys": [
+        "computedHash > proofElement",
+        "computedHash == proofElement",
+        "proofElement < computedHash"
+      ]
+    },
+    {
+      "name": "root_check",
+      "answer": "computedHash != merkleRoot",
+      "hint": "predicate",
+      "decoys": [
+        "computedHash == merkleRoot",
+        "merkleRoot != bytes32(0)",
+        "proofElement != merkleRoot"
+      ]
+    }
+  ],
+  "prompt": "Pick the leaf hash, the sorted-pair branch, and the root mismatch check."
+}

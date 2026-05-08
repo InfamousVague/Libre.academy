@@ -1,0 +1,46 @@
+{
+  "template": "[[SLOT use_io]]\n\nfn main() {\n    println!(\"Guess the number!\");\n\n    println!(\"Please input your guess.\");\n\n    let mut guess = [[SLOT string_new]];\n\n    io::stdin()\n        [[SLOT read_line]]\n        [[SLOT expect_call]];\n\n    println!(\"You guessed: {guess}\");\n}\n",
+  "slots": [
+    {
+      "name": "use_io",
+      "answer": "use std::io;",
+      "hint": "import",
+      "decoys": [
+        "use std::input;",
+        "use io;",
+        "use std::io::Read;"
+      ]
+    },
+    {
+      "name": "string_new",
+      "answer": "String::new()",
+      "hint": "constructor",
+      "decoys": [
+        "String::default()",
+        "String::from(\"\")",
+        "Vec::new()"
+      ]
+    },
+    {
+      "name": "read_line",
+      "answer": ".read_line(&mut guess)",
+      "hint": "io",
+      "decoys": [
+        ".read_to_string(&mut guess)",
+        ".read(&mut guess)",
+        ".readline(&mut guess)"
+      ]
+    },
+    {
+      "name": "expect_call",
+      "answer": ".expect(\"Failed to read line\")",
+      "hint": "error",
+      "decoys": [
+        ".unwrap()",
+        ".ok()",
+        ".expect(\"read error\")"
+      ]
+    }
+  ],
+  "prompt": "Wire up the io import, String::new, read_line, and the expect call."
+}

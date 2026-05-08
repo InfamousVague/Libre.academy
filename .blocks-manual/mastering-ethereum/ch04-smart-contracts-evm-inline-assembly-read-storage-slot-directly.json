@@ -1,0 +1,36 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.26;\n\ncontract StorageReader {\n    uint256 public slot0;           // slot 0\n    uint256 private slot1;          // slot 1\n    mapping(uint256 => uint256) private slot2Map; // slot 2\n\n    function setValues(uint256 a, uint256 b, uint256 key, uint256 mapVal) external {\n        slot0 = a;\n        slot1 = b;\n        slot2Map[key] = mapVal;\n    }\n\n    function readSlot0Assembly() external view returns (uint256 result) {\n        assembly {\n            [[SLOT load0]]\n        }\n    }\n\n    function readSlot1Assembly() external view returns (uint256 result) {\n        assembly {\n            [[SLOT load1]]\n        }\n    }\n\n    function readMapSlotAssembly(uint256 key) external view returns (uint256 result) {\n        bytes32 slot = [[SLOT map_slot]];\n        assembly {\n            result := sload(slot)\n        }\n    }\n}\n",
+  "slots": [
+    {
+      "name": "load0",
+      "answer": "result := sload(0)",
+      "hint": "yul",
+      "decoys": [
+        "result := sload(1)",
+        "result := mload(0)",
+        "result := slot0"
+      ]
+    },
+    {
+      "name": "load1",
+      "answer": "result := sload(1)",
+      "hint": "yul",
+      "decoys": [
+        "result := sload(0)",
+        "result := mload(1)",
+        "result := slot1"
+      ]
+    },
+    {
+      "name": "map_slot",
+      "answer": "keccak256(abi.encode(key, uint256(2)))",
+      "hint": "hash",
+      "decoys": [
+        "keccak256(abi.encodePacked(key, uint256(2)))",
+        "keccak256(abi.encode(uint256(2), key))",
+        "keccak256(key)"
+      ]
+    }
+  ],
+  "prompt": "Pick the two sload reads and the mapping-slot derivation."
+}

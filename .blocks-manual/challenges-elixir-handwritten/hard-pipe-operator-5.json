@@ -1,0 +1,46 @@
+{
+  "template": "defmodule Solution do\n  defmacro safe_pipe(initial, pipeline) do\n    pipeline\n    |> [[SLOT macro_expand]]\n    |> build_pipeline(initial)\n  end\n\n  defp build_pipeline([], acc) do\n    quote do: [[SLOT ok_wrap]]\n  end\n\n  defp build_pipeline([{func, args} | rest], acc) do\n    quote do\n      case apply_stage(unquote(acc), unquote(func), unquote(args)) do\n        {:ok, value} -> unquote(build_pipeline(rest, quote(do: value)))\n        [[SLOT error_match]] -> err\n        value -> unquote(build_pipeline(rest, quote(do: value)))\n      end\n    end\n  end\n\n  defp apply_stage(value, func, args) when [[SLOT fn_guard]] do\n    apply(func, [value | args])\n  end\n\n  defp apply_stage(value, {module, function, extra_args}, []) do\n    apply(module, function, [value | extra_args])\n  end\nend",
+  "slots": [
+    {
+      "name": "macro_expand",
+      "answer": "Macro.expand_once(__CALLER__)",
+      "hint": "macro",
+      "decoys": [
+        "Macro.expand(__CALLER__)",
+        "Macro.compile(__CALLER__)",
+        "Macro.eval(__CALLER__)"
+      ]
+    },
+    {
+      "name": "ok_wrap",
+      "answer": "{:ok, unquote(acc)}",
+      "hint": "tuple",
+      "decoys": [
+        "{:result, acc}",
+        "{:ok, acc}",
+        "unquote(acc)"
+      ]
+    },
+    {
+      "name": "error_match",
+      "answer": "{:error, _} = err",
+      "hint": "pattern",
+      "decoys": [
+        "{:error, _}",
+        "err = {:error, _}",
+        "{:error, reason}"
+      ]
+    },
+    {
+      "name": "fn_guard",
+      "answer": "is_function(func)",
+      "hint": "guard",
+      "decoys": [
+        "is_atom(func)",
+        "is_lambda(func)",
+        "function?(func)"
+      ]
+    }
+  ],
+  "prompt": "Pick the macro expander, the ok-wrap, the error pattern, and the function guard."
+}

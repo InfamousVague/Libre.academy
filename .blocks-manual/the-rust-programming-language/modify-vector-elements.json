@@ -1,0 +1,26 @@
+{
+  "template": "pub fn build_vector() -> Vec<i32> {\n    let mut v = Vec::new();\n    v.push(10);\n    v.push(20);\n    v.push(30);\n    v\n}\n\npub fn safe_access(v: &Vec<i32>, index: usize) -> Option<i32> {\n    match v.get(index) {\n        Some(&value) => Some(value),\n        None => None,\n    }\n}\n\n/// Doubles every element in the vector in place.\npub fn double_elements([[SLOT mut_param]]) {\n    for elem in v {\n        [[SLOT deref_mul]]\n    }\n}\n\nfn main() {\n    let mut v = build_vector();\n    println!(\"Before: {:?}\", v);\n    double_elements(&mut v);\n    println!(\"After: {:?}\", v);\n}\n",
+  "slots": [
+    {
+      "name": "mut_param",
+      "answer": "v: &mut Vec<i32>",
+      "hint": "param",
+      "decoys": [
+        "v: &Vec<i32>",
+        "v: Vec<i32>",
+        "v: &mut [i32]"
+      ]
+    },
+    {
+      "name": "deref_mul",
+      "answer": "*elem *= 2;",
+      "hint": "mutation",
+      "decoys": [
+        "elem *= 2;",
+        "*elem = elem * 2;",
+        "elem.set(elem * 2);"
+      ]
+    }
+  ],
+  "prompt": "Pick the &mut Vec parameter and the deref-multiply mutation."
+}

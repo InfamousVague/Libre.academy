@@ -1,0 +1,46 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.26;\n\ncontract DutchAuction {\n    uint256 public startPrice;\n    uint256 public discountRate;\n    uint256 public duration;\n    uint256 public startTime;\n    address public winner;\n    bool public sold;\n\n    event Sold(address indexed buyer, uint256 price);\n    event Refunded(address indexed buyer, uint256 amount);\n\n    constructor(uint256 _startPrice, uint256 _discountRate, uint256 _duration) {\n        startPrice = _startPrice;\n        discountRate = _discountRate;\n        duration = _duration;\n        startTime = block.timestamp;\n    }\n\n    function getPrice() public view returns (uint256) {\n        uint256 elapsed = [[SLOT elapsed_calc]];\n        if (elapsed >= duration) return 0;\n        uint256 discount = [[SLOT discount_calc]];\n        if (discount >= startPrice) return 0;\n        return [[SLOT price_calc]];\n    }\n\n    function buy() external payable {\n        require(!sold, \"Already sold\");\n        require(block.timestamp < startTime + duration, \"Auction expired\");\n        uint256 price = getPrice();\n        require([[SLOT exact_pay]], \"Incorrect payment\");\n        sold = true;\n        winner = msg.sender;\n        emit Sold(msg.sender, price);\n    }\n\n    function refund() external {\n        require(msg.sender == winner, \"Not winner\");\n        uint256 amount = address(this).balance;\n        winner = address(0);\n        sold = false;\n        payable(msg.sender).transfer(amount);\n        emit Refunded(msg.sender, amount);\n    }\n}\n",
+  "slots": [
+    {
+      "name": "elapsed_calc",
+      "answer": "block.timestamp - startTime",
+      "hint": "stamp",
+      "decoys": [
+        "startTime - block.timestamp",
+        "block.number - startTime",
+        "block.timestamp - duration"
+      ]
+    },
+    {
+      "name": "discount_calc",
+      "answer": "elapsed * discountRate",
+      "hint": "math",
+      "decoys": [
+        "elapsed + discountRate",
+        "discountRate / elapsed",
+        "elapsed - discountRate"
+      ]
+    },
+    {
+      "name": "price_calc",
+      "answer": "startPrice - discount",
+      "hint": "math",
+      "decoys": [
+        "startPrice + discount",
+        "discount - startPrice",
+        "startPrice / discount"
+      ]
+    },
+    {
+      "name": "exact_pay",
+      "answer": "msg.value == price",
+      "hint": "predicate",
+      "decoys": [
+        "msg.value >= price",
+        "msg.value > price",
+        "msg.value < price"
+      ]
+    }
+  ],
+  "prompt": "Pick the elapsed time, discount math, current price, and exact-pay check."
+}

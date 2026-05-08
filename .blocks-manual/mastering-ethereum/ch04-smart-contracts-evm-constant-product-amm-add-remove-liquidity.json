@@ -1,0 +1,36 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\ncontract AMM {\n    uint256 public reserveA;\n    uint256 public reserveB;\n    uint256 public totalShares;\n    mapping(address => uint256) public sharesOf;\n\n    event LiquidityAdded(address indexed who, uint256 amountA, uint256 amountB, uint256 sharesMinted);\n    event LiquidityRemoved(address indexed who, uint256 sharesBurned, uint256 amountA, uint256 amountB);\n\n    function add(uint256 amountA, uint256 amountB) external returns (uint256 shares) {\n        if (totalShares == 0) {\n            shares = [[SLOT init_shares]];\n        } else {\n            uint256 sA = [[SLOT calc_a_shares]];\n            uint256 sB = (amountB * totalShares) / reserveB;\n            shares = [[SLOT min_pick]];\n        }\n        require(shares > 0, \"zero shares\");\n        reserveA += amountA; reserveB += amountB;\n        totalShares += shares;\n        sharesOf[msg.sender] += shares;\n        emit LiquidityAdded(msg.sender, amountA, amountB, shares);\n    }\n\n    function remove(uint256 shares) external returns (uint256 amountA, uint256 amountB) {\n        amountA = (shares * reserveA) / totalShares;\n        amountB = (shares * reserveB) / totalShares;\n        sharesOf[msg.sender] -= shares;\n        totalShares -= shares;\n        reserveA -= amountA; reserveB -= amountB;\n        emit LiquidityRemoved(msg.sender, shares, amountA, amountB);\n    }\n\n    function _sqrt(uint256 x) private pure returns (uint256 z) {\n        if (x > 3) { z = x; uint256 y = x / 2 + 1; while (y < z) { z = y; y = (x / y + y) / 2; } }\n        else if (x != 0) { z = 1; }\n    }\n}\n",
+  "slots": [
+    {
+      "name": "init_shares",
+      "answer": "_sqrt(amountA * amountB)",
+      "hint": "math",
+      "decoys": [
+        "amountA + amountB",
+        "amountA * amountB",
+        "_sqrt(amountA + amountB)"
+      ]
+    },
+    {
+      "name": "calc_a_shares",
+      "answer": "(amountA * totalShares) / reserveA",
+      "hint": "math",
+      "decoys": [
+        "(totalShares * reserveA) / amountA",
+        "(amountA * reserveA) / totalShares",
+        "amountA / reserveA"
+      ]
+    },
+    {
+      "name": "min_pick",
+      "answer": "sA < sB ? sA : sB",
+      "hint": "ternary",
+      "decoys": [
+        "sA > sB ? sA : sB",
+        "sA + sB",
+        "sA == sB ? sA : 0"
+      ]
+    }
+  ],
+  "prompt": "Pick the initial-shares geometric mean, the proportional shares, and the min-pick."
+}

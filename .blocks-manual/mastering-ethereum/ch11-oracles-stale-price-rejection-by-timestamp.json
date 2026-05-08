@@ -1,0 +1,36 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.26;\n\ncontract PriceFeed {\n    uint256 public price;\n    uint256 public lastUpdate;\n    uint256 public constant [[SLOT max_age]];\n\n    error StalePrice();\n\n    function updatePrice(uint256 newPrice) external {\n        price = newPrice;\n        [[SLOT stamp_set]]\n    }\n\n    function getPrice() external view returns (uint256) {\n        if ([[SLOT stale_check]]) revert StalePrice();\n        return price;\n    }\n}\n",
+  "slots": [
+    {
+      "name": "max_age",
+      "answer": "MAX_AGE = 3600",
+      "hint": "constant",
+      "decoys": [
+        "MAX_AGE = 60",
+        "MAX_AGE = 86400",
+        "MAX_AGE = 0"
+      ]
+    },
+    {
+      "name": "stale_check",
+      "answer": "lastUpdate == 0 || block.timestamp - lastUpdate >= MAX_AGE",
+      "hint": "predicate",
+      "decoys": [
+        "block.timestamp - lastUpdate >= MAX_AGE",
+        "lastUpdate == 0",
+        "block.timestamp >= MAX_AGE"
+      ]
+    },
+    {
+      "name": "stamp_set",
+      "answer": "lastUpdate = block.timestamp;",
+      "hint": "stamp",
+      "decoys": [
+        "lastUpdate = block.number;",
+        "lastUpdate = newPrice;",
+        "lastUpdate++;"
+      ]
+    }
+  ],
+  "prompt": "Pick the max-age constant, the stale predicate, and the timestamp set."
+}

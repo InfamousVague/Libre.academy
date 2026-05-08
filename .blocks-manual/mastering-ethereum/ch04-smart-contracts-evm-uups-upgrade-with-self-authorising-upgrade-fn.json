@@ -1,0 +1,36 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.26;\n\ncontract UUPSProxy {\n    bytes32 private constant IMPLEMENTATION_SLOT = [[SLOT impl_slot]];\n\n    constructor(address _implementation) {\n        bytes32 slot = IMPLEMENTATION_SLOT;\n        assembly { sstore(slot, _implementation) }\n    }\n\n    fallback() external payable {\n        bytes32 slot = IMPLEMENTATION_SLOT;\n        assembly {\n            let impl := sload(slot)\n            calldatacopy(0, 0, calldatasize())\n            let ok := [[SLOT delegate_call]]\n            returndatacopy(0, 0, returndatasize())\n            switch ok\n            case 0 { revert(0, returndatasize()) }\n            default { return(0, returndatasize()) }\n        }\n    }\n\n    receive() external payable {}\n}\n\ncontract CounterV1 {\n    bytes32 internal constant IMPLEMENTATION_SLOT = bytes32(uint256(keccak256('eip1967.proxy.implementation')) - 1);\n    uint256 public count;\n    error Unauthorized();\n\n    function increment() external { count += 1; }\n\n    function upgradeToAndCall(address newImpl, bytes calldata data) external {\n        bytes32 slot = IMPLEMENTATION_SLOT;\n        address current;\n        assembly { current := sload(slot) }\n        if ([[SLOT init_check]]) revert Unauthorized();\n        assembly { sstore(slot, newImpl) }\n        if (data.length > 0) {\n            (bool ok, ) = newImpl.delegatecall(data);\n            require(ok, \"init fail\");\n        }\n    }\n}\n\ncontract CounterV2 {\n    bytes32 internal constant IMPLEMENTATION_SLOT = bytes32(uint256(keccak256('eip1967.proxy.implementation')) - 1);\n    uint256 public count;\n    error Unauthorized();\n\n    function increment() external { count += 10; }\n\n    function upgradeToAndCall(address newImpl, bytes calldata data) external {\n        bytes32 slot = IMPLEMENTATION_SLOT;\n        address current;\n        assembly { current := sload(slot) }\n        if (current == address(0)) revert Unauthorized();\n        assembly { sstore(slot, newImpl) }\n        if (data.length > 0) {\n            (bool ok, ) = newImpl.delegatecall(data);\n            require(ok, \"init fail\");\n        }\n    }\n}\n",
+  "slots": [
+    {
+      "name": "impl_slot",
+      "answer": "bytes32(uint256(keccak256('eip1967.proxy.implementation')) - 1)",
+      "hint": "constant",
+      "decoys": [
+        "keccak256('eip1967.proxy.implementation')",
+        "bytes32(uint256(keccak256('eip1967.proxy.implementation')))",
+        "bytes32(0)"
+      ]
+    },
+    {
+      "name": "delegate_call",
+      "answer": "delegatecall(gas(), impl, 0, calldatasize(), 0, 0)",
+      "hint": "yul",
+      "decoys": [
+        "call(gas(), impl, 0, 0, calldatasize(), 0, 0)",
+        "staticcall(gas(), impl, 0, calldatasize(), 0, 0)",
+        "delegatecall(gas(), impl, calldatasize(), 0, 0, 0)"
+      ]
+    },
+    {
+      "name": "init_check",
+      "answer": "current == address(0)",
+      "hint": "predicate",
+      "decoys": [
+        "current != address(0)",
+        "newImpl == address(0)",
+        "current == msg.sender"
+      ]
+    }
+  ],
+  "prompt": "Pick the EIP-1967 slot derivation, the delegatecall, and the init check."
+}

@@ -1,0 +1,36 @@
+{
+  "template": "pub fn version_command() -> &'static str {\n    [[SLOT version_cmd]]\n}\n\npub fn update_command() -> &'static str {\n    [[SLOT update_cmd]]\n}\n\npub fn uninstall_command() -> &'static str {\n    [[SLOT uninstall_cmd]]\n}\n\nfn main() {\n    println!(\"Verify:    {}\", version_command());\n    println!(\"Update:    {}\", update_command());\n    println!(\"Uninstall: {}\", uninstall_command());\n}\n",
+  "slots": [
+    {
+      "name": "version_cmd",
+      "answer": "\"rustc --version\"",
+      "hint": "command",
+      "decoys": [
+        "\"rustc -V\"",
+        "\"cargo --version\"",
+        "\"rustup --version\""
+      ]
+    },
+    {
+      "name": "update_cmd",
+      "answer": "\"rustup update\"",
+      "hint": "command",
+      "decoys": [
+        "\"cargo update\"",
+        "\"rustup upgrade\"",
+        "\"rustc update\""
+      ]
+    },
+    {
+      "name": "uninstall_cmd",
+      "answer": "\"rustup self uninstall\"",
+      "hint": "command",
+      "decoys": [
+        "\"rustup uninstall\"",
+        "\"rustc self uninstall\"",
+        "\"cargo uninstall\""
+      ]
+    }
+  ],
+  "prompt": "Pick the toolchain commands."
+}

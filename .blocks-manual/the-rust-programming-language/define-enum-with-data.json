@@ -1,0 +1,46 @@
+{
+  "template": "#[derive(Debug, PartialEq)]\npub enum Command {\n    [[SLOT say_variant]]\n    [[SLOT move_variant]]\n    Quit,\n}\n\nimpl Command {\n    pub fn describe(&self) -> String {\n        match self {\n            [[SLOT say_arm]],\n            [[SLOT move_arm]],\n            Command::Quit => String::from(\"Quit\"),\n        }\n    }\n}\n\nfn main() {\n    let cmd = Command::Say(String::from(\"hello\"));\n    println!(\"{}\", cmd.describe());\n}\n",
+  "slots": [
+    {
+      "name": "say_variant",
+      "answer": "Say(String),",
+      "hint": "variant",
+      "decoys": [
+        "Say { msg: String },",
+        "Say,",
+        "Say(&str),"
+      ]
+    },
+    {
+      "name": "move_variant",
+      "answer": "Move { x: i32, y: i32 },",
+      "hint": "variant",
+      "decoys": [
+        "Move(i32, i32),",
+        "Move { x: u32, y: u32 },",
+        "Move(Point),"
+      ]
+    },
+    {
+      "name": "say_arm",
+      "answer": "Command::Say(msg) => format!(\"Say: {}\", msg)",
+      "hint": "arm",
+      "decoys": [
+        "Command::Say(msg) => msg.clone()",
+        "Say(msg) => format!(\"Say: {}\", msg)",
+        "Command::Say { msg } => format!(\"Say: {}\", msg)"
+      ]
+    },
+    {
+      "name": "move_arm",
+      "answer": "Command::Move { x, y } => format!(\"Move to ({}, {})\", x, y)",
+      "hint": "arm",
+      "decoys": [
+        "Command::Move(x, y) => format!(\"Move to ({}, {})\", x, y)",
+        "Command::Move { x, y } => format!(\"({}, {})\", x, y)",
+        "Move { x, y } => format!(\"Move to ({}, {})\", x, y)"
+      ]
+    }
+  ],
+  "prompt": "Pick the two data-bearing variants and the corresponding match arms."
+}

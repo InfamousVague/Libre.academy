@@ -1,0 +1,46 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.26;\n\ncontract Counter {\n    uint256 public count;\n\n    function increment() external {\n        count++;\n    }\n\n    function get() external view returns (uint256) {\n        return count;\n    }\n}\n\ncontract CloneFactory {\n    address public implementation;\n    event Cloned(address indexed proxy);\n\n    constructor(address _implementation) {\n        implementation = _implementation;\n    }\n\n    function clone() external returns (address instance) {\n        address impl = implementation;\n        assembly {\n            let ptr := mload(0x40)\n            mstore(ptr, [[SLOT eip1167_prefix]])\n            mstore(add(ptr, 0x14), [[SLOT impl_shift]])\n            mstore(add(ptr, 0x28), [[SLOT eip1167_suffix]])\n            instance := [[SLOT create_call]]\n        }\n        require(instance != address(0), \"Clone failed\");\n        emit Cloned(instance);\n    }\n}\n",
+  "slots": [
+    {
+      "name": "eip1167_prefix",
+      "answer": "0x3d602d80600a3d3981f3363d3d373d3d3d363d73000000000000000000000000",
+      "hint": "bytecode",
+      "decoys": [
+        "0x3d602d80600a3d3981f3363d3d373d3d3d363d73",
+        "0x363d3d373d3d3d363d73000000000000000000000000000000000000000000000",
+        "0xff"
+      ]
+    },
+    {
+      "name": "impl_shift",
+      "answer": "shl(0x60, impl)",
+      "hint": "yul",
+      "decoys": [
+        "shl(0x40, impl)",
+        "shr(0x60, impl)",
+        "impl"
+      ]
+    },
+    {
+      "name": "eip1167_suffix",
+      "answer": "0x5af43d82803e903d91602b57fd5bf30000000000000000000000000000000000",
+      "hint": "bytecode",
+      "decoys": [
+        "0x5af43d82803e903d91602b57fd5bf3",
+        "0xfd5bf30000000000000000000000000000000000000000000000000000000000",
+        "0x00"
+      ]
+    },
+    {
+      "name": "create_call",
+      "answer": "create(0, ptr, 0x37)",
+      "hint": "yul",
+      "decoys": [
+        "create2(0, ptr, 0x37, 0)",
+        "create(0, ptr, 0x14)",
+        "create(value, ptr, 0x37)"
+      ]
+    }
+  ],
+  "prompt": "Pick the EIP-1167 prefix, the impl shift, the suffix, and the create call."
+}

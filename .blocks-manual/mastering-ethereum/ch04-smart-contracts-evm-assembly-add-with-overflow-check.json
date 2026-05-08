@@ -1,0 +1,26 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.26;\n\ncontract SafeMath {\n    function addWithOverflowCheck(uint256 a, uint256 b) external pure returns (uint256 result, bool overflowed) {\n        assembly {\n            [[SLOT asm_add]]\n            [[SLOT asm_overflow]]\n        }\n    }\n}\n",
+  "slots": [
+    {
+      "name": "asm_add",
+      "answer": "result := add(a, b)",
+      "hint": "yul",
+      "decoys": [
+        "result := mul(a, b)",
+        "result := sub(a, b)",
+        "result := add(b, a)"
+      ]
+    },
+    {
+      "name": "asm_overflow",
+      "answer": "overflowed := lt(result, a)",
+      "hint": "yul",
+      "decoys": [
+        "overflowed := gt(result, a)",
+        "overflowed := eq(result, a)",
+        "overflowed := lt(a, result)"
+      ]
+    }
+  ],
+  "prompt": "Pick the Yul add and the overflow lt-check."
+}

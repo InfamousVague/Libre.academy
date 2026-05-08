@@ -1,0 +1,46 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\ncontract SafeMath {\n    error Overflow();\n\n    function safeAdd(uint256 a, uint256 b) external pure returns (uint256 c) {\n        assembly {\n            [[SLOT yul_add]]\n            if [[SLOT overflow_pred]] {\n                [[SLOT store_selector]]\n                [[SLOT revert_call]]\n            }\n        }\n    }\n}\n",
+  "slots": [
+    {
+      "name": "yul_add",
+      "answer": "c := add(a, b)",
+      "hint": "yul",
+      "decoys": [
+        "c := mul(a, b)",
+        "c := sub(a, b)",
+        "c := add(b, a)"
+      ]
+    },
+    {
+      "name": "overflow_pred",
+      "answer": "lt(c, a)",
+      "hint": "yul",
+      "decoys": [
+        "gt(c, a)",
+        "eq(c, a)",
+        "lt(a, c)"
+      ]
+    },
+    {
+      "name": "store_selector",
+      "answer": "mstore(0x00, 0x35278d1200000000000000000000000000000000000000000000000000000000)",
+      "hint": "yul",
+      "decoys": [
+        "mstore(0x00, 0x0)",
+        "mstore(0x04, 0x35278d12)",
+        "sstore(0x00, 0x35278d12)"
+      ]
+    },
+    {
+      "name": "revert_call",
+      "answer": "revert(0x00, 0x04)",
+      "hint": "yul",
+      "decoys": [
+        "revert(0x04, 0x00)",
+        "revert(0x00, 0x20)",
+        "return(0x00, 0x04)"
+      ]
+    }
+  ],
+  "prompt": "Pick the Yul add, overflow predicate, selector store, and revert."
+}

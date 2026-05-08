@@ -1,0 +1,46 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\ncontract Stablecoin {\n    uint256 public constant [[SLOT min_ratio]]; // 150%\n    uint256 public constant PRICE = 2000e18;       // 1 ETH = $2000\n    mapping(address => uint256) public collateral;\n    mapping(address => uint256) public debt;\n\n    error Undercollateralized();\n\n    function mint(uint256 amount) external payable {\n        collateral[msg.sender] += msg.value;\n        debt[msg.sender] += amount;\n        // collateralValueUsd = collateral * PRICE / 1e18\n        // require collateralValueUsd * 10000 >= debt * MIN_RATIO_BPS\n        uint256 collateralValueUsd = [[SLOT usd_value]];\n        if ([[SLOT ratio_check]]) revert Undercollateralized();\n    }\n\n    function redeem(uint256 amount) external returns (uint256 ethReturned) {\n        debt[msg.sender] -= amount;\n        // ethReturned = amount / PRICE  (in 18-decimal terms)\n        ethReturned = [[SLOT eth_calc]];\n        collateral[msg.sender] -= ethReturned;\n        (bool ok, ) = msg.sender.call{value: ethReturned}(\"\");\n        require(ok, \"send fail\");\n    }\n\n    receive() external payable {}\n}\n",
+  "slots": [
+    {
+      "name": "min_ratio",
+      "answer": "MIN_RATIO_BPS = 15000",
+      "hint": "constant",
+      "decoys": [
+        "MIN_RATIO_BPS = 10000",
+        "MIN_RATIO_BPS = 100",
+        "MIN_RATIO_BPS = 150"
+      ]
+    },
+    {
+      "name": "usd_value",
+      "answer": "(collateral[msg.sender] * PRICE) / 1 ether",
+      "hint": "math",
+      "decoys": [
+        "collateral[msg.sender] * PRICE",
+        "(collateral[msg.sender] * 1 ether) / PRICE",
+        "collateral[msg.sender] / PRICE"
+      ]
+    },
+    {
+      "name": "ratio_check",
+      "answer": "collateralValueUsd * 10000 < debt[msg.sender] * MIN_RATIO_BPS",
+      "hint": "predicate",
+      "decoys": [
+        "collateralValueUsd < debt[msg.sender]",
+        "collateralValueUsd * MIN_RATIO_BPS < debt[msg.sender] * 10000",
+        "debt[msg.sender] * 10000 > collateralValueUsd"
+      ]
+    },
+    {
+      "name": "eth_calc",
+      "answer": "(amount * 1 ether) / PRICE",
+      "hint": "math",
+      "decoys": [
+        "amount / PRICE",
+        "(amount * PRICE) / 1 ether",
+        "amount * PRICE"
+      ]
+    }
+  ],
+  "prompt": "Pick the 150% ratio, USD valuation, undercollateralised check, and the eth-out math."
+}

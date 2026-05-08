@@ -1,0 +1,46 @@
+{
+  "template": "package main\n\nimport (\n\t\"fmt\"\n)\n\nfunc BuildCommand() string {\n\treturn [[SLOT build_cmd]]\n}\n\nfunc RunBinary(moduleName string) string {\n\treturn [[SLOT run_concat]]\n}\n\nfunc main() {\n\tfmt.Println([[SLOT arg1]])\n\tfmt.Println([[SLOT arg2]])\n}\n",
+  "slots": [
+    {
+      "name": "build_cmd",
+      "answer": "\"go build\"",
+      "hint": "literal",
+      "decoys": [
+        "\"go run\"",
+        "\"go install\"",
+        "\"build\""
+      ]
+    },
+    {
+      "name": "run_concat",
+      "answer": "\"./\" + moduleName",
+      "hint": "expression",
+      "decoys": [
+        "moduleName",
+        "\"./\" + moduleName + \".exe\"",
+        "\"./moduleName\""
+      ]
+    },
+    {
+      "name": "arg1",
+      "answer": "BuildCommand()",
+      "hint": "call",
+      "decoys": [
+        "\"BuildCommand\"",
+        "BuildCommand",
+        "Build()"
+      ]
+    },
+    {
+      "name": "arg2",
+      "answer": "RunBinary(\"hello_world\")",
+      "hint": "call",
+      "decoys": [
+        "RunBinary(moduleName)",
+        "RunBinary(\"hello world\")",
+        "RunBinary()"
+      ]
+    }
+  ],
+  "prompt": "Drop in the build command, the run-path concat, and the two Println arguments."
+}

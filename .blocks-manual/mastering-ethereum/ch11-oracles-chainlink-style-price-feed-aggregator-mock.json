@@ -1,0 +1,36 @@
+{
+  "template": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.26;\n\ncontract PriceFeed {\n    int256 private price;\n    uint80 private roundId;\n    address public owner;\n\n    error NotOwner();\n\n    constructor() {\n        owner = msg.sender;\n    }\n\n    function updatePrice(int256 newPrice) external {\n        if (msg.sender != owner) revert NotOwner();\n        [[SLOT round_inc]]\n        price = newPrice;\n    }\n\n    function latestRoundData()\n        external\n        view\n        returns (\n            uint80 roundId_,\n            int256 answer,\n            uint256 startedAt,\n            uint256 updatedAt,\n            uint80 answeredInRound\n        )\n    {\n        return [[SLOT round_data]];\n    }\n\n    function decimals() external pure returns (uint8) {\n        [[SLOT decimals_val]]\n    }\n}\n",
+  "slots": [
+    {
+      "name": "round_inc",
+      "answer": "roundId++;",
+      "hint": "round",
+      "decoys": [
+        "++roundId;",
+        "roundId = roundId + 1;",
+        "roundId += newPrice;"
+      ]
+    },
+    {
+      "name": "round_data",
+      "answer": "(roundId, price, block.timestamp, block.timestamp, roundId)",
+      "hint": "tuple",
+      "decoys": [
+        "(roundId, price, 0, 0, roundId)",
+        "(price, roundId, block.timestamp, block.timestamp, roundId)",
+        "(roundId, price, block.number, block.number, roundId)"
+      ]
+    },
+    {
+      "name": "decimals_val",
+      "answer": "return 8;",
+      "hint": "literal",
+      "decoys": [
+        "return 18;",
+        "return 6;",
+        "return 0;"
+      ]
+    }
+  ],
+  "prompt": "Pick the roundId bump, the latestRoundData tuple, and the decimals value."
+}
