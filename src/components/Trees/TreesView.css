@@ -19,12 +19,6 @@
    * shouldn't scroll. The detail variant overrides this below. */
   overflow: auto;
   padding: 24px 28px 32px;
-  /* Transparent so the app's `--color-bg-primary` floor reads
-   * through. The DottedGradientBg ambient bloom that used to live
-   * behind every surface was retired; transparency here is now a
-   * vestige of that decision but kept so future ambient layers
-   * (if any) compose correctly without a slab override. */
-  background: transparent;
   color: var(--color-text-primary);
   /* Defensive: any min-height descendant needs `min-height: 0` to
    * shrink inside a flex parent with overflow. Without this the
@@ -71,6 +65,77 @@
   letter-spacing: 0.8px;
   color: var(--color-text-tertiary);
   margin-bottom: 10px;
+}
+
+/* Tracks section header — same uppercase-eyebrow as the other section
+ * labels, with the racetrack glyph on the left and a softer secondary
+ * sublabel ("curated career paths") so the row reads as a single
+ * unit rather than competing for attention with the tree section
+ * headers below. */
+.fishbones-trees__section-label--tracks {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-secondary);
+}
+
+.fishbones-trees__section-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  line-height: 1;
+  color: var(--color-text-primary);
+}
+
+.fishbones-trees__section-sublabel {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.4px;
+  text-transform: none;
+  color: var(--color-text-tertiary);
+}
+
+/* Tracks grid is a touch roomier than the trees grid — track cards
+ * carry an extra "outcome" subtitle row, so the wider min-width keeps
+ * the title from wrapping awkwardly inside a 240px column. */
+.fishbones-trees__grid--tracks {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+/* Track card overrides on top of the shared `.fishbones-trees__card`
+ * base — same border / hover / progress-bar treatment, with the
+ * track-specific tag chip + outcome subtitle layered in. */
+.fishbones-trees__track-card-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--tree-accent);
+  background: color-mix(in srgb, var(--tree-accent) 14%, transparent);
+  padding: 3px 9px 3px 7px;
+  border-radius: var(--fb-radius-pill);
+}
+
+.fishbones-trees__track-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  line-height: 1;
+}
+
+.fishbones-trees__track-card-outcome {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  letter-spacing: -0.005em;
+  margin-top: -2px;
 }
 
 /* ── shelf grid ─────────────────────────────────────────────── */
@@ -1049,4 +1114,273 @@
   right: 10px;
   color: var(--tree-accent);
   font-weight: 700;
+}
+
+/* ── Track detail view ─────────────────────────────────────────── */
+
+/* Variant of the detail container — overrides the pan-viewport
+ * overflow rules since a track is a vertical scroll, not a pan
+ * canvas. Extends the shared `.fishbones-trees--detail` wrapper. */
+.fishbones-trees--track-detail {
+  overflow: auto;
+  padding: 24px 28px 32px;
+}
+
+.fishbones-trees__track-detail-titleicon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 10px;
+  vertical-align: -3px;
+}
+
+/* Outcome / meta strip — sits just below the title block. The accent
+ * border on the left ties it back to the track's colour token and
+ * mirrors the panel-tooltip treatment so the visual vocabulary is
+ * consistent. */
+.fishbones-trees__track-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border-default);
+  border-left: 3px solid var(--tree-accent);
+  border-radius: var(--fb-radius-md);
+  background: color-mix(in srgb, var(--tree-accent) 6%, var(--color-bg-secondary));
+  margin-bottom: 16px;
+}
+
+.fishbones-trees__track-meta-outcome {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  flex: 1 1 60%;
+}
+
+.fishbones-trees__track-meta-stats {
+  font-size: 11.5px;
+  color: var(--color-text-secondary);
+  text-transform: lowercase;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Continue CTA. Filled with the accent so the learner has one
+ * obvious primary click — sits above the step list as a permanent
+ * "I just want to keep going" handle. */
+.fishbones-trees__track-continue {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  appearance: none;
+  font: inherit;
+  text-align: left;
+  padding: 12px 16px;
+  border: 1px solid var(--tree-accent);
+  background: color-mix(in srgb, var(--tree-accent) 18%, var(--color-bg-secondary));
+  color: var(--color-text-primary);
+  border-radius: var(--fb-radius-md);
+  cursor: pointer;
+  margin-bottom: 16px;
+  transition: background 120ms ease, transform 120ms ease;
+}
+
+.fishbones-trees__track-continue:hover {
+  background: color-mix(in srgb, var(--tree-accent) 28%, var(--color-bg-secondary));
+  transform: translateY(-1px);
+}
+
+.fishbones-trees__track-continue > span:first-child {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--tree-accent);
+}
+
+.fishbones-trees__track-continue-target {
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Numbered step list. Each step is a row with a left rail (number /
+ * check + connector line down to the next step) and a body block
+ * (label, source-tree crumb, summary, "Open lesson" button). */
+.fishbones-trees__track-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.fishbones-trees__track-step {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+/* Rail column — the dot anchors the step, the line below stretches
+ * down to the next step's dot. The line uses absolute positioning so
+ * it only fills the GAP between dots, not the dot itself. */
+.fishbones-trees__track-step-rail {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Pad the bottom by the same amount as the dot height so the line
+   * doesn't visually overshoot when the step body is short. */
+  min-height: 56px;
+}
+
+.fishbones-trees__track-step-dot {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--fb-radius-pill);
+  border: 1.5px solid var(--color-border-default);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  font-size: 11.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.fishbones-trees__track-step-num {
+  line-height: 1;
+}
+
+.fishbones-trees__track-step-line {
+  flex: 1;
+  width: 2px;
+  background: var(--color-border-default);
+  /* Pull the line up under the dot so the seam vanishes. */
+  margin-top: -2px;
+}
+
+/* Status variants. Done = filled dot + accent line above; pending +
+ * gap = neutral; next-up adds a subtle accent ring. */
+.fishbones-trees__track-step--done .fishbones-trees__track-step-dot {
+  background: var(--tree-accent);
+  border-color: var(--tree-accent);
+  color: var(--color-bg-primary);
+}
+
+.fishbones-trees__track-step--done .fishbones-trees__track-step-line {
+  background: var(--tree-accent);
+}
+
+.fishbones-trees__track-step--gap .fishbones-trees__track-step-dot,
+.fishbones-trees__track-step--missing .fishbones-trees__track-step-dot {
+  border-style: dashed;
+  color: var(--color-text-tertiary);
+}
+
+.fishbones-trees__track-step--next .fishbones-trees__track-step-dot {
+  border-color: var(--tree-accent);
+  color: var(--tree-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tree-accent) 24%, transparent);
+}
+
+/* Body column — label + crumb + summary + "Open lesson" CTA. */
+.fishbones-trees__track-step-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 14px;
+}
+
+.fishbones-trees__track-step-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.fishbones-trees__track-step-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  color: var(--color-text-secondary);
+}
+
+.fishbones-trees__track-step--done .fishbones-trees__track-step-icon {
+  color: var(--tree-accent);
+}
+
+.fishbones-trees__track-step-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: -0.005em;
+}
+
+.fishbones-trees__track-step--done .fishbones-trees__track-step-label {
+  color: var(--color-text-secondary);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--tree-accent) 60%, transparent);
+}
+
+.fishbones-trees__track-step-flag {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--tree-accent);
+  background: color-mix(in srgb, var(--tree-accent) 14%, transparent);
+  padding: 2px 6px;
+  border-radius: var(--fb-radius-xs);
+}
+
+.fishbones-trees__track-step-flag--gap {
+  color: #c89cdf;
+  background: rgba(200, 156, 223, 0.14);
+}
+
+.fishbones-trees__track-step-meta {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+}
+
+.fishbones-trees__track-step-summary {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+  margin: 4px 0 0;
+}
+
+.fishbones-trees__track-step-open {
+  align-self: flex-start;
+  margin-top: 8px;
+  appearance: none;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border-radius: var(--fb-radius-sm);
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.fishbones-trees__track-step-open:hover {
+  border-color: var(--tree-accent);
+  background: color-mix(in srgb, var(--tree-accent) 10%, var(--color-bg-tertiary));
 }

@@ -7,13 +7,25 @@
 /// clicking the back chevron returns to the shelf. We could push
 /// this into App-level routing later (?tree=foundations) but it's
 /// not worth the URL plumbing yet.
+///
+/// The shelf has THREE sections:
+///   1. **Tracks** — Codecademy-style curated journeys. Show first
+///      because they're the most opinionated path for a learner who
+///      doesn't yet know what they want to do.
+///   2. **Start here** — beginner trees (Foundations).
+///   3. **Specialties** — every other tree.
 
 import { useMemo, useState } from "react";
+import { Icon } from "@base/primitives/icon";
+import { trainTrack } from "@base/primitives/icon/icons/train-track";
+import "@base/primitives/icon/icon.css";
 import type { Course } from "../../data/types";
 import { TREES } from "../../data/trees";
+import { TRACKS } from "../../data/tracks";
 import { TreeDetail } from "./TreeDetail";
+import { TrackDetail } from "./TrackDetail";
 import TreeCard from "./TreeCard";
-import "@base/primitives/icon/icon.css";
+import TrackCard from "./TrackCard";
 import "./TreesView.css";
 
 // Re-export so the fishbones.academy marketing site (and any other
@@ -42,11 +54,33 @@ export default function TreesView({
   onOpenLesson,
   onInstallMissingCourses,
 }: Props) {
+  // Two parallel "currently-open" states — at most one of these is
+  // non-null at a time. Clicking a tree card sets `activeTreeId`;
+  // clicking a track card sets `activeTrackId`. Back from either
+  // detail view clears the relevant one.
   const [activeTreeId, setActiveTreeId] = useState<string | null>(null);
+  const [activeTrackId, setActiveTrackId] = useState<string | null>(null);
   const activeTree = useMemo(
     () => TREES.find((t) => t.id === activeTreeId) ?? null,
     [activeTreeId],
   );
+  const activeTrack = useMemo(
+    () => TRACKS.find((t) => t.id === activeTrackId) ?? null,
+    [activeTrackId],
+  );
+
+  if (activeTrack) {
+    return (
+      <TrackDetail
+        track={activeTrack}
+        trees={TREES}
+        courses={courses}
+        completed={completed}
+        onBack={() => setActiveTrackId(null)}
+        onOpenLesson={onOpenLesson}
+      />
+    );
+  }
 
   if (activeTree) {
     return (
@@ -69,11 +103,42 @@ export default function TreesView({
       <header className="fishbones-trees__header">
         <h1 className="fishbones-trees__title">Skill Trees</h1>
         <p className="fishbones-trees__blurb">
-          Map out the path from where you are to where you want to be. Each
-          tree is a DAG of skills — finish the prerequisites and the next node
-          unlocks.
+          Map out the path from where you are to where you want to be. Pick a
+          curated <strong>track</strong> if you know the outcome you want, or
+          dive into a tree to explore the full skill graph.
         </p>
       </header>
+
+      {/* Tracks shelf — opinionated career-shaped paths. Goes first
+          because for a learner who doesn't know where to start, this
+          is the answer they're looking for. */}
+      {TRACKS.length > 0 && (
+        <section className="fishbones-trees__section fishbones-trees__section--tracks">
+          <div className="fishbones-trees__section-label fishbones-trees__section-label--tracks">
+            <span
+              className="fishbones-trees__section-icon"
+              aria-hidden
+            >
+              <Icon icon={trainTrack} size="xs" color="currentColor" weight="bold" />
+            </span>
+            <span>Tracks</span>
+            <span className="fishbones-trees__section-sublabel">
+              · curated career paths
+            </span>
+          </div>
+          <div className="fishbones-trees__grid fishbones-trees__grid--tracks">
+            {TRACKS.map((t) => (
+              <TrackCard
+                key={t.id}
+                track={t}
+                trees={TREES}
+                completed={completed}
+                onOpen={() => setActiveTrackId(t.id)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       {beginnerTrees.length > 0 && (
         <section className="fishbones-trees__section">
