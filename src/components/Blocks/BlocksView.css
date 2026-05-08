@@ -461,3 +461,54 @@
     animation: none;
   }
 }
+
+/* ── Phone layout overrides ───────────────────────────────────────
+   Mobile forces blocks-only mode (see MobileLesson) and lives
+   inside `.m-lesson` which has 12px 16px padding for prose content.
+   Prose wants that breathing room; the blocks workbench does NOT —
+   the code template + chip pool need every horizontal pixel they
+   can get on a 375px-wide screen, and the rounded "card inside a
+   card" stack reads as wasted real estate.
+   We negative-margin out of the parent's horizontal padding so the
+   workbench is screen-edge-to-edge, drop the rounded borders on
+   the template and pool, and rely on top/bottom hairlines for the
+   visual separation between zones. The header already
+   negative-margins so it stays edge-to-edge automatically.
+   Breakpoint matches the JS `isMobile` gate (window.innerWidth < 768)
+   so CSS + render-path agree. */
+@media (max-width: 767px) {
+  .fb-blocks {
+    /* `.m-lesson` pads 16px horizontally; cancel that to claim
+       screen edge-to-edge. Vertical padding stays so chips don't
+       slam into the lesson nav above or the next bit of UI below. */
+    margin-left: -16px;
+    margin-right: -16px;
+    padding: 12px 8px;
+  }
+
+  /* Template + pool — drop the rounded card chrome. Keeping the
+     fill colours so the visual hierarchy (dark code panel vs. lighter
+     pool tray) is preserved; the borders + radii are what made it
+     read as "card inside a card". Hairline borders on top + bottom
+     keep separation between zones without the contained-widget
+     feel. */
+  .fb-blocks__template,
+  .fb-blocks__pool {
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+  }
+
+  /* Slightly tighter horizontal padding inside the code panel so
+     code lines have more usable width. Vertical padding unchanged
+     so line-height + breathing room around the chips stay
+     comfortable. */
+  .fb-blocks__template {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .fb-blocks__pool {
+    padding: 10px 12px;
+  }
+}
