@@ -32,12 +32,23 @@
 }
 
 /* Static variant — when there's no audio for the lesson. Reads as
-   a quiet "X min read" chip without affording press. Matches the
-   playable shape so the row stays balanced visually. */
+   a quiet "X min read" chip without affording press. Sized to match
+   the Glossary chip in the same meta row (same padding + font scale)
+   so a lesson without narration shows a balanced two-chip row instead
+   of a heavy left chip + light right chip mismatch. The active /
+   playable variant above keeps its 32×32 ring + heavier shape because
+   the ring is the listening affordance — but when there's no audio
+   to play, the chip should recede. Symmetric padding + justify-center
+   keeps the icon-text cluster horizontally centered within whatever
+   width the parent gives it (in case a future flex layout makes the
+   pill flex-grow). */
 .fb-tts-pill--static {
   cursor: default;
-  padding: 4px 12px 4px 8px;
-  gap: 6px;
+  padding: 5px 12px;
+  gap: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  justify-content: center;
 }
 .fb-tts-pill--static:hover {
   background: var(--color-bg-secondary, #1a1a1f);
