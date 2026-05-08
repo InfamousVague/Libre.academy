@@ -131,6 +131,19 @@
   pointer-events: none;
 }
 
+/* Hard-clamp the inner glyph below the ring's ~13px inner diameter.
+   `size="xs"` from the @base Icon resolves to 11px (--text-xs-size),
+   which sits proud of the 13px ring and reads as a play triangle that
+   "overflows" the ring even though it's geometrically inside it.
+   9px gives the glyph clear breathing room and makes the ring
+   visually dominant — it's the progress affordance, the icon is
+   just a state label. Forced via !important because @base's
+   `.icon--xs` rule sets width/height with the same specificity. */
+.fb-tts-pill__icon svg {
+  width: 9px !important;
+  height: 9px !important;
+}
+
 /* Loader spin while the MP3 is fetching from the CDN on first play. */
 .fb-tts-pill--loading .fb-tts-pill__icon svg {
   animation: fb-tts-spin 0.9s linear infinite;
