@@ -77,6 +77,11 @@ export function useRealtimeSync(opts: RealtimeSyncOpts): RealtimeSyncHandle {
 
   const [status, setStatus] = useState<RealtimeSyncHandle["status"]>("idle");
   const [error, setError] = useState<string | null>(null);
+  /// Bumped when visibility flips back to "visible" so the pull /
+  /// subscribe effect re-runs against a fresh WebSocket. iOS WKWebView
+  /// silently suspends backgrounded sockets; without this, sync stalls
+  /// after the first app-switch until a manual refresh.
+  const [resyncEpoch, setResyncEpoch] = useState(0);
 
   // Refs for the appliers so the effects below don't re-fire on
   // every render — callers typically inline `applyX` lambdas which
@@ -165,7 +170,12 @@ export function useRealtimeSync(opts: RealtimeSyncOpts): RealtimeSyncHandle {
 
   // Initial pull + WS subscription. Re-fires when the user toggles
   // sign-in state. The cleanup tears down both the WS and any
-  // pending flush timer so a sign-out cuts off cleanly.
+  // pending flush timer so a sign-out cuts off cleanly. The
+  // `resyncEpoch` state below force-re-runs this effect when the
+  // visibility-resume handler fires — needed because iOS WKWebView
+  // suspends WS connections on background and may not fire `close`
+  // when iOS kills them, so a stale-but-"open" socket would silently
+  // miss every event until something else triggered a reconnect.
   useEffect(() => {
     if (!cloud.signedIn) {
       setStatus("idle");
@@ -236,21 +246,60 @@ export function useRealtimeSync(opts: RealtimeSyncOpts): RealtimeSyncHandle {
         flushTimer.current = null;
       }
     };
-  }, [cloud]);
+    // `resyncEpoch` (state below) is intentionally a dep so the
+    // visibility-resume handler can force a full re-run.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cloud, resyncEpoch]);
 
   // Best-effort flush before unload so a refresh / app-quit doesn't
   // strand the last burst of edits in the buffer. The pushes are
   // fire-and-forget here — the browser may cut us off before they
   // settle, but they'll still be in the buffer next session.
+  //
+  // ALSO flushes on `visibilitychange` to "hidden" — iOS WKWebView
+  // doesn't fire `beforeunload` when the user backgrounds the app,
+  // so without this hook a buffered `pushProgress` from "tap Next on
+  // a lesson, immediately switch apps" would be lost. visibility ->
+  // hidden is the iOS-equivalent signal.
   useEffect(() => {
-    const handler = () => {
+    const onUnload = () => {
       void flush();
     };
-    window.addEventListener("beforeunload", handler);
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        void flush();
+      }
+    };
+    window.addEventListener("beforeunload", onUnload);
+    document.addEventListener("visibilitychange", onVisibility);
     return () => {
-      window.removeEventListener("beforeunload", handler);
+      window.removeEventListener("beforeunload", onUnload);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [flush]);
+
+  // iOS WKWebView aggressively suspends backgrounded WebViews; on
+  // resume the WS we opened earlier may be silently dead (no `close`
+  // event fired by the OS, no error from the server end either —
+  // just stale). Without intervention, the user comes back to the
+  // app and sees no live progress sync until they tap something
+  // that triggers a fresh fetch. This effect bumps a `resyncEpoch`
+  // state on every visibility -> visible transition; the main pull
+  // / subscribe effect above lists `resyncEpoch` in its deps, so a
+  // bump tears down the (probably stale) WS, re-opens a fresh one,
+  // and re-pulls progress / solutions / settings to catch up on
+  // whatever changed while we were backgrounded.
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        setResyncEpoch((n) => n + 1);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, []);
 
   return {
     status,
