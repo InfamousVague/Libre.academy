@@ -20,6 +20,8 @@
 	<string>0.1.15</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Fishbones uses the camera to scan a QR code that auto-configures the AI assistant host (your Mac running Ollama on the tailnet). The camera is only opened when you tap "Scan QR" in Settings — no background access.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>

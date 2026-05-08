@@ -174,3 +174,19 @@
     transform: translate3d(0, -50%, 0);
   }
 }
+
+/* Mobile-narrow override: lift the orb above the floating tab pill
+   so the two affordances don't overlap. The pill is anchored at
+   `env(safe-area-inset-bottom) + 12px` and stands ~52px tall, so
+   `safe-area-inset-bottom + 84px` gives a 20px gap above the pill
+   — same vertical breathing room the desktop has between the orb
+   and the screen bottom. We also nudge the orb a few pixels in from
+   the right edge because the pill takes up the full horizontal
+   gutter on phone widths and a flush-right orb crowds the screen
+   edge visually. */
+@media (max-width: 767px) {
+  .fishbones-ai-character {
+    right: 12px;
+    bottom: calc(env(safe-area-inset-bottom, 0) + 84px);
+  }
+}

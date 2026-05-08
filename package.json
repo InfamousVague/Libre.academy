@@ -54,6 +54,7 @@
     "htmx.org": "^2.0.10",
     "i18next": "^26.0.4",
     "i18next-browser-languagedetector": "^8.2.1",
+    "jsqr": "^1.4.0",
     "markdown-it": "^14.1.1",
     "monaco-editor": "^0.52.2",
     "pyodide": "^0.29.3",

@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
+import QRCode from "qrcode";
 import { Icon } from "@base/primitives/icon";
 import { copy as copyIcon } from "@base/primitives/icon/icons/copy";
 import { check as checkIcon } from "@base/primitives/icon/icons/check";
+import { qrCode } from "@base/primitives/icon/icons/qr-code";
+import { camera } from "@base/primitives/icon/icons/camera";
 import { readAiHost, writeAiHost } from "../../../lib/aiHost";
+import { isMobile } from "../../../lib/platform";
+import QrScanner from "../../Shared/QrScanner";
 
 const MODEL_OPTIONS: Array<{ id: string; label: string; hint: string }> = [
   {
@@ -217,6 +222,9 @@ export default function AiPane({
 function AssistantHostField() {
   const [host, setHost] = useState<string>(() => readAiHost() ?? "");
   const [savedFlash, setSavedFlash] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const persisted = readAiHost() ?? "";
 
   // Flash a brief "saved" affordance when the value commits. We
@@ -230,13 +238,77 @@ function AssistantHostField() {
     return () => window.clearTimeout(t);
   }, [savedFlash]);
 
-  const commit = () => {
-    if (host.trim() === persisted) return;
-    writeAiHost(host);
+  const commit = (next?: string) => {
+    const val = (next ?? host).trim();
+    if (val === persisted) return;
+    setHost(val);
+    writeAiHost(val);
     // Custom event so the remote chat hook re-probes immediately
     // (storage events don't fire same-tab).
     window.dispatchEvent(new CustomEvent("fishbones:ai-host-changed"));
     setSavedFlash(true);
+  };
+
+  // Re-render the QR every time the user opens the modal OR edits
+  // the host with the modal open. Encoded as the bare host string
+  // (matching exactly what the phone's Settings field expects);
+  // simpler than wrapping it in a `fishbones://` URL scheme since
+  // we don't need ANY context beyond the hostname.
+  useEffect(() => {
+    if (!qrOpen) {
+      setQrDataUrl(null);
+      return;
+    }
+    const value = host.trim();
+    if (!value) {
+      setQrDataUrl(null);
+      return;
+    }
+    let cancelled = false;
+    void QRCode.toDataURL(value, {
+      // High-contrast bone-on-dark to match the rest of the chrome.
+      // The phone's QR scanner doesn't care about colour, but a
+      // matching palette keeps the modal from feeling like a
+      // bolt-on.
+      color: { dark: "#d4c5a1", light: "#0a0a0d" },
+      margin: 2,
+      width: 320,
+      errorCorrectionLevel: "M",
+    }).then((url) => {
+      if (!cancelled) setQrDataUrl(url);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [qrOpen, host]);
+
+  /// Validate + write a hostname scanned from a QR. Strips schemes
+  /// + trailing slashes (writeAiHost does the same, but checking
+  /// here lets us reject obvious garbage before persisting). A
+  /// "valid" host is anything that contains a `.` or a `:` or
+  /// looks like an IPv4 — covers Tailscale (`mac.tailnet.ts.net`),
+  /// LAN IP (`192.168.1.42`), and explicit-port forms
+  /// (`mac:11500`).
+  const handleScanResult = (raw: string) => {
+    setScanOpen(false);
+    const cleaned = raw
+      .trim()
+      .replace(/^https?:\/\//i, "")
+      .replace(/\/+$/, "");
+    const looksLikeHost =
+      /^[\w-]+(\.[\w-]+)+(:\d+)?$/.test(cleaned) ||
+      /^\d{1,3}(\.\d{1,3}){3}(:\d+)?$/.test(cleaned) ||
+      /^[\w-]+:\d+$/.test(cleaned);
+    if (!looksLikeHost) {
+      // Surface the rejection without throwing a blocking alert —
+      // the user can re-open the scanner and try a different code.
+      console.warn(
+        "[AiPane] QR scanned but didn't look like a host:",
+        cleaned.slice(0, 80),
+      );
+      return;
+    }
+    commit(cleaned);
   };
 
   return (
@@ -260,7 +332,7 @@ function AssistantHostField() {
             className="fishbones-settings-input"
             value={host}
             onChange={(e) => setHost(e.target.value)}
-            onBlur={commit}
+            onBlur={() => commit()}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.currentTarget.blur();
@@ -285,6 +357,47 @@ function AssistantHostField() {
           </span>
         </div>
       </label>
+
+      {/* Pair-with-QR row. Two affordances:
+          - Show QR (desktop): turns the current host field into a
+            scannable QR. The user opens this on their Mac, then
+            scans from the phone — no typing tailnet hostnames on a
+            tiny keyboard.
+          - Scan QR (phone / web): opens the camera, decodes any
+            visible QR, writes the result into the field.
+          We render BOTH on every platform so a desktop test build
+          can verify the round-trip without device-juggling, but
+          weight the labels for the most useful platform. */}
+      <div className="fishbones-settings-pair">
+        <button
+          type="button"
+          className="fishbones-settings-pair-btn"
+          onClick={() => setQrOpen(true)}
+          disabled={!host.trim()}
+          title={
+            host.trim()
+              ? "Show a QR code containing this hostname for the phone to scan"
+              : "Enter a hostname first, then a QR can be generated"
+          }
+        >
+          <Icon icon={qrCode} size="xs" color="currentColor" />
+          <span>Show QR for phone</span>
+        </button>
+        <button
+          type="button"
+          className="fishbones-settings-pair-btn"
+          onClick={() => setScanOpen(true)}
+          title={
+            isMobile
+              ? "Open the phone's camera to scan a QR from your Mac's Settings"
+              : "Open the camera to scan a QR (useful for testing on desktop)"
+          }
+        >
+          <Icon icon={camera} size="xs" color="currentColor" />
+          <span>Scan QR from Mac</span>
+        </button>
+      </div>
+
       <p className="fishbones-settings-note">
         On the host: run{" "}
         <code>OLLAMA_HOST=0.0.0.0:11434 ollama serve</code> so the
@@ -292,6 +405,57 @@ function AssistantHostField() {
         The default macOS Ollama install binds to 127.0.0.1 only —
         the phone won't reach it without the env override.
       </p>
+
+      {qrOpen && (
+        <div
+          className="fishbones-settings-qr-modal"
+          role="dialog"
+          aria-label="Assistant host QR code"
+          onClick={() => setQrOpen(false)}
+        >
+          <div
+            className="fishbones-settings-qr-card"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="fishbones-settings-qr-title">
+              Pair your phone
+            </div>
+            <p className="fishbones-settings-qr-blurb">
+              On the phone: open <strong>Settings → AI &amp; API →
+              Assistant host</strong>, tap <strong>Scan QR from
+              Mac</strong>, then point the camera at this code.
+            </p>
+            {qrDataUrl ? (
+              <img
+                src={qrDataUrl}
+                alt={`QR code for ${host}`}
+                className="fishbones-settings-qr-img"
+              />
+            ) : (
+              <div className="fishbones-settings-qr-placeholder">
+                Generating…
+              </div>
+            )}
+            <div className="fishbones-settings-qr-host">{host}</div>
+            <button
+              type="button"
+              className="fishbones-settings-pair-btn"
+              onClick={() => setQrOpen(false)}
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+
+      {scanOpen && (
+        <QrScanner
+          title="Scan the Mac's QR"
+          hint="Open Settings → AI on your Mac, tap Show QR for phone, point this camera at it."
+          onResult={handleScanResult}
+          onCancel={() => setScanOpen(false)}
+        />
+      )}
     </>
   );
 }

@@ -1,0 +1,158 @@
+/* Fullscreen modal scanner. Sits above every other affordance
+   (settings dialog included) so the user's camera view isn't
+   competing with chrome. */
+
+.fb-qr-scanner {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+}
+
+.fb-qr-scanner__viewport {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fb-qr-scanner__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Ramp from invisible to full opacity once the stream binds —
+     keeps the launch from flashing a black frame between
+     getUserMedia resolving and the first decoded frame. */
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+.fb-qr-scanner__video.is-ready {
+  opacity: 1;
+}
+
+/* Offscreen canvas — only used as the pixel source for jsqr. */
+.fb-qr-scanner__canvas {
+  position: absolute;
+  inset: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* Viewfinder — a square hint frame with bone-coloured corner
+   brackets. Centred over the camera feed. The actual decode region
+   is the WHOLE frame (jsqr scans pixels regardless), but the
+   visible corners cue the user where to aim. */
+.fb-qr-scanner__viewfinder {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(72vw, 360px);
+  height: min(72vw, 360px);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.fb-qr-scanner__corner {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-color: rgba(212, 197, 161, 0.95);
+  border-style: solid;
+  border-width: 0;
+}
+
+.fb-qr-scanner__corner--tl {
+  top: 0;
+  left: 0;
+  border-top-width: 3px;
+  border-left-width: 3px;
+  border-top-left-radius: 8px;
+}
+.fb-qr-scanner__corner--tr {
+  top: 0;
+  right: 0;
+  border-top-width: 3px;
+  border-right-width: 3px;
+  border-top-right-radius: 8px;
+}
+.fb-qr-scanner__corner--bl {
+  bottom: 0;
+  left: 0;
+  border-bottom-width: 3px;
+  border-left-width: 3px;
+  border-bottom-left-radius: 8px;
+}
+.fb-qr-scanner__corner--br {
+  bottom: 0;
+  right: 0;
+  border-bottom-width: 3px;
+  border-right-width: 3px;
+  border-bottom-right-radius: 8px;
+}
+
+/* Bottom chrome strip — title, hint, optional error, cancel
+   button. Translucent so the camera feed stays visible above it. */
+.fb-qr-scanner__chrome {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 22px 24px calc(env(safe-area-inset-bottom, 0) + 22px);
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+.fb-qr-scanner__title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #f5f5f7;
+}
+
+.fb-qr-scanner__hint {
+  font-size: 13px;
+  color: rgba(245, 245, 247, 0.7);
+  text-align: center;
+  max-width: 320px;
+  line-height: 1.4;
+}
+
+.fb-qr-scanner__error {
+  font-size: 12.5px;
+  color: rgba(255, 138, 138, 0.95);
+  text-align: center;
+  max-width: 320px;
+  line-height: 1.4;
+  padding: 8px 12px;
+  background: rgba(60, 18, 18, 0.6);
+  border: 1px solid rgba(255, 138, 138, 0.35);
+  border-radius: 8px;
+}
+
+.fb-qr-scanner__cancel {
+  margin-top: 4px;
+  padding: 10px 22px;
+  background: rgba(245, 245, 247, 0.92);
+  color: #1a1a1f;
+  border: 0;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fb-qr-scanner__cancel:active {
+  opacity: 0.85;
+}
