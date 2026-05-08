@@ -1,4 +1,5 @@
 import "./AiCharacter.css";
+import DnaHelix from "./DnaHelix";
 
 interface Props {
   /// Whether the chat panel is open. Drives a subtle "pressed" pose so
@@ -61,10 +62,24 @@ export default function AiCharacter({
               : "Ask Fishbones"
       }
     >
-      {/* The alert / streaming / celebrating signal lives entirely in
-          the gradient palette — no separate indicator dot. Mood class
-          on the parent button wires it up via CSS variables. */}
-      <span className="fishbones-ai-character-icon" aria-hidden />
+      {/* DNA double-helix glyph (replaces the prior fish-skeleton
+          mask). Mood drives `speed`: thinking + celebrating spin
+          faster so the orb visibly leans in; idle + alert hold the
+          baseline cycle so the orb feels calm or locked. The helix
+          itself is colour-randomised at mount time — see DnaHelix
+          for the palette + per-strand stagger maths. */}
+      <DnaHelix
+        className="fishbones-ai-character-icon"
+        speed={
+          mood === "streaming"
+            ? 1.2
+            : mood === "celebrating"
+              ? 1
+              : mood === "alert"
+                ? 4
+                : 2
+        }
+      />
     </button>
   );
 }

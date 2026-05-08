@@ -25,6 +25,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  /* 3D viewport for the DNA helix glyph inside. The helix uses
+     ±1-2px Z translations on its nodes + connecting bar; without a
+     perspective context those translations are flat and the spinner
+     looks 2D. ~80px keeps the depth subtle (the helix tilts a hint
+     in 3D rather than reading as a full holographic effect). */
+  perspective: 80px;
   /* Per-mood palette knobs. The ring picks up a saturated tint
      from the streak/level/longest-streak colour vocabulary the rest
      of the app uses so the orb reads as part of the family — but
@@ -100,42 +106,38 @@
   outline-offset: 4px;
 }
 
-/* Inner face. Bright off-white disc regardless of theme — the user
-   wants the dark fishbones glyph to pop, which only works against a
-   high-contrast light face. The subtle inset shadow + radial
-   highlight gives it 3D depth. */
+/* Inner face. Dark navy disc — flipped from the prior bright-white
+   face because the new DNA-helix glyph is designed for a dark
+   backdrop (the source CodePen sits on hsl(210 80% 12%)). The
+   saturated gradient halo around the rim now gets a calm centre to
+   contrast against, and the helix's white connecting bars + bright
+   nodes pop. Subtle inset highlight on top + a deeper shadow on the
+   bottom-right give the disc a soft 3D sphere read. */
 .fishbones-ai-character::before {
   content: "";
   position: absolute;
   inset: 3px;
   border-radius: 50%;
   background:
-    radial-gradient(ellipse 60% 40% at 50% 25%,
-      rgba(255, 255, 255, 1) 0%,
-      rgba(244, 244, 250, 1) 70%);
+    radial-gradient(ellipse 65% 50% at 50% 30%,
+      hsl(220, 45%, 18%) 0%,
+      hsl(220, 50%, 9%) 80%);
   box-shadow:
-    inset 1px 2px 0 rgba(255, 255, 255, 0.95),
-    inset -2px -3px 8px rgba(120, 110, 180, 0.18);
+    inset 1px 2px 0 rgba(255, 255, 255, 0.06),
+    inset -2px -3px 8px rgba(0, 0, 0, 0.45);
   pointer-events: none;
 }
 
-/* Brand fish-skeleton silhouette tinted dark slate so it pops against
-   the bright orb face. Uses `/fishbones_skinny_white.png` — the same
-   asset the TopBar logo and the FishbonesLoader spinner pull, so the
-   AI button speaks the same visual vocabulary as the rest of the
-   chrome. The previous `/ai-fish-skeleton.svg` was a one-off stick-
-   figure variant that looked off next to the brand mark. We mask the
-   PNG (alpha-channel) so the orb's gradient stays the visible
-   surface and we tint the fish silhouette via background-color. */
+/* DNA helix glyph wrapper. The component sizes itself in `em`, so
+   set `font-size` to drive the rendered size — 30px gives a 30px-
+   tall helix, 12px wide (2:5 aspect), which after the 30° rotation
+   fits cleanly inside the 46px inner face with breathing room.
+   z-index lifts it above the dark inner face. */
 .fishbones-ai-character-icon {
   position: relative;
-  width: 26px;
-  height: 26px;
-  background: #1f2330;
-  -webkit-mask: url("/fishbones_skinny_white.png") no-repeat center / contain;
-  mask: url("/fishbones_skinny_white.png") no-repeat center / contain;
   z-index: 2;
-  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.06));
+  font-size: 30px;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.4));
 }
 
 
