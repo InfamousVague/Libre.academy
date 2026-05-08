@@ -12,6 +12,10 @@ import "@base/primitives/icon/icon.css";
 import Sidebar from "./components/Sidebar/Sidebar";
 import NavigationRail from "./components/NavigationRail/NavigationRail";
 import TopBar from "./components/TopBar/TopBar";
+import { Tour } from "./components/Tour/Tour";
+import { TOUR_STEPS, type TourPage } from "./components/Tour/tourSteps";
+import { stopTourAudio } from "./components/Tour/useTourAudio";
+import { stopLessonAudio } from "./hooks/useLessonAudio";
 import TreesView from "./components/Trees/TreesView";
 import EvmDockBanner from "./components/ChainDock/EvmDockBanner";
 import BitcoinDockBanner from "./components/BitcoinChainDock/BitcoinDockBanner";
@@ -588,6 +592,50 @@ export default function App() {
       serialize: (v) => (v ? "1" : "0"),
       deserialize: (raw) => raw === "1",
     },
+  );
+
+  // First-run guided tour. Activates automatically on first launch
+  // (when the completion flag isn't set in localStorage) and can be
+  // re-triggered from the navigation rail's help affordance. Each
+  // step's narration MP3 is shipped under `public/tour-audio/` so
+  // the tour works offline on cold launch — no CDN dependency.
+  // Persisted via the same key shape stash uses (`<app>:tour-completed`)
+  // so the migration story is one-line if we ever reuse the
+  // pattern across products.
+  const [tourActive, setTourActive] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("fishbones:tour-completed") !== "true";
+    } catch {
+      // Private-mode Safari etc. — just don't auto-show, user can
+      // still trigger from Help if they want.
+      return false;
+    }
+  });
+  /// When the tour starts we stop any in-flight lesson audio so the
+  /// two narrators don't fight for the listener's ear. The reverse
+  /// is implicit — opening the tour calls this; closing leaves the
+  /// lesson audio paused (the user can resume manually).
+  const handleTourStart = useCallback(() => {
+    stopLessonAudio();
+    setTourActive(true);
+  }, []);
+  const handleTourComplete = useCallback(() => {
+    setTourActive(false);
+    stopTourAudio();
+    try {
+      localStorage.setItem("fishbones:tour-completed", "true");
+    } catch {
+      /* private-mode — drop the flag silently */
+    }
+  }, []);
+  const handleTourNavigate = useCallback(
+    (page: string) => {
+      // The tour's `step.page` is one of TourPage; the App's `view`
+      // happens to overlap exactly. Cast through TourPage for the
+      // type-checker's sake; runtime is a no-op.
+      setView(page as TourPage);
+    },
+    [setView],
   );
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -1224,6 +1272,7 @@ export default function App() {
           onTrees={() => setView("trees")}
           onPlayground={() => setView("playground")}
           onSettings={() => setSettingsOpen(true)}
+          onStartTour={handleTourStart}
           onToggleSidebar={() => setSidebarCollapsed((v) => !v)}
           sidebarCollapsed={sidebarCollapsed}
         />
@@ -1472,6 +1521,20 @@ export default function App() {
           onRequestSignIn={() => setSignInOpen(true)}
         />
       )}
+
+      {/* First-run guided tour. Mounts unconditionally so the
+          `active` prop fully owns visibility — keeps the entrance
+          animation in sync with the activation rather than the
+          mount lifecycle, and lets the tour spotlight measure
+          targets that live on different views without unmount /
+          remount each step. */}
+      <Tour
+        steps={TOUR_STEPS}
+        active={tourActive}
+        onNavigate={handleTourNavigate}
+        onComplete={handleTourComplete}
+      />
+
 
 
       {genPackOpen && (

@@ -16,6 +16,7 @@
     "blocks:apply": "node scripts/apply-blocks.mjs",
     "audio:import": "node scripts/import-local-audio.mjs",
     "audio:upload": "node scripts/upload-lesson-audio.mjs",
+    "tour:audio": "node scripts/generate-tour-audio.mjs",
     "fetch:node": "node scripts/fetch-node-runtime.mjs",
     "fetch:solana": "node scripts/fetch-solana-cli.mjs",
     "preview": "vite preview",

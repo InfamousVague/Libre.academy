@@ -1,0 +1,95 @@
+{
+  "tour_id": "fishbones-onboarding-v1",
+  "steps": [
+    {
+      "id": "welcome",
+      "page": "library",
+      "target": ".fishbones-nav-rail",
+      "placement": "right",
+      "icon": "sparkles",
+      "iconColor": "#a78bfa",
+      "title": "Welcome to Fishbones",
+      "body": "Fishbones turns programming books into runnable lessons. The rail on the left is home base — Library, Discover, Trees, and Playground. Let's walk through the parts of the app that aren't obvious."
+    },
+    {
+      "id": "library",
+      "page": "library",
+      "target": ".fishbones-library-grid",
+      "placement": "top",
+      "icon": "library-big",
+      "iconColor": "#d4c5a1",
+      "title": "Your library",
+      "body": "Books you've installed live here. Click a cover to start reading. Your progress is preserved per book, so you can keep three of them in flight without losing your place in any one."
+    },
+    {
+      "id": "sidebar",
+      "page": "courses",
+      "target": ".fishbones__sidebar",
+      "placement": "right",
+      "icon": "list-tree",
+      "iconColor": "#7fc8ff",
+      "title": "The course tree",
+      "body": "Once a book is open, the sidebar shows every chapter and lesson. The dot next to each lesson is your status — empty, in progress, or completed. Click any lesson to jump there."
+    },
+    {
+      "id": "narration",
+      "page": "courses",
+      "target": ".fb-tts-pill",
+      "placement": "bottom",
+      "icon": "book-headphones",
+      "iconColor": "#e86ec4",
+      "title": "Audiobook narration",
+      "body": "Reading lessons can play as audiobook-quality narration. Tap the speaker to start. The cursor follows along paragraph by paragraph, and pausing freezes both the audio and the highlight."
+    },
+    {
+      "id": "editor",
+      "page": "courses",
+      "target": ".fishbones-editor",
+      "placement": "left",
+      "icon": "terminal",
+      "iconColor": "#22c55e",
+      "title": "The editor",
+      "body": "Coding lessons drop you into a real editor with the language's compiler running locally. Press Run to execute your code against the lesson's tests. Failures show up in the panel below, with the assertion that broke."
+    },
+    {
+      "id": "blocks",
+      "page": "courses",
+      "target": ".fishbones-editor-mode",
+      "placement": "bottom",
+      "icon": "blocks",
+      "iconColor": "#f59e0b",
+      "title": "Blocks mode",
+      "body": "If writing from scratch is too much friction, switch to Blocks. The lesson becomes a drag-and-drop puzzle. Pick the right pieces, and the same tests run against the assembled code."
+    },
+    {
+      "id": "trees",
+      "page": "trees",
+      "target": ".fishbones-trees__section--tracks",
+      "placement": "bottom",
+      "icon": "trees",
+      "iconColor": "#22c55e",
+      "title": "Trees and Tracks",
+      "body": "Don't know where to start? Trees show the prerequisite graph for a topic — leaves first, mastery later. Tracks are curated linear paths through one or more trees, for when you want a recipe to follow instead of a graph to navigate."
+    },
+    {
+      "id": "discover",
+      "page": "discover",
+      "target": ".fishbones-library-grid",
+      "placement": "top",
+      "icon": "compass",
+      "iconColor": "#3b82f6",
+      "title": "Discover more books",
+      "body": "Discover is the full catalog. One click installs a book into your library. Once it's pulled down, everything you read or practice keeps working offline."
+    },
+    {
+      "id": "streak",
+      "page": "library",
+      "target": ".fishbones__topbar-stats-wrap",
+      "placement": "bottom",
+      "icon": "flame",
+      "iconColor": "#f59e0b",
+      "title": "You're set",
+      "body": "Daily reading and practice build a streak. The chip up here tracks it, plus XP earned today and shields you can spend to freeze a missed day. Pick a book, pick a tree, or browse Discover. Have fun."
+    }
+  ]
+}

@@ -30,6 +30,12 @@ public/vendor/
 # Starter-course staging — extracted from src-tauri/resources/bundled-packs
 # by scripts/extract-starter-courses.mjs as part of `npm run build:web`.
 public/starter-courses/
+# Guided-tour narration MP3s — synthesised from
+# src/components/Tour/tourSteps.json by scripts/generate-tour-audio.mjs
+# (`make tour-audio`). MP3 binaries + the manifest the runtime fetches
+# from /tour-audio/manifest.json. Regenerated locally; tour audio is
+# silent until you run the script. The visual tour works either way.
+public/tour-audio/
 
 # macOS
 .DS_Store

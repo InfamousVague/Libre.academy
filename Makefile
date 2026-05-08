@@ -40,7 +40,7 @@ INSTALL_PATH  := /Applications/Fishbones.app
 
 .PHONY: all build sign notarize staple install dev release local-release \
         deploy deploy-site deploy-content clean help \
-        audio-import audio-upload audio-deploy \
+        audio-import audio-upload audio-deploy tour-audio \
         run run-split run-phone run-watch pick-phone pick-watch run-clean
 
 # Marketing site checkout (separate repo). The site's `npm run deploy`
@@ -316,6 +316,17 @@ audio-deploy: audio-import audio-upload
 	@echo ""
 	@echo "✓ Audio synced — verify: curl -I https://fishbones.academy/audio/manifest.json"
 
+## Generate ElevenLabs MP3s for the guided-tour steps.
+## Reads `src/components/Tour/tourSteps.json`, synthesises one MP3
+## per step into `public/tour-audio/<stepId>.<sha7>.mp3`, and writes
+## the bundled manifest the runtime player reads. Idempotent —
+## unchanged step text is a cache hit. The MP3s ship with the app
+## bundle (no separate upload step) so the tour works offline on
+## first launch. Costs a few cents in ElevenLabs credits per full
+## run; nothing per re-run when the body text is unchanged.
+tour-audio:
+	cd $(ROOT) && node scripts/generate-tour-audio.mjs
+
 ## Full content deploy: audio (manifest + MP3s) AND the academy site
 ## (course JSONs with blocks + /learn/ embed). One command, idempotent.
 ## Use after editing audio, course content, marketing copy, or any
@@ -468,6 +479,7 @@ help:
 	@echo "  make audio-deploy   — audio only (import from \$$FROM + upload to VPS)"
 	@echo "  make audio-import   — pull MP3s from ~/Desktop into dist/audio/"
 	@echo "  make audio-upload   — rsync dist/audio/ → VPS"
+	@echo "  make tour-audio     — synthesise guided-tour narration MP3s (bundled, ~3min)"
 	@echo ""
 	@echo "iOS / watchOS run targets (interactive device picker):"
 	@echo "  make run          — pick + run phone AND watch (sequential, this window)"

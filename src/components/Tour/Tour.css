@@ -1,0 +1,299 @@
+/* ── Backdrop + spotlight ───────────────────────────────────── */
+
+/* The backdrop fills the viewport and dims everything but the
+   spotlight cutout. Pointer-events: auto on the backdrop layer
+   (so clicking outside the tooltip dismisses); pointer-events:
+   none on the mask + spotlight so they don't eat clicks meant
+   for the highlighted UI underneath. */
+.fb-tour {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  pointer-events: none;
+}
+
+.fb-tour__backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.fb-tour__backdrop-full {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 8, 12, 0.62);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+/* Mask layer — the magic. Two stacked solid rectangles, the
+   second one positioned over the spotlight rect, composited via
+   `mask-composite: exclude` so the spotlight rect is cut out of
+   the dim. Everything outside the spotlight reads as a 62%
+   black overlay; inside, the underlying UI shows clean. */
+.fb-tour__backdrop-mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 8, 12, 0.62);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+/* The spotlight border — a thin bone-colored ring around the
+   target. Pointer-events: none so the highlighted UI is still
+   clickable (Tour is non-interactive on the target itself; we
+   just point at it). */
+.fb-tour__spotlight {
+  position: fixed;
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 2px rgba(212, 197, 161, 0.85),
+    0 0 28px 4px rgba(212, 197, 161, 0.18);
+  pointer-events: none;
+  z-index: 9001;
+  transition:
+    top 200ms ease,
+    left 200ms ease,
+    width 200ms ease,
+    height 200ms ease;
+}
+
+/* ── Tooltip card ───────────────────────────────────────────── */
+
+.fb-tour__tooltip {
+  position: fixed;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  background: linear-gradient(
+    180deg,
+    rgba(20, 22, 30, 0.98) 0%,
+    rgba(14, 16, 22, 0.98) 100%
+  );
+  border: 1px solid rgba(212, 197, 161, 0.18);
+  border-radius: 14px;
+  box-shadow:
+    0 20px 60px -12px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  color: var(--color-text-primary, #eaeaea);
+  font-family: inherit;
+  z-index: 9002;
+  pointer-events: auto;
+  overflow: hidden;
+  /* Slide-in entrance — the tooltip remounts every step (key
+     prop in JSX), so this animation re-runs on each transition
+     for a deliberate "now look here" cue. */
+  animation: fb-tour-slide-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes fb-tour-slide-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+/* Centered (no-target) variant — the default `transform:
+   translate(-50%, -50%)` from the inline style needs to win over
+   the entrance-animation transform. We compose by overriding
+   `animation: none` for the centered case and using a softer
+   fade instead. */
+.fb-tour__tooltip[style*="translate(-50%"] {
+  animation: fb-tour-fade-in 220ms ease both;
+}
+@keyframes fb-tour-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── Progress bar (top edge of tooltip) ─────────────────────── */
+
+.fb-tour__progress-bar {
+  position: relative;
+  height: 4px;
+  background: rgba(212, 197, 161, 0.08);
+  overflow: hidden;
+}
+
+.fb-tour__progress-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: rgba(212, 197, 161, 0.45);
+  transition: width 280ms ease;
+}
+
+/* The audio sub-progress overlays the step-progress fill. Same
+   axis, lighter colour, narrower so both layers are legible at a
+   glance — wide bar = step progress, bright thin overlay =
+   "where we are inside the current step's narration". */
+.fb-tour__progress-audio {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  left: 0;
+  background: rgba(232, 110, 196, 0.85);
+  border-radius: 0 2px 2px 0;
+  transition: width 120ms linear;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+
+.fb-tour__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px 8px;
+}
+
+.fb-tour__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.fb-tour__header-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.fb-tour__step-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: rgba(234, 234, 234, 0.55);
+}
+
+.fb-tour__title {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--color-text-primary, #eaeaea);
+  margin-top: 2px;
+}
+
+.fb-tour__mute {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: rgba(234, 234, 234, 0.55);
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.fb-tour__mute:hover {
+  background: rgba(212, 197, 161, 0.08);
+  color: rgba(234, 234, 234, 0.85);
+}
+
+/* ── Body ───────────────────────────────────────────────────── */
+
+.fb-tour__body {
+  padding: 4px 18px 14px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: rgba(234, 234, 234, 0.82);
+}
+
+/* ── Dot row (step indicator) ──────────────────────────────── */
+
+.fb-tour__dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 18px 12px;
+}
+
+.fb-tour__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(212, 197, 161, 0.18);
+  transition: background 180ms ease, transform 180ms ease;
+}
+
+.fb-tour__dot--done {
+  background: rgba(212, 197, 161, 0.55);
+}
+
+.fb-tour__dot--active {
+  background: rgba(212, 197, 161, 0.95);
+  transform: scale(1.4);
+}
+
+/* ── Footer + buttons ──────────────────────────────────────── */
+
+.fb-tour__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px 14px;
+  border-top: 1px solid rgba(212, 197, 161, 0.08);
+}
+
+.fb-tour__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fb-tour__btn {
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+.fb-tour__btn--ghost {
+  background: transparent;
+  color: rgba(234, 234, 234, 0.7);
+}
+
+.fb-tour__btn--ghost:hover {
+  background: rgba(212, 197, 161, 0.08);
+  color: rgba(234, 234, 234, 0.95);
+}
+
+.fb-tour__btn--icon {
+  padding: 7px 8px;
+  min-width: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fb-tour__btn--primary {
+  background: rgba(212, 197, 161, 0.92);
+  color: #1a1a1f;
+}
+
+.fb-tour__btn--primary:hover {
+  background: rgba(228, 215, 184, 0.98);
+}
+
+/* ── Mobile-narrow tweaks ──────────────────────────────────── */
+
+@media (max-width: 720px) {
+  .fb-tour__tooltip {
+    width: calc(100vw - 32px);
+  }
+}

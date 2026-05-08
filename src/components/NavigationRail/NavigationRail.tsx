@@ -24,6 +24,7 @@ import { compass as compassIcon } from "@base/primitives/icon/icons/compass";
 import { trees as treesIcon } from "@base/primitives/icon/icons/trees";
 import { terminal as terminalIcon } from "@base/primitives/icon/icons/terminal";
 import { settings as settingsIcon } from "@base/primitives/icon/icons/settings";
+import { circleHelp } from "@base/primitives/icon/icons/circle-help";
 import { panelLeftClose } from "@base/primitives/icon/icons/panel-left-close";
 import { panelLeftOpen } from "@base/primitives/icon/icons/panel-left-open";
 import { Tooltip } from "@base/primitives/tooltip";
@@ -53,6 +54,11 @@ export interface NavigationRailProps {
   /// Playground route — free-form coding sandbox.
   onPlayground?: () => void;
   onSettings: () => void;
+  /// Re-trigger the guided tour (auto-runs on first launch; this
+  /// puts a permanent affordance in the rail so a learner who
+  /// dismissed it can come back). Optional — embeddings that
+  /// don't ship the tour just hide the row.
+  onStartTour?: () => void;
   /// Toggle the floating sidebar's visibility. The icon flips between
   /// panel-left-close (sidebar visible → click to hide) and
   /// panel-left-open (sidebar hidden → click to show). When omitted,
@@ -100,6 +106,7 @@ export default function NavigationRail({
   onTrees,
   onPlayground,
   onSettings,
+  onStartTour,
   onToggleSidebar,
   sidebarCollapsed,
 }: NavigationRailProps) {
@@ -138,6 +145,13 @@ export default function NavigationRail({
         )}
       </div>
       <div className="fishbones-nav-rail__bottom">
+        {onStartTour && (
+          <RailItem
+            icon={circleHelp}
+            label="Take the tour"
+            onClick={onStartTour}
+          />
+        )}
         <RailItem
           icon={settingsIcon}
           label="Settings"
