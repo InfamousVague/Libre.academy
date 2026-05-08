@@ -168,9 +168,12 @@ export default function TTSButton({
           />
         </svg>
         {/* Center icon. The play / pause / loader / volume glyph
-            sits absolutely centered over the SVG ring. */}
+            sits absolutely centered over the SVG ring. `xs` matches
+            the static variant + the Glossary chip's icon size — the
+            playable pill is now chip-sized rather than its prior
+            32×32-ring affordance, so the icon scales accordingly. */}
         <span className="fb-tts-pill__icon">
-          <Icon icon={icon} size="sm" color="currentColor" />
+          <Icon icon={icon} size="xs" color="currentColor" />
         </span>
       </span>
       <span className="fb-tts-pill__text">{label}</span>
