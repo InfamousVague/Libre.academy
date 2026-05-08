@@ -76,6 +76,20 @@
   margin: 14px 0;
 }
 
+/* Code blocks rendered through `markdown.ts` are wrapped in a
+   `.fishbones-code-block` div that already provides the border +
+   rounded corners + clipping. Without this override, the inner
+   <pre>'s own border + radius (from the `.m-reader__prose pre`
+   rule above) renders a second frame inside the wrapper — looks
+   like a nested chrome ring. Strip the inner pre's border / radius
+   when it sits inside the wrapper so the outer chrome is the only
+   visible frame. */
+.m-reader__prose .fishbones-code-block pre {
+  border: 0;
+  border-radius: 0;
+  margin: 0;
+}
+
 .m-reader__prose pre code {
   background: transparent;
   border: 0;

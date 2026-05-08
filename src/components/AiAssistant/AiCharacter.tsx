@@ -62,17 +62,15 @@ export default function AiCharacter({
               : "How can I assist?"
       }
     >
-      {/* Visible "How can I assist?" tooltip-style chip floating to
-          the LEFT of the orb. Always-on for idle mood (the most
-          common state when a learner first sees the assistant) so
-          the affordance is discoverable on platforms where the
-          browser-default `title` attribute doesn't fire — iOS has
-          no hover, so the title alone meant the assistant was
-          effectively unlabeled on phone. Hidden during streaming
-          / celebrating / alert / open because those moods carry
-          their own visual signal and a static label fights with
-          them. aria-hidden because the button's aria-label already
-          carries the canonical text for screen readers. */}
+      {/* "How can I assist?" tooltip floating to the LEFT of the
+          orb. Hidden by default; revealed on hover via the CSS
+          rule on the parent button (`:hover .fishbones-ai-character-tip`
+          fades opacity 0 → 1). Mounted only when none of the
+          state moods (open / streaming / alert / celebrating)
+          would be telling a different story — those moods carry
+          their own visual signal and the tooltip would compete
+          with them. aria-hidden because the button's aria-label
+          already carries the canonical text for screen readers. */}
       {!open && !streaming && !alert && !celebrating && (
         <span className="fishbones-ai-character-tip" aria-hidden>
           How can I assist?

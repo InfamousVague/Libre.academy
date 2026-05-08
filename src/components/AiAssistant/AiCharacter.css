@@ -158,7 +158,14 @@
   right: 100%;
   top: 50%;
   margin-right: 10px;
-  transform: translateY(-50%);
+  /* Hover-only visibility: hidden by default, the parent's `:hover`
+     rule below fades it in. Translate3d composes with the opacity
+     transition so the tip subtly slides toward the orb on reveal. */
+  transform: translate3d(8px, -50%, 0);
+  opacity: 0;
+  transition:
+    opacity 200ms ease,
+    transform 200ms ease;
   padding: 7px 12px;
   background: rgba(19, 19, 26, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -175,27 +182,18 @@
      whatever's behind the orb. Same shadow treatment as the mobile
      tab pill for consistency. */
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.32);
-  /* Subtle entrance — tip slides in from a touch further left and
-     fades up. Keeps the orb's appearance from feeling abrupt when
-     the panel closes (it'll re-mount and animate in). */
-  animation: fishbones-ai-tip-in 280ms ease both;
 }
 
-@keyframes fishbones-ai-tip-in {
-  from {
-    opacity: 0;
-    transform: translate3d(8px, -50%, 0);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, -50%, 0);
-  }
+.fishbones-ai-character:hover .fishbones-ai-character-tip {
+  opacity: 1;
+  transform: translate3d(0, -50%, 0);
 }
 
-/* Reduced motion — kill the entrance animation, keep the static
-   tip visible. */
+/* Reduced motion — kill the slide transition, keep the opacity
+   change so the tip still appears (just instantly) on hover. */
 @media (prefers-reduced-motion: reduce) {
   .fishbones-ai-character-tip {
-    animation: none;
+    transition: opacity 0s;
+    transform: translate3d(0, -50%, 0);
   }
 }
