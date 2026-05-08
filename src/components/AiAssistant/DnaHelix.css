@@ -24,14 +24,14 @@
      translation enough depth to read as "behind the nodes." */
   transform-style: preserve-3d;
   gap: 0.04em;
-  /* Tilted 90° so the helix lies horizontally — long axis runs
-     left-to-right rather than top-to-bottom. The previous 30°
-     base tilt + 14s 2D spin animation are both gone; the strand-
-     jump animation now provides all the motion, which (with the
-     helix horizontal) reads as a sideways double-helix winding
-     along its long axis rather than a vertical helix slowly
-     pirouetting. */
-  rotate: 90deg;
+  /* Tilted 94° so the helix lies almost horizontally with a 4°
+     downward droop on the right end — the small offset reads as
+     a more natural perspective than perfectly axis-aligned. The
+     previous 30° base tilt + 14s 2D spin animation are both gone;
+     the strand-jump animation now provides all the motion, which
+     reads as a sideways double-helix winding along its long axis
+     rather than a vertical helix slowly pirouetting. */
+  rotate: 94deg;
   position: relative;
 }
 
