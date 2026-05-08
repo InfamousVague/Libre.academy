@@ -20,8 +20,9 @@ import LessonPopover, { type PopoverContent } from "./LessonPopover";
 import InlineSandbox from "./InlineSandbox";
 import TTSButton from "./TTSButton";
 import { estimateReadingMinutes } from "./readingTime";
-import { stopLessonAudio, useLessonAudio } from "../../hooks/useLessonAudio";
+import { stopLessonAudio } from "../../hooks/useLessonAudio";
 import { stopFallbackNarration } from "../../hooks/useLessonAudioFallback";
+import { useLessonNarration } from "../../hooks/useLessonNarration";
 import { useLessonReadCursor } from "../../hooks/useLessonReadCursor";
 import DeviceAction from "../Ledger/DeviceAction";
 import LedgerStatusPill from "../Ledger/LedgerStatusPill";
@@ -143,7 +144,13 @@ export default function LessonReader({
   // app on lesson entry due to interaction with React-mounted
   // descendants (InlineSandbox, popover wiring, "Ask Fishbones"
   // badges) that mutate the article's subtree.
-  const audio = useLessonAudio(lesson.id);
+  // Drive the cursor off whichever narration source is actually
+  // playing — ElevenLabs CDN if the manifest covers this lesson,
+  // Web Speech API on the lesson body otherwise. Without this
+  // unified read, the cursor would freeze at progress=0 whenever
+  // the fallback is active (the narration plays, but no highlight
+  // follows along).
+  const audio = useLessonNarration(lesson.id, lesson.body);
   const audioProgress = audio.available ? audio.progress : 0;
   const audioPlaying = audio.available ? audio.isPlaying : false;
   // Article + scroll refs are state-backed so the cursor hook

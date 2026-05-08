@@ -8,8 +8,9 @@ import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { renderMarkdown } from "../components/Lesson/markdown";
 import TTSButton from "../components/Lesson/TTSButton";
 import { estimateReadingMinutes } from "../components/Lesson/readingTime";
-import { stopLessonAudio, useLessonAudio } from "../hooks/useLessonAudio";
+import { stopLessonAudio } from "../hooks/useLessonAudio";
 import { stopFallbackNarration } from "../hooks/useLessonAudioFallback";
+import { useLessonNarration } from "../hooks/useLessonNarration";
 import { useLessonReadCursor } from "../hooks/useLessonReadCursor";
 import "./MobileReader.css";
 
@@ -41,7 +42,12 @@ export default function MobileReader({ body, lessonId }: Props) {
   // viewport-checked auto-scroll, all keyed off the rendered `html`
   // string (no MutationObserver — see useLessonReadCursor for why).
   const [articleEl, setArticleEl] = useState<HTMLElement | null>(null);
-  const audio = useLessonAudio(lessonId);
+  // Drive the cursor off whichever narration source is actually
+  // playing (ElevenLabs CDN when the manifest covers it, Web Speech
+  // API on the body otherwise). Without the unified read, the
+  // cursor would freeze at progress=0 whenever the fallback is
+  // active.
+  const audio = useLessonNarration(lessonId, body);
   const audioProgress = audio.available ? audio.progress : 0;
   const audioPlaying = audio.available ? audio.isPlaying : false;
   useLessonReadCursor({
