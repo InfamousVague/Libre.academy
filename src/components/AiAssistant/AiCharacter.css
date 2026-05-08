@@ -76,16 +76,20 @@
 }
 
 /* DNA helix glyph wrapper. The component sizes itself in `em`, so
-   set `font-size` to drive the rendered size — 88px (double the
-   previous 44px) gives an 88px helix dimension along the long axis
-   with ~35px on the short. Idle motion lives entirely inside the
-   helix's own strand-jump animation; the AiCharacter passes a
-   slow `speed` value (see Tsx) when in idle mood so the helix
-   reads as gently breathing rather than actively working. */
+   set `font-size` to drive the rendered size — 70px (~20% smaller
+   than the prior 88px) gives a 70px helix dimension along the long
+   axis with ~28px on the short. The 96×96 click target stays
+   generous around the smaller glyph; trimming the orb container
+   itself isn't worth it since the orb is anchored at fixed
+   bottom-right coordinates and a smaller hit-target on a corner-
+   docked control reads as cramped. Idle motion lives entirely
+   inside the helix's own strand-jump animation; the AiCharacter
+   passes a slow `speed` value (see Tsx) when in idle mood so the
+   helix reads as gently breathing rather than actively working. */
 .fishbones-ai-character-icon {
   position: relative;
   z-index: 2;
-  font-size: 88px;
+  font-size: 70px;
   filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.4));
 }
 
