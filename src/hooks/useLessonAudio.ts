@@ -83,6 +83,31 @@ export function invalidateAudioManifest(): void {
   manifestPromise = null;
 }
 
+/// Rewrite every entry's `url` so its host matches the host we just
+/// fetched the manifest from. No-op when the manifest's `cdnBase`
+/// already agrees with `targetBase` (the common case). Trailing
+/// slashes are normalised on both sides before comparison so a
+/// stray `/` doesn't keep us from recognising a match.
+///
+/// The rewrite is keyed on the prefix `cdnBase + "/"` to avoid
+/// touching URLs that were authored against some unrelated host
+/// (defensive — shouldn't happen given the generator's behaviour,
+/// but keeps the rewrite local to entries that genuinely came out
+/// of this manifest).
+function rewriteEntryUrls(manifest: AudioManifest, targetBase: string): void {
+  if (!manifest?.cdnBase || !manifest.lessons) return;
+  const oldBase = manifest.cdnBase.replace(/\/+$/, "");
+  const newBase = targetBase.replace(/\/+$/, "");
+  if (oldBase === newBase) return;
+  const oldPrefix = oldBase + "/";
+  for (const entry of Object.values(manifest.lessons)) {
+    if (typeof entry?.url === "string" && entry.url.startsWith(oldPrefix)) {
+      entry.url = newBase + entry.url.slice(oldBase.length);
+    }
+  }
+  manifest.cdnBase = newBase;
+}
+
 async function fetchManifest(): Promise<AudioManifest | null> {
   if (manifest) return manifest;
   if (manifestPromise) return manifestPromise;
@@ -106,6 +131,19 @@ async function fetchManifest(): Promise<AudioManifest | null> {
       // cache a null result.
       if (!ct.toLowerCase().includes("json")) return null;
       const json = (await r.json()) as AudioManifest;
+      // Host-rewrite guard: the manifest's `cdnBase` field can drift
+      // away from the host we actually fetched the manifest from
+      // (e.g. when `generate-lesson-audio.mjs` is run with
+      // `FB_TTS_CDN_BASE` pointing at a CDN that later goes away or
+      // never had DNS set up). The MP3s always live next to the
+      // manifest — `upload-lesson-audio.mjs` rsyncs both into the
+      // same `/var/www/.../audio/` tree — so we can safely swap the
+      // declared base for our actual base on every entry's URL.
+      // Without this, a stale cdnBase silently breaks every play
+      // button: the manifest loads (so the speaker icon renders) but
+      // the per-entry URL points at a non-resolving host, and click
+      // → play fails with no visible error.
+      rewriteEntryUrls(json, TTS_CDN_BASE);
       return json;
     } catch {
       // Offline / CORS / non-JSON body — fall through silently. The

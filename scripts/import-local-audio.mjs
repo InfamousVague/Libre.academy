@@ -1,0 +1,333 @@
+#!/usr/bin/env node
+/// Import already-generated lesson MP3s from a local directory and
+/// rebuild `dist/audio/manifest.json` against them — no ElevenLabs
+/// API calls. Use this when you already have the audio files (e.g.
+/// in `~/Desktop/<courseId>/`) and just need to wire them up so
+/// `upload-lesson-audio.mjs` can push them to the VPS.
+///
+/// How matching works:
+///   1. We walk every course (`public/starter-courses/` + the live
+///      `~/Library/Application Support/.../courses` tree, same as
+///      `generate-lesson-audio.mjs`).
+///   2. For each reading/mixed lesson, we run its body through
+///      `markdownToSpokenText` and sha256 the result — exactly the
+///      hash the generator uses to name MP3s.
+///   3. We look for a file `<lessonId>.<sha7>.mp3` in
+///      `<source>/<courseId>/`. If found, we copy it to
+///      `dist/audio/<courseId>/` and add a manifest entry. If not
+///      found, the lesson is reported as missing (its body has
+///      changed since the MP3 was generated, OR it was never
+///      generated to begin with).
+///
+/// Output is a fresh `dist/audio/manifest.json` whose `cdnBase` and
+/// per-entry `url` fields use whichever host you set in
+/// `FB_TTS_CDN_BASE` — same env the generator reads. Run
+/// `upload-lesson-audio.mjs` afterwards to push to the VPS.
+///
+/// USAGE:
+///   node scripts/import-local-audio.mjs                   # default source ~/Desktop
+///   node scripts/import-local-audio.mjs --from ~/Audio    # alt source
+///   node scripts/import-local-audio.mjs --course a-to-zig # one course
+///   node scripts/import-local-audio.mjs --dry-run         # report only, no copies / writes
+///   node scripts/import-local-audio.mjs --keep-cdn-base   # preserve a remote manifest's
+///                                                          # cdnBase (rarely useful — the
+///                                                          # default rewrites to the host
+///                                                          # you'll actually upload to)
+
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import { homedir } from "node:os";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
+import { markdownToSpokenText } from "./spoken-text.mjs";
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const ROOT = join(HERE, "..");
+
+// `.env` (gitignored) is the conventional place to set FB_TTS_CDN_BASE
+// + voice / model — read it the same way generate-lesson-audio.mjs does
+// so a user with that already configured doesn't have to re-export
+// shell vars to run this script.
+const ENV_FILE = join(ROOT, ".env");
+if (existsSync(ENV_FILE)) {
+  for (const line of readFileSync(ENV_FILE, "utf8").split("\n")) {
+    const m = /^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.*?)\s*$/.exec(line);
+    if (!m) continue;
+    if (!process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, "");
+  }
+}
+
+const VOICE_NAME = process.env.ELEVEN_VOICE_NAME || "Verity";
+const MODEL_ID = process.env.ELEVEN_MODEL || "eleven_multilingual_v2";
+/// CDN base — defaults to the academy host because that's where
+/// `upload-lesson-audio.mjs` rsyncs to (`/var/www/fishbones-academy/audio`,
+/// served at `https://fishbones.academy/audio`). The MP3s live next to
+/// the manifest on that one server, so URLs pointing there are correct
+/// by construction.
+///
+/// We DELIBERATELY ignore `FB_TTS_CDN_BASE` here — that env var is what
+/// produced the original broken manifest (it baked URLs pointing at
+/// `cdn.mattssoftware.com`, a host that doesn't resolve). The
+/// `generate-lesson-audio.mjs` script honors that env var because the
+/// generator is the right place to opt into a separate CDN; the
+/// importer's job is just to wire up files that are about to be
+/// uploaded to the academy host, so it should always emit URLs there.
+/// Pass `--cdn-base <url>` if you genuinely need a different host.
+const CDN_BASE = "https://fishbones.academy/audio";
+
+const args = process.argv.slice(2);
+const flag = (name) => {
+  const i = args.indexOf(name);
+  return i >= 0 ? args[i + 1] : null;
+};
+const has = (name) => args.includes(name);
+
+const SOURCE_DIR = flag("--from")
+  ? resolve(flag("--from").replace(/^~(?=$|\/)/, homedir()))
+  : join(homedir(), "Desktop");
+const courseFilter = flag("--course");
+const DRY_RUN = has("--dry-run");
+const cdnBaseOverride = flag("--cdn-base");
+const EFFECTIVE_CDN_BASE = (cdnBaseOverride || CDN_BASE).replace(/\/+$/, "");
+
+const OUT_DIR = join(ROOT, "dist/audio");
+const MANIFEST_PATH = join(OUT_DIR, "manifest.json");
+
+// ── course discovery (mirrors generate-lesson-audio.mjs) ────────
+function loadAllCourses() {
+  const seen = new Set();
+  const out = [];
+  const seedDir = join(ROOT, "public/starter-courses");
+  if (existsSync(seedDir)) {
+    for (const f of readdirSync(seedDir).filter((n) => n.endsWith(".json"))) {
+      const p = join(seedDir, f);
+      try {
+        const c = JSON.parse(readFileSync(p, "utf8"));
+        if (c.id && !seen.has(c.id)) {
+          seen.add(c.id);
+          out.push(c);
+        }
+      } catch {
+        /* skip malformed */
+      }
+    }
+  }
+  const liveDir = join(
+    homedir(),
+    "Library/Application Support/com.mattssoftware.kata/courses",
+  );
+  if (existsSync(liveDir)) {
+    for (const id of readdirSync(liveDir)) {
+      if (seen.has(id)) continue;
+      const p = join(liveDir, id, "course.json");
+      if (!existsSync(p)) continue;
+      try {
+        const c = JSON.parse(readFileSync(p, "utf8"));
+        if (c.id && !seen.has(c.id)) {
+          seen.add(c.id);
+          out.push(c);
+        }
+      } catch {
+        /* skip malformed */
+      }
+    }
+  }
+  return out;
+}
+
+function* readingLessons(course) {
+  for (const ch of course.chapters || []) {
+    for (const l of ch.lessons || []) {
+      if (l.kind === "reading" || l.kind === "mixed") {
+        if (l.body && l.body.trim()) yield l;
+      }
+    }
+  }
+}
+
+function sha256(s) {
+  return createHash("sha256").update(s).digest("hex");
+}
+
+// ── main ────────────────────────────────────────────────────────
+function main() {
+  if (!existsSync(SOURCE_DIR)) {
+    console.error(`[import-audio] source dir not found: ${SOURCE_DIR}`);
+    process.exit(2);
+  }
+  console.error(`[import-audio] source: ${SOURCE_DIR}`);
+  console.error(`[import-audio] target: ${OUT_DIR}`);
+  console.error(`[import-audio] cdnBase: ${EFFECTIVE_CDN_BASE}`);
+  console.error(`[import-audio] voice: ${VOICE_NAME} / model: ${MODEL_ID}`);
+  if (DRY_RUN) console.error(`[import-audio] DRY RUN — no copies, no writes`);
+  console.error("");
+
+  const courses = loadAllCourses();
+  const manifest = {
+    version: 1,
+    voice: VOICE_NAME,
+    voiceId: null,
+    model: MODEL_ID,
+    cdnBase: EFFECTIVE_CDN_BASE,
+    generatedAt: new Date().toISOString(),
+    lessons: {},
+  };
+
+  let imported = 0;
+  let alreadyInDist = 0;
+  let missing = 0;
+  let stale = 0;
+  const missingByCourse = {};
+  const staleByCourse = {};
+
+  for (const course of courses) {
+    if (courseFilter && course.id !== courseFilter) continue;
+    const lessons = [...readingLessons(course)];
+    if (lessons.length === 0) continue;
+
+    const sourceCourseDir = join(SOURCE_DIR, course.id);
+    const targetCourseDir = join(OUT_DIR, course.id);
+    const sourceFiles = existsSync(sourceCourseDir)
+      ? readdirSync(sourceCourseDir).filter((n) => n.endsWith(".mp3"))
+      : [];
+
+    // Build a quick lookup so a per-lesson check is O(1) — keys are
+    // the `<lessonId>.<sha7>` portion of each filename.
+    const sourceIndex = new Map();
+    for (const f of sourceFiles) {
+      const m = /^(.+)\.([0-9a-f]{7})\.mp3$/.exec(f);
+      if (m) sourceIndex.set(`${m[1]}.${m[2]}`, f);
+    }
+
+    let courseImports = 0;
+    let courseMissing = 0;
+    let courseStale = 0;
+
+    for (const lesson of lessons) {
+      const spoken = markdownToSpokenText(lesson.body);
+      const textHash = sha256(spoken);
+      const sha7 = textHash.slice(0, 7);
+      const fileRel = `${course.id}/${lesson.id}.${sha7}.mp3`;
+      const fileAbs = join(OUT_DIR, fileRel);
+      const cdnUrl = `${EFFECTIVE_CDN_BASE}/${fileRel}`;
+
+      // Three locations, in priority order: already in dist/, in the
+      // source dir at the right sha7, or in the source dir at the
+      // wrong sha7 (= stale, body has drifted since synthesis).
+      if (existsSync(fileAbs)) {
+        manifest.lessons[lesson.id] = {
+          url: cdnUrl,
+          courseId: course.id,
+          sha256: sha256ForFile(fileAbs),
+          sizeBytes: statSync(fileAbs).size,
+          textHash,
+          voice: VOICE_NAME,
+          model: MODEL_ID,
+        };
+        alreadyInDist++;
+        continue;
+      }
+
+      const key = `${lesson.id}.${sha7}`;
+      if (sourceIndex.has(key)) {
+        const sourceAbs = join(sourceCourseDir, sourceIndex.get(key));
+        if (!DRY_RUN) {
+          mkdirSync(targetCourseDir, { recursive: true });
+          copyFileSync(sourceAbs, fileAbs);
+        }
+        manifest.lessons[lesson.id] = {
+          url: cdnUrl,
+          courseId: course.id,
+          sha256: DRY_RUN ? undefined : sha256ForFile(fileAbs),
+          sizeBytes: DRY_RUN ? statSync(sourceAbs).size : statSync(fileAbs).size,
+          textHash,
+          voice: VOICE_NAME,
+          model: MODEL_ID,
+        };
+        imported++;
+        courseImports++;
+        continue;
+      }
+
+      // Stale: source dir has SOME mp3 for this lesson, but the
+      // sha7 doesn't match the current body's hash. The MP3 was
+      // generated against an older version of the prose. Don't copy
+      // it (it'd narrate stale content); leave the manifest gap so
+      // the user knows what to regenerate.
+      const staleMatch = sourceFiles.find((f) =>
+        f.startsWith(`${lesson.id}.`),
+      );
+      if (staleMatch) {
+        stale++;
+        courseStale++;
+        (staleByCourse[course.id] ??= []).push(
+          `${lesson.id} (have sha7 ${/\.([0-9a-f]{7})\./.exec(staleMatch)?.[1]}, need ${sha7})`,
+        );
+        continue;
+      }
+
+      missing++;
+      courseMissing++;
+      (missingByCourse[course.id] ??= []).push(lesson.id);
+    }
+
+    if (courseImports + courseMissing + courseStale > 0) {
+      console.error(
+        `  ${course.id}: ${courseImports} imported, ${courseStale} stale, ${courseMissing} missing`,
+      );
+    }
+  }
+
+  if (!DRY_RUN) {
+    mkdirSync(OUT_DIR, { recursive: true });
+    writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
+    console.error(`\n[import-audio] wrote ${MANIFEST_PATH}`);
+  }
+
+  console.error("");
+  console.error(`Summary:`);
+  console.error(`  imported from source: ${imported}`);
+  console.error(`  already in dist:      ${alreadyInDist}`);
+  console.error(`  stale (body changed): ${stale}`);
+  console.error(`  missing (no file):    ${missing}`);
+  console.error(`  manifest entries:     ${Object.keys(manifest.lessons).length}`);
+
+  if (stale > 0) {
+    console.error(`\nStale lessons (regenerate body or re-synthesise):`);
+    for (const [cid, list] of Object.entries(staleByCourse)) {
+      console.error(`  ${cid}:`);
+      for (const item of list) console.error(`    - ${item}`);
+    }
+  }
+  if (missing > 0) {
+    console.error(`\nMissing lessons (run generate-lesson-audio.mjs to synthesise):`);
+    for (const [cid, list] of Object.entries(missingByCourse)) {
+      console.error(`  ${cid}: ${list.length} lessons`);
+      // Show first 5 so the output stays readable on a long miss list.
+      for (const id of list.slice(0, 5)) console.error(`    - ${id}`);
+      if (list.length > 5) console.error(`    … +${list.length - 5} more`);
+    }
+  }
+
+  console.error("");
+  console.error(
+    `Next: node scripts/upload-lesson-audio.mjs    # rsync dist/audio → fishbones-academy VPS`,
+  );
+}
+
+/// File sha256 — used to populate the manifest's sha256 field, same
+/// thing the generator does. Reads the file once into memory; lesson
+/// MP3s are at most a few MB so this is cheap.
+function sha256ForFile(path) {
+  return createHash("sha256").update(readFileSync(path)).digest("hex");
+}
+
+main();
