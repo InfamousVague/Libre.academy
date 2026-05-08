@@ -77,14 +77,24 @@
 .fishbones-reader-meta-glossary {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
+  /* Horizontally center the icon + label + count cluster inside the
+     pill. Mostly cosmetic for the inline-flex (content-sized) layout
+     in use today — but keeps the cluster centered when a parent
+     stretches the pill via flex-grow / explicit width. */
+  justify-content: center;
+  gap: 8px;
+  /* Slightly larger than the prior 4×10 chip — bumped to match the
+     visual weight of the static TTSButton chip on its left so the
+     meta row reads as two balanced affordances. The font-size +
+     padding bump together also gives the count badge breathing room
+     so it doesn't feel crammed into the trailing edge. */
+  padding: 5px 12px;
   background: transparent;
   border: 1px solid var(--color-border-default);
   border-radius: var(--fb-radius-pill);
   color: var(--color-text-secondary);
   font-family: inherit;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 600;
   cursor: pointer;
   transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy), border-color var(--fb-motion-snappy);
@@ -111,13 +121,23 @@
 }
 
 .fishbones-reader-meta-glossary-count {
-  padding: 0 5px;
+  /* Vertically + horizontally center the digits inside the badge so
+     a 1-digit and a 3-digit count both read as balanced. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  padding: 0 6px;
   border-radius: var(--fb-radius-pill);
   background: var(--color-bg-tertiary);
   color: var(--color-text-tertiary);
-  font-size: 10px;
+  /* Bumped from 10px → 10.5px to track the parent pill's font-size
+     bump (11px → 11.5px) so the count doesn't feel small alongside
+     the now-slightly-larger label. */
+  font-size: 10.5px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
 
 .fishbones-reader-meta-glossary--open .fishbones-reader-meta-glossary-count {
