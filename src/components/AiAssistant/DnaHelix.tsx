@@ -25,6 +25,8 @@
 /// (the AI orb sets `perspective: 80px` on the button itself).
 
 import { useMemo } from "react";
+import type { LanguageId } from "../../data/types";
+import { LANGUAGE_META } from "../../lib/languages";
 import "./DnaHelix.css";
 
 interface Props {
@@ -42,15 +44,28 @@ interface Props {
   className?: string;
 }
 
-/// Hand-picked Jurassic-park-via-Dribbble palette from the source
-/// CodePen. Extracted to a constant so a future caller could swap
-/// it via prop without re-writing the JS.
-const PALETTE = [
-  "hsl(44, 98%, 60%)", // sun-yellow
-  "hsl(197, 50%, 44%)", // cool teal
-  "hsl(300, 100%, 100%)", // (intentional white from the source)
-  "hsl(331, 76%, 50%)", // hot pink
-] as const;
+/// Curated subset of the app's language brand colours, picked to
+/// span the hue wheel evenly so the random per-strand assignment
+/// produces a balanced rainbow rather than e.g. five blues in a row.
+/// Sourced from `LANGUAGE_META` so any brand-colour adjustment in
+/// `lib/languages.tsx` (e.g. when Solidity's chip colour was retuned
+/// to Ethereum blue for legibility) flows through to the helix
+/// automatically. Order doesn't matter — the assignment is random
+/// per node — but the language IDs are kept in roughly hue order
+/// to make the palette readable when scanning the source.
+const PALETTE_LANGS: readonly LanguageId[] = [
+  "javascript", // #F7DF1E sun-yellow
+  "swift", //      #FA7343 deep orange
+  "rust", //       #CE412B brick red
+  "kotlin", //     #7F52FF rich purple
+  "typescript", // #3178C6 cobalt blue
+  "go", //         #00ADD8 saturated cyan
+  "react", //      #61DAFB light cyan
+];
+
+const PALETTE: readonly string[] = PALETTE_LANGS.map(
+  (id) => LANGUAGE_META[id].color,
+);
 
 export default function DnaHelix({
   strands = 13,
