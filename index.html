@@ -21,7 +21,6 @@
          stares at a black window.
 
          The markup + styling mirror the React FishbonesLoader and
-         DottedGradientBg components: bone-colored ring, steady (non-
          pulsing) fish, and a halftone-dot purple/pink gradient
          background. Without this mirroring there's a visible jump
          between the inline preloader and the React loader on cold
@@ -60,35 +59,6 @@
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
-      }
-      /* Halftone purple/pink wash, masked to a 7×7px dot grid. Mirrors
-         DottedGradientBg's `--fill` variant so the cold-launch screen
-         reads as part of the brand instead of a black void. Static
-         (no animation) — the React DottedGradientBg drifts, but for
-         the ~1s preloader window a static grid is enough. */
-      #preloader-wash {
-        position: absolute;
-        inset: 0;
-        z-index: 0;
-        pointer-events: none;
-        background-image:
-          radial-gradient(
-            ellipse 65% 55% at 25% 18%,
-            rgba(170, 110, 245, 0.95) 0%,
-            rgba(170, 110, 245, 0.45) 30%,
-            transparent 60%
-          ),
-          radial-gradient(
-            ellipse 55% 50% at 70% 30%,
-            rgba(232, 110, 196, 0.85) 0%,
-            rgba(232, 110, 196, 0.40) 35%,
-            transparent 65%
-          );
-        -webkit-mask-image: radial-gradient(circle at 1px 1px, black 1px, transparent 1.4px);
-        -webkit-mask-size: 7px 7px;
-        mask-image: radial-gradient(circle at 1px 1px, black 1px, transparent 1.4px);
-        mask-size: 7px 7px;
-        filter: blur(1px);
       }
       /* Subtle gray dot field beneath the colored wash so dots are
          visible everywhere, not just inside the bloom. */
