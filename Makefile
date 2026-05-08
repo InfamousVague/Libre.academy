@@ -42,7 +42,7 @@ INSTALL_PATH  := /Applications/Fishbones.app
         deploy deploy-site deploy-content clean help \
         audio-import audio-upload audio-deploy tour-audio \
         run run-split run-phone run-watch pick-phone pick-watch run-clean \
-        release-phone
+        release-phone ship-phone
 
 # Marketing site checkout (separate repo). The site's `npm run deploy`
 # rebuilds Fishbones with FISHBONES_BASE=/learn/, stages dist-web/ under
@@ -378,6 +378,24 @@ run-clean:
 # `tauri ios build` always rebuilds the web bundle via the
 # `beforeBuildCommand` in tauri.conf.json, so dist/ is fresh on each
 # invocation — no manual `npm run build` step needed first.
+## Mobile ship: redeploy fishbones.academy AND install a fresh release-mode
+## build on the connected iPhone in one command. Use after a code change
+## that affects BOTH the iPad/web path (which loads from the deployed
+## site) AND the native iOS app — so a single invocation lands the new
+## bits on every mobile surface.
+##
+## Audio is intentionally NOT touched. `make audio-deploy` covers that
+## flow when audio actually changed; bundling it here would slow the
+## common case (UI tweak, refresh both surfaces) for no reason. Pair
+## the two when you've changed audio + UI:
+##   make audio-deploy && make ship-phone
+ship-phone: deploy-site release-phone
+	@echo ""
+	@echo "✓ Mobile shipped end-to-end."
+	@echo "  Site:    https://fishbones.academy/"
+	@echo "  Embed:   https://fishbones.academy/learn/"
+	@echo "  Phone:   release-mode v$(VERSION) installed on the cached iPhone"
+
 release-phone:
 	@bash $(ROOT)/scripts/pick-device.sh phone --reuse
 	@set -eu; \
@@ -552,3 +570,4 @@ help:
 	@echo "  make pick-watch   — refresh watch selection only"
 	@echo "  make run-clean    — drop the cached device selection"
 	@echo "  make release-phone — RELEASE-mode build, installed to phone for everyday use"
+	@echo "  make ship-phone   — deploy-site + release-phone in one shot"
