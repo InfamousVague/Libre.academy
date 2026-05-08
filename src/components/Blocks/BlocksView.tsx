@@ -56,6 +56,7 @@ import {
   deriveStarterFiles,
 } from "../../lib/workbenchFiles";
 import { runFiles, type RunResult } from "../../runtimes";
+import { isMobile } from "../../lib/platform";
 import OutputPane from "../Output/OutputPane";
 import Workbench from "../Workbench/Workbench";
 import {
@@ -791,8 +792,18 @@ function BlocksViewInner({
 
   return (
     <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
+      {/* On mobile, swap `widthControlsParent` for `fillWidth`. The
+          desktop branch tells the Workbench to drive its parent's
+          inline width to a percentage (so the user can drag-resize the
+          workbench against the prose pane), but on mobile that ends up
+          stamping `width: 48%` onto `.m-lesson__body` — collapsing the
+          whole blocks experience into half the screen. `fillWidth`
+          lets the Workbench claim 100%, and the matching mobile CSS
+          override on `.fishbones-workbench` drops the floating-card
+          chrome so it reads as edge-to-edge content. */}
       <Workbench
-        widthControlsParent
+        widthControlsParent={!isMobile}
+        fillWidth={isMobile}
         editor={blocksTopHalf}
         output={
           <OutputPane

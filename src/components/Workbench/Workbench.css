@@ -211,3 +211,36 @@
   border-radius: 0;
   box-shadow: none;
 }
+
+/* ── Phone-narrow override ───────────────────────────────────────
+   On mobile (< 768px, matching the JS isMobile gate), the workbench's
+   floating-card chrome reads as wasted real estate — the screen is
+   only ~375px wide and the chip pool inside needs every horizontal
+   pixel. Drop the card fill / border / radius so the workbench reads
+   as edge-to-edge content, and negative-margin out of the .m-lesson
+   16px horizontal padding so the workbench actually claims the full
+   viewport width (the prose-padding is the wrong choice for a
+   blocks-mode exercise).
+   The width-handle gets hidden too because dragging horizontal width
+   on a phone doesn't make sense (no second pane next to us). */
+@media (max-width: 767px) {
+  .fishbones-workbench {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    margin-left: -16px;
+    margin-right: -16px;
+    /* Override the inline-style width the desktop branch sets, plus
+       the desktop bounds. `auto` lets the box fit its parent
+       (m-lesson__body) which after our negative margin spans the
+       viewport. */
+    width: auto !important;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .fishbones-workbench-width-handle {
+    display: none;
+  }
+}

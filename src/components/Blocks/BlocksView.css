@@ -477,12 +477,13 @@
    Breakpoint matches the JS `isMobile` gate (window.innerWidth < 768)
    so CSS + render-path agree. */
 @media (max-width: 767px) {
+  /* Edge-to-edge handling on phone is owned by the parent Workbench
+     (`.fishbones-workbench` mobile override drops its card chrome and
+     negative-margins out of `.m-lesson` padding). We only adjust the
+     inner blocks-content padding here so chips don't slam the
+     viewport edge, and drop the rounded borders on the template + pool
+     so they read as edge-to-edge zones rather than nested cards. */
   .fb-blocks {
-    /* `.m-lesson` pads 16px horizontally; cancel that to claim
-       screen edge-to-edge. Vertical padding stays so chips don't
-       slam into the lesson nav above or the next bit of UI below. */
-    margin-left: -16px;
-    margin-right: -16px;
     padding: 12px 8px;
   }
 
@@ -490,8 +491,7 @@
      fill colours so the visual hierarchy (dark code panel vs. lighter
      pool tray) is preserved; the borders + radii are what made it
      read as "card inside a card". Hairline borders on top + bottom
-     keep separation between zones without the contained-widget
-     feel. */
+     stay so separation between zones survives. */
   .fb-blocks__template,
   .fb-blocks__pool {
     border-left: 0;
