@@ -80,12 +80,12 @@ export default function AiCharacter({
           mask). Mood drives `speed`: thinking + celebrating push
           faster so the orb visibly leans in on a reply; alert
           slows down to read as locked / waiting on the human;
-          idle is the slowest of all (8s per strand-jump cycle) so
-          a learner glancing at the orb mid-lesson sees a gentle
-          breathing rhythm rather than a busy animation pulling
-          attention away from the prose. The helix itself is
-          colour-randomised at mount time — see DnaHelix for the
-          palette + per-strand stagger maths. */}
+          idle is the slowest of all (16s per strand-jump cycle —
+          double the prior 8s) so a learner glancing at the orb
+          mid-lesson sees a near-still rhythm rather than a busy
+          animation pulling attention away from the prose. The
+          helix itself is colour-randomised at mount time — see
+          DnaHelix for the palette + per-strand stagger maths. */}
       <DnaHelix
         className="fishbones-ai-character-icon"
         speed={
@@ -95,7 +95,7 @@ export default function AiCharacter({
               ? 1
               : mood === "alert"
                 ? 4
-                : 8
+                : 16
         }
       />
     </button>
