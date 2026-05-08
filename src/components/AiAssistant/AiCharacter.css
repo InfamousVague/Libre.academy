@@ -78,14 +78,29 @@
 /* DNA helix glyph wrapper. The component sizes itself in `em`, so
    set `font-size` to drive the rendered size — 88px (double the
    previous 44px) gives an 88px helix dimension along the long axis
-   with ~35px on the short. With the helix's `rotate: 90deg`, the
-   long axis is horizontal, so the rendered bounding box is roughly
-   88×35px — fits the 96×96 click target with comfortable margins. */
+   with ~35px on the short.
+
+   Slow 2D rotation is layered on top of the helix's static
+   `rotate: 4deg` base tilt; the longhand `rotate` property and the
+   `transform: rotate(...)` animation compose so the helix "spins"
+   while keeping its 4° resting offset. 24s = a full revolution
+   every 24 seconds, slow enough that the spin reads as drift, not
+   activity. Pauses on hover (below) so the tooltip + hover state
+   feel still rather than chasing a moving glyph. */
 .fishbones-ai-character-icon {
   position: relative;
   z-index: 2;
   font-size: 88px;
   filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.4));
+  animation: fishbones-ai-dna-drift 24s linear infinite;
+}
+
+/* Pause the rotation while the user is hovering. `paused` freezes
+   the animation at its current frame rather than snapping back, so
+   leaving the hover resumes from where it stopped — no visible
+   jump. */
+.fishbones-ai-character:hover .fishbones-ai-character-icon {
+  animation-play-state: paused;
 }
 
 
@@ -109,6 +124,16 @@
   }
 }
 
+@keyframes fishbones-ai-dna-drift {
+  /* Slow full-revolution cycle for the helix when the user isn't
+     interacting. The rotation composes with the helix's static
+     `rotate: 4deg`, so the helix's "rest" pose at the start of
+     each cycle is at 4°, drifting through 364° back to 4°. */
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Reduced motion — kill all orb-level animations. The DnaHelix has
    its own reduced-motion handler that flattens the helix to a
    static colourful pattern. */
@@ -116,5 +141,61 @@
   .fishbones-ai-character {
     animation: none !important;
     transition: none !important;
+  }
+}
+/* "How can I assist?" tooltip floating left of the orb. Pill-shaped
+   with the same translucent-glass treatment as the mobile tab bar so
+   the two read as members of the same UI family. Pointer-events
+   disabled — clicks pass through to the button underneath, so a
+   learner tapping the tip still opens the assistant.
+   Positioned absolutely to the LEFT of the button: `right: 100%`
+   anchors the tip's right edge to the button's left, then a small
+   gap (`margin-right: 10px`) gives it breathing room. Top is
+   centered against the orb so the tip's vertical midline lines up
+   with the orb's. */
+.fishbones-ai-character-tip {
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  margin-right: 10px;
+  transform: translateY(-50%);
+  padding: 7px 12px;
+  background: rgba(19, 19, 26, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--fb-radius-pill, 999px);
+  backdrop-filter: blur(14px) saturate(135%);
+  -webkit-backdrop-filter: blur(14px) saturate(135%);
+  color: var(--color-text-primary, #f5f5f7);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  pointer-events: none;
+  /* Soft drop shadow so the tip reads as floating in front of
+     whatever's behind the orb. Same shadow treatment as the mobile
+     tab pill for consistency. */
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.32);
+  /* Subtle entrance — tip slides in from a touch further left and
+     fades up. Keeps the orb's appearance from feeling abrupt when
+     the panel closes (it'll re-mount and animate in). */
+  animation: fishbones-ai-tip-in 280ms ease both;
+}
+
+@keyframes fishbones-ai-tip-in {
+  from {
+    opacity: 0;
+    transform: translate3d(8px, -50%, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, -50%, 0);
+  }
+}
+
+/* Reduced motion — kill the entrance animation, keep the static
+   tip visible. */
+@media (prefers-reduced-motion: reduce) {
+  .fishbones-ai-character-tip {
+    animation: none;
   }
 }
