@@ -19,7 +19,7 @@
 /// USAGE:
 ///   1. Drop these into `.env` at the repo root (gitignored):
 ///        ELEVEN_API_KEY=sk_...
-///        ELEVEN_VOICE_NAME=Mark             # or whatever lesson narrator uses
+///        ELEVEN_VOICE_NAME=Jessa            # or whatever lesson narrator uses
 ///        ELEVEN_MODEL=eleven_multilingual_v2
 ///   2. Run:
 ///        node scripts/generate-tour-audio.mjs           # all steps
@@ -51,7 +51,7 @@ if (existsSync(ENV_FILE)) {
 }
 
 const API_KEY = process.env.ELEVEN_API_KEY;
-const VOICE_NAME = process.env.ELEVEN_VOICE_NAME || "Mark";
+const VOICE_NAME = process.env.ELEVEN_VOICE_NAME || "Jessa";
 let MODEL_ID = process.env.ELEVEN_MODEL || "eleven_multilingual_v2";
 
 const args = process.argv.slice(2);
@@ -111,7 +111,7 @@ async function resolveVoiceId() {
   const { voices } = await r.json();
   const target = VOICE_NAME.toLowerCase().trim();
   // Same multi-tier match the lesson generator uses, so an entry
-  // in `.env` like `ELEVEN_VOICE_NAME=Mark` resolves regardless of
+  // in `.env` like `ELEVEN_VOICE_NAME=Jessa` resolves regardless of
   // whether the library voice is "Mark", "Mark - Energetic Storyteller",
   // etc.
   const match =
