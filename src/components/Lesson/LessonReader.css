@@ -83,12 +83,18 @@
      stretches the pill via flex-grow / explicit width. */
   justify-content: center;
   gap: 8px;
-  /* Slightly larger than the prior 4×10 chip — bumped to match the
-     visual weight of the static TTSButton chip on its left so the
-     meta row reads as two balanced affordances. The font-size +
-     padding bump together also gives the count badge breathing room
-     so it doesn't feel crammed into the trailing edge. */
-  padding: 5px 12px;
+  /* Locked to the same height + box-sizing as `.fb-tts-pill` (see
+     TTSButton.css). Both chips share `height: 26px`, `padding: 0 12px`,
+     and `line-height: 1` so neither's inner content (12px icon vs
+     16px ring) can push it taller than the other. Previously the
+     padding was top/bottom 5px with default line-height — which
+     meant the TTS pill's ring + the glossary's text-line each ended
+     up dictating different total heights, leaving the row visibly
+     uneven. */
+  height: 26px;
+  box-sizing: border-box;
+  padding: 0 12px;
+  line-height: 1;
   background: transparent;
   border: 1px solid var(--color-border-default);
   border-radius: var(--fb-radius-pill);

@@ -12,14 +12,17 @@
      layout in use today. */
   justify-content: center;
   gap: 8px;
-  /* Sized to match `.fishbones-reader-meta-glossary` next to it in
-     the lesson meta row — same padding, font-size, and font-weight
-     so the playable variant doesn't tower over the Glossary chip on
-     its right. The 18×18 progress ring (below) takes the place of
-     the prior 32×32 affordance; smaller but still legible, and it
-     keeps the chip from being noticeably taller than the Glossary
-     chip beside it. */
-  padding: 5px 12px;
+  /* Pinned to the same height as `.fishbones-reader-meta-glossary`
+     so the meta row reads as two balanced chips. With box-sizing:
+     border-box the padding + border fit INSIDE the 26px height,
+     and the line-height + ring/icon dimensions are tuned so neither
+     pushes past the box. Without this lock the 18px ring used to
+     drive the pill ~1-2px taller than the glossary chip whose text
+     line-height was the dominant child. */
+  height: 26px;
+  box-sizing: border-box;
+  padding: 0 12px;
+  line-height: 1;
   border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.1));
   border-radius: 999px;
   background: var(--color-bg-secondary, #1a1a1f);
@@ -75,19 +78,18 @@
   border-color: rgba(214, 185, 105, 0.32);
 }
 
-/* Progress-ring wrapper. 18×18 with the icon absolute-centered.
-   Was 32×32 — shrunk so the playable pill matches the Glossary chip
-   height beside it in the lesson meta row. The SVG inside still uses
-   a 32-unit viewBox; CSS overrides its rendered dimensions to 18px
-   so the inner circle (cx=16, r=13) scales proportionally to a
-   ~14.6px visual diameter ring with a ~1.1px stroke. */
+/* Progress-ring wrapper. 16×16 — well inside the pill's 26px clamped
+   height so the ring never drives the pill taller than the Glossary
+   chip. The SVG inside still uses a 32-unit viewBox; CSS overrides
+   its rendered dimensions so the inner circle (cx=16, r=13) scales
+   proportionally to a ~13px visual diameter ring with a ~1px stroke. */
 .fb-tts-pill__ring {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
 }
 
@@ -95,8 +97,8 @@
   /* CSS-set width/height intentionally overrides the SVG element's
      `width="32" height="32"` attributes so we can shrink the ring
      without changing the JSX RADIUS / viewBox math. */
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   /* Rotate so the arc grows from 12 o'clock clockwise. SVG default
      starts at 3 o'clock; -90° rotation snaps it to the top. */
   transform: rotate(-90deg);
