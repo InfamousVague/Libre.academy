@@ -24,8 +24,14 @@
      translation enough depth to read as "behind the nodes." */
   transform-style: preserve-3d;
   gap: 0.04em;
-  rotate: 30deg;
-  animation: fb-dna-spin 14s infinite linear;
+  /* Tilted 90° so the helix lies horizontally — long axis runs
+     left-to-right rather than top-to-bottom. The previous 30°
+     base tilt + 14s 2D spin animation are both gone; the strand-
+     jump animation now provides all the motion, which (with the
+     helix horizontal) reads as a sideways double-helix winding
+     along its long axis rather than a vertical helix slowly
+     pirouetting. */
+  rotate: 90deg;
   position: relative;
 }
 
@@ -80,12 +86,6 @@
   animation: fb-dna-scale var(--fb-dna-speed, 2s) var(--fb-dna-delay, 0s)
     infinite linear;
   border-radius: 1px;
-}
-
-@keyframes fb-dna-spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 @keyframes fb-dna-jump {

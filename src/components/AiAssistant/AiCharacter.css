@@ -12,12 +12,13 @@
      modals (1000+). 90 keeps the button reachable while the user
      is in a lesson or the library. */
   z-index: 90;
-  /* Sized between the original 64px (too prominent) and the first
-     pass at 44px (too small for the popup positioning maths to
-     anchor cleanly). 52px is the sweet spot — reads as a special
-     floating control without dominating the corner. */
-  width: 52px;
-  height: 52px;
+  /* Sized to host the doubled-up DNA helix (88px tall × ~35px wide
+     at the new font-size, sideways-rotated to ~88×35 visual area).
+     The 96×96 click target wraps that comfortably with breathing
+     room on every side. The orb is backgroundless so this is just
+     the click area + helix bounding box, not a visible disc. */
+  width: 96px;
+  height: 96px;
   padding: 0;
   border: none;
   border-radius: 50%;
@@ -31,25 +32,15 @@
      looks 2D. ~80px keeps the depth subtle (the helix tilts a hint
      in 3D rather than reading as a full holographic effect). */
   perspective: 80px;
-  /* Dark navy disc — the button IS the disc now. The previous
-     gradient ring + saturated glow halo were retired so the helix
-     stands on its own; backdrop is just dark enough that the
-     helix's white connecting bars + bright nodes pop, no rim of
-     swirling colour competing with them. */
-  background: radial-gradient(
-    ellipse 65% 55% at 50% 30%,
-    hsl(220, 45%, 18%) 0%,
-    hsl(220, 50%, 9%) 80%
-  );
-  box-shadow:
-    /* Soft drop shadow grounds the button on the page. No coloured
-       glow layers — the helix is the only visual statement now. */
-    0 8px 18px -8px rgba(0, 0, 0, 0.45),
-    inset 1px 2px 0 rgba(255, 255, 255, 0.05),
-    inset -2px -3px 8px rgba(0, 0, 0, 0.45);
+  /* No background, no shadow disc — the helix floats free against
+     whatever's behind the orb (typically the bone-tinted dark
+     theme's `--color-bg-primary`). The 52×52 box is purely a click
+     target now; everything visible comes from the DNA component
+     inside. */
+  background: transparent;
+  box-shadow: none;
   transition:
     transform 0.18s ease-out,
-    box-shadow 0.25s ease-out,
     filter 0.25s ease-out;
   will-change: transform;
 }
@@ -65,12 +56,9 @@
 .fishbones-ai-character:hover {
   /* Scale from the center, no translate — keeps the button anchored
      in the corner so it reads as growing toward the user rather
-     than drifting up. */
+     than drifting up. No shadow / background change since the orb
+     is backgroundless; scale is the only hover signal. */
   transform: scale(1.08);
-  box-shadow:
-    0 18px 30px -8px rgba(0, 0, 0, 0.55),
-    inset 1px 2px 0 rgba(255, 255, 255, 0.06),
-    inset -2px -3px 8px rgba(0, 0, 0, 0.45);
 }
 
 .fishbones-ai-character:active {
@@ -78,12 +66,8 @@
 }
 
 .fishbones-ai-character.is-open {
-  /* Pressed-in pose so the button reads as toggle state. Anchors
-     visually while the panel does the heavy lifting beside it. */
+  /* Pressed-in pose so the button reads as toggle state. */
   transform: scale(0.94);
-  box-shadow:
-    inset 0 2px 8px rgba(0, 0, 0, 0.32),
-    0 6px 14px -8px rgba(0, 0, 0, 0.5);
 }
 
 .fishbones-ai-character:focus-visible {
@@ -92,16 +76,15 @@
 }
 
 /* DNA helix glyph wrapper. The component sizes itself in `em`, so
-   set `font-size` to drive the rendered size — 44px gives a 44px-
-   tall helix, ~17.6px wide (2:5 aspect), which after the 30°
-   rotation occupies a ~47px-tall × ~37px-wide bounding box that
-   fits the 52px button comfortably. Now that the gradient ring +
-   inner face are gone, the helix can claim the full button and
-   doesn't need to share rim with anything. */
+   set `font-size` to drive the rendered size — 88px (double the
+   previous 44px) gives an 88px helix dimension along the long axis
+   with ~35px on the short. With the helix's `rotate: 90deg`, the
+   long axis is horizontal, so the rendered bounding box is roughly
+   88×35px — fits the 96×96 click target with comfortable margins. */
 .fishbones-ai-character-icon {
   position: relative;
   z-index: 2;
-  font-size: 44px;
+  font-size: 88px;
   filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.4));
 }
 
@@ -113,24 +96,16 @@
   /* Breathing pulse: the orb gently scales while a reply streams,
      so the button visibly leans in. Compounds with the helix's
      `speed` prop (which the AiCharacter cranks to 1.2s during
-     streaming) to multiply the "I am working" signal. Smaller scale
-     range (1 → 1.06) than hover so it doesn't feel like the user is
-     hovering in a loop. */
+     streaming) to multiply the "I am working" signal. Pure
+     transform animation — no shadow layers since the orb is
+     backgroundless. */
   0%,
   100% {
     transform: scale(1);
-    box-shadow:
-      0 14px 24px -10px rgba(0, 0, 0, 0.45),
-      inset 1px 2px 0 rgba(255, 255, 255, 0.05),
-      inset -2px -3px 8px rgba(0, 0, 0, 0.45);
   }
 
   50% {
     transform: scale(1.06);
-    box-shadow:
-      0 16px 28px -10px rgba(0, 0, 0, 0.5),
-      inset 1px 2px 0 rgba(255, 255, 255, 0.06),
-      inset -2px -3px 8px rgba(0, 0, 0, 0.4);
   }
 }
 
