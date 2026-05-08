@@ -1,6 +1,7 @@
 /// Slim icon-only rail to the LEFT of the floating sidebar. Holds the
-/// app's primary navigation (Library / Discover / Trees / Playground)
-/// plus the persistent footer cluster (Settings + sidebar toggle).
+/// app's primary navigation (Library / Discover / Trees / Tracks /
+/// Practice / Playground) plus the persistent footer cluster
+/// (Settings + sidebar toggle).
 ///
 /// Why a separate rail instead of more sidebar chrome:
 ///   - The sidebar collapses entirely when the learner hits Hide
@@ -18,10 +19,13 @@
 /// rail and sidebar read as a paired unit despite living in separate
 /// containers.
 
+import { useLayoutEffect, useRef, useState } from "react";
 import { Icon } from "@base/primitives/icon";
 import { libraryBig } from "@base/primitives/icon/icons/library-big";
 import { compass as compassIcon } from "@base/primitives/icon/icons/compass";
 import { trees as treesIcon } from "@base/primitives/icon/icons/trees";
+import { trainTrack } from "@base/primitives/icon/icons/train-track";
+import { dumbbell } from "@base/primitives/icon/icons/dumbbell";
 import { terminal as terminalIcon } from "@base/primitives/icon/icons/terminal";
 import { settings as settingsIcon } from "@base/primitives/icon/icons/settings";
 import { circleHelp } from "@base/primitives/icon/icons/circle-help";
@@ -43,7 +47,9 @@ export interface NavigationRailProps {
     | "playground"
     | "library"
     | "discover"
-    | "trees";
+    | "trees"
+    | "tracks"
+    | "practice";
   onLibrary: () => void;
   /// Discover route — browse catalog books + challenge packs not
   /// yet in the user's library. Optional; embeddings without one
@@ -51,6 +57,17 @@ export interface NavigationRailProps {
   onDiscover?: () => void;
   /// Trees route — skill-tree explorer.
   onTrees?: () => void;
+  /// Tracks route — curated linear paths through one or more trees.
+  /// Lives next to Trees in the rail because the two affordances
+  /// are complementary: Trees show the prerequisite DAG, Tracks
+  /// show author-curated recipes through it.
+  onTracks?: () => void;
+  /// Practice route — review-mode that resurfaces quizzes and
+  /// blocks puzzles from courses the learner has already touched.
+  /// The rest of the app is linear-by-lesson; Practice is the
+  /// random-access "drill weak spots" surface that closes the
+  /// learn → review loop.
+  onPractice?: () => void;
   /// Playground route — free-form coding sandbox.
   onPlayground?: () => void;
   onSettings: () => void;
@@ -104,15 +121,62 @@ export default function NavigationRail({
   onLibrary,
   onDiscover,
   onTrees,
+  onTracks,
+  onPractice,
   onPlayground,
   onSettings,
   onStartTour,
   onToggleSidebar,
   sidebarCollapsed,
 }: NavigationRailProps) {
+  // Sliding-pill indicator: a single absolutely-positioned element
+  // animates its `top` between the active rail button's positions
+  // rather than the highlight snapping from one button to another.
+  // We measure the active button's offset relative to the top
+  // cluster after every render that affects which button is active
+  // OR which buttons are present (sign-in toggling Trees / Discover
+  // visibility, etc.) so the pill stays glued to the right anchor.
+  // Using `useLayoutEffect` so the measurement happens before paint
+  // — without it the pill snaps to top:0 on the first frame and
+  // visibly leaps into place a microframe later.
+  const topRef = useRef<HTMLDivElement>(null);
+  const [pillTop, setPillTop] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    const top = topRef.current;
+    if (!top) {
+      setPillTop(null);
+      return;
+    }
+    const activeBtn = top.querySelector(
+      ".fishbones-nav-rail__item--active",
+    ) as HTMLElement | null;
+    if (!activeBtn) {
+      // Active route doesn't have a rail icon (e.g. "courses" or
+      // "profile" routes). Hide the pill so an old position doesn't
+      // float over the rail looking stuck.
+      setPillTop(null);
+      return;
+    }
+    const topRect = top.getBoundingClientRect();
+    const btnRect = activeBtn.getBoundingClientRect();
+    setPillTop(btnRect.top - topRect.top);
+    // Re-measure when conditional items toggle visibility — without
+    // these in the deps, a rail item appearing (e.g. user signs in
+    // and Trees becomes available) would shift the active button's
+    // offset without re-running the effect, leaving the pill
+    // misaligned.
+  }, [activeView, onDiscover, onTrees, onTracks, onPractice, onPlayground]);
+
   return (
     <nav className="fishbones-nav-rail" aria-label="Primary navigation">
-      <div className="fishbones-nav-rail__top">
+      <div className="fishbones-nav-rail__top" ref={topRef}>
+        {pillTop !== null && (
+          <span
+            className="fishbones-nav-rail__pill"
+            style={{ transform: `translateY(${pillTop}px)` }}
+            aria-hidden
+          />
+        )}
         <RailItem
           icon={libraryBig}
           label="Library"
@@ -133,6 +197,22 @@ export default function NavigationRail({
             label="Trees"
             onClick={onTrees}
             active={activeView === "trees"}
+          />
+        )}
+        {onTracks && (
+          <RailItem
+            icon={trainTrack}
+            label="Tracks"
+            onClick={onTracks}
+            active={activeView === "tracks"}
+          />
+        )}
+        {onPractice && (
+          <RailItem
+            icon={dumbbell}
+            label="Practice"
+            onClick={onPractice}
+            active={activeView === "practice"}
           />
         )}
         {onPlayground && (

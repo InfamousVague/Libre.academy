@@ -57,6 +57,49 @@
   gap: 4px;
 }
 
+/* `__top` hosts the sliding active-route pill (below) so it needs
+   to be a positioning context for the pill's absolute `transform:
+   translateY(...)` placement. */
+.fishbones-nav-rail__top {
+  position: relative;
+}
+
+/* Sliding active-indicator pill. Drawn as a single 40×40 rounded
+   square that animates its `transform: translateY` from one rail
+   button's offset to the next, so the highlight glides between
+   routes instead of snap-cutting. The buttons themselves only
+   invert their text colour (no per-button bg) — the pill is the
+   bg they appear to share.
+   `transform` over `top` because it composites on the GPU and
+   doesn't trigger layout. The cubic-bezier matches the easing the
+   editor / blocks-mode toggle and the route-fade animation use, so
+   the rail's motion language reads as part of the same family. */
+.fishbones-nav-rail__pill {
+  position: absolute;
+  top: 0;
+  /* `__top` is `align-items: center` on the rail, so it's only as
+     wide as its children (40px button width). The pill aligns with
+     the buttons by sitting at left: 0 within that 40px-wide column. */
+  left: 0;
+  width: 40px;
+  height: 40px;
+  background: var(--color-text-primary);
+  border-radius: var(--fb-radius-md);
+  pointer-events: none;
+  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 0;
+  /* GPU-promotion hint — the pill's transform updates ~1× per route
+     change, so will-change is cheap enough and eliminates a brief
+     pre-animation layout pass on first transition. */
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fishbones-nav-rail__pill {
+    transition: none;
+  }
+}
+
 .fishbones-nav-rail__item {
   width: 40px;
   height: 40px;
@@ -68,12 +111,17 @@
   border-radius: var(--fb-radius-md);
   color: var(--color-text-secondary);
   cursor: pointer;
-  /* Quick easing on hover/active. Color + bg only — no transform
-     transition (would interpolate any future motion-based
-     interaction). */
+  /* `position: relative` + `z-index: 1` lifts the button above the
+     sliding pill (`.fishbones-nav-rail__pill`, z-index: 0) so the
+     icon glyph paints on top of the pill's bone-white fill on the
+     active button. Color transition matches the pill's slide
+     duration so the icon inverts at roughly the same time the pill
+     arrives at the new position. */
+  position: relative;
+  z-index: 1;
   transition:
     background 120ms ease,
-    color 120ms ease;
+    color 220ms cubic-bezier(0.22, 1, 0.36, 1);
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -87,19 +135,20 @@
   box-shadow: 0 0 0 2px var(--color-text-primary);
 }
 
-/* Active-route highlight. Fills the icon button with the primary
-   text color (bone-white on dark theme) and inverts the icon to the
-   bg color so the active row reads as a "filled pill" — same
-   vocabulary the segmented Editor / Blocks toggle uses. */
+/* Active-route highlight. The bone-white fill is now drawn by the
+   sliding `.fishbones-nav-rail__pill` underneath; this rule only
+   inverts the icon colour to the bg-primary so it reads against the
+   pill. Background stays transparent so the pill (z-index: 0) shows
+   through the button's z-index: 1 layer. */
 .fishbones-nav-rail__item--active {
-  background: var(--color-text-primary);
+  background: transparent;
   color: var(--color-bg-primary);
 }
 
 .fishbones-nav-rail__item--active:hover {
-  background: var(--color-text-primary);
+  /* Suppress hover bg on the active item — the pill is its bg. */
+  background: transparent;
   color: var(--color-bg-primary);
-  filter: brightness(0.95);
 }
 
 /* The Base UI Tooltip wraps each rail button in a `.tooltip-trigger`
