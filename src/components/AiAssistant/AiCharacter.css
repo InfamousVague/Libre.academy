@@ -18,7 +18,7 @@
      floating control without dominating the corner. */
   width: 52px;
   height: 52px;
-  padding: 3px;
+  padding: 0;
   border: none;
   border-radius: 50%;
   cursor: pointer;
@@ -31,51 +31,35 @@
      looks 2D. ~80px keeps the depth subtle (the helix tilts a hint
      in 3D rather than reading as a full holographic effect). */
   perspective: 80px;
-  /* Per-mood palette knobs. The ring picks up a saturated tint
-     from the streak/level/longest-streak colour vocabulary the rest
-     of the app uses so the orb reads as part of the family — but
-     stays vibrant enough to be a colourful glow against any theme.
-     The streaming / celebrating / alert moods still pick their own
-     loud palettes since those are intentional state signals. */
-  --orb-c-left: #b056ff;
-  --orb-c-right: #ff7eb6;
-  --orb-glow: rgba(176, 86, 255, 0.55);
-  --orb-shift: 22s;
-  /* gradient hue-rotation period */
-  background:
-    linear-gradient(135deg, var(--orb-c-left) 0%, var(--orb-c-right) 100%);
+  /* Dark navy disc — the button IS the disc now. The previous
+     gradient ring + saturated glow halo were retired so the helix
+     stands on its own; backdrop is just dark enough that the
+     helix's white connecting bars + bright nodes pop, no rim of
+     swirling colour competing with them. */
+  background: radial-gradient(
+    ellipse 65% 55% at 50% 30%,
+    hsl(220, 45%, 18%) 0%,
+    hsl(220, 50%, 9%) 80%
+  );
   box-shadow:
-    /* Soft drop shadow grounds the button on the page. */
-    0 8px 18px -8px rgba(0, 0, 0, 0.4),
-    /* Saturated coloured glow — bigger spread, less black/white,
-       more hue. Two layers for depth: tight inner ring + larger
-       diffuse halo. */
-    0 0 12px -2px var(--orb-glow),
-    0 0 30px -2px var(--orb-glow);
+    /* Soft drop shadow grounds the button on the page. No coloured
+       glow layers — the helix is the only visual statement now. */
+    0 8px 18px -8px rgba(0, 0, 0, 0.45),
+    inset 1px 2px 0 rgba(255, 255, 255, 0.05),
+    inset -2px -3px 8px rgba(0, 0, 0, 0.45);
   transition:
     transform 0.18s ease-out,
     box-shadow 0.25s ease-out,
     filter 0.25s ease-out;
   will-change: transform;
-  /* Animated hue rotation on the gradient ring. Subtle on idle, faster
-     on streaming/celebrating (which adds a second animation on the
-     transform/box-shadow axes — they don't conflict because each
-     animation touches different properties). The hue-rotate filter
-     only affects the saturated ring; the inner white face is neutral
-     so the icon stays black. */
-  animation: fishbones-ai-hue var(--orb-shift) linear infinite;
 }
 
-/* Streaming = thinking. Stack a breathing scale + glow pulse on top
-   of the hue rotation so the button visibly works on a reply
-   instead of just spinning faster. Two animations on the same
-   element compose by multiplying transforms — `fishbones-ai-hue`
-   only touches the filter, this one only touches transform/box-
-   shadow, so they don't fight. */
+/* Streaming = thinking. Breathing scale + glow pulse so the button
+   visibly works on a reply. The DNA helix inside is already animated
+   (and accelerated via the `speed` prop in streaming mood); this
+   layered orb-level animation is the secondary signal. */
 .fishbones-ai-character--streaming {
-  animation:
-    fishbones-ai-hue var(--orb-shift) linear infinite,
-    fishbones-ai-thinking 1.4s ease-in-out infinite;
+  animation: fishbones-ai-thinking 1.4s ease-in-out infinite;
 }
 
 .fishbones-ai-character:hover {
@@ -84,8 +68,9 @@
      than drifting up. */
   transform: scale(1.08);
   box-shadow:
-    0 18px 30px -8px rgba(0, 0, 0, 0.5),
-    0 0 48px -6px var(--orb-glow);
+    0 18px 30px -8px rgba(0, 0, 0, 0.55),
+    inset 1px 2px 0 rgba(255, 255, 255, 0.06),
+    inset -2px -3px 8px rgba(0, 0, 0, 0.45);
 }
 
 .fishbones-ai-character:active {
@@ -97,134 +82,61 @@
      visually while the panel does the heavy lifting beside it. */
   transform: scale(0.94);
   box-shadow:
-    inset 0 2px 8px rgba(0, 0, 0, 0.18),
-    0 6px 14px -8px rgba(0, 0, 0, 0.45);
+    inset 0 2px 8px rgba(0, 0, 0, 0.32),
+    0 6px 14px -8px rgba(0, 0, 0, 0.5);
 }
 
 .fishbones-ai-character:focus-visible {
-  outline: 2px solid var(--orb-c-right);
+  outline: 2px solid hsl(220, 60%, 60%);
   outline-offset: 4px;
 }
 
-/* Inner face. Dark navy disc — flipped from the prior bright-white
-   face because the new DNA-helix glyph is designed for a dark
-   backdrop (the source CodePen sits on hsl(210 80% 12%)). The
-   saturated gradient halo around the rim now gets a calm centre to
-   contrast against, and the helix's white connecting bars + bright
-   nodes pop. Subtle inset highlight on top + a deeper shadow on the
-   bottom-right give the disc a soft 3D sphere read. */
-.fishbones-ai-character::before {
-  content: "";
-  position: absolute;
-  inset: 3px;
-  border-radius: 50%;
-  background:
-    radial-gradient(ellipse 65% 50% at 50% 30%,
-      hsl(220, 45%, 18%) 0%,
-      hsl(220, 50%, 9%) 80%);
-  box-shadow:
-    inset 1px 2px 0 rgba(255, 255, 255, 0.06),
-    inset -2px -3px 8px rgba(0, 0, 0, 0.45);
-  pointer-events: none;
-}
-
 /* DNA helix glyph wrapper. The component sizes itself in `em`, so
-   set `font-size` to drive the rendered size — 30px gives a 30px-
-   tall helix, 12px wide (2:5 aspect), which after the 30° rotation
-   fits cleanly inside the 46px inner face with breathing room.
-   z-index lifts it above the dark inner face. */
+   set `font-size` to drive the rendered size — 44px gives a 44px-
+   tall helix, ~17.6px wide (2:5 aspect), which after the 30°
+   rotation occupies a ~47px-tall × ~37px-wide bounding box that
+   fits the 52px button comfortably. Now that the gradient ring +
+   inner face are gone, the helix can claim the full button and
+   doesn't need to share rim with anything. */
 .fishbones-ai-character-icon {
   position: relative;
   z-index: 2;
-  font-size: 30px;
+  font-size: 44px;
   filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.4));
 }
 
 
-/* ---- Mood palettes --------------------------------------------- */
-
-/* Idle — saturated violet→pink halo. Same colour vocabulary as
-   the original cyan→violet but pushed warmer so it complements the
-   streak/level chrome elsewhere in the app. Slow hue rotation
-   keeps the orb gently alive. */
-.fishbones-ai-character--idle {
-  --orb-c-left: #b056ff;
-  --orb-c-right: #ff7eb6;
-  --orb-glow: rgba(176, 86, 255, 0.55);
-  --orb-shift: 22s;
-}
-
-/* Streaming / "thinking" — push to a brighter, faster cycle so the
-   orb visibly leans in while a reply streams. */
-.fishbones-ai-character--streaming {
-  --orb-c-left: #6dd6ff;
-  --orb-c-right: #c46aff;
-  --orb-glow: rgba(180, 90, 255, 0.7);
-  --orb-shift: 5s;
-}
-
-/* Celebrating — warm gold→pink, fastest cycle, brightest glow.
-   Held for a few seconds after a lesson passes (the parent
-   AiAssistant manages timing). */
-.fishbones-ai-character--celebrating {
-  --orb-c-left: #ffe18a;
-  --orb-c-right: #ff7eb6;
-  --orb-glow: rgba(255, 178, 132, 0.75);
-  --orb-shift: 3s;
-}
-
-/* Alert — pure red→deep red, no hue rotation. The lack of motion
-   plus the saturated palette is the entire signal now that the
-   indicator dot is gone — reads as "the orb is locked in a problem
-   state" rather than a mood. */
-.fishbones-ai-character--alert {
-  --orb-c-left: #ff7474;
-  --orb-c-right: #b81e1e;
-  --orb-glow: rgba(255, 92, 92, 0.7);
-  /* Effectively pause the hue cycle so the red-amber range never
-     wanders into territory that looks like the celebrating palette. */
-  --orb-shift: 999s;
-}
-
 /* ---- Keyframes ------------------------------------------------- */
-
-@keyframes fishbones-ai-hue {
-
-  /* Subtle hue rotation on the gradient ring. The inner white face
-     is unaffected so the icon contrast stays constant. */
-  0% {
-    filter: hue-rotate(0deg);
-  }
-
-  100% {
-    filter: hue-rotate(360deg);
-  }
-}
 
 @keyframes fishbones-ai-thinking {
 
-  /* Breathing pulse: the orb gently scales + the glow swells with
-     each beat so it reads as an active, living "thinking" state.
-     Smaller scale range (1 → 1.06) than hover so it doesn't feel
-     like the user is hovering in a loop. */
+  /* Breathing pulse: the orb gently scales while a reply streams,
+     so the button visibly leans in. Compounds with the helix's
+     `speed` prop (which the AiCharacter cranks to 1.2s during
+     streaming) to multiply the "I am working" signal. Smaller scale
+     range (1 → 1.06) than hover so it doesn't feel like the user is
+     hovering in a loop. */
   0%,
   100% {
     transform: scale(1);
     box-shadow:
       0 14px 24px -10px rgba(0, 0, 0, 0.45),
-      0 0 36px -8px var(--orb-glow);
+      inset 1px 2px 0 rgba(255, 255, 255, 0.05),
+      inset -2px -3px 8px rgba(0, 0, 0, 0.45);
   }
 
   50% {
     transform: scale(1.06);
     box-shadow:
       0 16px 28px -10px rgba(0, 0, 0, 0.5),
-      0 0 56px -4px var(--orb-glow);
+      inset 1px 2px 0 rgba(255, 255, 255, 0.06),
+      inset -2px -3px 8px rgba(0, 0, 0, 0.4);
   }
 }
 
-/* Reduced motion — kill the hue rotation. The static gradient still
-   looks intentional, just without movement. */
+/* Reduced motion — kill all orb-level animations. The DnaHelix has
+   its own reduced-motion handler that flattens the helix to a
+   static colourful pattern. */
 @media (prefers-reduced-motion: reduce) {
   .fishbones-ai-character {
     animation: none !important;
