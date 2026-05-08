@@ -20,9 +20,7 @@ import LessonPopover, { type PopoverContent } from "./LessonPopover";
 import InlineSandbox from "./InlineSandbox";
 import TTSButton from "./TTSButton";
 import { estimateReadingMinutes } from "./readingTime";
-import { stopLessonAudio } from "../../hooks/useLessonAudio";
-import { stopFallbackNarration } from "../../hooks/useLessonAudioFallback";
-import { useLessonNarration } from "../../hooks/useLessonNarration";
+import { stopLessonAudio, useLessonAudio } from "../../hooks/useLessonAudio";
 import { useLessonReadCursor } from "../../hooks/useLessonReadCursor";
 import DeviceAction from "../Ledger/DeviceAction";
 import LedgerStatusPill from "../Ledger/LedgerStatusPill";
@@ -144,13 +142,13 @@ export default function LessonReader({
   // app on lesson entry due to interaction with React-mounted
   // descendants (InlineSandbox, popover wiring, "Ask Fishbones"
   // badges) that mutate the article's subtree.
-  // Drive the cursor off whichever narration source is actually
-  // playing — ElevenLabs CDN if the manifest covers this lesson,
-  // Web Speech API on the lesson body otherwise. Without this
-  // unified read, the cursor would freeze at progress=0 whenever
-  // the fallback is active (the narration plays, but no highlight
-  // follows along).
-  const audio = useLessonNarration(lesson.id, lesson.body);
+  // Drive the cursor off the ElevenLabs CDN narration's progress.
+  // No on-device TTS fallback — lessons without a manifest entry
+  // simply render the static "X min read" chip and the cursor stays
+  // put. Adding a Web Speech / Siri fallback is what gave the
+  // listener Siri's voice when CDN audio didn't load; we want the
+  // CDN voice or nothing.
+  const audio = useLessonAudio(lesson.id);
   const audioProgress = audio.available ? audio.progress : 0;
   const audioPlaying = audio.available ? audio.isPlaying : false;
   // Article + scroll refs are state-backed so the cursor hook
@@ -473,14 +471,10 @@ export default function LessonReader({
   // Stop the singleton TTS player when the user navigates to a
   // different lesson or unmounts the reader entirely. Without this
   // the narration of the previous lesson keeps playing while the
-  // new one's prose is on screen — disorienting. Both narration
-  // sources (ElevenLabs CDN audio + Web Speech API fallback) own
-  // independent singletons, so we tear down both unconditionally —
-  // the unused one no-ops cleanly.
+  // new one's prose is on screen — disorienting.
   useEffect(() => {
     return () => {
       stopLessonAudio();
-      stopFallbackNarration();
     };
   }, [lesson.id]);
 
@@ -582,7 +576,6 @@ export default function LessonReader({
                     ? minutesRemaining
                     : 0
               }
-              fallbackText={lesson.body}
             />
             {/* Hardware-wallet chip — only mounts when the parent
                 course is flagged `requiresDevice`. Sits inline with

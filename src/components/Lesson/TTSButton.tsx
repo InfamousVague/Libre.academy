@@ -29,7 +29,6 @@ import { pause as pauseIcon } from "@base/primitives/icon/icons/pause";
 import { loader } from "@base/primitives/icon/icons/loader";
 import { clock as clockIcon } from "@base/primitives/icon/icons/clock";
 import { useLessonAudio } from "../../hooks/useLessonAudio";
-import { useLessonAudioFallback } from "../../hooks/useLessonAudioFallback";
 import "./TTSButton.css";
 
 interface Props {
@@ -39,13 +38,6 @@ interface Props {
   /// before audio metadata has loaded so the user has a sense of
   /// duration immediately.
   estimatedReadMinutes?: number;
-  /// Lesson body markdown — fed into the Web Speech API fallback
-  /// when no ElevenLabs MP3 exists for this lesson. Optional for
-  /// backwards compat (callers that haven't been updated still get
-  /// the static "X min read" chip when ElevenLabs is missing), but
-  /// supplying it gives the listener a working speaker icon backed
-  /// by the platform's built-in voices.
-  fallbackText?: string;
   /// Optional className passthrough for parent-scoped styling.
   className?: string;
 }
@@ -63,23 +55,15 @@ function fmtTime(sec: number | null): string {
 export default function TTSButton({
   lessonId,
   estimatedReadMinutes,
-  fallbackText,
   className,
 }: Props) {
-  // Two narration sources, evaluated in priority order:
-  //
-  //   1. ElevenLabs MP3 via the CDN manifest — the high-quality path.
-  //      Uses an HTMLAudioElement, exact duration, real seek, IndexedDB
-  //      caching, the works.
-  //   2. Web Speech API on the lesson body — a free in-browser
-  //      fallback for lessons not in the manifest (which, post-VPS
-  //      audio-dir-wipe, is currently every lesson). Lower fidelity
-  //      but Apple's Siri-quality voices read it surprisingly well,
-  //      and the consumer of this component doesn't need to care
-  //      which path is in use — both expose the same interface.
-  const cdn = useLessonAudio(lessonId);
-  const fallback = useLessonAudioFallback(lessonId, fallbackText);
-  const audio = cdn.available ? cdn : fallback;
+  // Single narration source: the ElevenLabs MP3s served from the
+  // CDN, looked up via `${TTS_CDN_BASE}/manifest.json`. Lessons not
+  // in the manifest render the static "X min read" chip below — we
+  // intentionally don't fall back to the Web Speech API, because the
+  // platform voices (Siri on Apple, system voices elsewhere) read as
+  // a regression next to the uploaded ElevenLabs voice.
+  const audio = useLessonAudio(lessonId);
 
   // No narration source available AND no reading-time hint — render
   // nothing. With reading-time, a static chip stands in so the meta

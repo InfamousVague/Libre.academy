@@ -8,9 +8,7 @@ import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { renderMarkdown } from "../components/Lesson/markdown";
 import TTSButton from "../components/Lesson/TTSButton";
 import { estimateReadingMinutes } from "../components/Lesson/readingTime";
-import { stopLessonAudio } from "../hooks/useLessonAudio";
-import { stopFallbackNarration } from "../hooks/useLessonAudioFallback";
-import { useLessonNarration } from "../hooks/useLessonNarration";
+import { stopLessonAudio, useLessonAudio } from "../hooks/useLessonAudio";
 import { useLessonReadCursor } from "../hooks/useLessonReadCursor";
 import "./MobileReader.css";
 
@@ -42,12 +40,13 @@ export default function MobileReader({ body, lessonId }: Props) {
   // viewport-checked auto-scroll, all keyed off the rendered `html`
   // string (no MutationObserver — see useLessonReadCursor for why).
   const [articleEl, setArticleEl] = useState<HTMLElement | null>(null);
-  // Drive the cursor off whichever narration source is actually
-  // playing (ElevenLabs CDN when the manifest covers it, Web Speech
-  // API on the body otherwise). Without the unified read, the
-  // cursor would freeze at progress=0 whenever the fallback is
-  // active.
-  const audio = useLessonNarration(lessonId, body);
+  // Drive the cursor off the ElevenLabs CDN narration's progress.
+  // Lessons not covered by the manifest get the static read-time
+  // chip — no on-device TTS fallback. (Earlier we had a Web Speech
+  // / Siri fallback that filled the gap, but it produced the
+  // platform's stock voice instead of the uploaded ElevenLabs
+  // voice, which read as a regression.)
+  const audio = useLessonAudio(lessonId);
   const audioProgress = audio.available ? audio.progress : 0;
   const audioPlaying = audio.available ? audio.isPlaying : false;
   useLessonReadCursor({
@@ -85,14 +84,10 @@ export default function MobileReader({ body, lessonId }: Props) {
 
   // Stop the singleton TTS player when this reader unmounts (the
   // user navigated away from the lesson). Without it the narration
-  // keeps playing in the background after a lesson change. Tear
-  // down BOTH narration paths — ElevenLabs CDN audio and the Web
-  // Speech API fallback — since either could be the active source
-  // for this lesson.
+  // keeps playing in the background after a lesson change.
   useEffect(() => {
     return () => {
       stopLessonAudio();
-      stopFallbackNarration();
     };
   }, [lessonId]);
 
@@ -131,7 +126,6 @@ export default function MobileReader({ body, lessonId }: Props) {
           <TTSButton
             lessonId={lessonId}
             estimatedReadMinutes={readingMinutes}
-            fallbackText={body}
           />
         </div>
       )}
