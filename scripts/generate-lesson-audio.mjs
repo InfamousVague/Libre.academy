@@ -58,7 +58,7 @@ if (existsSync(ENV_FILE)) {
 }
 
 const API_KEY = process.env.ELEVEN_API_KEY;
-const VOICE_NAME = process.env.ELEVEN_VOICE_NAME || "Verity";
+const VOICE_NAME = process.env.ELEVEN_VOICE_NAME || "Mark";
 // Default to multilingual_v2 (the highest-quality model). Overridable
 // via env (`ELEVEN_MODEL=eleven_turbo_v2_5`) or via the `--turbo` flag
 // further down for ad-hoc cost-conscious runs. Turbo charges roughly
