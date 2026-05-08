@@ -88,8 +88,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
 }
 
@@ -97,8 +97,8 @@
   /* CSS-set width/height intentionally overrides the SVG element's
      `width="32" height="32"` attributes so we can shrink the ring
      without changing the JSX RADIUS / viewBox math. */
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   /* Rotate so the arc grows from 12 o'clock clockwise. SVG default
      starts at 3 o'clock; -90° rotation snaps it to the top. */
   transform: rotate(-90deg);
@@ -131,17 +131,17 @@
   pointer-events: none;
 }
 
-/* Hard-clamp the inner glyph below the ring's ~13px inner diameter.
-   `size="xs"` from the @base Icon resolves to 11px (--text-xs-size),
-   which sits proud of the 13px ring and reads as a play triangle that
-   "overflows" the ring even though it's geometrically inside it.
-   9px gives the glyph clear breathing room and makes the ring
-   visually dominant — it's the progress affordance, the icon is
-   just a state label. Forced via !important because @base's
-   `.icon--xs` rule sets width/height with the same specificity. */
+/* Hard-clamp the inner glyph well inside the ring. The ring renders
+   at ~16px diameter (20px viewBox × r=13/16 of half-width), so a
+   10px glyph sits at ~62% of the ring's inner diameter — enough
+   that the ring reads as "containing" the glyph rather than "barely
+   bigger than" it. The ring is the progress affordance and should
+   visually dominate; the glyph is just a play/pause/loader state
+   label. Forced via !important because @base's `.icon--xs` rule
+   sets width/height with the same selector specificity. */
 .fb-tts-pill__icon svg {
-  width: 9px !important;
-  height: 9px !important;
+  width: 10px !important;
+  height: 10px !important;
 }
 
 /* Loader spin while the MP3 is fetching from the CDN on first play. */
