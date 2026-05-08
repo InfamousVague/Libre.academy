@@ -1,6 +1,28 @@
 /* Pull in base kit design tokens (colors, radius, typography). */
 @import "@mattmattmattmatt/base/site/styles/tokens.css";
 
+/* Global icon-size bump. The `@base/primitives/icon` library sizes
+   icons via CSS custom properties keyed off `--text-*-size`, which
+   produces 12 / 14 / 16 / 18 / 20 / 24 px for xs / sm / base / lg /
+   xl / 2xl. The defaults read small inside Fishbones' typography
+   (which leans heavier than the base library's stock sample apps),
+   so we layer a +6px bump on top of every tier. Using `calc(... +
+   6px)` rather than overriding the underlying `--text-*-size`
+   tokens keeps text scale unaffected — only the .icon utility's
+   `width`/`height` change. Specificity matches the base library's
+   own `.icon--<size>` rule; later in cascade order so this wins.
+
+   Net visual: chrome icons (xs/sm) jump ~40-50% bigger, larger
+   tiers a smaller relative amount. This dials in clearer than the
+   prior +2px / +4px attempts; revert to library defaults by
+   dropping these rules. */
+.icon--xs   { width: calc(var(--text-xs-size)   + 6px); height: calc(var(--text-xs-size)   + 6px); }
+.icon--sm   { width: calc(var(--text-sm-size)   + 6px); height: calc(var(--text-sm-size)   + 6px); }
+.icon--base { width: calc(var(--text-base-size) + 6px); height: calc(var(--text-base-size) + 6px); }
+.icon--lg   { width: calc(var(--text-lg-size)   + 6px); height: calc(var(--text-lg-size)   + 6px); }
+.icon--xl   { width: calc(var(--text-xl-size)   + 6px); height: calc(var(--text-xl-size)   + 6px); }
+.icon--2xl  { width: calc(var(--text-2xl-size)  + 6px); height: calc(var(--text-2xl-size)  + 6px); }
+
 /* ─────────────────────────────────────────────────────────────────
  * Fishbones-specific design tokens.
  *

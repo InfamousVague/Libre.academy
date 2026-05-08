@@ -587,6 +587,127 @@
   font-weight: 500;
 }
 
+/* ---- Streak shield panel ----------------------------------------- */
+/* Pale-blue panel sitting between the next-milestone teaser and the
+   View-profile CTA. Surfaces the per-week shield budget as a row of
+   pip dots (filled = used, hollow = available) and pops a "Freeze
+   yesterday" button when the streak is on the brink. The colour is
+   intentionally distinct from the next-milestone strip's gold so the
+   two panels read as two different affordances at a glance. */
+
+.fishbones__topbar-stats-freeze {
+  margin-top: 10px;
+  padding: 9px 12px 10px;
+  background: linear-gradient(90deg, rgba(127, 200, 255, 0.08), transparent 90%);
+  border: 1px solid rgba(127, 200, 255, 0.22);
+  border-radius: var(--fb-radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fishbones__topbar-stats-freeze-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fishbones__topbar-stats-freeze-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  line-height: 1;
+}
+
+.fishbones__topbar-stats-freeze-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(127, 200, 255, 0.95);
+  flex: 1;
+}
+
+.fishbones__topbar-stats-freeze-count {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.fishbones__topbar-stats-freeze-pips {
+  display: flex;
+  gap: 5px;
+}
+
+.fishbones__topbar-stats-freeze-pip {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1.5px solid rgba(127, 200, 255, 0.55);
+  transition: background var(--fb-motion-snappy);
+}
+
+.fishbones__topbar-stats-freeze-pip--used {
+  background: rgba(127, 200, 255, 0.55);
+  border-color: rgba(127, 200, 255, 0.55);
+}
+
+.fishbones__topbar-stats-freeze-hint {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--color-text-secondary);
+}
+
+/* Full-width CTA — uses the same primary-fill treatment as View
+   profile but tinted toward the freeze blue so it doesn't compete
+   with the bottom button. Only shown when the streak is in danger
+   AND a shield is available. */
+.fishbones__topbar-stats-freeze-btn {
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 7px 12px;
+  background: rgba(127, 200, 255, 0.18);
+  color: #cfe6ff;
+  border: 1px solid rgba(127, 200, 255, 0.55);
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy);
+}
+
+.fishbones__topbar-stats-freeze-btn:hover {
+  background: rgba(127, 200, 255, 0.3);
+  color: #ffffff;
+}
+
+/* Snowflake indicator that rides next to the streak count in the
+   collapsed chip when the current run includes at least one
+   shield-frozen day. Inherits its colour through `currentColor`
+   inside the trigger button so it picks up the chip's foreground. */
+.fishbones__topbar-streak-frozen {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 11px;
+  height: 11px;
+  margin-left: 1px;
+  color: #7fc8ff;
+  line-height: 1;
+}
+
 /* Full-width "View profile" CTA pinned to the bottom of the dropdown.
    Uses the primary-fill treatment (inverted) so it reads as the
    natural next action rather than another stat chip. */
@@ -826,5 +947,150 @@
 
 .fishbones__tab-close:hover {
   opacity: 1;
+}
+
+/* ── Tab groups ──────────────────────────────────────────────────
+   Tabs sharing a `groupId` render a 2px coloured underline + a
+   subtle tinted background so the eye can identify the run at a
+   glance. The colour comes from the inline `--fb-tab-group-color`
+   custom property set in TopBar.tsx, which references one of the
+   palette tokens defined below. Run leaders (the leftmost tab in
+   each contiguous group run) also render a small group-name badge
+   prefix so the learner sees what the group is called. */
+
+.fishbones__tab--grouped {
+  /* Soft tint behind the tab using the group's colour at 8% alpha.
+     Mixed against the existing `.fishbones__tab` background so an
+     active tab still reads as active (its base bg is bg-secondary,
+     which dominates over the 8% tint). */
+  background: color-mix(in srgb, var(--fb-tab-group-color, transparent) 8%, transparent);
+  /* The 2px coloured underline sits on the bottom edge of the tab.
+     Box-shadow rather than border so we don't disturb the tab's
+     vertical alignment with neighbouring ungrouped tabs. */
+  box-shadow: inset 0 -2px 0 0 var(--fb-tab-group-color, transparent);
+}
+
+.fishbones__tab--grouped:hover {
+  background: color-mix(in srgb, var(--fb-tab-group-color, transparent) 14%, transparent);
+}
+
+.fishbones__tab--grouped.fishbones__tab--active {
+  /* Active grouped tab — keep the active treatment but bump the
+     underline opacity so the group affiliation still shows. */
+  background: var(--color-bg-secondary);
+  border-color: color-mix(in srgb, var(--fb-tab-group-color, transparent) 60%, var(--color-border-default));
+  box-shadow: inset 0 -2px 0 0 var(--fb-tab-group-color, transparent);
+}
+
+.fishbones__tab-group-badge {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 1px 6px;
+  margin-right: 4px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--color-bg-primary);
+  background: var(--fb-tab-group-color, var(--color-text-primary));
+  /* Cap the badge width so a long group name doesn't push the
+     tab's title off the strip. Truncation via ellipsis. */
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Group colour palette. Each token is a 5-stop saturation curve
+   tuned to read distinctly on both the dark + light themes. The
+   right-click "Add to group" menu's swatches and grouped-tab
+   underlines both consume these via `--fb-tab-group-color-<token>`.
+   Adding a new colour: append a token here AND its palette name
+   to `TAB_GROUP_PALETTE` in App.tsx. */
+:root {
+  --fb-tab-group-color-gold: #d6b969;
+  --fb-tab-group-color-coral: #e08a78;
+  --fb-tab-group-color-mint: #78c896;
+  --fb-tab-group-color-sky: #7aa6d6;
+  --fb-tab-group-color-lavender: #b08fd0;
+}
+
+/* ── Tab right-click menu ────────────────────────────────────────
+   Portal'd into document.body so the topbar's overflow / z-index
+   constraints don't clip us. Same vocabulary as the AddCourseButton
+   dropdown + sidebar context menu so menus across the app feel
+   like one family. */
+
+.fishbones__tab-menu {
+  position: fixed;
+  z-index: 100;
+  min-width: 220px;
+  max-width: 280px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--fb-radius-md);
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.45),
+    0 2px 6px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  font-size: 12px;
+}
+
+.fishbones__tab-menu-label {
+  padding: 4px 10px 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-tertiary);
+  /* Truncate long course titles so the menu doesn't grow unbounded. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fishbones__tab-menu-section {
+  padding: 6px 10px 2px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-tertiary);
+}
+
+.fishbones__tab-menu-sep {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--color-border-default);
+}
+
+.fishbones__tab-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--fb-radius-sm);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font-size: 12px;
+  text-align: left;
+  font-family: inherit;
+}
+
+.fishbones__tab-menu-item:hover {
+  background: var(--color-bg-tertiary);
+}
+
+.fishbones__tab-menu-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 

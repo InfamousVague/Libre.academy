@@ -2,12 +2,9 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "@base/primitives/icon";
 import { libraryBig } from "@base/primitives/icon/icons/library-big";
-import { compass as compassIcon } from "@base/primitives/icon/icons/compass";
-import { trees as treesIcon } from "@base/primitives/icon/icons/trees";
 import { settings as settingsIcon } from "@base/primitives/icon/icons/settings";
 import { download as downloadIcon } from "@base/primitives/icon/icons/download";
 import { x as xIcon } from "@base/primitives/icon/icons/x";
-import { terminal as terminalIcon } from "@base/primitives/icon/icons/terminal";
 import { swords } from "@base/primitives/icon/icons/swords";
 import { rotateCcw } from "@base/primitives/icon/icons/rotate-ccw";
 import "@base/primitives/icon/icon.css";
@@ -17,37 +14,6 @@ import { languageLabel } from "./labels";
 import CourseGroup from "./CourseGroup";
 import CourseCarousel from "./CourseCarousel";
 import "./Sidebar.css";
-
-/// Vertical nav-list row at the top of the sidebar. Icon + label, full
-/// width. `active` controls the highlighted pill state for persistent
-/// destinations (Library, Discover, Trees, Playground) so the learner
-/// always knows which main-pane route they're on. Moved here from
-/// `DocsSidebarNav.tsx` after the in-app docs section was retired —
-/// Sidebar is now the only consumer.
-function SidebarNavItem({
-  icon,
-  label,
-  onClick,
-  active,
-}: {
-  icon: string;
-  label: string;
-  onClick: () => void;
-  active?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      className={`fishbones__sidebar-nav-item ${active ? "fishbones__sidebar-nav-item--active" : ""}`}
-      onClick={onClick}
-    >
-      <span className="fishbones__sidebar-nav-icon" aria-hidden>
-        <Icon icon={icon} size="sm" color="currentColor" />
-      </span>
-      <span className="fishbones__sidebar-nav-label">{label}</span>
-    </button>
-  );
-}
 
 interface Props {
   courses: Course[];
@@ -65,33 +31,12 @@ interface Props {
   /// through. Separate from onSelectLesson so the carousel's click
   /// behavior is explicit rather than guessing a lesson id here.
   onSelectCourse?: (courseId: string) => void;
-  /// Opens the course library modal.
+  /// Opens the course library modal. Used by the empty-state CTA
+  /// inside the course tree ("Open Library" button shown when the
+  /// user has zero courses installed). Primary nav routes
+  /// (Library / Discover / Trees / Playground / Settings) live in
+  /// `NavigationRail` now; this prop is the in-tree affordance only.
   onLibrary: () => void;
-  /// Discover route — browse catalog books + challenge packs not
-  /// yet in the user's library. Distinct from `onLibrary` so the
-  /// installed shelf and the available-to-install shelf don't
-  /// share a surface. Optional — embeddings without a discover
-  /// view just don't render the entry.
-  onDiscover?: () => void;
-  onSettings: () => void;
-  /// Trees route — skill-tree explorer. Optional so embeddings
-  /// without a trees pane (popped workbench, mobile) don't grow a
-  /// dead chip.
-  onTrees?: () => void;
-  /// Playground route — free-form coding sandbox, jsfiddle-style.
-  onPlayground?: () => void;
-  /// Which main-pane destination is currently showing. Used ONLY to draw
-  /// an active state on the matching icon chip; clicking a chip calls
-  /// its callback and lets the parent manage the state transition.
-  /// "profile" stays a valid destination even though it's no longer in
-  /// the sidebar — the top-bar streak pill's "View profile" CTA sets it.
-  activeView?:
-    | "courses"
-    | "profile"
-    | "playground"
-    | "library"
-    | "discover"
-    | "trees";
   onExportCourse?: (courseId: string, courseTitle: string) => void;
   onDeleteCourse?: (courseId: string, courseTitle: string) => void;
   onCourseSettings?: (courseId: string) => void;
@@ -119,11 +64,6 @@ export default function Sidebar({
   onSelectLesson,
   onSelectCourse,
   onLibrary,
-  onDiscover,
-  onTrees,
-  onSettings,
-  onPlayground,
-  activeView = "courses",
   onExportCourse,
   onDeleteCourse,
   onCourseSettings,
@@ -230,48 +170,10 @@ export default function Sidebar({
         />
       )}
 
-      {/* Primary nav sits BELOW the carousel. Rationale: the carousel
-          is the frequent-action (switch course); the nav is the
-          occasional-action (import, settings, playground). Putting the
-          frequent one first matches how the learner actually uses the
-          sidebar. */}
-      <div className="fishbones__sidebar-nav">
-        <SidebarNavItem
-          icon={libraryBig}
-          label="Library"
-          onClick={onLibrary}
-          active={activeView === "library"}
-        />
-        {onDiscover && (
-          <SidebarNavItem
-            icon={compassIcon}
-            label="Discover"
-            onClick={onDiscover}
-            active={activeView === "discover"}
-          />
-        )}
-        {onTrees && (
-          <SidebarNavItem
-            icon={treesIcon}
-            label="Trees"
-            onClick={onTrees}
-            active={activeView === "trees"}
-          />
-        )}
-        {onPlayground && (
-          <SidebarNavItem
-            icon={terminalIcon}
-            label="Playground"
-            onClick={onPlayground}
-            active={activeView === "playground"}
-          />
-        )}
-        <SidebarNavItem
-          icon={settingsIcon}
-          label="Settings"
-          onClick={onSettings}
-        />
-      </div>
+      {/* Library / Discover / Trees / Playground / Settings live in
+          the navigation rail to the LEFT of this sidebar — see
+          components/NavigationRail/NavigationRail.tsx. The sidebar's
+          job here is the course tree + carousel only. */}
 
       <nav className="fishbones__nav">
         {(() => {

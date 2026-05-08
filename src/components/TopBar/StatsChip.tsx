@@ -4,9 +4,14 @@ import { flame } from "@base/primitives/icon/icons/flame";
 import { check } from "@base/primitives/icon/icons/check";
 import { sparkles } from "@base/primitives/icon/icons/sparkles";
 import { trophy } from "@base/primitives/icon/icons/trophy";
+import { snowflake } from "@base/primitives/icon/icons/snowflake";
 import "@base/primitives/icon/icon.css";
 import type { StreakAndXp } from "../../hooks/useStreakAndXp";
 import type { Completion } from "../../hooks/useProgress";
+import {
+  localDayKey,
+  type StreakShieldsState,
+} from "../../hooks/useStreakShields";
 import { ProgressRing } from "../Shared/ProgressRing";
 
 /// Semantic color tokens for the stats chips. Each row's uppercase label
@@ -18,6 +23,7 @@ const STAT_COLORS = {
   lessons: "#7cd97c",  // success green
   xp: "#e8c46b",       // warm gold
   longest: "#c79bff",  // soft purple — personal-record accent
+  freeze: "#7fc8ff",   // pale blue — ice / streak shield
 } as const;
 
 /// Combined streak + level chip with a dropdown detail panel. Chip shows
@@ -27,6 +33,7 @@ const STAT_COLORS = {
 export default function StatsChip({
   stats,
   history,
+  shields,
   onOpenProfile,
   signedIn,
   userDisplayName,
@@ -36,6 +43,12 @@ export default function StatsChip({
 }: {
   stats: StreakAndXp;
   history?: Completion[];
+  /// Streak-shield state. When wired, the dropdown renders a small
+  /// "freezes" panel showing how many shields remain this week + a
+  /// "Freeze yesterday" button that surfaces only when the streak is
+  /// in jeopardy (no completion yesterday + the day isn't already
+  /// frozen). Omit on embeds that don't ship the shield hook.
+  shields?: StreakShieldsState;
   onOpenProfile?: () => void;
   signedIn?: boolean;
   userDisplayName?: string | null;
@@ -68,6 +81,64 @@ export default function StatsChip({
     stats.xpForLevel > 0 ? stats.xpIntoLevel / stats.xpForLevel : 0;
   const streakActive = stats.streakDays >= 1;
   const xpToNext = Math.max(0, stats.xpForLevel - stats.xpIntoLevel);
+
+  /// Freeze-affordance state. The "Freeze yesterday" CTA shows only when:
+  ///   - shields are wired,
+  ///   - the learner has at least one shield available this week,
+  ///   - they had a completion today OR yesterday already (no point
+  ///     freezing into the void — without an adjacent real day there's
+  ///     no streak to preserve),
+  ///   - yesterday has no real completion (otherwise the freeze is a
+  ///     no-op — the streak is already alive),
+  ///   - and yesterday isn't already frozen.
+  ///
+  /// The 1-day grace baked into `computeStreaks` means a streak survives
+  /// one missed day on its own. The shield only becomes useful when the
+  /// learner is about to run out of grace — i.e. they're staring at the
+  /// app TODAY without having practiced YESTERDAY and don't want to
+  /// scramble a lesson in to keep the run alive.
+  const yesterdayKey = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return localDayKey(d);
+  }, []);
+  const todayKey = useMemo(() => localDayKey(new Date()), []);
+  const yesterdayHasCompletion = useMemo(() => {
+    if (!history || history.length === 0) return false;
+    for (const c of history) {
+      const d = new Date(c.completed_at * 1000);
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      if (`${d.getFullYear()}-${m}-${day}` === yesterdayKey) return true;
+    }
+    return false;
+  }, [history, yesterdayKey]);
+  const todayHasCompletion = useMemo(() => {
+    if (!history || history.length === 0) return false;
+    for (const c of history) {
+      const d = new Date(c.completed_at * 1000);
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      if (`${d.getFullYear()}-${m}-${day}` === todayKey) return true;
+    }
+    return false;
+  }, [history, todayKey]);
+  const yesterdayFrozen = !!shields?.frozenDays.has(yesterdayKey);
+  const canFreezeYesterday =
+    !!shields &&
+    shields.available > 0 &&
+    streakActive &&
+    !yesterdayHasCompletion &&
+    !yesterdayFrozen &&
+    // Only worth offering when yesterday is actually adjacent to a real
+    // active day — either today already has a completion, or the streak
+    // engine is currently surviving on yesterday-grace alone (which we
+    // detect by streakActive + no-completion-today: the run is hanging
+    // on by its fingernails and a freeze locks it in).
+    (todayHasCompletion || stats.streakDays >= 1);
+  const usedShields =
+    shields ? shields.perWeek - shields.available : 0;
+  const frozenDayCount = shields?.frozenDays.size ?? 0;
 
   /// 4-week mini heatmap. Calendar-aligned: each column = one Sun–Sat
   /// week, so rows correspond to stable weekdays. Future days in the
@@ -177,6 +248,18 @@ export default function StatsChip({
             <Icon icon={flame} size="xs" color="currentColor" weight="bold" />
           </span>
           <span className="fishbones__topbar-streak-count">{stats.streakDays}</span>
+          {/* Tiny snowflake when at least one day in the current run was
+              shield-frozen — surfaces the protected state at a glance
+              without forcing the learner to open the dropdown. */}
+          {frozenDayCount > 0 && (
+            <span
+              className="fishbones__topbar-streak-frozen"
+              aria-label={`${frozenDayCount} day${frozenDayCount === 1 ? "" : "s"} frozen`}
+              title={`${frozenDayCount} day${frozenDayCount === 1 ? "" : "s"} frozen`}
+            >
+              <Icon icon={snowflake} size="xs" color="currentColor" weight="bold" />
+            </span>
+          )}
         </span>
         <ProgressRing
           progress={levelProgress}
@@ -352,6 +435,71 @@ export default function StatsChip({
                   {nextMilestone.unit}
                 </span>
               </span>
+            </div>
+          )}
+
+          {/* Streak shield panel. Only renders when `shields` is wired
+              (the desktop / iOS hook). Shows the per-week budget as a
+              row of pip dots — filled = used, hollow = available — plus
+              a CTA to freeze yesterday when the streak is on the brink.
+              Position chosen so it sits adjacent to the streak stat
+              block above it without competing with the View-profile
+              CTA below. */}
+          {shields && (
+            <div
+              className="fishbones__topbar-stats-freeze"
+              aria-label="Streak shields"
+            >
+              <div className="fishbones__topbar-stats-freeze-head">
+                <span
+                  className="fishbones__topbar-stats-freeze-icon"
+                  style={{ color: STAT_COLORS.freeze }}
+                  aria-hidden
+                >
+                  <Icon icon={snowflake} size="xs" color="currentColor" weight="bold" />
+                </span>
+                <span className="fishbones__topbar-stats-freeze-label">
+                  Streak shields
+                </span>
+                <span className="fishbones__topbar-stats-freeze-count">
+                  {shields.available} of {shields.perWeek}
+                </span>
+              </div>
+              <div className="fishbones__topbar-stats-freeze-pips" aria-hidden>
+                {Array.from({ length: shields.perWeek }).map((_, i) => (
+                  <span
+                    key={i}
+                    className={`fishbones__topbar-stats-freeze-pip ${
+                      i < usedShields
+                        ? "fishbones__topbar-stats-freeze-pip--used"
+                        : ""
+                    }`}
+                  />
+                ))}
+              </div>
+              <div className="fishbones__topbar-stats-freeze-hint">
+                {canFreezeYesterday
+                  ? "You missed yesterday — freeze it to keep your streak."
+                  : yesterdayFrozen
+                  ? "Yesterday is frozen. Run is safe."
+                  : shields.available === 0
+                  ? "No shields left this week. They refill Monday."
+                  : todayHasCompletion
+                  ? "Streak active. Shields refill every Monday."
+                  : "Refills every Monday."}
+              </div>
+              {canFreezeYesterday && (
+                <button
+                  type="button"
+                  className="fishbones__topbar-stats-freeze-btn"
+                  onClick={() => {
+                    shields.freezeDay(yesterdayKey);
+                  }}
+                >
+                  <Icon icon={snowflake} size="xs" color="currentColor" weight="bold" />
+                  <span>Freeze yesterday</span>
+                </button>
+              )}
             </div>
           )}
 

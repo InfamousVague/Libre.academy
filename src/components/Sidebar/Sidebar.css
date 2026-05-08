@@ -542,8 +542,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
+  /* Sized to seat an `xs` icon (~18px after the global +6px bump in
+     App.css) inside the circle with a comfortable ~4px ring of
+     padding all the way around. Was 16px back when xs icons were
+     12px — that left zero padding and the glyph spilled to the
+     edges, which read as "the icon IS the bubble" rather than
+     "the icon sits IN the bubble." */
+  width: 26px;
+  height: 26px;
   flex-shrink: 0;
   border-radius: 50%;
   transition: background 0.2s ease, border-color 0.2s ease, color var(--fb-motion-snappy),

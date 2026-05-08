@@ -71,6 +71,7 @@ import SignInDialog from "./components/dialogs/SignInDialog/SignInDialog";
 import { useCourses } from "./hooks/useCourses";
 import { useRecentCourses } from "./hooks/useRecentCourses";
 import { useStreakAndXp } from "./hooks/useStreakAndXp";
+import { useStreakShields } from "./hooks/useStreakShields";
 import {
   LIBRARY_INSTALLED_IDS_KEY,
   serializeLibraryAllowlist,
@@ -79,6 +80,7 @@ import {
   savePersistedTabs,
   validateTabsAgainstCourses,
   type OpenCourse,
+  type TabGroup,
 } from "./lib/openTabsState";
 import "./App.css";
 
@@ -118,6 +120,13 @@ export default function App() {
   // has data to read.
   const [openTabs, setOpenTabs] = useState<OpenCourse[]>([]);
   const [activeTabIndex, setActiveTabIndex] = useState(0);
+  /// Tab-group definitions. Tabs reference a group by id via
+  /// `OpenCourse.groupId`; this array carries the human-facing
+  /// metadata (name, colour). Created lazily when the user picks
+  /// "New group with…" from a tab's right-click menu; pruned in
+  /// `validateTabsAgainstCourses` once the last referencing tab
+  /// closes. Persisted alongside the tabs themselves.
+  const [tabGroups, setTabGroups] = useState<TabGroup[]>([]);
 
   /// `cmd+K → "Verify this course"` session state. Null when no
   /// verification is in flight or visible. The overlay component
@@ -490,7 +499,8 @@ export default function App() {
   // correct even when the learner racked up completions via drill kinds
   // we hide from the desktop nav. See `filterCourseForDesktop` doc in
   // data/types.ts.
-  const stats = useStreakAndXp(history, coursesAll);
+  const shields = useStreakShields();
+  const stats = useStreakAndXp(history, coursesAll, shields.frozenDays);
 
   /// Reactive flags for "is there transaction state on either
   /// in-process chain right now?" Used to gate the EVM and Bitcoin
@@ -740,11 +750,16 @@ export default function App() {
   // Persist tab state on every change. Cheap (<1 KB to localStorage)
   // and synchronous, so the next launch reads exactly what the
   // learner left behind — which course tabs were open, which one was
-  // active. No debounce needed: tab open/close/switch are infrequent
-  // events triggered by user clicks, not by every keystroke.
+  // active, plus tab-group definitions. No debounce needed: tab
+  // open/close/switch/reorder/group-edit are infrequent events
+  // triggered by user clicks, not by every keystroke.
   useEffect(() => {
-    savePersistedTabs({ tabs: openTabs, activeIndex: activeTabIndex });
-  }, [openTabs, activeTabIndex]);
+    savePersistedTabs({
+      tabs: openTabs,
+      groups: tabGroups,
+      activeIndex: activeTabIndex,
+    });
+  }, [openTabs, tabGroups, activeTabIndex]);
 
   // Validate restored tabs against the live course list once it loads.
   // A learner who uninstalled a course between sessions would otherwise
@@ -1020,12 +1035,95 @@ export default function App() {
     }
   }
 
+  /// Drag-reorder one tab from `from` to `to`. The visually-active
+  /// tab follows its underlying entry — if you drag the active tab
+  /// to a new slot, that slot is now the active index. If you drag
+  /// a non-active tab past the active one, activeTabIndex shifts
+  /// to track the still-active entry's new position.
+  function reorderTab(from: number, to: number) {
+    if (from === to || from < 0 || to < 0) return;
+    if (from >= openTabs.length || to >= openTabs.length) return;
+    setOpenTabs((prev) => {
+      const next = prev.slice();
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+    setActiveTabIndex((cur) => {
+      if (cur === from) return to;
+      // Tab moved THROUGH cur — adjust by ±1 to track the same entry.
+      if (from < cur && to >= cur) return cur - 1;
+      if (from > cur && to <= cur) return cur + 1;
+      return cur;
+    });
+  }
+
+  /// Auto-pick the next colour from the group palette that isn't
+  /// already in use. Falls back to "gold" when every palette entry
+  /// is taken (rare — would mean 5 active groups). The palette
+  /// matches the CSS tokens defined in TopBar.css.
+  const TAB_GROUP_PALETTE = ["gold", "coral", "mint", "sky", "lavender"];
+  function pickGroupColor(existing: TabGroup[]): string {
+    const taken = new Set(existing.map((g) => g.colorToken));
+    return TAB_GROUP_PALETTE.find((c) => !taken.has(c)) ?? TAB_GROUP_PALETTE[0];
+  }
+
+  /// Set / clear the group on a single tab. Passing `null` for
+  /// `groupId` removes the tab from any group it was in. When the
+  /// last tab in a group leaves it, the group definition is pruned
+  /// (the validator does this on the next render anyway, but doing
+  /// it here keeps state minimal between renders).
+  function setTabGroup(tabIndex: number, groupId: string | null) {
+    if (tabIndex < 0 || tabIndex >= openTabs.length) return;
+    setOpenTabs((prev) =>
+      prev.map((t, i) =>
+        i === tabIndex ? { ...t, groupId: groupId ?? undefined } : t,
+      ),
+    );
+    // Prune any group that now has zero references.
+    setTabGroups((prev) => {
+      const inUse = new Set<string>();
+      openTabs.forEach((t, i) => {
+        const effective = i === tabIndex ? groupId ?? undefined : t.groupId;
+        if (effective) inUse.add(effective);
+      });
+      return prev.filter((g) => inUse.has(g.id));
+    });
+  }
+
+  /// Create a new group containing only the tab at `tabIndex`. The
+  /// caller usually follows this with `setTabGroup` on additional
+  /// tabs to bring them into the same group, or relies on the
+  /// learner adding more via the right-click menu.
+  function createGroupForTab(tabIndex: number, name: string) {
+    if (tabIndex < 0 || tabIndex >= openTabs.length) return;
+    const id = `g_${Date.now().toString(36)}_${Math.floor(Math.random() * 1e6).toString(36)}`;
+    const colorToken = pickGroupColor(tabGroups);
+    setTabGroups((prev) => [...prev, { id, name, colorToken }]);
+    setOpenTabs((prev) =>
+      prev.map((t, i) => (i === tabIndex ? { ...t, groupId: id } : t)),
+    );
+  }
+
+  /// Rename an existing group. No-op when the id is unknown.
+  function renameTabGroup(groupId: string, name: string) {
+    setTabGroups((prev) =>
+      prev.map((g) => (g.id === groupId ? { ...g, name } : g)),
+    );
+  }
+
   const tabs = openTabs.map((t) => {
     const c = courses.find((x) => x.id === t.courseId);
+    const group = t.groupId
+      ? tabGroups.find((g) => g.id === t.groupId)
+      : undefined;
     return {
       id: t.courseId,
       label: c?.title ?? t.courseId,
       language: c?.language ?? "javascript",
+      groupId: group?.id,
+      groupName: group?.name,
+      groupColorToken: group?.colorToken,
     };
   });
 
@@ -1035,15 +1133,6 @@ export default function App() {
         sidebarCollapsed ? "fishbones--sidebar-collapsed" : ""
       }`}
     >
-      {/* First-load overlay. Shown until `useCourses` resolves its
-          initial list so the learner sees a branded loader instead of
-          an empty sidebar + blank welcome flash. Same fish-bone spinner
-          the OutputPane uses — keeps the loading vocabulary consistent
-          across the app. Fades itself out via CSS once coursesLoaded
-          flips true. The DottedGradientBg ambient bloom that used to
-          live behind every surface (and as fill on this bootloader)
-          was retired — the app reads cleaner against a flat
-          `--color-bg-primary` floor. */}
       <div
         className={`fishbones__bootloader ${
           coursesLoaded ? "fishbones__bootloader--hidden" : ""
@@ -1066,6 +1155,7 @@ export default function App() {
 
       <TopBar
         tabs={tabs}
+        groups={tabGroups}
         activeIndex={activeTabIndex}
         onActivate={(i) => {
           // Tabs live in the top bar across every route, so clicking one
@@ -1076,8 +1166,13 @@ export default function App() {
           setActiveTabIndex(i);
         }}
         onClose={closeTab}
+        onReorder={reorderTab}
+        onSetTabGroup={setTabGroup}
+        onCreateGroup={createGroupForTab}
+        onRenameGroup={renameTabGroup}
         stats={stats}
         history={history}
+        shields={shields}
         onOpenProfile={() => setView("profile")}
         // Sidebar-collapse toggle moved out of the topbar and into
         // the navigation rail's bottom cluster (NavigationRail.tsx).
@@ -1141,11 +1236,6 @@ export default function App() {
           onSelectLesson={selectLesson}
           onSelectCourse={openCourseFromLibrary}
           onLibrary={() => setView("library")}
-          onDiscover={() => setView("discover")}
-          onSettings={() => setSettingsOpen(true)}
-          onTrees={() => setView("trees")}
-          onPlayground={() => setView("playground")}
-          activeView={view}
           onExportCourse={exportCourse}
           onDeleteCourse={deleteCourseFromLibrary}
           onCourseSettings={(id) => setCourseSettingsId(id)}

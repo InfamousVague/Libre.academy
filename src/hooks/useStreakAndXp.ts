@@ -37,14 +37,29 @@ export interface StreakAndXp {
 /// Compute streak + XP purely from the completions list and the loaded
 /// courses. No extra DB tables needed — lesson kinds are looked up from
 /// the in-memory course data.
+///
+/// `frozenDays` (optional) is a set of `YYYY-MM-DD` keys the learner
+/// has spent a streak shield on. Each entry counts as a phantom
+/// completion in the streak calculation (NOT XP — frozen days don't
+/// award lesson XP, they just keep the run alive). Defaults to an
+/// empty set so existing call sites that don't know about freezes
+/// keep their original behavior.
 export function useStreakAndXp(
   history: Completion[],
   courses: Course[],
+  frozenDays?: ReadonlySet<string>,
 ): StreakAndXp {
-  return useMemo(() => computeStreakAndXp(history, courses), [history, courses]);
+  return useMemo(
+    () => computeStreakAndXp(history, courses, frozenDays),
+    [history, courses, frozenDays],
+  );
 }
 
-function computeStreakAndXp(history: Completion[], courses: Course[]): StreakAndXp {
+function computeStreakAndXp(
+  history: Completion[],
+  courses: Course[],
+  frozenDays?: ReadonlySet<string>,
+): StreakAndXp {
   // Build a quick lookup: `${courseId}:${lessonId}` -> kind
   const kindByKey = new Map<string, string>();
   for (const course of courses) {
@@ -61,7 +76,10 @@ function computeStreakAndXp(history: Completion[], courses: Course[]): StreakAnd
     xp += XP_PER_KIND[kind] ?? XP_PER_KIND.reading;
   }
 
-  const { current: streakDays, longest: longestStreakDays } = computeStreaks(history);
+  const { current: streakDays, longest: longestStreakDays } = computeStreaks(
+    history,
+    frozenDays,
+  );
 
   const { level, xpIntoLevel, xpForLevel } = levelFor(xp);
 
@@ -77,15 +95,25 @@ function computeStreakAndXp(history: Completion[], courses: Course[]): StreakAnd
 }
 
 /// Walk the set of distinct calendar days (in local time) where a completion
-/// happened and find (a) the current streak ending today-or-yesterday and
-/// (b) the longest consecutive run ever. Calendar day is the YYYY-MM-DD of
+/// happened — UNION'd with any frozen days the learner has spent shields on
+/// — and find (a) the current streak ending today-or-yesterday and (b) the
+/// longest consecutive run ever. Calendar day is the YYYY-MM-DD of
 /// the completion timestamp in the user's local timezone — we don't bother
 /// with UTC because streak UX is about "did I practice today".
-function computeStreaks(history: Completion[]): { current: number; longest: number } {
-  if (history.length === 0) return { current: 0, longest: 0 };
+function computeStreaks(
+  history: Completion[],
+  frozenDays?: ReadonlySet<string>,
+): { current: number; longest: number } {
+  if (history.length === 0 && (!frozenDays || frozenDays.size === 0)) {
+    return { current: 0, longest: 0 };
+  }
 
   const days = new Set<string>();
   for (const c of history) days.add(localDayKey(c.completed_at));
+  // Treat each frozen day as a phantom completion. Doing this before
+  // the streak walk means the longest-run + current-run computation
+  // both naturally honor freezes — no special-casing in either path.
+  if (frozenDays) for (const d of frozenDays) days.add(d);
   const sorted = Array.from(days).sort();
 
   // Longest run by walking the sorted unique days.
