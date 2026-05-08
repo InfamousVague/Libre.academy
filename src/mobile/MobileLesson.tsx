@@ -8,7 +8,7 @@
 /// The header (back arrow + course title + chapter label) is shared
 /// across all three so navigation feels uniform.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Course, Lesson } from "../data/types";
 import { isExerciseKind, isQuiz } from "../data/types";
 import MobileReader from "./MobileReader";
@@ -50,6 +50,20 @@ export default function MobileLesson({
 }: Props) {
   const chapter = course.chapters[chapterIndex];
   const [outlineOpen, setOutlineOpen] = useState(false);
+
+  // Reset the page scroll on every lesson change. Without this,
+  // navigating from a long reading lesson to a short one keeps the
+  // user mid-paragraph in the new lesson — they have to scroll up
+  // to see the title and the start of the prose. Mobile uses the
+  // document as the scroll container (see useLessonReadCursor's
+  // `document.scrollingElement` reference) so window.scrollTo
+  // hits the right element. `behavior: "instant"` because a
+  // smooth-scroll on every nav feels sluggish; the user wanted to
+  // GO somewhere, not watch the page rewind.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [lesson.id]);
 
   // Where in the course are we, in 1-indexed flat position? Drives the
   // header progress chip ("Lesson 7 of 56").

@@ -6,6 +6,56 @@
    - Glass treatment: translucent dark fill + 18px backdrop blur +
      hairline border, mirroring the academy site's `.nav--scrolled`. */
 
+/* Gradient gaussian blur band that sits BEHIND the floating tab pill.
+   Catches everything sliding under the bottom of the screen and
+   feathers it into a blurred zone instead of having prose text
+   suddenly disappear under the pill's edges. iOS does this natively
+   on its tab bars (UIKit's `UIBlurEffect`); we replicate it with a
+   masked backdrop-filter + a subtle alpha gradient so the effect
+   ramps from "no blur" at the top to "fully blurred + dimmed" at
+   the bottom of the band. */
+.fishbones-mtab-blur {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* Tall enough to cover the pill (52px) plus the safe-area inset
+     plus a feather above the pill so the blur ramp starts before
+     the user can see content sliding into the pill region. ~140px
+     gives the gradient room to read as a soft fade rather than a
+     hard cut. */
+  height: calc(env(safe-area-inset-bottom, 0) + 140px);
+  pointer-events: none;
+  z-index: 90;
+  /* The mask-image sets the BLUR's opacity per row: transparent at
+     the top fades to opaque at the bottom, so backdrop-filter only
+     applies near the bottom edge. Without the mask, blur would
+     apply uniformly across the whole 140px and content scrolling
+     up through the band would pop in/out of focus jarringly.
+     Webkit prefix kept for older iOS WKWebView. */
+  -webkit-mask-image: linear-gradient(to top, #000 35%, transparent 100%);
+  mask-image: linear-gradient(to top, #000 35%, transparent 100%);
+  backdrop-filter: blur(14px) saturate(135%);
+  -webkit-backdrop-filter: blur(14px) saturate(135%);
+}
+
+/* Subtle vertical alpha gradient layered on top of the blur — pulls
+   the bottom edge a touch darker so even on a fully-black scrolled
+   page the band reads as "slightly different" and the floating pill
+   has visual ground beneath it. */
+.fishbones-mtab-blur::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(8, 8, 12, 0.55) 0%,
+    rgba(8, 8, 12, 0.18) 60%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
 .fishbones-mtab {
   position: fixed;
   left: 50%;

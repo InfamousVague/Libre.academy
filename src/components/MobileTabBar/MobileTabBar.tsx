@@ -34,7 +34,14 @@ export default function MobileTabBar({
   onSettings,
 }: Props) {
   return (
-    <nav className="fishbones-mtab" aria-label="Primary navigation">
+    <>
+      {/* Gradient blur band that catches content scrolling under the
+          floating tab pill. Sibling to the nav rather than child so
+          its z-index sits below the pill's `z-index: 100` — the pill
+          stays opaque at its own level, the band only blurs the
+          space behind. aria-hidden because it's pure visual chrome. */}
+      <div className="fishbones-mtab-blur" aria-hidden />
+      <nav className="fishbones-mtab" aria-label="Primary navigation">
       <button
         type="button"
         className={`fishbones-mtab__btn${active === "library" ? " fishbones-mtab__btn--active" : ""}`}
@@ -69,6 +76,7 @@ export default function MobileTabBar({
         <Icon icon={settings} size="lg" />
         <span>Settings</span>
       </button>
-    </nav>
+      </nav>
+    </>
   );
 }
