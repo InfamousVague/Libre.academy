@@ -41,7 +41,8 @@ INSTALL_PATH  := /Applications/Fishbones.app
 .PHONY: all build sign notarize staple install dev release local-release \
         deploy deploy-site deploy-content clean help \
         audio-import audio-upload audio-deploy tour-audio \
-        run run-split run-phone run-watch pick-phone pick-watch run-clean
+        run run-split run-phone run-watch pick-phone pick-watch run-clean \
+        release-phone
 
 # Marketing site checkout (separate repo). The site's `npm run deploy`
 # rebuilds Fishbones with FISHBONES_BASE=/learn/, stages dist-web/ under
@@ -364,6 +365,67 @@ run-clean:
 # When `make run` invokes us via sub-make, it already picked both devices —
 # avoid prompting "Use last?" again. The standalone case has FB_SKIP_PICK
 # unset, so the picker still runs.
+# `make release-phone` — install a RELEASE-mode build on the user's
+# physical iPhone/iPad. Same flow as `run-phone` (pick device, build,
+# install via devicectl, launch) but drops `--debug` so the resulting
+# binary is smaller, faster, and ships without the debug symbol bloat.
+# The signed app stays installed for the validity window of your
+# provisioning profile (7 days on a free Apple ID, ~1 year on a paid
+# Developer account) — re-run this target before that window closes
+# to refresh, or set up TestFlight if you want the install to never
+# expire.
+#
+# `tauri ios build` always rebuilds the web bundle via the
+# `beforeBuildCommand` in tauri.conf.json, so dist/ is fresh on each
+# invocation — no manual `npm run build` step needed first.
+release-phone:
+	@bash $(ROOT)/scripts/pick-device.sh phone --reuse
+	@set -eu; \
+	. $(DEVICE_CACHE); \
+	echo ""; \
+	echo "=== Phone (release): $$IPHONE_NAME ($$IPHONE_KIND/$$IPHONE_UDID) ==="; \
+	if [ "$$IPHONE_KIND" = "sim" ]; then \
+		echo "ERROR: release-phone is for physical devices only"; \
+		echo "       (simulator builds don't gain anything from --release"; \
+		echo "       and the install path differs from devicectl)."; \
+		echo "       Use 'make run-phone' against a sim instead."; \
+		exit 1; \
+	fi; \
+	echo "--- tauri ios build (device, release) ---"; \
+	cd $(ROOT) && $(TAURI_ENV) tauri ios build --target aarch64; \
+	APP=""; \
+	for cand in \
+		"$(TAURI)/gen/apple/build/arm64/Fishbones.app" \
+		"$(TAURI)/gen/apple/build/fishbones_iOS.xcarchive/Products/Applications/Fishbones.app"; do \
+		if [ -d "$$cand" ]; then APP="$$cand"; echo "Found .app: $$cand"; break; fi; \
+	done; \
+	if [ -z "$$APP" ]; then \
+		IPA="$(TAURI)/gen/apple/build/arm64/Fishbones.ipa"; \
+		if [ -f "$$IPA" ]; then \
+			echo "--- no .app found; extracting from $$IPA ---"; \
+			EXTRACT_DIR="$(TAURI)/gen/apple/build/arm64/_ipa-extract"; \
+			rm -rf "$$EXTRACT_DIR"; mkdir -p "$$EXTRACT_DIR"; \
+			unzip -q -o "$$IPA" -d "$$EXTRACT_DIR"; \
+			APP=$$(ls -d "$$EXTRACT_DIR"/Payload/*.app 2>/dev/null | head -1); \
+			[ -d "$$APP" ] && echo "Extracted .app: $$APP"; \
+		fi; \
+	fi; \
+	if [ -z "$$APP" ] || [ ! -d "$$APP" ]; then \
+		echo "ERROR: no Fishbones.app or .ipa produced under $(TAURI)/gen/apple/build/."; \
+		echo "Build likely failed — scroll up for tauri/xcodebuild errors."; \
+		echo "If signing failed, open src-tauri/gen/apple/fishbones.xcodeproj in Xcode,"; \
+		echo "let it auto-resolve provisioning, then re-run this target."; \
+		exit 1; \
+	fi; \
+	echo "--- devicectl install + launch ---"; \
+	xcrun devicectl device install app --device "$$IPHONE_UDID" "$$APP"; \
+	xcrun devicectl device process launch --device "$$IPHONE_UDID" --terminate-existing $(PHONE_BUNDLE_ID); \
+	echo ""; \
+	echo "✓ Fishbones (release) installed on $$IPHONE_NAME — usable independent of this Mac."; \
+	echo "  Provisioning expires per your Apple Developer account's policy"; \
+	echo "  (free: 7 days / paid team $(TEAM_ID): ~1 year). Re-run 'make release-phone'"; \
+	echo "  to refresh before that window closes."
+
 run-phone: $(if $(FB_SKIP_PICK),,pick-phone)
 	@set -eu; \
 	. $(DEVICE_CACHE); \
@@ -489,3 +551,4 @@ help:
 	@echo "  make pick-phone   — refresh phone selection only"
 	@echo "  make pick-watch   — refresh watch selection only"
 	@echo "  make run-clean    — drop the cached device selection"
+	@echo "  make release-phone — RELEASE-mode build, installed to phone for everyday use"

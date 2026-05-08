@@ -81,7 +81,18 @@ pub fn courses_dir(app: &tauri::AppHandle) -> anyhow::Result<PathBuf> {
 // (auto-installs every bundled pack on mobile so phones converge to
 // the same shelf desktop has). Existing installs re-evaluate the
 // per-pack filter on the next launch and pull in the expanded set.
-const SEED_VERSION: u32 = 10;
+//
+// V11 — Re-extract every pack to pick up restored blocks data +
+// the audio-driven section blocks (`splitMarkdownIntoSections` +
+// `apply-blocks` pipeline). The bundled .fishbones archives were
+// repacked from the desktop's installed library via
+// `promote-library-to-bundle.mjs`, which runs after `apply-blocks
+// --install` so each course.json carries blocks payloads. Existing
+// iOS/desktop installs that were on V10 still have the blocks-free
+// extracted copies on disk — bumping forces re-extraction so the
+// "this exercise hasn't been authored for blocks mode yet" message
+// stops appearing on every challenge.
+const SEED_VERSION: u32 = 11;
 
 /// Ids that previously shipped via `resources/bundled-packs/` but have
 /// since been retired. On a SEED_VERSION bump, ensure_seed deletes
