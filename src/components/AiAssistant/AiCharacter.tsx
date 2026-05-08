@@ -77,11 +77,15 @@ export default function AiCharacter({
         </span>
       )}
       {/* DNA double-helix glyph (replaces the prior fish-skeleton
-          mask). Mood drives `speed`: thinking + celebrating spin
-          faster so the orb visibly leans in; idle + alert hold the
-          baseline cycle so the orb feels calm or locked. The helix
-          itself is colour-randomised at mount time — see DnaHelix
-          for the palette + per-strand stagger maths. */}
+          mask). Mood drives `speed`: thinking + celebrating push
+          faster so the orb visibly leans in on a reply; alert
+          slows down to read as locked / waiting on the human;
+          idle is the slowest of all (8s per strand-jump cycle) so
+          a learner glancing at the orb mid-lesson sees a gentle
+          breathing rhythm rather than a busy animation pulling
+          attention away from the prose. The helix itself is
+          colour-randomised at mount time — see DnaHelix for the
+          palette + per-strand stagger maths. */}
       <DnaHelix
         className="fishbones-ai-character-icon"
         speed={
@@ -91,7 +95,7 @@ export default function AiCharacter({
               ? 1
               : mood === "alert"
                 ? 4
-                : 2
+                : 8
         }
       />
     </button>

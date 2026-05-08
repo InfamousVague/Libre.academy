@@ -78,29 +78,15 @@
 /* DNA helix glyph wrapper. The component sizes itself in `em`, so
    set `font-size` to drive the rendered size — 88px (double the
    previous 44px) gives an 88px helix dimension along the long axis
-   with ~35px on the short.
-
-   Slow 2D rotation is layered on top of the helix's static
-   `rotate: 4deg` base tilt; the longhand `rotate` property and the
-   `transform: rotate(...)` animation compose so the helix "spins"
-   while keeping its 4° resting offset. 24s = a full revolution
-   every 24 seconds, slow enough that the spin reads as drift, not
-   activity. Pauses on hover (below) so the tooltip + hover state
-   feel still rather than chasing a moving glyph. */
+   with ~35px on the short. Idle motion lives entirely inside the
+   helix's own strand-jump animation; the AiCharacter passes a
+   slow `speed` value (see Tsx) when in idle mood so the helix
+   reads as gently breathing rather than actively working. */
 .fishbones-ai-character-icon {
   position: relative;
   z-index: 2;
   font-size: 88px;
   filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.4));
-  animation: fishbones-ai-dna-drift 24s linear infinite;
-}
-
-/* Pause the rotation while the user is hovering. `paused` freezes
-   the animation at its current frame rather than snapping back, so
-   leaving the hover resumes from where it stopped — no visible
-   jump. */
-.fishbones-ai-character:hover .fishbones-ai-character-icon {
-  animation-play-state: paused;
 }
 
 
@@ -124,15 +110,6 @@
   }
 }
 
-@keyframes fishbones-ai-dna-drift {
-  /* Slow full-revolution cycle for the helix when the user isn't
-     interacting. The rotation composes with the helix's static
-     `rotate: 4deg`, so the helix's "rest" pose at the start of
-     each cycle is at 4°, drifting through 364° back to 4°. */
-  to {
-    transform: rotate(360deg);
-  }
-}
 
 /* Reduced motion — kill all orb-level animations. The DnaHelix has
    its own reduced-motion handler that flattens the helix to a
