@@ -437,6 +437,48 @@ function BlocksViewInner({
           content: synthesised,
         });
       }
+
+      // ── Structural fast-path ────────────────────────────────
+      // If every slot has its canonical block, the assembled
+      // source is byte-identical to the lesson's reference
+      // solution — which we already verified passes the test
+      // suite at authoring time (apply-blocks.mjs runs a strict
+      // round-trip equality check before writing each manual /
+      // cached payload). Skip the runner and accept the pass
+      // immediately. Two reasons to short-circuit:
+      //   1. Some platforms can't run some languages — Zig has no
+      //      in-browser/iOS compiler, for instance, so on mobile
+      //      the runner would fail-by-environment even on a
+      //      perfect solution.
+      //   2. Instant feedback. Runner round-trips can take 1-3s
+      //      on cold-start (WASM warmup, module init, harness
+      //      bootstrap); for blocks-mode the user's intent is
+      //      already fully expressed by their placements.
+      // Non-canonical-but-still-valid arrangements still fall
+      // through to the runner below — we only bypass when we
+      // KNOW the answer matches the reference.
+      if (allCorrect) {
+        const r: RunResult = {
+          logs: [],
+          durationMs: 0,
+          tests: blocks.slots.map((s) => ({ name: s.id, passed: true })),
+        };
+        setResult(r);
+        onSolutionAccepted?.(files);
+        setJustPassed(true);
+        setLiveMessage(
+          `All ${blocks.slots.length} block${
+            blocks.slots.length === 1 ? "" : "s"
+          } placed correctly. Lesson complete.`,
+        );
+        window.setTimeout(() => setJustPassed(false), 1600);
+        if (!completedRef.current) {
+          completedRef.current = true;
+          onComplete?.();
+        }
+        return;
+      }
+
       const r = await runFiles(
         lesson.language,
         files,
@@ -446,10 +488,12 @@ function BlocksViewInner({
         lesson.harness,
       );
       setResult(r);
-      // Lesson completion: same criterion as editor mode — the test
-      // suite passed. We DO NOT use isBlocksAllCorrect here; if a
-      // learner found an alternate placement that compiles + passes
-      // tests, that's still a correct answer.
+      // Lesson completion via runner: same criterion as editor
+      // mode — the test suite passed. We deliberately accept a
+      // non-canonical arrangement here; if a learner found an
+      // alternate placement that compiles + passes tests, that's
+      // still a correct answer (the structural fast-path above
+      // already handled the canonical case).
       const passed =
         !!r.tests &&
         r.tests.length > 0 &&
@@ -498,7 +542,7 @@ function BlocksViewInner({
     } finally {
       setRunning(false);
     }
-  }, [lesson, blocks, placements, onComplete]);
+  }, [lesson, blocks, placements, allCorrect, onComplete, onSolutionAccepted]);
 
   // ── Template + chip highlighting ─────────────────────────────
   // Run Shiki against the template once (with slot markers swapped
