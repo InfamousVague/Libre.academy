@@ -77,30 +77,29 @@
 .fishbones-reader-meta-glossary {
   display: inline-flex;
   align-items: center;
-  /* Horizontally center the icon + label + count cluster inside the
-     pill. Mostly cosmetic for the inline-flex (content-sized) layout
-     in use today — but keeps the cluster centered when a parent
-     stretches the pill via flex-grow / explicit width. */
-  justify-content: center;
-  gap: 8px;
-  /* Locked to the same height + box-sizing as `.fb-tts-pill` (see
-     TTSButton.css). Both chips share `height: 26px`, `padding: 0 12px`,
-     and `line-height: 1` so neither's inner content (12px icon vs
-     16px ring) can push it taller than the other. Previously the
-     padding was top/bottom 5px with default line-height — which
-     meant the TTS pill's ring + the glossary's text-line each ended
-     up dictating different total heights, leaving the row visibly
-     uneven. */
-  height: 26px;
+  /* Left-aligned cluster — icon + "Glossary" label + count badge
+     all sit at the leading edge. Matches the TTS pill's flex-start
+     so both chips in the meta row read as one consistent chip
+     family with leading-edge content rather than centered content. */
+  justify-content: flex-start;
+  gap: 9px;
+  /* Locked to the same height + padding + line-height as `.fb-tts-pill`
+     (see TTSButton.css). Both chips share `height: 30px`,
+     `padding: 0 14px`, and `line-height: 1` so neither's inner
+     content (14px icon, 11px label, 20px ring etc.) can drive a
+     different intrinsic box. Bumped from 26 → 30 to give the
+     primary play affordance and the Glossary chip a friendlier
+     target size. */
+  height: 30px;
   box-sizing: border-box;
-  padding: 0 12px;
+  padding: 0 14px;
   line-height: 1;
   background: transparent;
   border: 1px solid var(--color-border-default);
   border-radius: var(--fb-radius-pill);
   color: var(--color-text-secondary);
   font-family: inherit;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy), border-color var(--fb-motion-snappy);
@@ -122,8 +121,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 12px;
-  height: 12px;
+  /* Bumped 12 → 14 to track the parent pill's height bump (26 → 30).
+     The book glyph inside (`<Icon size="xs" />`, ~11px) sits with
+     1.5px of breathing room on every side instead of nearly touching
+     the wrapper edges. */
+  width: 14px;
+  height: 14px;
 }
 
 .fishbones-reader-meta-glossary-count {
@@ -132,15 +135,18 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 18px;
-  padding: 0 6px;
+  /* Slight min-width bump tracks the parent's height + font bump so
+     a single-digit count still has a clear pill shape rather than
+     looking cramped beside the now-larger label. */
+  min-width: 20px;
+  padding: 0 7px;
   border-radius: var(--fb-radius-pill);
   background: var(--color-bg-tertiary);
   color: var(--color-text-tertiary);
-  /* Bumped from 10px → 10.5px to track the parent pill's font-size
-     bump (11px → 11.5px) so the count doesn't feel small alongside
-     the now-slightly-larger label. */
-  font-size: 10.5px;
+  /* Bumped to 11px so the count tracks the parent pill's 12px label
+     proportionally (count is meant to read a half-step quieter, not
+     dramatically smaller). */
+  font-size: 11px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   line-height: 1;

@@ -6,29 +6,33 @@
 .fb-tts-pill {
   display: inline-flex;
   align-items: center;
-  /* Center the ring + label cluster inside the pill's content box
-     so a flex parent stretching the pill via flex-grow keeps things
-     visually centered. No-op for the inline-flex content-sized
-     layout in use today. */
-  justify-content: center;
-  gap: 8px;
-  /* Pinned to the same height as `.fishbones-reader-meta-glossary`
-     so the meta row reads as two balanced chips. With box-sizing:
-     border-box the padding + border fit INSIDE the 26px height,
-     and the line-height + ring/icon dimensions are tuned so neither
-     pushes past the box. Without this lock the 18px ring used to
-     drive the pill ~1-2px taller than the glossary chip whose text
-     line-height was the dominant child. */
-  height: 26px;
+  /* Left-aligned content: the play/progress ring sits at the leading
+     edge with the label following it. Centering used to be the
+     default but it floated the ring away from the pill's left edge,
+     and a primary-action affordance reads more like a "button +
+     status" cluster when the action is pinned to the leading edge.
+     Glossary applies the same flex-start so the pair reads as a
+     consistent chip family. */
+  justify-content: flex-start;
+  gap: 9px;
+  /* Pinned height locks the row in lockstep with
+     `.fishbones-reader-meta-glossary` — both chips share the same
+     height + padding + line-height so neither's inner content can
+     drive a different intrinsic box. Bumped from 26px → 30px because
+     the prior chip-size felt undersized for the primary play
+     affordance; box-sizing: border-box keeps padding + border inside
+     the 30px so the ring (20px) and font (12px) both fit comfortably
+     without forcing extra rim. */
+  height: 30px;
   box-sizing: border-box;
-  padding: 0 12px;
+  padding: 0 14px;
   line-height: 1;
   border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.1));
   border-radius: 999px;
   background: var(--color-bg-secondary, #1a1a1f);
   color: var(--color-text-secondary, #a4a4ad);
   font: inherit;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.01em;
   cursor: pointer;
@@ -132,16 +136,16 @@
 }
 
 /* Hard-clamp the inner glyph well inside the ring. The ring renders
-   at ~16px diameter (20px viewBox × r=13/16 of half-width), so a
-   10px glyph sits at ~62% of the ring's inner diameter — enough
-   that the ring reads as "containing" the glyph rather than "barely
-   bigger than" it. The ring is the progress affordance and should
-   visually dominate; the glyph is just a play/pause/loader state
-   label. Forced via !important because @base's `.icon--xs` rule
-   sets width/height with the same selector specificity. */
+   at ~16px visible diameter (20px viewBox × r=13/16 of half-width),
+   so an 11px glyph sits at ~70% of the ring's inner diameter —
+   enough that the ring reads as "containing" the glyph rather than
+   "barely bigger than" it. The ring is the progress affordance and
+   should visually dominate; the glyph is just a play/pause/loader
+   state label. Forced via !important because @base's `.icon--xs`
+   rule sets width/height with the same selector specificity. */
 .fb-tts-pill__icon svg {
-  width: 10px !important;
-  height: 10px !important;
+  width: 11px !important;
+  height: 11px !important;
 }
 
 /* Loader spin while the MP3 is fetching from the CDN on first play. */
