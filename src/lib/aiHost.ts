@@ -10,15 +10,21 @@
 /// (which we don't want — the host is per-device, your phone and a
 /// shared family iPad would target different Macs).
 
+import { isDesktop, isMobile } from "./platform";
+
 /// Storage key. Single source of truth — every reader / writer
 /// imports `STORAGE_KEY` so a future rename here is one-line.
 export const STORAGE_KEY = "fishbones:ai-host";
 
-/// Enable / disable the in-app AI assistant entirely. Off by default
-/// — the orb stays hidden + no probes fire until the user explicitly
-/// turns it on in Settings. This is what "disabled by default" means
-/// in product terms: the AI is opt-in, not always-on with a red dot
-/// nagging at users who never asked for an LLM in their lesson app.
+/// Enable / disable the in-app AI assistant entirely. Defaults vary
+/// by platform — see `readAiEnabled` below for the resolution rules.
+/// On desktop the default is ON (the Tauri shell can spawn / talk
+/// to a localhost Ollama daemon, so the orb is useful out of the
+/// box); on mobile + web the default is OFF (those surfaces need a
+/// remote Ollama host the user has to configure, so the orb stays
+/// silent until they explicitly opt in). Either default can be
+/// overridden by an explicit "0" / "1" in localStorage — the user's
+/// previous toggle choice always wins over the platform default.
 const ENABLED_KEY = "fishbones:ai-assistant-enabled";
 
 /// Custom event consumers can listen for so a Settings toggle takes
@@ -69,13 +75,27 @@ export function writeAiHost(value: string): void {
   }
 }
 
-/// Whether the in-app AI assistant is opted in by the user. Returns
-/// `false` when the flag isn't set (default off) OR when localStorage
-/// is unavailable. Consumers branch the assistant's render path on
-/// this — nothing AI-related renders when this is false.
+/// Whether the in-app AI assistant is opted in by the user.
+/// Resolution order:
+///   1. Explicit "1" in localStorage → ON.
+///   2. Explicit "0" in localStorage → OFF (user toggled off).
+///   3. Unset → platform default: desktop form factor → ON, mobile
+///      / web → OFF. The desktop shell can talk to a localhost
+///      Ollama daemon, so the orb is useful out of the box; mobile
+///      + web need a remote Ollama host the user has to configure,
+///      so the orb stays silent until they opt in via Settings.
+///
+/// `isDesktop` is the build-target test (Tauri vs web bundle);
+/// `isMobile` is the runtime form-factor test (narrow viewport,
+/// true on iPhone/iPad even though those are also `isDesktop`
+/// builds). The desktop default fires only when BOTH say "this is
+/// the wide-viewport Tauri shell."
 export function readAiEnabled(): boolean {
   try {
-    return localStorage.getItem(ENABLED_KEY) === "1";
+    const v = localStorage.getItem(ENABLED_KEY);
+    if (v === "1") return true;
+    if (v === "0") return false;
+    return isDesktop && !isMobile;
   } catch {
     return false;
   }
