@@ -39,16 +39,55 @@ const TTS_CDN_BASE = (
 
 const MANIFEST_URL = `${TTS_CDN_BASE}/manifest.json`;
 
-export interface AudioManifestEntry {
+/// One MP3 inside a sectioned lesson. Sections are heading-bounded
+/// (H1/H2 starts a new one), produced by `splitMarkdownIntoSections`
+/// in scripts/spoken-text.mjs and one-MP3-per-section'd by
+/// scripts/generate-lesson-audio.mjs. The `blockStart` / `blockEnd`
+/// indices align with the renderer's `data-tts-block` numbering so
+/// the cursor can highlight DOM blocks while their section's audio
+/// plays.
+export interface AudioSection {
   url: string;
-  courseId: string;
   sha256?: string;
   sizeBytes?: number;
+  /// Estimated from byte length at generation time (bytes / 16000 for
+  /// 128 kbps CBR MP3). Within a few hundred ms of true duration —
+  /// the player refines with the live `audio.duration` for whichever
+  /// section is currently loaded, but uses the estimate for sections
+  /// that haven't been played yet so cumulative progress stays smooth.
   durationSec?: number;
   textHash: string;
   voice: string;
   voiceId?: string;
   model: string;
+  blockStart: number;
+  blockEnd: number;
+  headingText: string | null;
+  headingLevel: number | null;
+}
+
+/// Manifest entry for one lesson. v2 (current) — sectioned. The
+/// player walks `sections` in order, plays each MP3, waits for
+/// `ended` before advancing. The legacy `url` field is kept for
+/// reading older manifests on the wire (during a partial re-upload)
+/// but the generator no longer emits it; new entries always have
+/// `sections`.
+export interface AudioManifestEntry {
+  courseId: string;
+  voice: string;
+  model: string;
+  sections?: AudioSection[];
+  /// Legacy v1 single-MP3 path. Present only on manifests generated
+  /// before the v2 sectioning rollout. New consumers should branch
+  /// on `sections` first; `url` is the fall-through.
+  url?: string;
+  /// Legacy v1 fields — kept on the type so older manifests parse
+  /// without TypeScript complaining. Unused on the v2 happy path.
+  sha256?: string;
+  sizeBytes?: number;
+  durationSec?: number;
+  textHash?: string;
+  voiceId?: string;
 }
 
 export interface AudioManifest {
@@ -100,9 +139,20 @@ function rewriteEntryUrls(manifest: AudioManifest, targetBase: string): void {
   const newBase = targetBase.replace(/\/+$/, "");
   if (oldBase === newBase) return;
   const oldPrefix = oldBase + "/";
+  const fix = (url: string | undefined): string | undefined => {
+    if (typeof url !== "string") return url;
+    if (!url.startsWith(oldPrefix)) return url;
+    return newBase + url.slice(oldBase.length);
+  };
   for (const entry of Object.values(manifest.lessons)) {
-    if (typeof entry?.url === "string" && entry.url.startsWith(oldPrefix)) {
-      entry.url = newBase + entry.url.slice(oldBase.length);
+    if (!entry) continue;
+    // v1 single-URL entry (legacy).
+    if (typeof entry.url === "string") entry.url = fix(entry.url);
+    // v2 sectioned entry — fix every section URL.
+    if (Array.isArray(entry.sections)) {
+      for (const sec of entry.sections) {
+        if (sec) sec.url = fix(sec.url) ?? sec.url;
+      }
     }
   }
   manifest.cdnBase = newBase;
@@ -185,19 +235,66 @@ export function useLessonAudioManifest(): AudioManifest | null {
 
 // ── Singleton player ────────────────────────────────────────────
 //
-// One HTMLAudioElement managed at module scope so navigating between
-// lessons cleanly stops the previous lesson's audio. Hooks subscribe
-// to its events; everything else is component state.
+// One HTMLAudioElement managed at module scope. Two modes:
+//   - Sectioned (v2 manifest): `activeSections` holds the lesson's
+//     section list; `activeSectionIndex` is which section is loaded
+//     into the audio element. On `ended` we advance to the next
+//     section automatically — that's the "wait for the section's
+//     audio to finish before moving the cursor" behaviour the
+//     wait-and-advance UX needs.
+//   - Single MP3 (v1 manifest, legacy): `activeSections` is null,
+//     `activeSectionIndex` is 0, and the lesson's `entry.url` is
+//     loaded once and plays end-to-end. Same code path with
+//     length-1 logic.
+//
+// Hooks subscribe to events; everything else is React-state-derived.
 
 let audioEl: HTMLAudioElement | null = null;
 let activeLessonId: string | null = null;
+let activeSections: AudioSection[] | null = null;
+let activeSectionIndex = 0;
+/// Per-section duration cache for the active lesson. Seeded from the
+/// manifest's `durationSec` estimates and refined by the live
+/// `audio.duration` once each section loads. Length always matches
+/// `activeSections?.length` (or 1 in legacy mode). Used to compute
+/// CUMULATIVE progress across sections — without it the player
+/// could only report progress within the currently-loaded section,
+/// and the cursor would snap backwards every time a section ended.
+let sectionDurations: number[] = [];
 const listeners = new Set<() => void>();
+
 function notify(): void {
   for (const l of listeners) {
     try {
       l();
     } catch {
       /* swallow */
+    }
+  }
+}
+
+function onSectionEnded(): void {
+  // End-of-lesson when no more sections remain. We deliberately do
+  // NOT auto-loop; the cursor pause-at-end is a useful UX signal
+  // ("you finished this reading").
+  if (!activeSections) return;
+  const next = activeSectionIndex + 1;
+  if (next >= activeSections.length) return;
+  activeSectionIndex = next;
+  if (audioEl) {
+    audioEl.src = activeSections[next].url;
+    void audioEl.play();
+  }
+}
+
+function onLoadedMetadata(): void {
+  // Refine the duration cache for whichever section is currently
+  // loaded. The manifest carries a byte-derived estimate; the live
+  // value from the engine is exact. Subscribers re-render via the
+  // shared `notify`.
+  if (audioEl && Number.isFinite(audioEl.duration) && audioEl.duration > 0) {
+    if (sectionDurations.length > activeSectionIndex) {
+      sectionDurations[activeSectionIndex] = audioEl.duration;
     }
   }
 }
@@ -211,37 +308,92 @@ function ensureAudioEl(): HTMLAudioElement {
     audioEl.preload = "metadata";
     // Wire all the events the hook surfaces — every one of them
     // notifies subscribers so per-lesson hook state stays in sync.
-    for (const ev of ["play", "pause", "ended", "loadedmetadata", "timeupdate", "error"]) {
+    for (const ev of ["play", "pause", "loadedmetadata", "timeupdate", "error"]) {
       audioEl.addEventListener(ev, notify);
     }
+    // `loadedmetadata` ALSO refreshes the duration cache — separate
+    // listener so the cache update happens before subscribers react.
+    audioEl.addEventListener("loadedmetadata", onLoadedMetadata);
+    // `ended` advances to the next section (or stops if last). Notify
+    // happens after the advance so the new section index is observed.
+    audioEl.addEventListener("ended", () => {
+      onSectionEnded();
+      notify();
+    });
   }
   return audioEl;
+}
+
+/// Resolve a manifest entry to a section list. v2 entries return
+/// `entry.sections` directly; v1 (legacy) entries are wrapped in a
+/// length-1 list so the rest of the player can treat both uniformly.
+function sectionsFor(entry: AudioManifestEntry): AudioSection[] | null {
+  if (Array.isArray(entry.sections) && entry.sections.length > 0) {
+    return entry.sections;
+  }
+  if (typeof entry.url === "string" && entry.url.length > 0) {
+    return [
+      {
+        url: entry.url,
+        sha256: entry.sha256,
+        sizeBytes: entry.sizeBytes,
+        durationSec: entry.durationSec,
+        textHash: entry.textHash ?? "",
+        voice: entry.voice,
+        voiceId: entry.voiceId,
+        model: entry.model,
+        blockStart: 0,
+        blockEnd: -1,
+        headingText: null,
+        headingLevel: null,
+      },
+    ];
+  }
+  return null;
 }
 
 export type LessonAudioState =
   | { available: false }
   | {
       available: true;
+      /// URL of the section currently loaded into the audio element.
+      /// Mostly useful for debug overlays — typical consumers want
+      /// `progress` / `currentSec` / `durationSec` instead.
       url: string;
-      /// Duration in seconds. Resolves once the audio element fires
-      /// `loadedmetadata`; falls back to the manifest's pre-computed
-      /// value if available, else null. Components should treat null
-      /// as "unknown — show reading-time estimate instead".
+      /// Number of sections in the active lesson, ≥ 1.
+      sectionCount: number;
+      /// Zero-based index of the section currently playing (or about
+      /// to play). Drives the "wait for this section to finish"
+      /// playback model — when it changes, the cursor / scroll-follow
+      /// know a new section has started.
+      sectionIndex: number;
+      /// Total duration in seconds across ALL sections of the active
+      /// lesson. Resolves as each section's `loadedmetadata` fires;
+      /// initially seeded from the manifest's per-section byte
+      /// estimates so the value is reasonable from the first paint.
       durationSec: number | null;
       isActive: boolean;
       isPlaying: boolean;
       isLoading: boolean;
+      /// Cumulative seconds played across ALL sections (not just the
+      /// current one). Lets the TTSButton pill display elapsed /
+      /// remaining time over the whole lesson.
       currentSec: number;
-      /// Playback progress 0..1. Useful for the circular progress
-      /// ring on the TTSButton pill — divides currentSec by
-      /// durationSec defensively (returns 0 when duration unknown).
+      /// Cumulative playback progress 0..1 across the whole lesson.
+      /// Drives the circular progress ring AND the lesson-read cursor
+      /// hook (which char-weights DOM blocks against this value to
+      /// pick the highlighted paragraph).
       progress: number;
-      /// Seconds remaining. `durationSec - currentSec` clamped to >= 0,
-      /// or null if duration is unknown.
+      /// Seconds remaining across the whole lesson. Null when total
+      /// duration is unknown.
       remainingSec: number | null;
       play: () => void;
       pause: () => void;
       toggle: () => void;
+      /// Seek to a position WITHIN THE CURRENT SECTION. Cross-section
+      /// scrubbing isn't wired yet — would need a UI affordance and
+      /// some logic to resolve "which section does this overall sec
+      /// fall into?". Out of scope for the wait-and-advance UX.
       seek: (sec: number) => void;
       setSpeed: (rate: number) => void;
     };
@@ -271,9 +423,32 @@ export function useLessonAudio(lessonId: string | undefined): LessonAudioState {
   if (!m || !lessonId) return { available: false };
   const entry = m.lessons[lessonId];
   if (!entry) return { available: false };
+  const sections = sectionsFor(entry);
+  if (!sections) return { available: false };
 
   const isActive = activeLessonId === lessonId && audioEl != null;
   const el = audioEl;
+
+  // Read the per-section duration list. When this lesson is the
+  // active one we use the live cache (which has refined entries);
+  // otherwise we synthesise estimates from the manifest so the
+  // total-duration display still works pre-play.
+  const durations = isActive
+    ? sectionDurations
+    : sections.map((s) => (typeof s.durationSec === "number" ? s.durationSec : 0));
+  const totalDuration = durations.reduce((a, b) => a + (b > 0 ? b : 0), 0);
+  const haveAnyDuration = durations.some((d) => d > 0);
+
+  // Cumulative seconds = sum of fully-played section durations + the
+  // current section's `currentTime`. When the lesson isn't active
+  // both are 0.
+  const sectionIdx = isActive ? activeSectionIndex : 0;
+  const elapsedBefore = durations
+    .slice(0, sectionIdx)
+    .reduce((a, b) => a + (b > 0 ? b : 0), 0);
+  const currentSecLocal = isActive && el ? el.currentTime : 0;
+  const currentSec = elapsedBefore + currentSecLocal;
+
   const isPlaying = isActive && el != null && !el.paused && !el.ended;
   const isLoading =
     isActive &&
@@ -281,16 +456,7 @@ export function useLessonAudio(lessonId: string | undefined): LessonAudioState {
     el.readyState < el.HAVE_FUTURE_DATA &&
     !el.paused;
 
-  // Live duration once metadata loads (audio.duration is NaN before
-  // `loadedmetadata` fires). Falls back to the manifest's pre-baked
-  // value if present, else null. The TTSButton pill swaps from
-  // "X min read" to "M:SS left" the instant we have a real number.
-  const liveDuration =
-    isActive && el && Number.isFinite(el.duration) && el.duration > 0
-      ? el.duration
-      : null;
-  const durationSec = liveDuration ?? entry.durationSec ?? null;
-  const currentSec = isActive && el ? el.currentTime : 0;
+  const durationSec = haveAnyDuration ? totalDuration : null;
   const progress =
     durationSec && durationSec > 0
       ? Math.max(0, Math.min(1, currentSec / durationSec))
@@ -298,9 +464,25 @@ export function useLessonAudio(lessonId: string | undefined): LessonAudioState {
   const remainingSec =
     durationSec != null ? Math.max(0, durationSec - currentSec) : null;
 
+  const startSection = (idx: number): void => {
+    const a = ensureAudioEl();
+    activeLessonId = lessonId;
+    activeSections = sections;
+    activeSectionIndex = idx;
+    // Seed the duration cache from manifest estimates. Each entry's
+    // live duration overwrites the estimate as `loadedmetadata` fires.
+    sectionDurations = sections.map((s) =>
+      typeof s.durationSec === "number" && s.durationSec > 0 ? s.durationSec : 0,
+    );
+    a.src = sections[idx].url;
+    void a.play();
+  };
+
   return {
     available: true,
-    url: entry.url,
+    url: sections[sectionIdx]?.url ?? "",
+    sectionCount: sections.length,
+    sectionIndex: sectionIdx,
     durationSec,
     isActive,
     isPlaying,
@@ -309,26 +491,24 @@ export function useLessonAudio(lessonId: string | undefined): LessonAudioState {
     progress,
     remainingSec,
     play: () => {
-      const a = ensureAudioEl();
       if (activeLessonId !== lessonId) {
-        a.src = entry.url;
-        activeLessonId = lessonId;
+        startSection(0);
+        return;
       }
-      void a.play();
+      // Already loaded — just resume.
+      if (audioEl) void audioEl.play();
     },
     pause: () => {
       if (audioEl && activeLessonId === lessonId) audioEl.pause();
     },
     toggle: () => {
-      const a = ensureAudioEl();
       if (activeLessonId !== lessonId) {
-        a.src = entry.url;
-        activeLessonId = lessonId;
-        void a.play();
+        startSection(0);
         return;
       }
-      if (a.paused) void a.play();
-      else a.pause();
+      if (!audioEl) return;
+      if (audioEl.paused) void audioEl.play();
+      else audioEl.pause();
     },
     seek: (sec) => {
       if (audioEl && activeLessonId === lessonId) audioEl.currentTime = sec;
@@ -346,5 +526,8 @@ export function stopLessonAudio(): void {
   if (audioEl && !audioEl.paused) audioEl.pause();
   if (audioEl) audioEl.removeAttribute("src");
   activeLessonId = null;
+  activeSections = null;
+  activeSectionIndex = 0;
+  sectionDurations = [];
   notify();
 }

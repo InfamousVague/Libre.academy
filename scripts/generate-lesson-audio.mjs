@@ -40,7 +40,11 @@ import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { markdownToSpokenText, chunkForSynthesis } from "./spoken-text.mjs";
+import {
+  markdownToSpokenText,
+  chunkForSynthesis,
+  splitMarkdownIntoSections,
+} from "./spoken-text.mjs";
 
 // ── env loading ─────────────────────────────────────────────────
 // Ultra-light .env reader — no deps. Looks for a `.env` file at the
@@ -277,12 +281,31 @@ function sha256(buf) {
   return createHash("sha256").update(buf).digest("hex");
 }
 
+/// Estimate MP3 duration from the file's byte length. ElevenLabs
+/// emits 128 kbps CBR MP3 (`mp3_44100_128` in the synthesis URL),
+/// so duration ≈ bytes / 16000 (128 kbits/s = 16000 bytes/s). The
+/// estimate is within a few hundred ms of the true duration —
+/// sufficient for cumulative-progress maths in the player. The
+/// player refines with the live `audio.duration` once each section
+/// has actually loaded.
+function estimateDurationFromBytes(bytes) {
+  if (!bytes || bytes <= 0) return null;
+  // 128 kbps CBR MP3 → 16000 bytes per second of audio.
+  return Math.round((bytes / 16000) * 100) / 100;
+}
+
 async function main() {
   const courses = loadAllCourses();
   console.error(`[generate-audio] found ${courses.length} courses`);
 
+  // Manifest schema v2 — each lesson carries a `sections` array
+  // instead of a single `url`. Each section is one MP3 file under
+  // `dist/audio/<courseId>/<lessonId>/NN.<sha7>.mp3`. The player
+  // walks the array, plays each in order, and waits for `ended`
+  // before advancing — so the cursor + progress signal stay glued
+  // to which paragraph is actually being read.
   const manifest = {
-    version: 1,
+    version: 2,
     voice: VOICE_NAME,
     voiceId: null,
     model: MODEL_ID,
@@ -291,8 +314,9 @@ async function main() {
     lessons: {},
   };
 
-  let synthesised = 0;
-  let skipped = 0;
+  let lessonsTouched = 0;
+  let sectionsSynth = 0;
+  let sectionsSkipped = 0;
   let totalChars = 0;
   let billedChars = 0;
 
@@ -305,67 +329,141 @@ async function main() {
     }
     for (const lesson of lessons) {
       if (lessonFilter && lesson.id !== lessonFilter) continue;
-      const spoken = markdownToSpokenText(lesson.body);
-      const textHash = sha256(spoken);
-      const sha7 = textHash.slice(0, 7);
-      const fileRel = `${course.id}/${lesson.id}.${sha7}.mp3`;
-      const fileAbs = join(OUT_DIR, fileRel);
-      const cdnUrl = `${CDN_BASE}/${fileRel}`;
 
-      totalChars += spoken.length;
+      // Sectioning happens on the RAW markdown so block indices line
+      // up with the renderer's `data-tts-block` numbering. Each
+      // section's spoken text is run through the same
+      // `markdownToSpokenText` pipeline the old per-lesson path used.
+      const sections = splitMarkdownIntoSections(lesson.body);
+      if (sections.length === 0) continue;
 
-      const prev = previousManifest.lessons?.[lesson.id];
-      const cacheHit =
-        prev &&
-        prev.textHash === textHash &&
-        prev.voice === VOICE_NAME &&
-        prev.model === MODEL_ID &&
-        existsSync(fileAbs);
+      lessonsTouched += 1;
+      const lessonRelDir = `${course.id}/${lesson.id}`;
+      const lessonAbsDir = join(OUT_DIR, lessonRelDir);
+      const sectionEntries = [];
+      let lessonAnySynth = false;
 
-      if (cacheHit) {
-        manifest.lessons[lesson.id] = prev;
-        // The cached entry might have a stale CDN base if env changed;
-        // refresh the URL field in case the user moved CDNs.
-        manifest.lessons[lesson.id].url = cdnUrl;
-        skipped++;
-        if (VERBOSE) console.error(`  ✓ skip ${lesson.id} (unchanged)`);
-        continue;
-      }
+      for (let sIdx = 0; sIdx < sections.length; sIdx++) {
+        const section = sections[sIdx];
+        const spoken = markdownToSpokenText(section.source);
+        // Skip an empty-spoken section (e.g. a heading-only section
+        // whose body became "" after preprocessing) — the player
+        // would have nothing to play and the manifest entry would
+        // be a 0-byte MP3.
+        if (!spoken.trim()) {
+          if (VERBOSE)
+            console.error(
+              `    · ${lesson.id} §${sIdx + 1} empty after preprocess — skipped`,
+            );
+          continue;
+        }
+        const textHash = sha256(spoken);
+        const sha7 = textHash.slice(0, 7);
+        // Zero-padded to two digits so lexical sort = playback
+        // order. Three digits would be paranoid (a single lesson
+        // with 100+ H1/H2 sections would be unusual; degrade
+        // gracefully if we ever hit it by widening the pad).
+        const seq = String(sIdx + 1).padStart(2, "0");
+        const fileRel = `${lessonRelDir}/${seq}.${sha7}.mp3`;
+        const fileAbs = join(OUT_DIR, fileRel);
+        const cdnUrl = `${CDN_BASE}/${fileRel}`;
 
-      billedChars += spoken.length;
+        totalChars += spoken.length;
 
-      if (DRY_RUN) {
+        // Cache hit: the previous manifest had this same lesson +
+        // section index + textHash, AND the on-disk file still
+        // exists. Refresh the URL field defensively (CDN base may
+        // have moved) and move on.
+        const prevSection = previousManifest.lessons?.[lesson.id]?.sections?.[
+          sIdx
+        ];
+        const cacheHit =
+          prevSection &&
+          prevSection.textHash === textHash &&
+          prevSection.voice === VOICE_NAME &&
+          prevSection.model === MODEL_ID &&
+          existsSync(fileAbs);
+
+        if (cacheHit) {
+          sectionsSkipped += 1;
+          sectionEntries.push({
+            ...prevSection,
+            url: cdnUrl,
+            blockStart: section.blockStart,
+            blockEnd: section.blockEnd,
+            headingText: section.headingText,
+            headingLevel: section.headingLevel,
+          });
+          if (VERBOSE)
+            console.error(`  ↩ ${lesson.id} §${sIdx + 1} cache hit`);
+          continue;
+        }
+
+        billedChars += spoken.length;
+
+        if (DRY_RUN) {
+          console.error(
+            `  ▶ would synth ${lesson.id} §${sIdx + 1} (${spoken.length} chars)` +
+              (section.headingText ? ` — "${section.headingText}"` : ""),
+          );
+          sectionEntries.push({
+            url: cdnUrl,
+            sha256: undefined,
+            sizeBytes: undefined,
+            durationSec: undefined,
+            textHash,
+            voice: VOICE_NAME,
+            model: MODEL_ID,
+            blockStart: section.blockStart,
+            blockEnd: section.blockEnd,
+            headingText: section.headingText,
+            headingLevel: section.headingLevel,
+          });
+          sectionsSynth += 1;
+          continue;
+        }
+
         console.error(
-          `  ▶ would synth ${lesson.id} (${spoken.length} chars)`,
+          `  ▶ ${lesson.id} §${sIdx + 1} (${spoken.length} chars)` +
+            (section.headingText ? ` — "${section.headingText}"` : ""),
         );
-        manifest.lessons[lesson.id] = {
+        const voiceId = await resolveVoiceId();
+        manifest.voiceId = voiceId;
+        const mp3 = await synthesizeLesson(voiceId, spoken);
+        mkdirSync(lessonAbsDir, { recursive: true });
+        writeFileSync(fileAbs, mp3);
+        sectionEntries.push({
           url: cdnUrl,
-          courseId: course.id,
+          sha256: sha256(mp3),
+          sizeBytes: mp3.length,
+          durationSec: estimateDurationFromBytes(mp3.length),
           textHash,
           voice: VOICE_NAME,
+          voiceId,
           model: MODEL_ID,
-        };
-        synthesised++;
-        continue;
+          blockStart: section.blockStart,
+          blockEnd: section.blockEnd,
+          headingText: section.headingText,
+          headingLevel: section.headingLevel,
+        });
+        sectionsSynth += 1;
+        lessonAnySynth = true;
       }
 
-      console.error(`  ▶ ${lesson.id} (${spoken.length} chars)`);
-      const voiceId = await resolveVoiceId();
-      manifest.voiceId = voiceId;
-      const mp3 = await synthesizeLesson(voiceId, spoken);
-      mkdirSync(dirname(fileAbs), { recursive: true });
-      writeFileSync(fileAbs, mp3);
+      if (sectionEntries.length === 0) continue;
+
       manifest.lessons[lesson.id] = {
-        url: cdnUrl,
         courseId: course.id,
-        sha256: sha256(mp3),
-        sizeBytes: mp3.length,
-        textHash,
         voice: VOICE_NAME,
-        voiceId,
         model: MODEL_ID,
+        sections: sectionEntries,
       };
-      synthesised++;
+
+      // Forward the manifest's voiceId once we have one — populated
+      // on first synthesis, no-op otherwise.
+      if (lessonAnySynth && manifest.voiceId == null) {
+        manifest.voiceId = await resolveVoiceId();
+      }
     }
   }
 
@@ -377,15 +475,16 @@ async function main() {
   writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
 
   console.error("\n──────────────────────────────────────");
-  console.error(`synthesised:  ${synthesised}`);
-  console.error(`skipped:      ${skipped} (cache hits)`);
-  console.error(`total chars:  ${totalChars.toLocaleString()}`);
-  console.error(`billed chars: ${billedChars.toLocaleString()}`);
+  console.error(`lessons touched: ${lessonsTouched}`);
+  console.error(`sections synth:  ${sectionsSynth}`);
+  console.error(`sections cached: ${sectionsSkipped}`);
+  console.error(`total chars:     ${totalChars.toLocaleString()}`);
+  console.error(`billed chars:    ${billedChars.toLocaleString()}`);
   if (DRY_RUN) {
     console.error(`(dry run — no API calls made)`);
   }
-  console.error(`manifest:     ${MANIFEST_PATH}`);
-  console.error(`upload root:  ${OUT_DIR}`);
+  console.error(`manifest:        ${MANIFEST_PATH}`);
+  console.error(`upload root:     ${OUT_DIR}`);
 }
 
 main().catch((err) => {

@@ -47,7 +47,10 @@ import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { markdownToSpokenText } from "./spoken-text.mjs";
+import {
+  markdownToSpokenText,
+  splitMarkdownIntoSections,
+} from "./spoken-text.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");
@@ -172,7 +175,12 @@ function main() {
 
   const courses = loadAllCourses();
   const manifest = {
-    version: 1,
+    // The importer always emits v2 manifests now — even when the
+    // sources are legacy single-MP3-per-lesson files, we wrap them
+    // as a length-1 section list so the player's v2 code path drives
+    // both. New generator output is true multi-section; the legacy
+    // wrap is just transitional until the user regenerates.
+    version: 2,
     voice: VOICE_NAME,
     voiceId: null,
     model: MODEL_ID,
@@ -185,6 +193,7 @@ function main() {
   let alreadyInDist = 0;
   let missing = 0;
   let stale = 0;
+  let legacy = 0;
   const missingByCourse = {};
   const staleByCourse = {};
 
@@ -195,65 +204,181 @@ function main() {
 
     const sourceCourseDir = join(SOURCE_DIR, course.id);
     const targetCourseDir = join(OUT_DIR, course.id);
-    const sourceFiles = existsSync(sourceCourseDir)
-      ? readdirSync(sourceCourseDir).filter((n) => n.endsWith(".mp3"))
+    // Top-level files in the source course dir (v1 layout: one MP3
+    // per lesson sitting next to its siblings).
+    const sourceTopMp3s = existsSync(sourceCourseDir)
+      ? readdirSync(sourceCourseDir, { withFileTypes: true })
+          .filter((d) => d.isFile() && d.name.endsWith(".mp3"))
+          .map((d) => d.name)
       : [];
+    // Per-lesson subdirs (v2 layout: one dir per lesson with NN.sha7.mp3 files).
+    const sourceLessonDirs = existsSync(sourceCourseDir)
+      ? new Set(
+          readdirSync(sourceCourseDir, { withFileTypes: true })
+            .filter((d) => d.isDirectory())
+            .map((d) => d.name),
+        )
+      : new Set();
 
-    // Build a quick lookup so a per-lesson check is O(1) — keys are
-    // the `<lessonId>.<sha7>` portion of each filename.
-    const sourceIndex = new Map();
-    for (const f of sourceFiles) {
+    // Top-level lookup keyed on `<lessonId>.<sha7>` for the legacy
+    // path (single MP3 per lesson).
+    const topLevelIndex = new Map();
+    for (const f of sourceTopMp3s) {
       const m = /^(.+)\.([0-9a-f]{7})\.mp3$/.exec(f);
-      if (m) sourceIndex.set(`${m[1]}.${m[2]}`, f);
+      if (m) topLevelIndex.set(`${m[1]}.${m[2]}`, f);
     }
 
     let courseImports = 0;
     let courseMissing = 0;
     let courseStale = 0;
+    let courseLegacy = 0;
 
     for (const lesson of lessons) {
-      const spoken = markdownToSpokenText(lesson.body);
-      const textHash = sha256(spoken);
-      const sha7 = textHash.slice(0, 7);
-      const fileRel = `${course.id}/${lesson.id}.${sha7}.mp3`;
-      const fileAbs = join(OUT_DIR, fileRel);
-      const cdnUrl = `${EFFECTIVE_CDN_BASE}/${fileRel}`;
+      const lessonRelDir = `${course.id}/${lesson.id}`;
+      const lessonAbsDir = join(OUT_DIR, lessonRelDir);
+      const lessonSourceDir = join(sourceCourseDir, lesson.id);
 
-      // Three locations, in priority order: already in dist/, in the
-      // source dir at the right sha7, or in the source dir at the
-      // wrong sha7 (= stale, body has drifted since synthesis).
-      if (existsSync(fileAbs)) {
+      // ── v2 path: per-section MP3s in <source>/<courseId>/<lessonId>/ ──
+      // Hash each section's spoken text; look for an
+      // <NN>.<sha7>.mp3 whose sha7 matches. Emit a sectioned manifest
+      // entry when at least one section matches; report the rest as
+      // missing/stale on a per-section basis so partial coverage
+      // is clear instead of silently degrading.
+      const haveLessonDir = sourceLessonDirs.has(lesson.id);
+      if (haveLessonDir) {
+        const lessonSourceFiles = readdirSync(lessonSourceDir).filter((n) =>
+          n.endsWith(".mp3"),
+        );
+        // Index keyed by sha7 so a section matches its file by
+        // content, not by section number — a renumbered section
+        // (heading reordered) still finds its old MP3 if the spoken
+        // text is unchanged.
+        const sha7Index = new Map();
+        for (const f of lessonSourceFiles) {
+          const m = /^(\d{2})\.([0-9a-f]{7})\.mp3$/.exec(f);
+          if (m) sha7Index.set(m[2], f);
+        }
+
+        const sections = splitMarkdownIntoSections(lesson.body);
+        const entrySections = [];
+        let hadAnyMatch = false;
+        let hadAnyMiss = false;
+        for (let sIdx = 0; sIdx < sections.length; sIdx++) {
+          const section = sections[sIdx];
+          const spokenSection = markdownToSpokenText(section.source);
+          if (!spokenSection.trim()) continue;
+          const textHash = sha256(spokenSection);
+          const sha7 = textHash.slice(0, 7);
+          const seq = String(sIdx + 1).padStart(2, "0");
+          const fileRel = `${lessonRelDir}/${seq}.${sha7}.mp3`;
+          const fileAbs = join(OUT_DIR, fileRel);
+          const cdnUrl = `${EFFECTIVE_CDN_BASE}/${fileRel}`;
+
+          if (existsSync(fileAbs)) {
+            entrySections.push(buildSectionEntry({
+              fileAbs, cdnUrl, textHash, section, sIdx,
+            }));
+            hadAnyMatch = true;
+            continue;
+          }
+
+          if (sha7Index.has(sha7)) {
+            const sourceAbs = join(lessonSourceDir, sha7Index.get(sha7));
+            if (!DRY_RUN) {
+              mkdirSync(lessonAbsDir, { recursive: true });
+              copyFileSync(sourceAbs, fileAbs);
+            }
+            entrySections.push(
+              buildSectionEntry({
+                fileAbs: DRY_RUN ? sourceAbs : fileAbs,
+                cdnUrl,
+                textHash,
+                section,
+                sIdx,
+              }),
+            );
+            imported++;
+            hadAnyMatch = true;
+            continue;
+          }
+
+          hadAnyMiss = true;
+        }
+
+        if (hadAnyMatch) {
+          manifest.lessons[lesson.id] = {
+            courseId: course.id,
+            voice: VOICE_NAME,
+            model: MODEL_ID,
+            sections: entrySections,
+          };
+          courseImports++;
+          if (hadAnyMiss) {
+            (missingByCourse[course.id] ??= []).push(
+              `${lesson.id} (partial — ${entrySections.length}/${sections.length} sections)`,
+            );
+          }
+          continue;
+        }
+        // Lesson dir exists but no sections matched — fall through
+        // to the v1 / missing accounting below.
+      }
+
+      // ── v1 path: single MP3 at <source>/<courseId>/<lessonId>.<sha7>.mp3 ──
+      // Wrapped as a length-1 section list so the player's v2 path
+      // drives it uniformly. The wrap intentionally leaves
+      // `blockEnd: -1` to mark "we don't know the block range" — the
+      // cursor falls back to char-weighting against overall progress
+      // (= same behaviour as before sectioning).
+      const wholeSpoken = markdownToSpokenText(lesson.body);
+      const wholeTextHash = sha256(wholeSpoken);
+      const wholeSha7 = wholeTextHash.slice(0, 7);
+      const v1FileRel = `${course.id}/${lesson.id}.${wholeSha7}.mp3`;
+      const v1FileAbs = join(OUT_DIR, v1FileRel);
+      const v1CdnUrl = `${EFFECTIVE_CDN_BASE}/${v1FileRel}`;
+
+      if (existsSync(v1FileAbs)) {
         manifest.lessons[lesson.id] = {
-          url: cdnUrl,
           courseId: course.id,
-          sha256: sha256ForFile(fileAbs),
-          sizeBytes: statSync(fileAbs).size,
-          textHash,
           voice: VOICE_NAME,
           model: MODEL_ID,
+          sections: [
+            buildLegacySectionEntry({
+              fileAbs: v1FileAbs,
+              cdnUrl: v1CdnUrl,
+              textHash: wholeTextHash,
+            }),
+          ],
         };
         alreadyInDist++;
+        legacy++;
+        courseLegacy++;
         continue;
       }
 
-      const key = `${lesson.id}.${sha7}`;
-      if (sourceIndex.has(key)) {
-        const sourceAbs = join(sourceCourseDir, sourceIndex.get(key));
+      const v1Key = `${lesson.id}.${wholeSha7}`;
+      if (topLevelIndex.has(v1Key)) {
+        const sourceAbs = join(sourceCourseDir, topLevelIndex.get(v1Key));
         if (!DRY_RUN) {
           mkdirSync(targetCourseDir, { recursive: true });
-          copyFileSync(sourceAbs, fileAbs);
+          copyFileSync(sourceAbs, v1FileAbs);
         }
         manifest.lessons[lesson.id] = {
-          url: cdnUrl,
           courseId: course.id,
-          sha256: DRY_RUN ? undefined : sha256ForFile(fileAbs),
-          sizeBytes: DRY_RUN ? statSync(sourceAbs).size : statSync(fileAbs).size,
-          textHash,
           voice: VOICE_NAME,
           model: MODEL_ID,
+          sections: [
+            buildLegacySectionEntry({
+              fileAbs: DRY_RUN ? sourceAbs : v1FileAbs,
+              cdnUrl: v1CdnUrl,
+              textHash: wholeTextHash,
+            }),
+          ],
         };
         imported++;
+        legacy++;
         courseImports++;
+        courseLegacy++;
         continue;
       }
 
@@ -262,14 +387,14 @@ function main() {
       // generated against an older version of the prose. Don't copy
       // it (it'd narrate stale content); leave the manifest gap so
       // the user knows what to regenerate.
-      const staleMatch = sourceFiles.find((f) =>
+      const staleMatch = sourceTopMp3s.find((f) =>
         f.startsWith(`${lesson.id}.`),
       );
       if (staleMatch) {
         stale++;
         courseStale++;
         (staleByCourse[course.id] ??= []).push(
-          `${lesson.id} (have sha7 ${/\.([0-9a-f]{7})\./.exec(staleMatch)?.[1]}, need ${sha7})`,
+          `${lesson.id} (have sha7 ${/\.([0-9a-f]{7})\./.exec(staleMatch)?.[1]}, need ${wholeSha7})`,
         );
         continue;
       }
@@ -280,8 +405,9 @@ function main() {
     }
 
     if (courseImports + courseMissing + courseStale > 0) {
+      const legacyHint = courseLegacy > 0 ? `, ${courseLegacy} legacy` : "";
       console.error(
-        `  ${course.id}: ${courseImports} imported, ${courseStale} stale, ${courseMissing} missing`,
+        `  ${course.id}: ${courseImports} imported${legacyHint}, ${courseStale} stale, ${courseMissing} missing`,
       );
     }
   }
@@ -298,6 +424,7 @@ function main() {
   console.error(`  already in dist:      ${alreadyInDist}`);
   console.error(`  stale (body changed): ${stale}`);
   console.error(`  missing (no file):    ${missing}`);
+  console.error(`  legacy single-file:   ${legacy} (re-run generate-lesson-audio.mjs to upgrade to per-section audio)`);
   console.error(`  manifest entries:     ${Object.keys(manifest.lessons).length}`);
 
   if (stale > 0) {
@@ -328,6 +455,60 @@ function main() {
 /// MP3s are at most a few MB so this is cheap.
 function sha256ForFile(path) {
   return createHash("sha256").update(readFileSync(path)).digest("hex");
+}
+
+/// Approximate duration in seconds for a 128 kbps CBR MP3.
+/// Mirrors the generator's `estimateDurationFromBytes`. The audio
+/// player refines via the live `audio.duration` once each section
+/// loads, so being a few hundred ms off doesn't show up in the UX.
+function estimateDurationFromBytes(bytes) {
+  if (!bytes || bytes <= 0) return null;
+  return Math.round((bytes / 16000) * 100) / 100;
+}
+
+/// Build a v2 manifest section entry for the per-section path. The
+/// section comes from `splitMarkdownIntoSections` (so we have the
+/// heading text + block range); the file fields are read live from
+/// disk for accuracy.
+function buildSectionEntry({ fileAbs, cdnUrl, textHash, section }) {
+  const sizeBytes = statSync(fileAbs).size;
+  return {
+    url: cdnUrl,
+    sha256: sha256ForFile(fileAbs),
+    sizeBytes,
+    durationSec: estimateDurationFromBytes(sizeBytes),
+    textHash,
+    voice: VOICE_NAME,
+    model: MODEL_ID,
+    blockStart: section.blockStart,
+    blockEnd: section.blockEnd,
+    headingText: section.headingText,
+    headingLevel: section.headingLevel,
+  };
+}
+
+/// Build a v2 manifest section entry from a v1 single-MP3 source.
+/// We don't know section structure (the file covers the whole
+/// lesson), so `blockStart=0, blockEnd=-1` flags "unknown range" —
+/// the cursor falls back to char-weighting against overall progress
+/// (= the pre-sectioning behaviour). This wrapping path exists
+/// purely for the transition: legacy MP3s on Desktop still produce
+/// playable audio while the user decides whether to regenerate.
+function buildLegacySectionEntry({ fileAbs, cdnUrl, textHash }) {
+  const sizeBytes = statSync(fileAbs).size;
+  return {
+    url: cdnUrl,
+    sha256: sha256ForFile(fileAbs),
+    sizeBytes,
+    durationSec: estimateDurationFromBytes(sizeBytes),
+    textHash,
+    voice: VOICE_NAME,
+    model: MODEL_ID,
+    blockStart: 0,
+    blockEnd: -1,
+    headingText: null,
+    headingLevel: null,
+  };
 }
 
 main();

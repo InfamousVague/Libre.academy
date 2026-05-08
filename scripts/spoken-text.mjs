@@ -104,9 +104,104 @@ const SYMBOL_REPLACEMENTS = [
 /// rather than the listener hearing every symbol read aloud — which
 /// is the audiobook-killer the user pointed out.
 const FENCED_BLOCK_RE = /(```|~~~)\s*(\w*)\s*\n([\s\S]*?)\n\1/g;
-/// Inline `code` is just stripped of its backticks — single short
-/// tokens like `chain.send()` read fine without them.
+/// Inline `code` runs through `speakableInlineCode` so symbols and
+/// punctuation don't read as their literal names. The previous
+/// implementation just stripped backticks, which left things like
+/// `===`, `&&`, `0x80`, and `i++` to be pronounced character by
+/// character ("equals equals equals", "and and", "zero x eight zero")
+/// — much worse than reading "strict equals", "and", or "hex 8 0".
 const INLINE_CODE_RE = /`([^`\n]+)`/g;
+
+/// Operator → spoken-word mapping for inline code. Longest first so
+/// the regex alternation is greedy at the right places (`===` before
+/// `==`, `>=` before `>`). Each phrase is space-padded inside the
+/// transform so adjacent identifiers don't run together.
+const INLINE_OPS = [
+  ["===", "strict equals"],
+  ["!==", "strict not equals"],
+  ["==", "equals"],
+  ["!=", "not equals"],
+  ["<=", "less than or equal to"],
+  [">=", "greater than or equal to"],
+  ["<<", "left shift"],
+  [">>", "right shift"],
+  ["&&", "and"],
+  ["||", "or"],
+  ["??", "or"],
+  ["=>", "arrow"],
+  ["->", "arrow"],
+  ["++", " plus plus"],
+  ["--", " minus minus"],
+  ["::", " "],
+];
+
+/// Convert a single inline-code span (the content inside the
+/// backticks, NOT including them) into a TTS-friendly phrase.
+///
+/// Handles the high-frequency stumbles:
+///   - `0x80` / `0xFF`        → "hex 8 0" / "hex F F"
+///   - `===`, `!==`, `==`     → "strict equals" / "not equals" / etc.
+///   - `&&`, `||`             → "and" / "or"
+///   - `=>`, `->`             → "arrow"
+///   - `foo()`                → "foo" (drop empty parens after an
+///                              identifier so the TTS doesn't read
+///                              "foo open paren close paren")
+///   - `obj.method()`         → "obj dot method" (same — drop the
+///                              parens, keep the dot which most
+///                              engines pronounce naturally)
+///   - `<button>` / `{x}`     → fall through to the prose-pass
+///                              `stripStrayFormattingChars` later;
+///                              we just drop the brackets here so
+///                              the inner identifier survives.
+///   - `i++`, `n--`           → "i plus plus" / "n minus minus"
+///   - `my_var`               → "my var" (the prose-pass strip
+///                              already does this; we mirror it
+///                              here so multi-pass idempotence is
+///                              preserved).
+///
+/// Anything not matched falls through unchanged so plain identifiers
+/// (`chain.send`, `String::new`, `Vec<i32>`) still read fine.
+export function speakableInlineCode(code) {
+  let s = (code ?? "").trim();
+  if (!s) return "";
+
+  // Hex literals first — must run BEFORE operator replacements so
+  // the `0x` prefix isn't misread as part of some operator. Each hex
+  // digit gets spaced so the engine reads them individually
+  // ("hex F F" not "hex FF" which TTS sometimes reads as "fast forward").
+  s = s.replace(/\b0x([0-9a-fA-F]+)\b/g, (_, hex) =>
+    `hex ${hex.toUpperCase().split("").join(" ")}`,
+  );
+
+  // Operators. Use literal indexOf-style replacement (replaceAll on
+  // a string arg, not regex) so we don't have to escape every char.
+  for (const [op, word] of INLINE_OPS) {
+    s = s.split(op).join(` ${word} `);
+  }
+
+  // Empty parens after an identifier: `foo()` → `foo`. The TTS reads
+  // `foo` as "foo" naturally; with the parens it sometimes reads
+  // "foo of nothing" or "foo open paren close paren".
+  s = s.replace(/([A-Za-z_$][\w$]*)\s*\(\s*\)/g, "$1");
+
+  // Bare empty parens / brackets / braces remaining anywhere — drop
+  // (replace with a space) so they don't read as their literal names.
+  s = s.replace(/[(){}\[\]]/g, " ");
+
+  // Underscores between word chars become spaces, lone underscores
+  // dropped. Mirrors stripStrayFormattingChars's prose-side handling
+  // — applied here so the inline transform is self-contained.
+  s = s.replace(/(\w)_+(\w)/g, "$1 $2").replace(/_+/g, " ");
+
+  // Angle brackets — generic-style `Vec<i32>` reads as "vec i32"
+  // after we drop them. Stripping here keeps the inner type names.
+  s = s.replace(/<\s*/g, " ").replace(/\s*>/g, " ");
+
+  // Collapse runs of whitespace.
+  s = s.replace(/\s+/g, " ").trim();
+
+  return s;
+}
 
 /// Friendly language label. The TTS reads these aloud so we want a
 /// natural pronunciation (e.g. "TypeScript" not "TS"). Falls back to
@@ -428,9 +523,13 @@ export function markdownToSpokenText(markdown) {
   // 2) Strip markdown formatting chrome (headings, bold, lists, links).
   text = stripFormatting(text);
 
-  // 3) Inline `code` → bare code (drop the backticks; the words
-  //    inside usually read fine, e.g. `chain.send()`).
-  text = text.replace(INLINE_CODE_RE, "$1");
+  // 3) Inline `code` → speakable phrase. See `speakableInlineCode`
+  //    above for the per-token rules; the short version is "translate
+  //    operators to words, drop empty parens, space hex digits, leave
+  //    plain identifiers alone".
+  text = text.replace(INLINE_CODE_RE, (_match, code) =>
+    speakableInlineCode(code),
+  );
 
   // 4) Symbol replacements (math, arrows, dashes).
   for (const [re, repl] of SYMBOL_REPLACEMENTS) {
@@ -525,6 +624,187 @@ function stripStrayFormattingChars(text) {
       // often the residue of a stripped link target ("see :"). Drop.
       .replace(/:\s*([,.;!?])/g, "$1")
   );
+}
+
+/// Split a lesson's MARKDOWN body into heading-bounded sections so
+/// each section can be synthesized as its own MP3. Per-section audio
+/// gives the player precise wait-for-section-to-finish playback +
+/// gives the cursor accurate per-section progress (vs. the previous
+/// one-MP3-per-lesson setup where the cursor had to char-weight a
+/// global progress signal across the whole body).
+///
+/// Section boundary rule: H1 or H2 headings start a new section.
+/// Deeper headings (H3+) stay inside their parent section — they're
+/// typically used for "step a / step b" sub-points that read
+/// naturally as part of the same narration, so cutting audio between
+/// them would feel like a stutter. Lessons with NO H1/H2 (rare —
+/// short readings, or books that lean entirely on H3+ sub-headings)
+/// collapse to one section covering the whole body, which matches
+/// the old single-MP3-per-lesson behaviour.
+///
+/// Block accounting: the `data-tts-block` indices the renderer adds
+/// (see `annotateTtsBlocks` in src/components/Lesson/markdown.ts)
+/// match this segmentation 1:1, because both treat the same things
+/// as a "top-level block":
+///   - a paragraph (text separated by blank lines)
+///   - a heading line
+///   - a fenced code block (one block even if it has internal blank lines)
+///   - a list (one block; consecutive list items merge into one)
+///   - a blockquote
+/// HRs (`---`) are skipped on both sides. Each returned section
+/// carries `{ blockStart, blockEnd }` so a downstream consumer (the
+/// player / cursor) can map "section N is playing" → "highlight DOM
+/// blocks blockStart..blockEnd".
+///
+/// Returned shape:
+///   [
+///     { source: string,        // original markdown for this section
+///       headingText: string|null,  // null only for an intro section
+///                                  // before the first heading
+///       headingLevel: number|null,
+///       blockStart: number,    // first data-tts-block index
+///       blockEnd: number       // last data-tts-block index (inclusive)
+///     },
+///     …
+///   ]
+export function splitMarkdownIntoSections(markdown) {
+  if (!markdown || typeof markdown !== "string") return [];
+
+  // Phase 1 — tokenise into blocks. We're permissive here: anything
+  // separated by a blank line is a block; fenced code is a single
+  // block regardless of internal blank lines; lists greedily eat
+  // consecutive list-marker lines + their indented continuations.
+  const blocks = []; // [{ kind, source, level?, headingText? }]
+  const lines = markdown.split(/\r?\n/);
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (!line.trim()) {
+      i += 1;
+      continue;
+    }
+
+    // Fenced code block — one block, internal blanks preserved.
+    const fenceOpen = /^(\s*)(```|~~~)(.*)$/.exec(line);
+    if (fenceOpen) {
+      const fence = fenceOpen[2];
+      const start = i;
+      i += 1;
+      while (i < lines.length && !lines[i].trim().startsWith(fence)) i += 1;
+      if (i < lines.length) i += 1; // consume closing fence
+      blocks.push({ kind: "code", source: lines.slice(start, i).join("\n") });
+      continue;
+    }
+
+    // Heading.
+    const headingMatch = /^(\s*)(#{1,6})\s+(.*\S)\s*$/.exec(line);
+    if (headingMatch) {
+      blocks.push({
+        kind: "heading",
+        level: headingMatch[2].length,
+        headingText: headingMatch[3].trim(),
+        source: line,
+      });
+      i += 1;
+      continue;
+    }
+
+    // List — bullet (-, *, +) or numbered (`1.` etc). Eats
+    // continuations: indented lines, blank lines followed by another
+    // list marker. Stops at a non-list non-indented non-blank line.
+    if (/^\s*([-*+]|\d+[.)])\s+/.test(line)) {
+      const start = i;
+      i += 1;
+      while (i < lines.length) {
+        const cur = lines[i];
+        if (!cur.trim()) {
+          // Lookahead — continuation if next non-blank is another
+          // list marker or an indented line.
+          let j = i + 1;
+          while (j < lines.length && !lines[j].trim()) j += 1;
+          if (
+            j < lines.length &&
+            (/^\s*([-*+]|\d+[.)])\s+/.test(lines[j]) || /^\s+\S/.test(lines[j]))
+          ) {
+            i = j;
+            continue;
+          }
+          break;
+        }
+        if (
+          /^\s*([-*+]|\d+[.)])\s+/.test(cur) ||
+          /^\s+\S/.test(cur)
+        ) {
+          i += 1;
+          continue;
+        }
+        break;
+      }
+      blocks.push({ kind: "list", source: lines.slice(start, i).join("\n") });
+      continue;
+    }
+
+    // Blockquote — eats consecutive `>` lines.
+    if (/^\s*>/.test(line)) {
+      const start = i;
+      while (i < lines.length && /^\s*>/.test(lines[i])) i += 1;
+      blocks.push({ kind: "quote", source: lines.slice(start, i).join("\n") });
+      continue;
+    }
+
+    // Horizontal rule — the renderer drops these from
+    // `data-tts-block` accounting, so we drop them here too.
+    if (/^\s*[-*_]{3,}\s*$/.test(line)) {
+      i += 1;
+      continue;
+    }
+
+    // Default: paragraph — consume contiguous non-blank lines.
+    const start = i;
+    while (i < lines.length && lines[i].trim()) i += 1;
+    blocks.push({ kind: "paragraph", source: lines.slice(start, i).join("\n") });
+  }
+
+  if (blocks.length === 0) return [];
+
+  // Phase 2 — group blocks into sections. H1/H2/H3 starts a new
+  // section. Anything before the first qualifying heading goes into
+  // an "intro" section with headingText: null.
+  const SECTION_LEVELS = new Set([1, 2]);
+  const sections = [];
+  let cur = null;
+  let blockIdx = 0;
+  for (const block of blocks) {
+    const startsSection =
+      block.kind === "heading" && SECTION_LEVELS.has(block.level);
+    if (startsSection) {
+      if (cur) sections.push(cur);
+      cur = {
+        source: block.source,
+        headingText: block.headingText,
+        headingLevel: block.level,
+        blockStart: blockIdx,
+        blockEnd: blockIdx,
+      };
+    } else {
+      if (!cur) {
+        // Intro section — runs until the first qualifying heading.
+        cur = {
+          source: block.source,
+          headingText: null,
+          headingLevel: null,
+          blockStart: blockIdx,
+          blockEnd: blockIdx,
+        };
+      } else {
+        cur.source += "\n\n" + block.source;
+        cur.blockEnd = blockIdx;
+      }
+    }
+    blockIdx += 1;
+  }
+  if (cur) sections.push(cur);
+  return sections;
 }
 
 /// Split spoken text into chunks small enough to safely send to
