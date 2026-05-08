@@ -39,7 +39,8 @@ DMG           := $(TAURI)/target/release/bundle/dmg/Fishbones_$(VERSION)_$(ARCH_
 INSTALL_PATH  := /Applications/Fishbones.app
 
 .PHONY: all build sign notarize staple install dev release local-release \
-        deploy deploy-site clean help \
+        deploy deploy-site deploy-content clean help \
+        audio-import audio-upload audio-deploy \
         run run-split run-phone run-watch pick-phone pick-watch run-clean
 
 # Marketing site checkout (separate repo). The site's `npm run deploy`
@@ -256,6 +257,13 @@ deploy: local-release deploy-site
 ##
 ## The academy's deploy.mjs reads VPS_PASSWORD from this repo's
 ## api/.env automatically, so there's no extra credential setup.
+##
+## Note on blocks data: `npm run build:web` (which the academy's
+## deploy.mjs runs) chains `starter:web → blocks:apply` so the
+## staged course JSONs always carry blocks payloads, even though
+## `extract-starter-courses` re-creates the directory from the
+## blocks-free bundled .fishbones packs. Without that chain, every
+## site deploy would silently ship a /learn/ build without blocks.
 deploy-site:
 	@echo "=== Deploying fishbones.academy (site + /learn/ embed) ==="
 	@if [ ! -d "$(ACADEMY_ROOT)" ]; then \
@@ -270,6 +278,53 @@ deploy-site:
 		echo "      prompt next time."; \
 	fi
 	cd "$(ACADEMY_ROOT)" && FISHBONES_SRC="$(ROOT)" npm run deploy
+
+# --- Audio + content deploy -----------------------------------------------
+# Audio MP3s and the manifest live on the academy VPS at
+# `/var/www/fishbones-academy/audio/`, served at
+# https://fishbones.academy/audio/. They're independent of the academy
+# site's webroot — `--exclude=audio/` in the academy's deploy rsync
+# means a `make deploy-site` won't touch them — so audio gets its own
+# pipeline.
+#
+# Two-step flow because the inputs come from two places:
+#   1. `audio-import`  — pull MP3s sitting in $FROM (default ~/Desktop)
+#                        into dist/audio/ and rebuild dist/audio/manifest.json
+#                        by hashing each lesson body and matching against the
+#                        on-disk MP3 filenames. No ElevenLabs API calls.
+#   2. `audio-upload`  — rsync dist/audio/ to the VPS via
+#                        scripts/upload-lesson-audio.mjs.
+#
+# `make audio-deploy` chains both. Override the source dir with
+# `make audio-deploy FROM=/path/to/dir` if your audio isn't on Desktop.
+FROM ?= $(HOME)/Desktop
+
+## Pull local MP3s into dist/audio/ + rebuild the manifest. Idempotent;
+## skipped lessons (body changed since synthesis, or never synthesised)
+## are reported but don't fail the run.
+audio-import:
+	cd $(ROOT) && node scripts/import-local-audio.mjs --from "$(FROM)"
+
+## Rsync dist/audio/ → the academy VPS. Uses sshpass with the same
+## VPS_PASSWORD chain as the site deploy. Needs `make audio-import`
+## (or a prior generate run) to have populated dist/audio/ first.
+audio-upload:
+	cd $(ROOT) && node scripts/upload-lesson-audio.mjs
+
+## Audio sync end-to-end: import + upload.
+audio-deploy: audio-import audio-upload
+	@echo ""
+	@echo "✓ Audio synced — verify: curl -I https://fishbones.academy/audio/manifest.json"
+
+## Full content deploy: audio (manifest + MP3s) AND the academy site
+## (course JSONs with blocks + /learn/ embed). One command, idempotent.
+## Use after editing audio, course content, marketing copy, or any
+## combination of the three. Skips the desktop binary — for that, run
+## `make local-release` separately (it's much slower and rarely needed
+## on a content-only push).
+deploy-content: audio-deploy deploy-site
+	@echo ""
+	@echo "✓ Content deployed — audio + academy site live at https://fishbones.academy/"
 
 ## Remove build artifacts
 clean:
@@ -407,8 +462,12 @@ help:
 	@echo "  make local-release — full local build + sign + notarize + upload to GitHub"
 	@echo ""
 	@echo "Web deploy targets (fishbones.academy):"
-	@echo "  make deploy       — local-release + rsync site + /learn/ to VPS"
-	@echo "  make deploy-site  — site only (skip the DMG rebuild)"
+	@echo "  make deploy         — local-release + rsync site + /learn/ to VPS"
+	@echo "  make deploy-site    — site + /learn/ (course JSONs + blocks); no DMG"
+	@echo "  make deploy-content — audio + site in one shot (no DMG)"
+	@echo "  make audio-deploy   — audio only (import from \$$FROM + upload to VPS)"
+	@echo "  make audio-import   — pull MP3s from ~/Desktop into dist/audio/"
+	@echo "  make audio-upload   — rsync dist/audio/ → VPS"
 	@echo ""
 	@echo "iOS / watchOS run targets (interactive device picker):"
 	@echo "  make run          — pick + run phone AND watch (sequential, this window)"
