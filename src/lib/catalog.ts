@@ -97,12 +97,52 @@ function defaultCatalogUrl(): string {
 
 let cachedPromise: Promise<CatalogEntry[]> | null = null;
 let cachedAt = 0;
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes (in-memory)
+const PERSIST_KEY = "fb:catalog-cache-v1";
+const PERSIST_TTL_MS = 1000 * 60 * 60 * 24; // 24h (localStorage)
+
+interface PersistedCatalog {
+  ts: number;
+  entries: CatalogEntry[];
+}
+
+/// Read the cached catalog synchronously off localStorage. Used by
+/// `useCatalog` to paint a stale-but-good first frame instantly,
+/// while the live `fetchCatalog()` revalidates in the background.
+/// Returns null when missing, malformed, or older than the TTL —
+/// callers fall through to the live fetch in those cases.
+export function readPersistedCatalog(): CatalogEntry[] | null {
+  if (typeof localStorage === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(PERSIST_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PersistedCatalog;
+    if (!parsed || !Array.isArray(parsed.entries)) return null;
+    if (Date.now() - parsed.ts > PERSIST_TTL_MS) return null;
+    return parsed.entries;
+  } catch {
+    return null;
+  }
+}
+
+function writePersistedCatalog(entries: CatalogEntry[]): void {
+  if (typeof localStorage === "undefined") return;
+  try {
+    const payload: PersistedCatalog = { ts: Date.now(), entries };
+    localStorage.setItem(PERSIST_KEY, JSON.stringify(payload));
+  } catch {
+    // Quota exceeded / private mode — silently skip. Next launch
+    // just re-fetches; persistence is a paint-speed nicety, not a
+    // correctness requirement.
+  }
+}
 
 /// Fetch the catalog. Cached for `CACHE_TTL_MS` per process so the
 /// Library doesn't re-hit the catalog source on every render. Force
 /// a refresh with `{ refresh: true }` after a Reapply / Promote
-/// flow (rare).
+/// flow (rare). Successful fetches also persist to localStorage so
+/// the next cold start can paint from cache before the network has
+/// settled — see `readPersistedCatalog`.
 ///
 /// Desktop: invokes the Tauri `list_bundled_catalog_entries` command,
 /// which enumerates `.fishbones` archives shipped under
@@ -132,9 +172,18 @@ export function fetchCatalog(opts: { refresh?: boolean } = {}): Promise<
   // then show two tiles for the same install. Web fetches a single
   // manifest so this is a no-op there, but having one funnel keeps
   // both surfaces honest.
-  cachedPromise = (isWeb ? fetchWebCatalog() : fetchDesktopCatalog()).then(
-    dedupeById,
-  );
+  cachedPromise = (isWeb ? fetchWebCatalog() : fetchDesktopCatalog())
+    .then(dedupeById)
+    .then((entries) => {
+      // Persist successful fetches so the next launch can paint
+      // from cache before this network round-trip completes. Empty
+      // results aren't persisted — those tend to come from a
+      // transient network failure (the hook returns [] on error)
+      // and overwriting a good cache with [] would defeat the
+      // point of the cache.
+      if (entries.length > 0) writePersistedCatalog(entries);
+      return entries;
+    });
   cachedAt = Date.now();
   return cachedPromise;
 }
