@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AiCharacter from "./AiCharacter";
 import AiChatPanel from "./AiChatPanel";
 import { useAiChat } from "../../hooks/useAiChat";
+import { readAiEnabled } from "../../lib/aiHost";
 import type { Lesson, Course } from "../../data/types";
 
 interface Props {
@@ -33,6 +34,25 @@ const CELEBRATE_MS = 3500;
 /// that retrieves the top-k relevant chunks across the whole library.
 export default function AiAssistant({ lesson, course, celebrateAt }: Props) {
   const [open, setOpen] = useState(false);
+  // Track the enable toggle as React state so flipping it in
+  // Settings re-renders this component. We re-read from
+  // localStorage in response to the custom event the
+  // `writeAiEnabled` helper dispatches — same channel the AI host
+  // field uses, since both inputs feed the same downstream state.
+  const [enabled, setEnabled] = useState<boolean>(() => readAiEnabled());
+  useEffect(() => {
+    const update = () => setEnabled(readAiEnabled());
+    window.addEventListener("fishbones:ai-host-changed", update);
+    // Cross-tab toggles arrive as `storage` events.
+    const onStorage = (ev: StorageEvent) => {
+      if (ev.key === "fishbones:ai-assistant-enabled") update();
+    };
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener("fishbones:ai-host-changed", update);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
   const chat = useAiChat();
 
   // Latch a celebration when the parent bumps `celebrateAt`. We
@@ -129,6 +149,15 @@ export default function AiAssistant({ lesson, course, celebrateAt }: Props) {
     if (!chat.probe) return false;
     return !chat.probe.reachable || !chat.probe.hasDefaultModel;
   }, [chat.probe]);
+
+  // Disabled-by-default gate. The user explicitly opts in via
+  // Settings → AI & API → "Enable AI assistant". Until that toggle
+  // is on, NOTHING AI-related renders — no orb, no panel, no probes.
+  // We intentionally hide the entire experience rather than showing
+  // a greyed-out orb because a noisy "click here to set up the
+  // thing you didn't ask for" affordance was the explicit complaint
+  // that prompted this gate.
+  if (!enabled) return null;
 
   return (
     <>

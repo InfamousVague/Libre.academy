@@ -14,6 +14,21 @@
 /// imports `STORAGE_KEY` so a future rename here is one-line.
 export const STORAGE_KEY = "fishbones:ai-host";
 
+/// Enable / disable the in-app AI assistant entirely. Off by default
+/// — the orb stays hidden + no probes fire until the user explicitly
+/// turns it on in Settings. This is what "disabled by default" means
+/// in product terms: the AI is opt-in, not always-on with a red dot
+/// nagging at users who never asked for an LLM in their lesson app.
+const ENABLED_KEY = "fishbones:ai-assistant-enabled";
+
+/// Custom event consumers can listen for so a Settings toggle takes
+/// effect across the React tree without prop-drilling. The host
+/// field already dispatches `fishbones:ai-host-changed`; the toggle
+/// dispatches the same event since the downstream effect (re-render
+/// the assistant + maybe re-probe) is identical regardless of which
+/// input changed.
+const CONFIG_CHANGE_EVENT = "fishbones:ai-host-changed";
+
 /// Default Ollama HTTP port. Overridable in the configured host
 /// string itself if a user runs the daemon on a non-standard port
 /// (`fishbones-mac.tailnet.ts.net:11500` works just by including the
@@ -48,6 +63,34 @@ export function writeAiHost(value: string): void {
       localStorage.setItem(STORAGE_KEY, cleaned);
     } else {
       localStorage.removeItem(STORAGE_KEY);
+    }
+  } catch {
+    /* private-mode — drop the write silently */
+  }
+}
+
+/// Whether the in-app AI assistant is opted in by the user. Returns
+/// `false` when the flag isn't set (default off) OR when localStorage
+/// is unavailable. Consumers branch the assistant's render path on
+/// this — nothing AI-related renders when this is false.
+export function readAiEnabled(): boolean {
+  try {
+    return localStorage.getItem(ENABLED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/// Persist the enable toggle. We use "0" / "1" rather than JSON
+/// booleans for parity with other on/off settings in the codebase
+/// (`fishbones:sidebarCollapsed`, etc.) — the parser is the same
+/// "value === '1'" check everywhere. Fires the config-change event
+/// so a same-tab toggle takes effect without a remount.
+export function writeAiEnabled(enabled: boolean): void {
+  try {
+    localStorage.setItem(ENABLED_KEY, enabled ? "1" : "0");
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent(CONFIG_CHANGE_EVENT));
     }
   } catch {
     /* private-mode — drop the write silently */

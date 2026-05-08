@@ -5,7 +5,12 @@ import { copy as copyIcon } from "@base/primitives/icon/icons/copy";
 import { check as checkIcon } from "@base/primitives/icon/icons/check";
 import { qrCode } from "@base/primitives/icon/icons/qr-code";
 import { camera } from "@base/primitives/icon/icons/camera";
-import { readAiHost, writeAiHost } from "../../../lib/aiHost";
+import {
+  readAiEnabled,
+  readAiHost,
+  writeAiEnabled,
+  writeAiHost,
+} from "../../../lib/aiHost";
 import { isMobile } from "../../../lib/platform";
 import QrScanner from "../../Shared/QrScanner";
 
@@ -220,12 +225,23 @@ export default function AiPane({
 /// keystroke — saving partial hostnames triggers re-probes that
 /// will all fail until the field is complete).
 function AssistantHostField() {
+  const [enabled, setEnabled] = useState<boolean>(() => readAiEnabled());
   const [host, setHost] = useState<string>(() => readAiHost() ?? "");
   const [savedFlash, setSavedFlash] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const persisted = readAiHost() ?? "";
+
+  /// Toggle the master enable flag. The orb + panel are hidden
+  /// app-wide when this is off (see AiAssistant.tsx). Persist
+  /// immediately — no save button — and the writeAiEnabled helper
+  /// dispatches the config-change event so the assistant
+  /// re-evaluates without a remount.
+  const toggleEnabled = (next: boolean) => {
+    setEnabled(next);
+    writeAiEnabled(next);
+  };
 
   // Flash a brief "saved" affordance when the value commits. We
   // own the flash state locally; the Settings dialog's main "Save"
@@ -313,6 +329,34 @@ function AssistantHostField() {
 
   return (
     <>
+      <h3 className="fishbones-settings-section fishbones-settings-section--sub">
+        AI assistant
+      </h3>
+      <p className="fishbones-settings-blurb">
+        The in-app chat tutor — a floating orb in the bottom-right
+        that opens a side panel with conversational help. Off by
+        default. Flip the toggle below to enable it; once on, the
+        orb appears and the rest of the configuration applies.
+      </p>
+      <label className="fishbones-settings-toggle">
+        <input
+          type="checkbox"
+          checked={enabled}
+          onChange={(e) => toggleEnabled(e.target.checked)}
+        />
+        <span className="fishbones-settings-toggle-slider" aria-hidden />
+        <span className="fishbones-settings-toggle-label">
+          {enabled ? "Enabled" : "Disabled"}
+        </span>
+      </label>
+
+      {/* Host configuration is only meaningful once the toggle is
+          on — collapse the host field + pairing affordances when
+          the assistant is disabled so the section reads as a
+          clean off-state, not a half-configured setup waiting on
+          the user. */}
+      {enabled && (
+        <>
       <h3 className="fishbones-settings-section fishbones-settings-section--sub">
         Assistant host (mobile / web)
       </h3>
@@ -455,6 +499,8 @@ function AssistantHostField() {
           onResult={handleScanResult}
           onCancel={() => setScanOpen(false)}
         />
+      )}
+        </>
       )}
     </>
   );
