@@ -36,6 +36,7 @@ import MobileSettings from "./MobileSettings";
 import MobileSearchPalette from "./MobileSearchPalette";
 import SignInDialog from "../components/dialogs/SignInDialog/SignInDialog";
 import MobileTabBar, { type MobileTab } from "../components/MobileTabBar/MobileTabBar";
+import AiAssistant from "../components/AiAssistant/AiAssistant";
 import FishbonesLoader from "../components/Shared/FishbonesLoader";
 import "./MobileApp.css";
 
@@ -357,6 +358,19 @@ export default function MobileApp() {
         }}
         onProfile={() => setView("profile")}
         onSettings={() => setView("settings")}
+      />
+
+      {/* Floating AI assistant. Same component as the desktop, but
+          the underlying `useAiChat` hook autoselects the remote
+          variant on mobile (see src/hooks/useAiChat.ts) — phone HTTPs
+          straight to the user's configured Ollama host (typically a
+          Mac on their Tailscale tailnet). When unconfigured the orb
+          still mounts but probe reports unreachable, so the panel
+          shows a "set the host in Settings" message rather than
+          trying to drive a setup flow that wouldn't work on iOS. */}
+      <AiAssistant
+        lesson={active && lesson ? lesson : null}
+        course={active?.course ?? null}
       />
 
       {signInOpen && (

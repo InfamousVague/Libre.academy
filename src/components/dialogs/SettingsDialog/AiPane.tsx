@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Icon } from "@base/primitives/icon";
 import { copy as copyIcon } from "@base/primitives/icon/icons/copy";
 import { check as checkIcon } from "@base/primitives/icon/icons/check";
+import { readAiHost, writeAiHost } from "../../../lib/aiHost";
 
 const MODEL_OPTIONS: Array<{ id: string; label: string; hint: string }> = [
   {
@@ -193,6 +194,104 @@ export default function AiPane({
         <code>&lt;app_data_dir&gt;/settings.json</code>. Only used for
         image requests to api.openai.com.
       </p>
+
+      <AssistantHostField />
     </section>
+  );
+}
+
+/// Inline section for the in-app chat assistant's HTTP host.
+///
+/// On desktop the assistant talks to a localhost Ollama daemon via
+/// Tauri IPC and this field is unused (left visible so the user
+/// remembers the field exists when they pick up their phone). On
+/// mobile / web, the assistant uses this host directly: HTTP fetch
+/// to `<host>:11434/api/chat` with `stream: true`. Typical value is
+/// the user's own Mac on their Tailscale tailnet — that machine has
+/// Ollama running, the phone reaches it over the encrypted tailnet
+/// without exposing the daemon to the public internet.
+///
+/// State is read once on mount + persisted on blur (not on every
+/// keystroke — saving partial hostnames triggers re-probes that
+/// will all fail until the field is complete).
+function AssistantHostField() {
+  const [host, setHost] = useState<string>(() => readAiHost() ?? "");
+  const [savedFlash, setSavedFlash] = useState(false);
+  const persisted = readAiHost() ?? "";
+
+  // Flash a brief "saved" affordance when the value commits. We
+  // own the flash state locally; the Settings dialog's main "Save"
+  // button doesn't gate this field because the assistant host is a
+  // single-key localStorage write, not part of the settings.json
+  // bundle.
+  useEffect(() => {
+    if (!savedFlash) return;
+    const t = window.setTimeout(() => setSavedFlash(false), 1400);
+    return () => window.clearTimeout(t);
+  }, [savedFlash]);
+
+  const commit = () => {
+    if (host.trim() === persisted) return;
+    writeAiHost(host);
+    // Custom event so the remote chat hook re-probes immediately
+    // (storage events don't fire same-tab).
+    window.dispatchEvent(new CustomEvent("fishbones:ai-host-changed"));
+    setSavedFlash(true);
+  };
+
+  return (
+    <>
+      <h3 className="fishbones-settings-section fishbones-settings-section--sub">
+        Assistant host (mobile / web)
+      </h3>
+      <p className="fishbones-settings-blurb">
+        Hostname or IP of the machine running Ollama. The phone +
+        web build talk straight to it over HTTP on port 11434. A
+        Tailscale tailnet hostname is the recommended setup —
+        encrypted, stable across LAN moves, no public exposure.
+        Desktop ignores this field and uses its own localhost
+        daemon via Tauri IPC.
+      </p>
+      <label className="fishbones-settings-field">
+        <span className="fishbones-settings-label">Hostname or IP</span>
+        <div className="fishbones-settings-input-row">
+          <input
+            type="text"
+            className="fishbones-settings-input"
+            value={host}
+            onChange={(e) => setHost(e.target.value)}
+            onBlur={commit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.currentTarget.blur();
+              }
+            }}
+            placeholder="fishbones-mac.tailnet-abc.ts.net  or  192.168.1.42"
+            spellCheck={false}
+            autoCapitalize="none"
+            autoComplete="off"
+          />
+          <span
+            className="fishbones-settings-input-copy"
+            aria-hidden
+            style={{
+              opacity: savedFlash ? 1 : 0,
+              transition: "opacity 220ms ease",
+              pointerEvents: "none",
+            }}
+            title={savedFlash ? "Saved" : ""}
+          >
+            <Icon icon={checkIcon} size="xs" color="currentColor" />
+          </span>
+        </div>
+      </label>
+      <p className="fishbones-settings-note">
+        On the host: run{" "}
+        <code>OLLAMA_HOST=0.0.0.0:11434 ollama serve</code> so the
+        daemon listens on the tailnet interface, not just localhost.
+        The default macOS Ollama install binds to 127.0.0.1 only —
+        the phone won't reach it without the env override.
+      </p>
+    </>
   );
 }

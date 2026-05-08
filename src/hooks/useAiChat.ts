@@ -74,7 +74,11 @@ export interface UseAiChat {
 /// concurrent sends safe. Incremented on every send.
 let nextStreamId = 1;
 
-export function useAiChat(model?: string): UseAiChat {
+/// Local hook — Tauri-IPC path that streams from the user's
+/// localhost Ollama daemon. Renamed from the original `useAiChat`
+/// so the new top-level export below can pick between this and the
+/// remote variant at module load.
+export function useAiChatLocal(model?: string): UseAiChat {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -289,3 +293,30 @@ export function useAiChat(model?: string): UseAiChat {
     setupBusy,
   };
 }
+
+/// Picked at module load — same hook for the entire React tree's
+/// lifetime. We can't conditionally call hooks per render (rules of
+/// hooks), but assigning the chosen implementation to a const ONCE
+/// at import time and re-exporting it preserves call-order
+/// stability: every render of every consumer goes through the same
+/// hook function, just one that was selected ahead of time.
+///
+/// Mobile (`window.innerWidth < 768`) and the web target have no
+/// localhost Ollama to talk to — iOS won't let you run a daemon,
+/// and the web build runs in a normal browser tab without Tauri
+/// IPC at all. Both fall through to the remote hook which talks to
+/// a user-configured Ollama HTTP host (typically a Mac on the
+/// user's Tailscale tailnet — see `src/lib/aiHost.ts`).
+//
+// We import inside the picker so the local hook's `@tauri-apps/api`
+// imports don't load on the web bundle (Vite's tree-shake handles
+// the dead branch, but importing at the top is what creates the
+// initial load — we want zero Tauri code in dist-web's main chunk).
+import { useAiChatRemote } from "./useAiChatRemote";
+import { isMobile, isWeb } from "../lib/platform";
+
+const pickedHook: typeof useAiChatLocal = (isMobile || isWeb)
+  ? useAiChatRemote
+  : useAiChatLocal;
+
+export const useAiChat = pickedHook;
