@@ -196,7 +196,17 @@ function starterUrl(path: string): string {
 /// fluent-react, three-js-and-a-frame). All nine are listed in
 /// LEGACY_STARTER_IDS so the prune step actually removes them
 /// from returning visitors' IndexedDB.
-const SEED_VERSION = 10;
+///
+/// V11 — Re-seed for blocks restoration. The deployed
+/// `/learn/starter-courses/<id>.json` files now carry blocks data
+/// (the build:web → blocks:apply chain bakes them in on every
+/// build), but returning visitors whose IndexedDB was seeded from
+/// V10 have blocks-free copies — every exercise on web mobile shows
+/// "this exercise hasn't been authored for blocks mode yet" because
+/// `lesson.blocks` is undefined in the cached records. Bumping
+/// forces a fresh fetch of the deployed JSONs so existing visitors
+/// pick up the blocks payloads without an IndexedDB reset.
+const SEED_VERSION = 11;
 
 /// Run the web seed if it hasn't run yet OR if the persisted
 /// `SEED_VERSION` is older than the current build's. Idempotent +
