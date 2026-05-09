@@ -34,6 +34,32 @@ const CELEBRATE_MS = 3500;
 /// that retrieves the top-k relevant chunks across the whole library.
 export default function AiAssistant({ lesson, course, celebrateAt }: Props) {
   const [open, setOpen] = useState(false);
+  // Click-outside-to-close. While the panel is open, listen for
+  // mousedown anywhere on the document — if the click landed
+  // outside both the panel itself AND the floating orb (which has
+  // its own toggle handler that would otherwise be cancelled out
+  // by the close-on-outside-click here), close the panel.
+  // mousedown rather than click so dialogs that mount on click
+  // don't briefly see the AI panel still open beneath them.
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Element | null;
+      if (!target) return;
+      // Click landed inside the AI panel — keep open.
+      if (target.closest(".fishbones-ai-panel")) return;
+      // Click landed on the orb — its onClick will toggle. Don't
+      // race it from here; the toggle handles the close itself.
+      if (target.closest(".fishbones-ai-character")) return;
+      setOpen(false);
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("touchstart", onPointerDown, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("touchstart", onPointerDown);
+    };
+  }, [open]);
   // Track the enable toggle as React state so flipping it in
   // Settings re-renders this component. We re-read from
   // localStorage in response to the custom event the

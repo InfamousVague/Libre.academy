@@ -49,8 +49,11 @@ interface Props {
 const CLICK_BOOST_MS = 60_000;
 /// Speed (in seconds per strand-jump cycle) while boosted —
 /// immediately after a click and for the full duration. Lower =
-/// faster.
-const CLICK_BOOST_SPEED = 0.5;
+/// faster. 2.0s is comfortably faster than the 16s idle baseline
+/// (8× the rate, so the orb clearly reads as "active") without
+/// crossing into frenetic-pulsing territory; the previous 0.5s
+/// felt more anxious than alive.
+const CLICK_BOOST_SPEED = 2.0;
 
 export default function AiCharacter({
   open,
