@@ -5,12 +5,16 @@
 
 .fishbones-ai-panel {
   position: fixed;
-  /* Anchor sits 12px above the character button. Button is 52px
-     tall + 20px from the bottom edge, so the panel's bottom edge is
-     at `52 + 20 + 12 = 84px`. Re-do the maths if the orb size or
-     offset changes again — these constants flow into the `top` /
-     `height` calculations below too. */
-  bottom: calc(52px + 20px + 12px);
+  /* Anchor sits clear of the orb's top edge with breathing room.
+     Orb button is 96×96 (bumped from the original 52px so the
+     larger DNA helix has room) anchored at `bottom: 20px`. Orb's
+     top edge is therefore at `96 + 20 = 116px` from screen bottom.
+     Add 16px breathing room so the panel's bottom rim doesn't
+     visually butt up against the helix. Total: 132px. Re-do the
+     maths here if the orb size or its `bottom` anchor changes
+     again — these constants flow into the `top` / `height`
+     calculations below too. */
+  bottom: calc(96px + 20px + 16px);
   right: 20px;
   /* Use both `top` AND `bottom` to give the panel a *definite*
      height (capped by the viewport on small screens). Without a
@@ -18,8 +22,8 @@
      a real overflow target — the scrollbar appears in DOM but the
      wheel doesn't have a constrained surface to scroll, which is
      exactly the "I can't scroll the history" symptom. */
-  top: max(14px, calc(100vh - 52px - 20px - 12px - min(620px, 80vh)));
-  height: min(620px, calc(100vh - 52px - 20px - 12px - 14px));
+  top: max(14px, calc(100vh - 96px - 20px - 16px - min(620px, 80vh)));
+  height: min(620px, calc(100vh - 96px - 20px - 16px - 14px));
   width: 380px;
   max-width: calc(100vw - 28px);
   z-index: 91;
