@@ -37,6 +37,7 @@
 
 import type { Course, LanguageId } from "../data/types";
 import { isWeb } from "./platform";
+import { isHiddenCourse } from "./hiddenCourses";
 
 export interface CatalogEntry {
   id: string;
@@ -179,12 +180,21 @@ export function fetchCatalog(opts: { refresh?: boolean } = {}): Promise<
   // both surfaces honest.
   cachedPromise = (isWeb ? fetchWebCatalog() : fetchDesktopCatalog())
     .then(dedupeById)
-    // Drop unlisted entries (`hidden: true`) so they never reach
-    // the catalog UI — they're shareable-by-link only, the
+    // Drop unlisted entries — they're shareable-by-link only, the
     // manifest still carries them so the on-demand fetch in
     // App.tsx's deep-link path can pull the JSON when a visitor
-    // arrives via `?courseId=…`.
-    .then((entries) => entries.filter((e) => !e.hidden))
+    // arrives via `?courseId=…`. Two checks for the same reason
+    // App.tsx + MobileApp.tsx have two: the per-entry flag covers
+    // freshly-fetched manifests, the runtime id-set covers
+    // localStorage-cached catalog snapshots from before the flag
+    // existed (a returning visitor whose previous fetchCatalog
+    // wrote a cache without the hidden flag in any entry — without
+    // this second check the cache would silently leak hellotrade
+    // back onto the Discover grid until the SWR revalidation
+    // finished).
+    .then((entries) =>
+      entries.filter((e) => !e.hidden && !isHiddenCourse(e.id)),
+    )
     .then((entries) => {
       // Persist successful fetches so the next launch can paint
       // from cache before this network round-trip completes. Empty

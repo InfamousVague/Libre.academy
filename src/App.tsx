@@ -87,6 +87,7 @@ import {
   isLibraryMarkerRow,
   serializeLibraryAllowlist,
 } from "./lib/librarySync";
+import { isHiddenCourse } from "./lib/hiddenCourses";
 import {
   savePersistedTabs,
   validateTabsAgainstCourses,
@@ -118,15 +119,19 @@ export default function App() {
   // BlocksData render mode — the helper is now an identity
   // pass-through kept only for ABI compatibility.
   //
-  // `hidden` filter: courses flagged `hidden: true` in the catalog
-  // manifest are reachable by direct link (`?courseId=…`) but NEVER
-  // appear in any listing (Library / Discover / Sidebar / Trees).
-  // We filter them out of `courses` here — the listing-side derivation
-  // — but keep them in `coursesAll` so the deep-link lookups below
-  // can still resolve a hidden course by id.
+  // `hidden` filter: courses are dropped from the public listing if
+  // EITHER the saved record has `hidden: true` (fresh seeds get this
+  // from the manifest at install time) OR the course id is in the
+  // runtime `HIDDEN_COURSE_IDS` allow-list (catches existing local
+  // installs from before the flag was added — see `lib/hiddenCourses.ts`
+  // for why both checks are needed). Hidden courses stay in
+  // `coursesAll` so deep-link lookups by id below can still resolve
+  // them — the filter only narrows the LISTING surface.
   const courses = useMemo(
     () =>
-      coursesAll.map(filterCourseForDesktop).filter((c) => !c.hidden),
+      coursesAll
+        .map(filterCourseForDesktop)
+        .filter((c) => !c.hidden && !isHiddenCourse(c.id)),
     [coursesAll],
   );
 
@@ -1154,7 +1159,7 @@ export default function App() {
       const defaultName = slugify(courseTitle) + ".fishbones";
       const destination = await save({
         defaultPath: defaultName,
-        filters: [{ name: "Fishbones course", extensions: ["fishbones", "kata"] }],
+        filters: [{ name: "Libre course", extensions: ["fishbones", "kata"] }],
         title: `Export "${courseTitle}"`,
       });
       if (!destination) return; // user cancelled
@@ -1292,7 +1297,7 @@ export default function App() {
     try {
       const picked = await openDialog({
         multiple: false,
-        filters: [{ name: "Fishbones course", extensions: ["fishbones", "kata"] }],
+        filters: [{ name: "Libre course", extensions: ["fishbones", "kata"] }],
       });
       if (typeof picked !== "string") return; // user cancelled
       await importArchiveAtPath(picked);
@@ -1457,7 +1462,7 @@ export default function App() {
         }`}
         aria-hidden={coursesLoaded}
       >
-        <FishbonesLoader label="loading Fishbones…" />
+        <FishbonesLoader label="loading Libre…" />
       </div>
 
       {/* Drag-and-drop import overlay. Listens at the app level via
@@ -1692,11 +1697,11 @@ export default function App() {
                 <div className="fishbones__welcome-glyph" aria-hidden>
                   <Icon icon={libraryBig} size="2xl" color="currentColor" weight="light" />
                 </div>
-                <h1 className="fishbones__welcome-title">Welcome to Fishbones</h1>
+                <h1 className="fishbones__welcome-title">Welcome to Libre</h1>
                 <p className="fishbones__welcome-blurb">
                   {isWeb
                     ? "A browser-native preview. Try the bundled lessons in JavaScript, Python, or Svelte — your progress saves locally and syncs to the cloud once you sign in."
-                    : "Turn any technical book into an interactive course. Pick a PDF to import, and Fishbones will split it into lessons, generate exercises, and let you code along chapter by chapter."}
+                    : "Turn any technical book into an interactive course. Pick a PDF to import, and Libre will split it into lessons, generate exercises, and let you code along chapter by chapter."}
                 </p>
                 <div className="fishbones__welcome-actions">
                   {isWeb ? (

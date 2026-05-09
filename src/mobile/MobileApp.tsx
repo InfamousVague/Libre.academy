@@ -30,6 +30,7 @@ import {
   reconcilePerception,
   serializeLibraryAllowlist,
 } from "../lib/librarySync";
+import { isHiddenCourse } from "../lib/hiddenCourses";
 import type { Course, Lesson } from "../data/types";
 import { isoToUnixSeconds } from "../lib/timestamps";
 import MobileLibrary from "./MobileLibrary";
@@ -125,11 +126,16 @@ export default function MobileApp() {
   const courses = useMemo(() => {
     // Drop hidden courses up-front — these are installable via direct
     // URL / import but never surface in the Library tree (matches the
-    // desktop App.tsx filter). Currently used for the HelloTrade
-    // partner-preview pack; mirrors the catalog filter in
-    // `lib/catalog.ts` so a deep-linked install doesn't leak it back
-    // into the public shelf via the seed → IndexedDB path.
-    const visibleAll = coursesAll.filter((c) => !c.hidden);
+    // desktop App.tsx filter). Two checks: the saved-record `hidden`
+    // flag (fresh seeds pick this up from the manifest), AND the
+    // runtime `isHiddenCourse(id)` allow-list (catches existing
+    // installs from before the flag was added — see
+    // `lib/hiddenCourses.ts`). The runtime check is what makes the
+    // filter work on devices that already had the course in
+    // IndexedDB before the manifest flag flipped.
+    const visibleAll = coursesAll.filter(
+      (c) => !c.hidden && !isHiddenCourse(c.id),
+    );
     if (!cloud.signedIn) return visibleAll;
     // Markers are authoritative — when present they REPLACE every
     // other signal, since they encode desktop's full list.
