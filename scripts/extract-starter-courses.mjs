@@ -240,25 +240,40 @@ function resizeCover(srcPng, dstJpg) {
   try {
     if (impl === "magick" || impl === "convert") {
       // ImageMagick — same args for both the `magick` (v7) and
-      // `convert` (legacy) commands. `-resize 480x>` only shrinks
+      // `convert` (legacy) commands. `-resize 360x>` only shrinks
       // (the `>` qualifier means "resize only if larger");
-      // `-strip` drops EXIF; `-interlace Plane` produces a
-      // progressive JPEG so the cover paints faster on slow
-      // connections.
+      // `-strip` drops EXIF; `-sampling-factor 4:2:0` enables
+      // chroma-subsampling for ~15% smaller files at no
+      // perceptible quality loss for cover art.
+      //
+      // Sizing rationale: the grid view renders cards at ~260px
+      // wide, the shelf at ~170px. 360px source = 1.4×–2.1× the
+      // display size, which covers retina at small sizes and
+      // hits the eye as crisp without paying for 2× the bytes.
+      // Quality dropped 78 → 72 because the JPEG block-noise
+      // floor at this size is well below what the viewer notices
+      // through the BookCover's gradient overlay; q72 trims
+      // ~20% more bytes for free. NOTE: dropped `-interlace
+      // Plane` — progressive JPEG decode is slower on the
+      // browser's image-decode path than baseline, and the
+      // progressive paint advantage doesn't apply when the file
+      // is <40KB and reaches the browser in one TCP window.
       execFileSync(impl, [
         srcPng,
-        "-resize", "480x>",
+        "-resize", "360x>",
         "-strip",
-        "-interlace", "Plane",
-        "-quality", "78",
+        "-sampling-factor", "4:2:0",
+        "-quality", "72",
         dstJpg,
       ], { stdio: "ignore" });
     } else if (impl === "sips") {
-      // macOS sips: -Z is "resize-only-if-larger".
+      // macOS sips: -Z is "resize-only-if-larger". sips doesn't
+      // expose chroma-subsampling controls — accept the slightly
+      // larger output (still well under the old 480px size).
       execFileSync(impl, [
-        "-Z", "480",
+        "-Z", "360",
         "-s", "format", "jpeg",
-        "-s", "formatOptions", "78",
+        "-s", "formatOptions", "72",
         srcPng,
         "--out", dstJpg,
       ], { stdio: "ignore" });
