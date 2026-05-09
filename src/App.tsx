@@ -967,6 +967,59 @@ export default function App() {
     }
   }, [coursesLoaded, courses, openTabs.length, pendingOpen]);
 
+  // On-demand install for unlisted / share-by-link courses. When a
+  // direct link `?courseId=…` references a course that isn't in
+  // IndexedDB (the catalog manifest doesn't carry it, so the
+  // first-launch seed didn't pick it up), fall back to fetching
+  // `/starter-courses/<id>.json` and saving it with `hidden: true`
+  // so it stays out of the listings on next mount but is fully
+  // playable for the duration of this visit.
+  //
+  // Only fires for the Tauri-stub `isWeb` build path. Desktop falls
+  // through to the existing catalog/install flow (the manifest is
+  // the source of truth there too — if the entry isn't there, we
+  // don't have the localPath/archiveUrl needed to install).
+  const installAttemptRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!pendingOpen) return;
+    if (!coursesLoaded) return;
+    if (!isWeb) return;
+    if (coursesAll.find((c) => c.id === pendingOpen.courseId)) return;
+    if (installAttemptRef.current.has(pendingOpen.courseId)) return;
+    installAttemptRef.current.add(pendingOpen.courseId);
+
+    void (async () => {
+      try {
+        const base = (import.meta.env.BASE_URL ?? "/").replace(/\/?$/, "/");
+        const url = `${base}starter-courses/${pendingOpen.courseId}.json`;
+        const res = await fetch(url, { cache: "no-cache" });
+        if (!res.ok) {
+          console.warn(
+            `[deep-link] no /starter-courses/${pendingOpen.courseId}.json (HTTP ${res.status})`,
+          );
+          return;
+        }
+        const course = (await res.json()) as Course;
+        // Force the URL-bar id and stamp `hidden: true` so the
+        // course never shows up in Library/Discover/Sidebar after
+        // landing — the only path back is the direct link itself.
+        const record: Course = {
+          ...course,
+          id: pendingOpen.courseId,
+          hidden: true,
+        };
+        const { storage } = await import("./lib/storage");
+        await storage.saveCourse(pendingOpen.courseId, record);
+        await refreshCourses();
+      } catch (err) {
+        console.warn(
+          `[deep-link] on-demand install failed for ${pendingOpen.courseId}:`,
+          err instanceof Error ? err.message : err,
+        );
+      }
+    })();
+  }, [pendingOpen, coursesLoaded, coursesAll, refreshCourses]);
+
   // Warm-path: if a deep link arrives after the app's already booted
   // and the learner has tabs open, honour it via selectLesson rather
   // than appending it to the auto-open queue.
