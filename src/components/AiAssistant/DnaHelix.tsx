@@ -30,9 +30,12 @@ import { LANGUAGE_META } from "../../lib/languages";
 import "./DnaHelix.css";
 
 interface Props {
-  /// Number of horizontal strands stacked vertically. Default 13 —
-  /// matches the source design's density at the orb scale we ship
-  /// at; bumping it makes the helix denser.
+  /// Number of horizontal strands stacked vertically. Default 9
+  /// (was 13, but dropped so each strand's allotted height grows —
+  /// nodes are aspect-ratio: 1 circles that fill the strand height,
+  /// so fewer strands = thicker dots without changing the helix
+  /// font-size). Bumping back up makes the helix denser at the
+  /// cost of smaller individual nodes.
   strands?: number;
   /// Animation speed in seconds (one full jump cycle). Lower = faster.
   /// Default 2s. The mood-driven AiCharacter passes shorter values
@@ -68,7 +71,7 @@ const PALETTE: readonly string[] = PALETTE_LANGS.map(
 );
 
 export default function DnaHelix({
-  strands = 13,
+  strands = 9,
   speed = 2,
   className,
 }: Props) {

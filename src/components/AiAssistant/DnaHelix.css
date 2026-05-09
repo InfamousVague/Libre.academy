@@ -71,20 +71,26 @@
 
 /* Connecting bar between each strand's two nodes. Lives behind the
    nodes via a 1px Z translation; its scaleX collapses to 0 at the
-   midpoint so the bar visually splits when the nodes cross. */
+   midpoint so the bar visually splits when the nodes cross.
+   Height was 30% — bumped to 50% so the rung reads as a confident
+   line at the smaller orb scale rather than a hairline that
+   disappears against the dark backdrop. Capsule-rounded ends
+   (border-radius: 999px) replace the prior 1px square corners,
+   which barely registered visually but now matter at the thicker
+   weight. */
 .fb-dna__strand::before {
   content: "";
   position: absolute;
   top: 50%;
   left: 50%;
   width: 94%;
-  height: 30%;
-  background: rgba(255, 255, 255, 0.78);
+  height: 50%;
+  background: rgba(255, 255, 255, 0.85);
   transform: translate3d(-50%, -50%, -1px);
   transform-origin: center;
   animation: fb-dna-scale var(--fb-dna-speed, 2s) var(--fb-dna-delay, 0s)
     infinite linear;
-  border-radius: 1px;
+  border-radius: 999px;
 }
 
 @keyframes fb-dna-jump {

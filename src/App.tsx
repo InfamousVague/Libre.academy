@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { save } from "@tauri-apps/plugin-dialog";
 import { onOpenUrl, getCurrent as getCurrentDeepLinks } from "@tauri-apps/plugin-deep-link";
@@ -17,6 +17,8 @@ import { TOUR_STEPS, type TourPage } from "./components/Tour/tourSteps";
 import { stopTourAudio } from "./components/Tour/useTourAudio";
 import { stopLessonAudio } from "./hooks/useLessonAudio";
 import TreesView from "./components/Trees/TreesView";
+import TracksView from "./components/Trees/TracksView";
+import PracticeView from "./components/Practice/PracticeView";
 import EvmDockBanner from "./components/ChainDock/EvmDockBanner";
 import BitcoinDockBanner from "./components/BitcoinChainDock/BitcoinDockBanner";
 import SvmDockBanner from "./components/SvmDock/SvmDockBanner";
@@ -46,6 +48,7 @@ import FloatingIngestPanel from "./components/IngestPanel/FloatingIngestPanel";
 import ProfileView from "./components/Profile/ProfileView";
 import PlaygroundView from "./components/Playground/PlaygroundView";
 import { isWeb, isMobile } from "./lib/platform";
+import { isoToUnixSeconds } from "./lib/timestamps";
 import DownloadButton from "./components/DownloadButton/DownloadButton";
 import GeneratePackDialog from "./components/dialogs/ChallengePack/GeneratePackDialog";
 import { useIngestRun } from "./hooks/useIngestRun";
@@ -78,6 +81,8 @@ import { useStreakAndXp } from "./hooks/useStreakAndXp";
 import { useStreakShields } from "./hooks/useStreakShields";
 import {
   LIBRARY_INSTALLED_IDS_KEY,
+  LIBRARY_MARKER_LESSON_ID,
+  isLibraryMarkerRow,
   serializeLibraryAllowlist,
 } from "./lib/librarySync";
 import {
@@ -184,6 +189,7 @@ export default function App() {
     completed,
     history,
     markCompleted,
+    markCompletedBatch,
     clearLessonCompletion,
     clearChapterCompletions,
     clearCourseCompletions,
@@ -326,10 +332,36 @@ export default function App() {
   const realtime = useRealtimeSync({
     cloud,
     applyProgress: useCallback(
-      (rows: Array<{ course_id: string; lesson_id: string }>) => {
-        for (const r of rows) markCompleted(r.course_id, r.lesson_id);
+      (
+        rows: Array<{
+          course_id: string;
+          lesson_id: string;
+          /// ISO 8601 from the relay. Bulk-applied via
+          /// `markCompletedBatch` so a 150-row pull is one React
+          /// setState + one storage write instead of 150 of each
+          /// (the per-row path was the source of mobile's silently-
+          /// failing IDB writes; same hook + same path on desktop
+          /// keeps the wire-up consistent).
+          completed_at: string;
+        }>,
+      ) => {
+        // Split off library-marker rows (sentinel lesson id) before
+        // routing the rest through `markCompletedBatch`. Markers
+        // would otherwise show up in `history` as fake completions
+        // and skew XP / streak / heatmap math. Desktop doesn't
+        // currently consume the markers it pulls (its own course
+        // list is authoritative), but we still strip them for
+        // hygiene + future use.
+        const real = rows.filter((r) => !isLibraryMarkerRow(r));
+        markCompletedBatch(
+          real.map((r) => ({
+            courseId: r.course_id,
+            lessonId: r.lesson_id,
+            completedAtSec: isoToUnixSeconds(r.completed_at) ?? undefined,
+          })),
+        );
       },
-      [markCompleted],
+      [markCompletedBatch],
     ),
     applySolutions: useCallback(
       (
@@ -464,12 +496,72 @@ export default function App() {
     } catch {
       /* swallow */
     }
+    // Canonical settings push. Mobile no longer relies on this for
+    // library sync (the marker effect below covers that via the
+    // always-available `/progress` endpoint), but we keep it for
+    // any downstream consumer that watches the settings stream.
     realtime.pushSetting({
       key: LIBRARY_INSTALLED_IDS_KEY,
       value: serialized,
       updated_at: new Date().toISOString(),
     });
-  }, [coursesAll, coursesLoaded, cloud.signedIn, realtime]);
+  }, [coursesAll, coursesLoaded, cloud, cloud.signedIn, realtime]);
+
+  /// Library-marker push — separate from the settings push above so
+  /// it's NOT gated by the localStorage-cached "did the list
+  /// change?" check. The settings push uses that cache to avoid
+  /// re-pushing identical payloads, but the cache turns into a trap
+  /// for the marker pipeline: if a previous build cached the list
+  /// in localStorage WITHOUT ever successfully pushing markers
+  /// (which is exactly what happened — the relay had 3293 progress
+  /// rows but 0 markers), the early-return fires forever and the
+  /// markers never land. We track marker pushes against a separate
+  /// ref + localStorage key so a missing-markers state always
+  /// re-pushes on next mount.
+  const lastPushedMarkersRef = useRef<string | null>(
+    (() => {
+      try {
+        return localStorage.getItem("fishbones.library.markersPushed.v1");
+      } catch {
+        return null;
+      }
+    })(),
+  );
+  useEffect(() => {
+    if (!coursesLoaded || !cloud.signedIn) return;
+    const ids = coursesAll.map((c) => c.id);
+    const serialized = serializeLibraryAllowlist(ids);
+    if (serialized === lastPushedMarkersRef.current) return;
+    lastPushedMarkersRef.current = serialized;
+    // One marker row per installed course id. Receiving side (see
+    // mobile's applyProgress) splits these out before they hit the
+    // completion store, so they only signal library membership and
+    // never pollute XP / streak math. Fire-and-forget; if the push
+    // fails the next courses-change (or the next mount with a
+    // different serialized list) tries again.
+    const markerRows = coursesAll.map((c) => ({
+      course_id: c.id,
+      lesson_id: LIBRARY_MARKER_LESSON_ID,
+      completed_at: new Date().toISOString(),
+    }));
+    if (markerRows.length === 0) return;
+    cloud
+      .pushProgress(markerRows)
+      .then(() => {
+        try {
+          localStorage.setItem(
+            "fishbones.library.markersPushed.v1",
+            serialized,
+          );
+        } catch {
+          /* swallow */
+        }
+      })
+      .catch(() => {
+        // Reset the ref so the next mount retries.
+        lastPushedMarkersRef.current = null;
+      });
+  }, [coursesAll, coursesLoaded, cloud, cloud.signedIn]);
 
   /// Timestamp of the last fresh completion (transition from incomplete →
   /// complete). Drives the AI tutor's happy-celebration loop. Plain
@@ -547,14 +639,45 @@ export default function App() {
   /// "playground" are dedicated destinations triggered from the sidebar
   /// iconbar. Selecting a lesson anywhere forces back to "courses" so the
   /// learner isn't stuck on a side view after clicking a sidebar item.
-  const [view, setView] = useState<
+  const [view, setViewRaw] = useState<
     | "courses"
     | "profile"
     | "playground"
     | "library"
     | "discover"
     | "trees"
+    | "tracks"
+    | "practice"
   >("library");
+
+  /// `useTransition` lets us mark the view-switch state update as
+  /// non-urgent. React then renders the NEW view in the background
+  /// while keeping the CURRENT view interactive. Without this, a
+  /// click on Discover (which forces CourseLibrary to remount with
+  /// a different scope: re-fold ~150 catalog entries, prefetch
+  /// covers, build the section tree) blocked the main thread for
+  /// the duration of that mount + first paint — the user perceived
+  /// it as "the app freezes for a second then jumps to the new
+  /// view." With the transition, the previous view stays painted
+  /// (visually identical to before the click), the new view's
+  /// render happens on the side, and React swaps when ready.
+  /// `isPending` is true during the swap so we can dim the previous
+  /// view slightly as a "yes, your click registered" cue without
+  /// blanking the screen.
+  const [isViewPending, startViewTransition] = useTransition();
+  const setView = useCallback(
+    (next: typeof view) => {
+      // Wrap every external setView in the transition so EVERY
+      // view-switch path benefits — sidebar clicks, rail clicks,
+      // tour navigation, post-completion routing, etc. The single
+      // call site keeps the perceived-latency fix consistent
+      // across surfaces.
+      startViewTransition(() => {
+        setViewRaw(next);
+      });
+    },
+    [startViewTransition],
+  );
 
   /// Challenge-pack generation dialog visibility. Opened from the Profile
   /// page's "Generate challenge pack" CTA; runs through useIngestRun when
@@ -594,23 +717,69 @@ export default function App() {
     },
   );
 
-  // First-run guided tour. Activates automatically on first launch
-  // (when the completion flag isn't set in localStorage) and can be
-  // re-triggered from the navigation rail's help affordance. Each
-  // step's narration MP3 is shipped under `public/tour-audio/` so
+  // First-run guided tour. The tour itself never auto-starts anymore
+  // — instead we surface a confirmation dialog (`tourPromptOpen`,
+  // below) on the very first launch asking the learner whether they
+  // want a quick walkthrough. Auto-starting felt ambush-y: a brand
+  // new user opens the app and immediately a narrated walkthrough
+  // hijacks every nav surface. The opt-in prompt respects "I want to
+  // poke around first" while keeping the discovery affordance.
+  // Re-triggerable forever from the navigation rail's help icon.
+  // Each step's narration MP3 ships under `public/tour-audio/` so
   // the tour works offline on cold launch — no CDN dependency.
-  // Persisted via the same key shape stash uses (`<app>:tour-completed`)
-  // so the migration story is one-line if we ever reuse the
-  // pattern across products.
-  const [tourActive, setTourActive] = useState<boolean>(() => {
+  const [tourActive, setTourActive] = useState(false);
+  // First-launch prompt state. We show the "Take the tour?" dialog
+  // once per device, gated on a separate `:tour-prompted` flag (the
+  // legacy `:tour-completed` key is also honoured so existing
+  // installs that were upgraded from the auto-start build don't get
+  // re-prompted just because they never explicitly marked the tour
+  // done). Initialised lazily inside an effect because we want to
+  // wait for the cold-start bootloader to fade and FirstLaunchPrompt
+  // (the sign-in nudge) to either dismiss or render — stacking two
+  // modal backdrops on the very first paint is jarring.
+  const [tourPromptOpen, setTourPromptOpen] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    let alreadyPrompted = false;
     try {
-      return localStorage.getItem("fishbones:tour-completed") !== "true";
+      alreadyPrompted =
+        localStorage.getItem("fishbones:tour-prompted") === "true" ||
+        localStorage.getItem("fishbones:tour-completed") === "true";
     } catch {
-      // Private-mode Safari etc. — just don't auto-show, user can
-      // still trigger from Help if they want.
-      return false;
+      alreadyPrompted = true; // private mode — never pester
     }
-  });
+    if (alreadyPrompted) return;
+    // Wait until both the bootloader has had a paint AND
+    // FirstLaunchPrompt's own ~800ms delay has fired so the two
+    // dialogs aren't competing for the user's attention on the same
+    // frame. 1600ms is comfortably after FirstLaunchPrompt's open
+    // moment but still feels prompt rather than nag-y.
+    const id = window.setTimeout(() => {
+      if (cancelled) return;
+      setTourPromptOpen(true);
+    }, 1600);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(id);
+    };
+  }, []);
+  const markTourPrompted = useCallback(() => {
+    try {
+      localStorage.setItem("fishbones:tour-prompted", "true");
+    } catch {
+      /* private-mode — drop the flag silently */
+    }
+  }, []);
+  const handleTourPromptAccept = useCallback(() => {
+    markTourPrompted();
+    setTourPromptOpen(false);
+    stopLessonAudio();
+    setTourActive(true);
+  }, [markTourPrompted]);
+  const handleTourPromptSkip = useCallback(() => {
+    markTourPrompted();
+    setTourPromptOpen(false);
+  }, [markTourPrompted]);
   /// When the tour starts we stop any in-flight lesson audio so the
   /// two narrators don't fight for the listener's ear. The reverse
   /// is implicit — opening the tour calls this; closing leaves the
@@ -1270,6 +1439,8 @@ export default function App() {
           onLibrary={() => setView("library")}
           onDiscover={() => setView("discover")}
           onTrees={() => setView("trees")}
+          onTracks={() => setView("tracks")}
+          onPractice={() => setView("practice")}
           onPlayground={() => setView("playground")}
           onSettings={() => setSettingsOpen(true)}
           onStartTour={handleTourStart}
@@ -1317,6 +1488,25 @@ export default function App() {
               }}
               onInstallMissingCourses={handleInstallMissingPathCourses}
             />
+          ) : view === "tracks" ? (
+            <TracksView
+              courses={courses}
+              completed={completed}
+              onOpenLesson={(courseId, lessonId) => {
+                selectLesson(courseId, lessonId);
+                setView("courses");
+              }}
+            />
+          ) : view === "practice" ? (
+            <PracticeView
+              courses={courses}
+              completed={completed}
+              history={history}
+              onOpenLesson={(courseId, lessonId) => {
+                selectLesson(courseId, lessonId);
+                setView("courses");
+              }}
+            />
           ) : view === "library" || view === "discover" ? (
             // Library + Discover both render through CourseLibrary —
             // same chrome (filters / search / view-mode), different
@@ -1329,22 +1519,26 @@ export default function App() {
             // reuses the SAME CourseLibrary instance across a
             // library ↔ discover switch, which historically meant
             // useState/useMemo state from one scope could survive
-            // into the other (most visibly: the Discover view's
-            // placeholder tiles still showing up in Library on the
-            // first frame after switching back). Keying on `view`
-            // forces React to unmount + remount, giving each scope
-            // a fresh component instance with its own filter state.
-            // Phase on DeferredMount also tracks `view` so the
-            // loader briefly flashes between switches as a visual
-            // confirmation that we're on a new dataset.
-            <DeferredMount
-              phase={view}
-              fallback={
-                <LoadingPane
-                  label={
-                    view === "discover" ? "Loading catalog…" : "Loading library…"
-                  }
-                />
+            // into the other. Keying on `view` forces a fresh
+            // component instance with its own filter state.
+            //
+            // We used to wrap this in `<DeferredMount>` to flash a
+            // "Loading…" pane during the swap, but combined with
+            // `useTransition` (which keeps the previous view
+            // painted while React prepares the new one in the
+            // background) the loader is just visible noise — it
+            // would blank the screen for a frame and THEN show
+            // CourseLibrary. The transition delivers the same
+            // "register the click instantly" feeling without
+            // throwing the previous content away first. The
+            // `is-view-pending` class on the wrapper dims the
+            // outgoing view by ~30% so the user sees something
+            // happen the instant they click, even if the new
+            // render takes a beat.
+            <div
+              className={
+                "fishbones-view-pane" +
+                (isViewPending ? " is-view-pending" : "")
               }
             >
               <CourseLibrary
@@ -1375,7 +1569,7 @@ export default function App() {
                 onBrowseCatalog={() => setView("discover")}
                 onInstallCatalogEntry={handleInstallCatalogEntry}
               />
-            </DeferredMount>
+            </div>
           ) : courses.length === 0 && coursesLoaded ? (
             // First-launch / empty-library welcome card. Single hero
             // tile with intent copy + the right CTA per build target
@@ -1517,6 +1711,9 @@ export default function App() {
       {settingsOpen && (
         <SettingsDialog
           cloud={cloud}
+          realtime={realtime}
+          history={history}
+          courses={courses}
           onDismiss={() => setSettingsOpen(false)}
           onRequestSignIn={() => setSignInOpen(true)}
         />
@@ -1535,7 +1732,23 @@ export default function App() {
         onComplete={handleTourComplete}
       />
 
-
+      {/* First-launch tour invite. Renders ONCE per device on the
+          very first session (gated by the `tour-prompted` flag) and
+          asks the learner whether they want a quick walkthrough.
+          Either button records the prompt-shown decision so this
+          dialog never reappears; "Take tour" additionally activates
+          the Tour component above. The Help icon on the navigation
+          rail can re-trigger the tour any time after that. */}
+      {tourPromptOpen && (
+        <ConfirmDialog
+          title="Take a quick tour?"
+          message="A short narrated walkthrough of the main features — about a minute. You can replay it anytime from the Help icon on the left rail."
+          confirmLabel="Take tour"
+          cancelLabel="Skip"
+          onConfirm={handleTourPromptAccept}
+          onCancel={handleTourPromptSkip}
+        />
+      )}
 
       {genPackOpen && (
         <GeneratePackDialog
