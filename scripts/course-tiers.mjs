@@ -27,6 +27,9 @@ export const CORE_PACK_IDS = [
   // install opens with two opinionated, end-to-end tutorials.
   "a-to-zig",
   "a-to-ts",
+  // HelloTrade — 51 lessons + the in-app TradeDock (Postman-style
+  // REST + WS client). Small enough to ship in core (96KB JSON).
+  "hellotrade",
 
   // Long-form books we want every install to start with.
   "the-rust-programming-language",
@@ -127,6 +130,11 @@ export const ALL_PACK_IDS = [
   "solana-programs-rust-on-the-svm",
   "viem-and-ethers-js-talking-to-ethereum-from-typescript",
   "cryptography-fundamentals-hashes-to-zk",
+  // HelloTrade — decentralised perp futures exchange. JavaScript-
+  // primary; bundles with the in-app TradeDock (Postman-shaped REST
+  // + WS client) so every dock-flagged lesson hits a real-or-mock
+  // API. Source-distilled from hellotrade.gitbook.io.
+  "hellotrade",
 
   // ── Challenge packs ───────────────────────────────────────────
   "javascript-challenges",
@@ -197,6 +205,12 @@ export const RELEASE_STATUS_OVERRIDES = {
   "mastering-ethereum": "BETA",
   "mastering-bitcoin": "BETA",
   "solana-programs-rust-on-the-svm": "BETA",
+  // HelloTrade authored hand-on at BETA — every prose lesson
+  // proofread, every dock-driven exercise pinned to a real preset
+  // in the API tester. Lessons compile cleanly with the placeholder
+  // exercise harness even though the dock is the actual interaction
+  // surface.
+  "hellotrade": "BETA",
 
   // ── Books bumped to ALPHA ────────────────────────────────────
   // Vyper went from 0 exercises to a full set after the recent
