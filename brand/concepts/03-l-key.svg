@@ -1,0 +1,33 @@
+<!--
+  Concept 3 — Stylized "L" formed as a key.
+  Reads as: L for Libre + a literal key = the keys to programming,
+  free / unlocked. Owns the "open" semantics through the unlock
+  metaphor instead of the open-source one.
+
+  Why this works: monogram-style marks survive heavy size scaling
+  (App Store icon → favicon → embroidered hat), and the key
+  silhouette is unmistakable at small sizes. The horizontal foot of
+  the L doubles as the key's blade.
+
+  This direction is the most "logo-y" of the four — most likely
+  to feel proprietary and trademarkable.
+-->
+<svg viewBox="0 0 80 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Libre Academy">
+  <defs>
+    <style>
+      .ink { fill: none; stroke: #1f2330; stroke-width: 4; stroke-linejoin: round; stroke-linecap: round; }
+      .accent { fill: none; stroke: #c9a76b; stroke-width: 3; stroke-linecap: round; }
+    </style>
+  </defs>
+  <!-- The L — vertical stem, horizontal foot. Squared corners at the bottom,
+       slightly extended foot to make room for the key's teeth. -->
+  <path class="ink" d="M 24 14 L 24 50 L 56 50"/>
+  <!-- Key bow (the round part you hold) — a circle at the top of the L's stem -->
+  <circle cx="24" cy="14" r="6" fill="none" stroke="#1f2330" stroke-width="3.5"/>
+  <!-- Inner cutout in the bow — completes the key silhouette -->
+  <circle cx="24" cy="14" r="2.4" fill="#1f2330"/>
+  <!-- Teeth — two notches on the underside of the L's foot, where a real key
+       has its bitting. These tip the visual cue from "L" to "key + L." -->
+  <path class="accent" d="M 38 50 L 38 56 L 42 56 L 42 53"/>
+  <path class="accent" d="M 48 50 L 48 56 L 52 56 L 52 53"/>
+</svg>

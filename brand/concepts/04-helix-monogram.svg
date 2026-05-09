@@ -1,0 +1,52 @@
+<!--
+  Concept 4 — DNA helix as a monogram element, paired with the
+  wordmark.
+  Reads as: leverage the existing AI orb glyph as the brand mark.
+  The helix already lives in the app (src/components/AiAssistant/
+  DnaHelix.tsx), and its colour palette is sourced from
+  LANGUAGE_META — which means the brand glyph LITERALLY embodies
+  "the languages we teach." That's a rare alignment between mark
+  and product semantics; most logos can't claim it.
+
+  This concept is the tightest continuity bridge from Fishbones to
+  Libre Academy: the orb users have been seeing in the app becomes
+  the wordmark companion. No re-learning.
+
+  Static SVG approximation here — the live mark uses the existing
+  CSS-animated DnaHelix component on the marketing site.
+-->
+<svg viewBox="0 0 80 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Libre Academy">
+  <defs>
+    <style>
+      .strand { stroke-width: 1.5; fill: none; stroke-linecap: round; }
+      .bar { stroke: #f4eedd; stroke-width: 2; stroke-linecap: round; opacity: 0.6; }
+    </style>
+  </defs>
+  <!-- A static slice of the helix: 6 strand pairs, sinusoidally offset so
+       the eye reads "double helix" without the animation. Colours pull
+       from LANGUAGE_META (yellow/orange/red/purple/blue/cyan). -->
+  <!-- Strand 1: javascript yellow + go cyan -->
+  <line class="bar" x1="38" y1="14" x2="42" y2="14"/>
+  <circle cx="36" cy="14" r="2.5" fill="#F7DF1E"/>
+  <circle cx="44" cy="14" r="2.5" fill="#00ADD8"/>
+  <!-- Strand 2: swift orange + typescript blue -->
+  <line class="bar" x1="34" y1="22" x2="46" y2="22"/>
+  <circle cx="32" cy="22" r="2.5" fill="#FA7343"/>
+  <circle cx="48" cy="22" r="2.5" fill="#3178C6"/>
+  <!-- Strand 3 (centerfold widest) -->
+  <line class="bar" x1="32" y1="30" x2="48" y2="30"/>
+  <circle cx="30" cy="30" r="2.5" fill="#CE412B"/>
+  <circle cx="50" cy="30" r="2.5" fill="#61DAFB"/>
+  <!-- Strand 4 (cross-over) -->
+  <line class="bar" x1="32" y1="38" x2="48" y2="38"/>
+  <circle cx="30" cy="38" r="2.5" fill="#7F52FF"/>
+  <circle cx="50" cy="38" r="2.5" fill="#F7DF1E"/>
+  <!-- Strand 5 -->
+  <line class="bar" x1="34" y1="46" x2="46" y2="46"/>
+  <circle cx="32" cy="46" r="2.5" fill="#00ADD8"/>
+  <circle cx="48" cy="46" r="2.5" fill="#FA7343"/>
+  <!-- Strand 6 -->
+  <line class="bar" x1="38" y1="54" x2="42" y2="54"/>
+  <circle cx="36" cy="54" r="2.5" fill="#3178C6"/>
+  <circle cx="44" cy="54" r="2.5" fill="#CE412B"/>
+</svg>

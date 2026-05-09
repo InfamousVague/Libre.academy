@@ -164,6 +164,14 @@ secp256k1 = { version = "0.29", features = ["rand"] }
 # uses it is gated to the same target set in `src/lib.rs`.
 hidapi = "2.6"
 
+# iOS-only Foundation bindings. Used by `widget_snapshot.rs` to
+# resolve the App Group container URL via NSFileManager — the only
+# place we need to call into native iOS APIs that Tauri's own SDK
+# doesn't expose. The crate ships zero-cost Rust bindings against
+# the system Foundation framework; nothing extra to embed.
+[target.'cfg(target_os = "ios")'.dependencies]
+objc2-foundation = { version = "0.2", features = ["NSFileManager", "NSString", "NSURL"] }
+
 [profile.release]
 opt-level = 3
 lto = true

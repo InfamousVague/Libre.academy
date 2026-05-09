@@ -22,6 +22,7 @@ import { useProgress } from "../hooks/useProgress";
 import { useFishbonesCloud } from "../hooks/useFishbonesCloud";
 import { useRealtimeSync } from "../hooks/useRealtimeSync";
 import { useStreakAndXp } from "../hooks/useStreakAndXp";
+import { useWidgetSnapshot } from "./useWidgetSnapshot";
 import {
   LIBRARY_INSTALLED_IDS_KEY,
   isLibraryMarkerRow,
@@ -155,6 +156,13 @@ export default function MobileApp() {
   ]);
 
   const stats = useStreakAndXp(history, courses);
+
+  // Publish the snapshot the iOS widgets + watchOS app read on
+  // every render where streak / library / completions changed.
+  // The hook handles its own debounce + dedupe so this is cheap.
+  // No-op on non-iOS targets (the underlying Tauri command bails
+  // out on platforms without an App Group container).
+  useWidgetSnapshot({ courses, completed, history, stats });
 
   /// Real-time cross-device sync. Identical wiring to the desktop
   /// App.tsx — pulls progress / solutions / settings on sign-in,

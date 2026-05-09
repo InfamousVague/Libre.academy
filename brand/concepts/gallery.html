@@ -1,0 +1,346 @@
+<!doctype html>
+<!--
+  Concept gallery for the Libre Academy logo brainstorm. Renders the
+  four SVG sketches side-by-side on a dark bone-tinted backdrop
+  (matches the app's default-dark theme so each mark previews against
+  realistic chrome). Click a tile to open the SVG file in its own
+  tab — useful for downloading / inspecting the source markup.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Libre Academy — concept gallery</title>
+  <style>
+    :root {
+      --bg: #09090b;
+      --bg-secondary: #19191d;
+      --bg-card-light: #f4eedd;
+      --ink: #1f2330;
+      --bone: #d4c5a1;
+      --bone-soft: #f4eedd;
+      --amber: #c9a76b;
+      --text: #f4eedd;
+      --text-secondary: #a4a4ad;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Inter", "Helvetica Neue", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 32px 24px 64px;
+    }
+    .header {
+      max-width: 1100px;
+      margin: 0 auto 32px;
+    }
+    .header h1 {
+      margin: 0 0 6px;
+      font-family: "Iowan Old Style", "Charter", Georgia, serif;
+      font-weight: 500;
+      font-size: 32px;
+      letter-spacing: -0.01em;
+    }
+    .header p {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 14px;
+      max-width: 720px;
+      line-height: 1.5;
+    }
+    .grid {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+    }
+    .tile {
+      background: var(--bg-secondary);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 120ms ease, border-color 120ms ease;
+    }
+    .tile:hover {
+      transform: translateY(-2px);
+      border-color: var(--amber);
+    }
+    .tile__art {
+      /* Bone-cream surface so the dark-ink + warm-amber strokes read
+         the way they will against the marketing site's lighter
+         hero — most logos live on white more than dark. */
+      background: var(--bg-card-light);
+      padding: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      aspect-ratio: 5 / 4;
+    }
+    .tile__art svg {
+      width: 100%;
+      height: 100%;
+      max-height: 200px;
+    }
+    .tile__art--dark {
+      /* Variant that previews the mark against the dark theme — useful
+         for concept 4 (helix), which is designed for a dark backdrop. */
+      background: var(--bg);
+    }
+    .tile__body {
+      padding: 14px 16px 18px;
+    }
+    .tile__name {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--amber);
+      margin: 0 0 4px;
+    }
+    .tile__title {
+      font-family: "Iowan Old Style", Georgia, serif;
+      font-size: 18px;
+      font-weight: 500;
+      margin: 0 0 6px;
+    }
+    .tile__desc {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+
+    /* Wordmark row — full-width tile spanning the grid */
+    .wordmark {
+      grid-column: 1 / -1;
+      background: var(--bg-card-light);
+      border-radius: 12px;
+      padding: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 160px;
+    }
+    .wordmark svg {
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Favicon row — tiny renderings to gut-check small-size legibility */
+    .favicons {
+      grid-column: 1 / -1;
+      background: var(--bg-secondary);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 22px;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      flex-wrap: wrap;
+    }
+    .fav-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--text-secondary);
+      min-width: 80px;
+    }
+    .fav-stack {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+    }
+    .fav {
+      background: var(--bg-card-light);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px;
+    }
+    .fav-16 { width: 16px; height: 16px; }
+    .fav-32 { width: 32px; height: 32px; }
+    .fav-64 { width: 64px; height: 64px; }
+    .fav svg { width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Libre Academy — logo concepts</h1>
+    <p>
+      Four directions for the public mark. Click any tile to open the SVG
+      source in a new tab. The tiles preview each concept on a bone-cream
+      background (where most logos live, hero sections / printed
+      collateral) — concept 4's tile uses the dark-theme backdrop because
+      the helix is designed for it.
+    </p>
+  </div>
+
+  <div class="grid">
+    <a class="tile" href="01-book-braces.svg" target="_blank">
+      <div class="tile__art">
+        <svg viewBox="0 0 80 64" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <style>
+              .ink-1 { fill: none; stroke: #1f2330; stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+              .accent-1 { fill: none; stroke: #c9a76b; stroke-width: 2.25; stroke-linecap: round; }
+              .page-1 { fill: #f4eedd; }
+            </style>
+          </defs>
+          <path class="page-1" d="M 18 14 L 40 18 L 62 14 L 62 50 L 40 54 L 18 50 Z"/>
+          <path class="ink-1" d="M 18 14 L 40 18 L 62 14 L 62 50 L 40 54 L 18 50 Z"/>
+          <line class="ink-1" x1="40" y1="18" x2="40" y2="54"/>
+          <path class="accent-1" d="M 12 18 Q 6 32 12 46"/>
+          <path class="accent-1" d="M 68 18 Q 74 32 68 46"/>
+          <line class="ink-1" x1="24" y1="32" x2="36" y2="34" opacity="0.35"/>
+          <line class="ink-1" x1="44" y1="34" x2="56" y2="32" opacity="0.35"/>
+        </svg>
+      </div>
+      <div class="tile__body">
+        <p class="tile__name">Concept 01</p>
+        <h3 class="tile__title">Book &amp; Braces</h3>
+        <p class="tile__desc">Open book bracketed by curly braces. Sells the book → code transformation. Most legible to non-developers.</p>
+      </div>
+    </a>
+
+    <a class="tile" href="02-lambda-page.svg" target="_blank">
+      <div class="tile__art">
+        <svg viewBox="0 0 80 64" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <style>
+              .ink-2 { fill: none; stroke: #1f2330; stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+              .accent-2 { fill: none; stroke: #c9a76b; stroke-width: 2.5; stroke-linecap: round; }
+            </style>
+          </defs>
+          <path class="ink-2" d="M 26 54 L 40 18 L 54 54"/>
+          <line class="ink-2" x1="40" y1="18" x2="40" y2="50" opacity="0.55"/>
+          <line class="accent-2" x1="20" y1="58" x2="60" y2="58"/>
+        </svg>
+      </div>
+      <div class="tile__body">
+        <p class="tile__name">Concept 02</p>
+        <h3 class="tile__title">Lambda / Page</h3>
+        <p class="tile__desc">Lambda silhouette doubling as a page-tent. CS-coded + literary. Tightly academy-coded.</p>
+      </div>
+    </a>
+
+    <a class="tile" href="03-l-key.svg" target="_blank">
+      <div class="tile__art">
+        <svg viewBox="0 0 80 64" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <style>
+              .ink-3 { fill: none; stroke: #1f2330; stroke-width: 4; stroke-linejoin: round; stroke-linecap: round; }
+              .accent-3 { fill: none; stroke: #c9a76b; stroke-width: 3; stroke-linecap: round; }
+            </style>
+          </defs>
+          <path class="ink-3" d="M 24 14 L 24 50 L 56 50"/>
+          <circle cx="24" cy="14" r="6" fill="none" stroke="#1f2330" stroke-width="3.5"/>
+          <circle cx="24" cy="14" r="2.4" fill="#1f2330"/>
+          <path class="accent-3" d="M 38 50 L 38 56 L 42 56 L 42 53"/>
+          <path class="accent-3" d="M 48 50 L 48 56 L 52 56 L 52 53"/>
+        </svg>
+      </div>
+      <div class="tile__body">
+        <p class="tile__name">Concept 03</p>
+        <h3 class="tile__title">L Key</h3>
+        <p class="tile__desc">The L of Libre as a key. Owns the unlock metaphor; most distinctive + trademarkable.</p>
+      </div>
+    </a>
+
+    <a class="tile" href="04-helix-monogram.svg" target="_blank">
+      <div class="tile__art tile__art--dark">
+        <svg viewBox="0 0 80 64" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <style>
+              .bar-4 { stroke: #f4eedd; stroke-width: 2; stroke-linecap: round; opacity: 0.6; }
+            </style>
+          </defs>
+          <line class="bar-4" x1="38" y1="14" x2="42" y2="14"/>
+          <circle cx="36" cy="14" r="2.5" fill="#F7DF1E"/>
+          <circle cx="44" cy="14" r="2.5" fill="#00ADD8"/>
+          <line class="bar-4" x1="34" y1="22" x2="46" y2="22"/>
+          <circle cx="32" cy="22" r="2.5" fill="#FA7343"/>
+          <circle cx="48" cy="22" r="2.5" fill="#3178C6"/>
+          <line class="bar-4" x1="32" y1="30" x2="48" y2="30"/>
+          <circle cx="30" cy="30" r="2.5" fill="#CE412B"/>
+          <circle cx="50" cy="30" r="2.5" fill="#61DAFB"/>
+          <line class="bar-4" x1="32" y1="38" x2="48" y2="38"/>
+          <circle cx="30" cy="38" r="2.5" fill="#7F52FF"/>
+          <circle cx="50" cy="38" r="2.5" fill="#F7DF1E"/>
+          <line class="bar-4" x1="34" y1="46" x2="46" y2="46"/>
+          <circle cx="32" cy="46" r="2.5" fill="#00ADD8"/>
+          <circle cx="48" cy="46" r="2.5" fill="#FA7343"/>
+          <line class="bar-4" x1="38" y1="54" x2="42" y2="54"/>
+          <circle cx="36" cy="54" r="2.5" fill="#3178C6"/>
+          <circle cx="44" cy="54" r="2.5" fill="#CE412B"/>
+        </svg>
+      </div>
+      <div class="tile__body">
+        <p class="tile__name">Concept 04</p>
+        <h3 class="tile__title">Helix Monogram</h3>
+        <p class="tile__desc">DNA helix in language brand colors. Continuity with the AI orb; the mark literally embodies the languages we teach.</p>
+      </div>
+    </a>
+
+    <div class="wordmark">
+      <svg viewBox="0 0 320 100" xmlns="http://www.w3.org/2000/svg" style="width:280px">
+        <defs>
+          <style>
+            .libre-w { font-family: "Iowan Old Style", "Charter", "Source Serif Pro", Georgia, serif; font-size: 56px; font-weight: 500; fill: #1f2330; letter-spacing: -0.01em; }
+            .academy-w { font-family: "Inter", "Helvetica Neue", Arial, sans-serif; font-size: 14px; font-weight: 600; fill: #1f2330; letter-spacing: 0.32em; text-transform: uppercase; }
+            .rule-w { stroke: #c9a76b; stroke-width: 2; stroke-linecap: round; }
+          </style>
+        </defs>
+        <text class="libre-w" x="20" y="60">libre</text>
+        <line class="rule-w" x1="20" y1="72" x2="155" y2="72"/>
+        <text class="academy-w" x="20" y="90">ACADEMY</text>
+      </svg>
+    </div>
+
+    <div class="favicons">
+      <span class="fav-label">Favicon test</span>
+      <div class="fav-stack">
+        <div class="fav fav-16">
+          <svg viewBox="0 0 80 64"><path fill="none" stroke="#1f2330" stroke-width="2.5" stroke-linejoin="round" d="M 18 14 L 40 18 L 62 14 L 62 50 L 40 54 L 18 50 Z"/><line stroke="#1f2330" stroke-width="1.5" x1="40" y1="18" x2="40" y2="54"/></svg>
+        </div>
+        <div class="fav fav-32">
+          <svg viewBox="0 0 80 64"><path fill="none" stroke="#1f2330" stroke-width="2.5" stroke-linejoin="round" d="M 18 14 L 40 18 L 62 14 L 62 50 L 40 54 L 18 50 Z"/><line stroke="#1f2330" stroke-width="1.5" x1="40" y1="18" x2="40" y2="54"/></svg>
+        </div>
+        <div class="fav fav-64">
+          <svg viewBox="0 0 80 64"><path fill="none" stroke="#1f2330" stroke-width="2.5" stroke-linejoin="round" d="M 18 14 L 40 18 L 62 14 L 62 50 L 40 54 L 18 50 Z"/><line stroke="#1f2330" stroke-width="1.5" x1="40" y1="18" x2="40" y2="54"/></svg>
+        </div>
+      </div>
+      <div class="fav-stack">
+        <div class="fav fav-16">
+          <svg viewBox="0 0 80 64"><path fill="none" stroke="#1f2330" stroke-width="3" stroke-linejoin="round" d="M 26 54 L 40 18 L 54 54"/></svg>
+        </div>
+        <div class="fav fav-32">
+          <svg viewBox="0 0 80 64"><path fill="none" stroke="#1f2330" stroke-width="3" stroke-linejoin="round" d="M 26 54 L 40 18 L 54 54"/></svg>
+        </div>
+        <div class="fav fav-64">
+          <svg viewBox="0 0 80 64"><path fill="none" stroke="#1f2330" stroke-width="3" stroke-linejoin="round" d="M 26 54 L 40 18 L 54 54"/></svg>
+        </div>
+      </div>
+      <div class="fav-stack">
+        <div class="fav fav-16">
+          <svg viewBox="0 0 80 64"><path fill="none" stroke="#1f2330" stroke-width="4" stroke-linejoin="round" d="M 24 14 L 24 50 L 56 50"/><circle cx="24" cy="14" r="6" fill="none" stroke="#1f2330" stroke-width="3"/></svg>
+        </div>
+        <div class="fav fav-32">
+          <svg viewBox="0 0 80 64"><path fill="none" stroke="#1f2330" stroke-width="4" stroke-linejoin="round" d="M 24 14 L 24 50 L 56 50"/><circle cx="24" cy="14" r="6" fill="none" stroke="#1f2330" stroke-width="3.5"/><circle cx="24" cy="14" r="2.4" fill="#1f2330"/></svg>
+        </div>
+        <div class="fav fav-64">
+          <svg viewBox="0 0 80 64"><path fill="none" stroke="#1f2330" stroke-width="4" stroke-linejoin="round" d="M 24 14 L 24 50 L 56 50"/><circle cx="24" cy="14" r="6" fill="none" stroke="#1f2330" stroke-width="3.5"/><circle cx="24" cy="14" r="2.4" fill="#1f2330"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

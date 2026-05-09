@@ -30,6 +30,7 @@ mod progress_db;
 mod settings;
 mod sveltekit_runner;
 mod toolchain;
+mod widget_snapshot;
 
 use std::io::Write;
 use std::process::Command;
@@ -258,6 +259,7 @@ pub fn run() {
             image_gen::generate_cover_art,
             toolchain::probe_language_toolchain,
             toolchain::install_language_toolchain,
+            widget_snapshot::publish_widget_snapshot,
             settings::load_settings,
             settings::save_settings,
             llm::structure_with_llm,
