@@ -31,6 +31,8 @@ export type TourPage =
   | "library"
   | "discover"
   | "trees"
+  | "tracks"
+  | "practice"
   | "playground"
   | "courses"
   | "profile";

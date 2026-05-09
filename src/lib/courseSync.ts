@@ -41,6 +41,47 @@ export async function hashCourse(c: Course): Promise<string> {
   return await sha256(canonicalJson(stripped));
 }
 
+/// Module-level caches. Both keyed by courseId. Library + Discover
+/// remount CourseLibrary on every nav (key={view}), and without
+/// these every nav re-fetched the full bundled course over IPC and
+/// re-hashed it — 24 courses × multi-MB canonicalJson + SHA-256 was
+/// the multi-second freeze the user reported on Library → Discover.
+///
+/// Both are session-scoped: bundled content is shipped in the app
+/// bundle so it's stable for the lifetime of the process, and the
+/// hash of that content is therefore also stable. `installed`-side
+/// hashes are keyed on the installed `bundleSha` so a successful
+/// re-apply (which writes a new sha) naturally invalidates without
+/// us having to remember.
+///
+/// `clearUpdateCache(courseId?)` is exported for the explicit
+/// "Refresh library" / per-course `recheck` paths so they can force
+/// a re-fetch when the user wants to know about upstream changes
+/// that landed mid-session.
+const _bundledCache = new Map<string, Course | null>();
+const _updateCache = new Map<string, UpdateStatus>();
+
+function updateCacheKey(installed: Course): string {
+  // Combine id + the installed-side bundleSha so a course whose sha
+  // just got backfilled returns a new key on the next mount and
+  // recomputes — important for the `!installed.bundleSha` branch
+  // where we DO write a fresh sha to disk and want subsequent
+  // mounts to skip the slow re-hash path.
+  return installed.id + "|" + (installed.bundleSha ?? "_none_");
+}
+
+export function clearUpdateCache(courseId?: string): void {
+  if (!courseId) {
+    _bundledCache.clear();
+    _updateCache.clear();
+    return;
+  }
+  _bundledCache.delete(courseId);
+  for (const k of Array.from(_updateCache.keys())) {
+    if (k.startsWith(courseId + "|")) _updateCache.delete(k);
+  }
+}
+
 async function sha256(text: string): Promise<string> {
   const buf = new TextEncoder().encode(text);
   const hashBuf = await crypto.subtle.digest("SHA-256", buf);
@@ -98,24 +139,33 @@ export function bundledCourseUrl(courseId: string): string {
 export async function fetchBundledCourse(
   courseId: string,
 ): Promise<Course | null> {
+  // Cache hit short-circuits the IPC entirely — bundled content is
+  // immutable per session (it's shipped inside the app), so once
+  // we've resolved it we can re-serve from memory until the user
+  // explicitly clears via clearUpdateCache().
+  if (_bundledCache.has(courseId)) {
+    return _bundledCache.get(courseId) ?? null;
+  }
+  let result: Course | null = null;
   if (isDesktop) {
     try {
       const { invoke } = await import("@tauri-apps/api/core");
-      const result = await invoke<Course | null>("read_bundled_course", {
-        courseId,
-      });
-      return result ?? null;
+      result =
+        (await invoke<Course | null>("read_bundled_course", { courseId })) ??
+        null;
     } catch {
-      return null;
+      result = null;
+    }
+  } else {
+    try {
+      const res = await fetch(bundledCourseUrl(courseId), { cache: "no-cache" });
+      result = res.ok ? ((await res.json()) as Course) : null;
+    } catch {
+      result = null;
     }
   }
-  try {
-    const res = await fetch(bundledCourseUrl(courseId), { cache: "no-cache" });
-    if (!res.ok) return null;
-    return (await res.json()) as Course;
-  } catch {
-    return null;
-  }
+  _bundledCache.set(courseId, result);
+  return result;
 }
 
 export interface UpdateStatus {
@@ -136,14 +186,25 @@ export interface UpdateStatus {
 export async function checkUpdateAvailable(
   installed: Course,
 ): Promise<UpdateStatus> {
+  // Per-(id+sha) cache. CourseLibrary remounts on every Library ↔
+  // Discover nav (key={view} in App.tsx), and without this the
+  // whole 24-course-fan-out fired again every time — 24 IPC fetches
+  // + 24 SHA-256s over multi-MB canonical JSON, blocking the main
+  // thread for several seconds per nav.
+  const cacheKey = updateCacheKey(installed);
+  const cached = _updateCache.get(cacheKey);
+  if (cached) return cached;
+
   const bundled = await fetchBundledCourse(installed.id);
   if (!bundled) {
-    return {
+    const result: UpdateStatus = {
       available: false,
       bundledHash: null,
       installedSha: installed.bundleSha ?? null,
       bundled: null,
     };
+    _updateCache.set(cacheKey, result);
+    return result;
   }
   const bundledHash = await hashCourse(bundled);
 
@@ -159,30 +220,36 @@ export async function checkUpdateAvailable(
       // surfacing — the next mount will retry.
       const next: Course = { ...installed, bundleSha: bundledHash };
       void storage.saveCourse(installed.id, next).catch(() => {});
-      return {
+      const result: UpdateStatus = {
         available: false,
         bundledHash,
         installedSha: bundledHash,
         bundled,
       };
+      _updateCache.set(cacheKey, result);
+      return result;
     }
     // No bundleSha + content differs from bundled: the user has
     // local edits OR an outdated install. Surface the badge so the
     // user can choose to overwrite.
-    return {
+    const result: UpdateStatus = {
       available: true,
       bundledHash,
       installedSha: null,
       bundled,
     };
+    _updateCache.set(cacheKey, result);
+    return result;
   }
 
-  return {
+  const result: UpdateStatus = {
     available: installed.bundleSha !== bundledHash,
     bundledHash,
     installedSha: installed.bundleSha,
     bundled,
   };
+  _updateCache.set(cacheKey, result);
+  return result;
 }
 
 /// Overwrite the installed copy with the current bundled version.

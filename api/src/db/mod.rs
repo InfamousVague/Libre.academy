@@ -161,14 +161,14 @@ CREATE TABLE IF NOT EXISTS solutions (
     user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     course_id   TEXT NOT NULL,
     lesson_id   TEXT NOT NULL,
-    /// The active file's content. Solidity / Rust / etc. — single
-    /// blob to keep the row format stable; a multi-file lesson packs
-    /// its files into a serialized JSON wrapper before write.
+    -- The active file's content. Solidity / Rust / etc. — single
+    -- blob to keep the row format stable; a multi-file lesson packs
+    -- its files into a serialized JSON wrapper before write.
     content     TEXT NOT NULL,
     language    TEXT,
-    /// Source-of-truth timestamp from the WRITING device, ISO 8601.
-    /// Used in the conflict resolver: only overwrite if incoming
-    /// `updated_at` is strictly newer.
+    -- Source-of-truth timestamp from the WRITING device, ISO 8601.
+    -- Used in the conflict resolver: only overwrite if incoming
+    -- `updated_at` is strictly newer.
     updated_at  TEXT NOT NULL,
     PRIMARY KEY (user_id, course_id, lesson_id)
 );

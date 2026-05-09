@@ -589,6 +589,25 @@
   position: relative;
 }
 
+/* Card list is in a deferred recomputation — chrome (header / count
+   / filter pills) has already updated to the new scope but the
+   actual card derivation is still running on a background priority.
+   Dim the body slightly so the user sees the state-mismatch as
+   "loading…" rather than thinking the list is just stale. The
+   transition is gentle (200ms ease) because the deferred work
+   usually finishes faster than the eye registers; we only want the
+   dim to be visible when the work genuinely takes a beat (large
+   catalogs, slow CPU). */
+.fishbones-library-body.is-deferred-pending {
+  opacity: 0.55;
+  transition: opacity 200ms ease;
+  /* Block interactions on stale cards — clicking a Library card
+     while the body is in the middle of swapping to Discover would
+     be confusing. The pointer-events comes back as soon as the
+     deferred render commits and the class drops. */
+  pointer-events: none;
+}
+
 /* The cover-prefetch gate that previously lived here was removed —
    it flashed on every window refocus because the effect re-ran and
    the prefetch resolved synchronously from cache, briefly toggling

@@ -135,17 +135,18 @@
   pointer-events: none;
 }
 
-/* Hard-clamp the inner glyph well inside the ring. The ring renders
-   at ~16px visible diameter (20px viewBox × r=13/16 of half-width),
-   so an 11px glyph sits at ~70% of the ring's inner diameter —
-   enough that the ring reads as "containing" the glyph rather than
-   "barely bigger than" it. The ring is the progress affordance and
-   should visually dominate; the glyph is just a play/pause/loader
-   state label. Forced via !important because @base's `.icon--xs`
-   rule sets width/height with the same selector specificity. */
+/* Hard-clamp the inner glyph WELL inside the ring. The ring is
+   20px (see `.fb-tts-pill__ring`), and after the global +6px icon
+   bump in App.css the @base `xs` size lands at 18px — way too
+   loud, the play / pause bars dominate the pill instead of
+   reading as a state badge inside the progress ring. 9px keeps
+   the glyph well below the ring's inner diameter (~50% fill) so
+   the ring is the focal point and the glyph reads as "what state
+   am I in" rather than "press here." `!important` forces past the
+   same-specificity `.icon--xs` rule in App.css. */
 .fb-tts-pill__icon svg {
-  width: 11px !important;
-  height: 11px !important;
+  width: 9px !important;
+  height: 9px !important;
 }
 
 /* Loader spin while the MP3 is fetching from the CDN on first play. */

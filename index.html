@@ -10,8 +10,15 @@
          safe-area math via `env(safe-area-inset-*)` in MobileApp.css
          + MobileTabBar.css, so opting into edge-to-edge here is
          what actually delivers the "scroll to the bottom of the
-         phone window" feel. -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+         phone window" feel.
+         `maximum-scale=1.0, user-scalable=no` disables pinch-zoom
+         AND the input-focus auto-zoom on iOS. The app is its own
+         window, not a web page; double-tapping a button shouldn't
+         leave the layout zoomed in. iOS 10+ ignores user-scalable=no
+         in mobile Safari for accessibility, but inside a Tauri
+         WKWebView (where we control the host) it's still honored,
+         and the maximum-scale=1.0 alone stops the auto-zoom. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <link rel="icon" type="image/png" href="/fishbones_appicon.png" />
     <link rel="apple-touch-icon" href="/fishbones_appicon.png" />
     <title>Fishbones</title>
@@ -116,6 +123,21 @@
         to { transform: rotate(360deg); }
       }
     </style>
+    <!-- Floating dev console. Loads BEFORE the React module bundle
+         (parser-blocking, no `defer`/`async`) so it can hook
+         console.log/.error and window error events before main.tsx
+         emits anything. The script gates its own UI on a localStorage
+         flag and exposes a 5-tap-on-top-left magic gesture to toggle
+         that flag from inside the iPad app — where Safari Web
+         Inspector isn't reachable, which is the entire reason this
+         file exists ("Loading Fishbones…" stuck on iPad).
+
+         Loaded as an external script (rather than inline) because the
+         Tauri CSP is `script-src 'self' 'wasm-unsafe-eval'` — no
+         `'unsafe-inline'` — and an external file from the bundled
+         /public/ tree counts as 'self'. Console patches always run;
+         the panel UI only mounts when the flag is set. -->
+    <script src="/devconsole.js"></script>
   </head>
   <body>
     <div id="preloader" role="status" aria-label="Loading Fishbones">

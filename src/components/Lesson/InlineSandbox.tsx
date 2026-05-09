@@ -70,9 +70,12 @@ export default function InlineSandbox({ language, initialCode }: Props) {
 
   // Line count drives the editor height so we don't leave a giant empty
   // box for a 3-line snippet. Cap so a 20-line "try it" still scrolls
-  // rather than pushing the prose below it off-screen.
+  // rather than pushing the prose below it off-screen. The trailing
+  // `+ 24` pixels accounts for the editor's vertical padding (10 top
+  // + 10 bottom set in `padding` below, plus a small fudge) so the
+  // last line never gets clipped against the bottom border.
   const lineCount = Math.max(3, Math.min(code.split("\n").length, 12));
-  const editorHeight = `${lineCount * 18 + 10}px`;
+  const editorHeight = `${lineCount * 18 + 24}px`;
 
   return (
     <div className="fishbones-inline-sandbox-root">
@@ -117,7 +120,12 @@ export default function InlineSandbox({ language, initialCode }: Props) {
             folding: false,
             lineDecorationsWidth: 0,
             lineNumbersMinChars: 0,
-            padding: { top: 6, bottom: 6 },
+            // Monaco's `padding` option is vertical-only. Horizontal
+            // breathing room comes from the parent's CSS padding so
+            // long lines have a visible gutter against the panel
+            // border. Bumped vertical padding too — the original 6px
+            // sat the first line right against the header divider.
+            padding: { top: 10, bottom: 10 },
             renderLineHighlight: "none",
             overviewRulerLanes: 0,
             hideCursorInOverviewRuler: true,

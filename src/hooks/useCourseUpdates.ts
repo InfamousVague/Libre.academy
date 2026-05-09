@@ -16,7 +16,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { Course } from "../data/types";
-import { checkUpdateAvailable } from "../lib/courseSync";
+import { checkUpdateAvailable, clearUpdateCache } from "../lib/courseSync";
 import { storage } from "../lib/storage";
 
 export function useCourseUpdates(courses: Course[]): {
@@ -34,19 +34,34 @@ export function useCourseUpdates(courses: Course[]): {
   const [updates, setUpdates] = useState<Record<string, boolean>>({});
 
   const checkAll = useCallback(async (list: Course[]) => {
-    const entries = await Promise.all(
-      list.map(async (c) => {
-        try {
-          const r = await checkUpdateAvailable(c);
-          return [c.id, r.available] as const;
-        } catch {
-          return [c.id, false] as const;
-        }
-      }),
-    );
+    // Sequential with a setTimeout(0) yield between courses, NOT
+    // Promise.all. The hash work (canonicalJson + SHA-256) is
+    // CPU-bound and blocks the event loop — Promise.all stacked all
+    // 24 courses' worth of canonicalisation back-to-back, freezing
+    // the app for several seconds on every Library ↔ Discover nav.
+    // Sequential + yield trades a touch more wall-time for a UI
+    // that stays responsive throughout, and second-and-beyond mounts
+    // hit the module-level cache in courseSync.ts so the freeze
+    // only ever happens once per session per course.
+    const t0 = performance.now();
     const next: Record<string, boolean> = {};
-    for (const [id, available] of entries) next[id] = available;
+    for (const c of list) {
+      try {
+        const r = await checkUpdateAvailable(c);
+        next[c.id] = r.available;
+      } catch {
+        next[c.id] = false;
+      }
+      // Yield so the browser can paint + handle clicks between
+      // courses. Cheap when the cache is warm (returns sync-ish);
+      // critical on the first cold pass.
+      await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    }
     setUpdates(next);
+    // eslint-disable-next-line no-console
+    console.log(
+      `[lib] update-check ${list.length} courses in ${(performance.now() - t0).toFixed(0)}ms`,
+    );
   }, []);
 
   useEffect(() => {
@@ -61,6 +76,10 @@ export function useCourseUpdates(courses: Course[]): {
 
   const recheck = useCallback(
     async (courseId: string) => {
+      // Invalidate the module-level cache for this course before
+      // we fetch — otherwise the cached pre-update result would
+      // win and the badge wouldn't clear.
+      clearUpdateCache(courseId);
       // Load FRESH from disk rather than reading from the `courses`
       // prop. The prop is captured at click time; by the time
       // `recheck` runs after a sync, the parent's `refreshCourses`
@@ -81,6 +100,9 @@ export function useCourseUpdates(courses: Course[]): {
   );
 
   const recheckAll = useCallback(async () => {
+    // The user explicitly asked for a refresh; blow away the cache
+    // so we actually re-fetch + re-hash rather than serving stale.
+    clearUpdateCache();
     await checkAll(courses);
   }, [checkAll, courses]);
 

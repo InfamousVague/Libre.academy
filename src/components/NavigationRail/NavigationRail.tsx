@@ -110,7 +110,11 @@ function RailItem({ icon, label, onClick, active, pressed }: RailItemProps) {
         aria-label={label}
         aria-pressed={pressed}
       >
-        <Icon icon={icon} size="sm" color="currentColor" />
+        {/* size="xl" — bumped up from the original "sm" so the rail
+            glyphs read as primary-nav, but stepped down from "2xl"
+            which crowded the 40×40 button. xl (22px) leaves ~9px
+            of ring inside the button for hover / active contrast. */}
+        <Icon icon={icon} size="xl" color="currentColor" />
       </button>
     </Tooltip>
   );

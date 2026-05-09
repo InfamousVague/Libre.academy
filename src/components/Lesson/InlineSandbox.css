@@ -83,9 +83,16 @@
 
 /* Editor shell — height is controlled inline so small snippets don't
    get an oversized container. overflow clips the Monaco viewport to
-   the rounded border-radius at the top. */
+   the rounded border-radius at the top.
+   The 12px horizontal padding pushes Monaco's content inward so code
+   doesn't crash against the panel's left/right borders — Monaco's
+   built-in `padding` option only handles vertical, hence the CSS
+   wrapper. The inset background mirrors the dark theme's canvas so
+   the wrapper isn't visible as a different color stripe at the
+   edges. */
 .fishbones-inline-sandbox-editor {
   background: var(--color-bg-primary);
+  padding: 0 12px;
 }
 
 /* Output strip — mono font, dim backdrop, tight padding. Renders below

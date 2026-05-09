@@ -24,6 +24,11 @@ interface ManifestEntry {
   cover?: string;
   sizeBytes: number;
   packType?: "course" | "challenges";
+  /// "Unlisted" — see Course.hidden + CatalogEntry.hidden. We still
+  /// seed the course (so a deep link to `?courseId=…` works without
+  /// an extra fetch) but stamp the flag onto the saved Course so
+  /// CourseLibrary/Sidebar/Trees skip it in their listings.
+  hidden?: boolean;
 }
 
 interface Manifest {
@@ -298,6 +303,12 @@ export async function seedWebStarterCourses(): Promise<number> {
         ...course,
         id: entry.id,
         coverFetchedAt: entry.cover ? Date.now() : undefined,
+        // Threaded from the manifest so the course is queryable by
+        // direct link (`?courseId=…`) but stays out of the catalog
+        // and library listings. Only set when the manifest opts in;
+        // otherwise we leave the field undefined so the rest of the
+        // app can do strict `course.hidden === true` checks.
+        hidden: entry.hidden ? true : undefined,
       };
       await storage.saveCourse(entry.id, record);
       written += 1;

@@ -230,6 +230,16 @@ export interface Course {
   /// = downloadable on demand. Set on installed courses too so the
   /// Library can sort core books to the front of the shelf.
   tier?: "core" | "remote";
+  /// "Unlisted" flag. When true, the course is reachable by a direct
+  /// link (`?courseId=…`) and shows up in the active tab if opened,
+  /// but is excluded from every catalog/library/sidebar listing so
+  /// it doesn't surface to people who don't already have the URL.
+  /// Set in the catalog manifest entry; threaded through
+  /// `webSeedCourses` onto the saved Course so the Library can
+  /// filter on a single field instead of cross-referencing the
+  /// catalog. Used for share-by-link previews of courses we don't
+  /// want in the discoverable catalog yet.
+  hidden?: boolean;
   /// When true, the course assumes the learner will connect a
   /// hardware wallet (currently: Ledger only). Setting this:
   ///   - Mounts the LedgerStatusPill in the lesson view header so
@@ -368,7 +378,7 @@ export interface ExerciseLesson extends LessonBase {
    * `deploy`, `read`, `write`, `expectRevert`); "solana" for LiteSVM
    * lessons. See docs/evm-solana-runtime-design.md.
    */
-  harness?: "evm" | "solana" | "bitcoin";
+  harness?: "evm" | "solana" | "bitcoin" | "trade";
   /**
    * Building-blocks render data. When present, the lesson can be played
    * in a tap-to-place / drag-to-place mode where the learner fills in
@@ -401,7 +411,7 @@ export interface MixedLesson extends LessonBase {
   solutionFiles?: WorkbenchFile[];
   difficulty?: Difficulty;
   topic?: string;
-  harness?: "evm" | "solana" | "bitcoin";
+  harness?: "evm" | "solana" | "bitcoin" | "trade";
   /** See ExerciseLesson.blocks — same shape, same semantics. */
   blocks?: BlocksData;
 }

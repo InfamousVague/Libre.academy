@@ -6,6 +6,7 @@
 import { Icon } from "@base/primitives/icon";
 import { library } from "@base/primitives/icon/icons/library";
 import { bookOpen } from "@base/primitives/icon/icons/book-open";
+import { dumbbell } from "@base/primitives/icon/icons/dumbbell";
 import { user } from "@base/primitives/icon/icons/user";
 import { settings } from "@base/primitives/icon/icons/settings";
 import "./MobileTabBar.css";
@@ -13,6 +14,7 @@ import "./MobileTabBar.css";
 export type MobileTab =
   | "library"
   | "courses"
+  | "practice"
   | "profile"
   | "settings";
 
@@ -21,6 +23,10 @@ interface Props {
   hasActiveLesson: boolean;
   onLibrary: () => void;
   onLesson: () => void;
+  /// Practice tab handler. Optional so embeddings without the
+  /// Practice surface (legacy mobile builds during rollout) can
+  /// still mount the bar; when omitted, the button is hidden.
+  onPractice?: () => void;
   onProfile: () => void;
   onSettings: () => void;
 }
@@ -30,6 +36,7 @@ export default function MobileTabBar({
   hasActiveLesson,
   onLibrary,
   onLesson,
+  onPractice,
   onProfile,
   onSettings,
 }: Props) {
@@ -60,6 +67,16 @@ export default function MobileTabBar({
         <Icon icon={bookOpen} size="lg" />
         <span>Lesson</span>
       </button>
+      {onPractice && (
+        <button
+          type="button"
+          className={`fishbones-mtab__btn${active === "practice" ? " fishbones-mtab__btn--active" : ""}`}
+          onClick={onPractice}
+        >
+          <Icon icon={dumbbell} size="lg" />
+          <span>Practice</span>
+        </button>
+      )}
       <button
         type="button"
         className={`fishbones-mtab__btn${active === "profile" ? " fishbones-mtab__btn--active" : ""}`}

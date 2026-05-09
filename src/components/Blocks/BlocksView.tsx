@@ -486,7 +486,11 @@ function BlocksViewInner({
         lesson.tests,
         undefined,
         lesson.id,
-        lesson.harness,
+        // The "trade" harness has no code-runtime side (it just
+        // mounts the API tester dock above the lesson). Strip it
+        // here so we don't pass it into runFiles, whose harness
+        // union is intentionally narrower (chain runtimes only).
+        lesson.harness === "trade" ? undefined : lesson.harness,
       );
       setResult(r);
       // Lesson completion via runner: same criterion as editor

@@ -219,6 +219,32 @@ button {
   }
 }
 
+/* View-pending dim. While `useTransition` is preparing the next
+   library/discover view in the background, the wrapper carries
+   `is-view-pending` so the user sees their click registered. We
+   apply a subtle opacity drop + cursor-progress instead of a
+   spinner — the previous view stays interactive (it's the same
+   one they were looking at) and the dim is only meant to read as
+   "your click landed; the new view is on its way." Transition
+   feels instant (<150ms) for cached-catalog cases, so the dim is
+   imperceptible there; only the cold-catalog or first-paint cases
+   get a brief visible cue. */
+.fishbones-view-pane {
+  width: 100%;
+  height: 100%;
+  display: contents;
+  transition: opacity 120ms ease;
+}
+
+.fishbones-view-pane.is-view-pending {
+  /* `display: contents` collapses this wrapper out of the layout
+     tree, so opacity won't bind to it directly — switch to block
+     during the pending state so the cue actually shows. */
+  display: block;
+  opacity: 0.6;
+  cursor: progress;
+}
+
 /* Mobile body: drop the desktop margin-left and reserve space at the
    top for the iOS status bar / dynamic island, plus bottom padding so
    the MobileTabBar (~70px) doesn't occlude scrollable content. */

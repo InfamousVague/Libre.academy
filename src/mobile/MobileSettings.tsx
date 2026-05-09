@@ -12,10 +12,25 @@
 
 import { useState } from "react";
 import type { UseFishbonesCloud } from "../hooks/useFishbonesCloud";
+import type { RealtimeSyncHandle } from "../hooks/useRealtimeSync";
+import type { Completion } from "../hooks/useProgress";
+import type { Course } from "../data/types";
+import SyncDebugPanel from "../components/dialogs/SettingsDialog/SyncDebugPanel";
+import { applyTheme, loadTheme, THEMES, type ThemeName } from "../theme/themes";
 import "./MobileSettings.css";
 
 interface Props {
   cloud: UseFishbonesCloud;
+  /// Realtime sync hook handle. Drives the Sync diagnostics card —
+  /// status badge, pending push counter, manual pull/push buttons,
+  /// diff view. Optional for embeddings that don't run sync.
+  realtime?: RealtimeSyncHandle;
+  /// Local completion history. Source of truth for the "On this
+  /// device" column of the sync diff.
+  history?: readonly Completion[];
+  /// Live course list — used to format diff entries with
+  /// "Course Title · Lesson Title" instead of raw IDs.
+  courses?: readonly Course[];
   onRequestSignIn: () => void;
   onResetProgress: () => Promise<void> | void;
   appVersion?: string;
@@ -23,6 +38,9 @@ interface Props {
 
 export default function MobileSettings({
   cloud,
+  realtime,
+  history,
+  courses,
   onRequestSignIn,
   onResetProgress,
   appVersion = "0.1.4",
@@ -30,6 +48,15 @@ export default function MobileSettings({
   const [confirmReset, setConfirmReset] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  // Theme picker state — initialise from the current persisted choice
+  // (loadTheme reads localStorage). `applyTheme` writes-through on
+  // every selection so the change persists across launches.
+  const [theme, setTheme] = useState<ThemeName>(() => loadTheme());
+
+  function handleThemeChange(next: ThemeName) {
+    setTheme(next);
+    applyTheme(next);
+  }
 
   const signedIn = cloud.signedIn === true;
   const user =
@@ -99,6 +126,66 @@ export default function MobileSettings({
             </button>
           </>
         )}
+      </section>
+
+      {signedIn && realtime && (
+        <section className="m-set__section">
+          <SyncDebugPanel
+            cloud={cloud}
+            realtime={realtime}
+            history={history ?? []}
+            describeLesson={(courseId, lessonId) => {
+              const course = courses?.find((c) => c.id === courseId);
+              if (!course) return `${courseId} · ${lessonId}`;
+              for (const ch of course.chapters) {
+                const lesson = ch.lessons.find((l) => l.id === lessonId);
+                if (lesson) return `${course.title} · ${lesson.title}`;
+              }
+              return `${course.title} · ${lessonId}`;
+            }}
+          />
+        </section>
+      )}
+
+      <section className="m-set__section">
+        <h3 className="m-set__section-title">Theme</h3>
+        <p className="m-set__blurb">
+          App + editor colors. Picks land instantly and persist across
+          launches; same library as the desktop app.
+        </p>
+        <ul className="m-set__theme-list" role="radiogroup" aria-label="Theme">
+          {THEMES.map((t) => {
+            const active = t.id === theme;
+            return (
+              <li key={t.id}>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  className={
+                    "m-set__theme-row" + (active ? " is-active" : "")
+                  }
+                  onClick={() => handleThemeChange(t.id)}
+                >
+                  <span
+                    className="m-set__theme-swatch"
+                    data-theme={t.id}
+                    aria-hidden
+                  />
+                  <span className="m-set__theme-text">
+                    <span className="m-set__theme-label">{t.label}</span>
+                    <span className="m-set__theme-desc">{t.description}</span>
+                  </span>
+                  {active && (
+                    <span className="m-set__theme-check" aria-hidden>
+                      ✓
+                    </span>
+                  )}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       </section>
 
       <section className="m-set__section">

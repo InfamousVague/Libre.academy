@@ -9,6 +9,27 @@
      handled by MobileTabBar's own safe-area-inset. */
   padding-top: env(safe-area-inset-top, 0);
   font-family: var(--font-sans);
+  /* Disable double-tap zoom and text-size auto-adjust at the root
+     of the mobile tree. The viewport meta in index.html already
+     blocks pinch-zoom + input-focus zoom; this layer covers the
+     remaining cases (double-tap on a button, font-size auto-adjust
+     in landscape rotation). `touch-action: manipulation` is the
+     standard knob — it allows pan + pinch but suppresses the 350ms
+     double-tap zoom delay AND the gesture itself. */
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Belt-and-brace: disable double-tap zoom on every interactive
+ * element inside the mobile tree. Some iOS WKWebView versions
+ * still honor double-tap on certain `<button>` / link elements
+ * even with the root rule above; targeting the elements directly
+ * stops the zoom dead. */
+.m-app button,
+.m-app a,
+.m-app [role="button"] {
+  touch-action: manipulation;
 }
 
 .m-app__main {

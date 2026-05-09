@@ -75,17 +75,38 @@ pub fn list_completions(db: State<'_, ProgressDb>) -> Result<Vec<Completion>, St
     Ok(out)
 }
 
+/// Mark a lesson complete for the active user.
+///
+/// `completed_at` is an optional epoch-seconds timestamp. The cloud-
+/// sync path supplies it so a row pulled down from the relay carries
+/// the original completion time across devices — without this, every
+/// row stamps with `now()` and a fresh device's streak / activity
+/// graphs collapse to "everything happened today" the moment the
+/// learner signs in. The local self-mark path passes `None` and we
+/// stamp with `now()` ourselves.
 #[tauri::command]
 pub fn mark_completion(
     db: State<'_, ProgressDb>,
     course_id: String,
     lesson_id: String,
+    completed_at: Option<i64>,
 ) -> Result<(), String> {
     let conn = db.0.lock().map_err(|_| "db mutex poisoned".to_string())?;
-    let now = chrono::Utc::now().timestamp();
+    let supplied = completed_at.unwrap_or_else(|| chrono::Utc::now().timestamp());
+    // Upsert with "earliest wins" semantics: if a row already exists
+    // for this (course, lesson), keep the smaller timestamp. That way
+    // a stale local copy (e.g. one stamped "today" by a pre-fix mobile
+    // build) gets overwritten by the cloud's authentic completion
+    // time on the next sync round, but a lesson the user just freshly
+    // completed locally doesn't get retroactively backdated by some
+    // older sync row arriving later. SQLite needs the
+    // ON CONFLICT (...) syntax — the table's PRIMARY KEY is the
+    // composite (course_id, lesson_id).
     conn.execute(
-        "INSERT OR IGNORE INTO completions (course_id, lesson_id, completed_at) VALUES (?1, ?2, ?3)",
-        params![course_id, lesson_id, now],
+        "INSERT INTO completions (course_id, lesson_id, completed_at) VALUES (?1, ?2, ?3) \
+         ON CONFLICT(course_id, lesson_id) DO UPDATE SET \
+            completed_at = MIN(completions.completed_at, excluded.completed_at)",
+        params![course_id, lesson_id, supplied],
     )
     .map_err(|e| e.to_string())?;
     Ok(())

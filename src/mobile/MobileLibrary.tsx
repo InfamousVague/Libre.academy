@@ -30,6 +30,8 @@ import { layoutGrid as gridIcon } from "@base/primitives/icon/icons/layout-grid"
 import { libraryBig as coversIcon } from "@base/primitives/icon/icons/library-big";
 import BookCover from "../components/Library/BookCover";
 import CourseCard from "../components/Library/CourseCard";
+import PullToRefresh from "./PullToRefresh";
+import { usePullToRefresh } from "./usePullToRefresh";
 import "./MobileLibrary.css";
 
 type ViewMode = "grid" | "covers";
@@ -43,6 +45,11 @@ interface Props {
   /// global mobile search palette. Left optional so callers that
   /// haven't wired the palette in yet still type-check.
   onOpenSearch?: () => void;
+  /// Optional — pull-to-refresh handler. When provided, dragging
+  /// down at the top of the page triggers this callback and shows
+  /// the system-style ring indicator until the returned promise
+  /// resolves. Wired by MobileApp to the realtime sync resync.
+  onRefresh?: () => Promise<void> | void;
 }
 
 const LANG_LABELS: Partial<Record<LanguageId, string>> = {
@@ -101,7 +108,15 @@ export default function MobileLibrary({
   completed,
   onOpenLesson,
   onOpenSearch,
+  onRefresh,
 }: Props) {
+  // Pull-to-refresh — only arms when the host actually wires a
+  // refresh handler. The hook is inert (no listeners attached)
+  // when `onRefresh` is undefined.
+  const { pullDistance, isRefreshing } = usePullToRefresh({
+    onRefresh: onRefresh ?? (() => {}),
+    enabled: !!onRefresh,
+  });
   const [filter, setFilter] = useState<LanguageId | "all">("all");
   /// Persisted view-mode preference. Default "grid" so the first-time
   /// experience matches the desktop default; a learner who flips to
@@ -185,7 +200,20 @@ export default function MobileLibrary({
   }, [filtered, completed]);
 
   return (
-    <div className="m-lib">
+    <div
+      className="m-lib"
+      // Translate the page content down by the current pull distance
+      // so the floating refresh indicator slides into view above it.
+      // No transition while the finger is moving (the hook updates
+      // pullDistance per touchmove); the hook itself springs back to
+      // 0 with a CSS transition once the gesture ends.
+      style={{
+        transform: pullDistance > 0 ? `translateY(${pullDistance}px)` : undefined,
+        transition:
+          pullDistance > 0 && !isRefreshing ? "none" : "transform 200ms cubic-bezier(0.22, 1, 0.36, 1)",
+      }}
+    >
+      <PullToRefresh pullDistance={pullDistance} isRefreshing={isRefreshing} />
       <header className="m-lib__head">
         <div className="m-lib__head-text">
           <h1 className="m-lib__title">Library</h1>

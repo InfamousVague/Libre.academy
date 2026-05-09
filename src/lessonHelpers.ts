@@ -177,3 +177,33 @@ export function shouldShowSvmDock(
   }
   return false;
 }
+
+/// Show the TradeDock (Postman-like REST + WebSocket client) when:
+///   - the lesson explicitly opts into the Trade harness
+///     (`harness: "trade"`), OR
+///   - the lesson is a coding lesson AND the parent course id
+///     matches the HelloTrade-flavoured prefix (`hellotrade*` /
+///     `*-hello-trade-*`). The dock is API-tester chrome and only
+///     makes sense above lessons that ARE about hitting an API,
+///     so unlike the chain docks we DON'T fall back to "any
+///     coding lesson in the course" — a non-API exercise inside
+///     the same book (e.g. a closure-revisit drill) shouldn't
+///     drag the request panel onto its surface.
+///
+/// Reading + quiz lessons stay excluded — the dock is interactive
+/// and would be silent chrome above a prose page.
+export function shouldShowTradeDock(
+  lesson: Lesson,
+  course: Course,
+  // `_opts` retained for parity with the chain-dock helpers.
+  _opts?: { hasActivity?: boolean },
+): boolean {
+  // Unlike the chain docks (which are chrome around the code
+  // editor — pointless above prose), the TradeDock IS its own
+  // editor: an interactive HTTP/WS client with a presets sidebar.
+  // It works above ANY lesson in the HelloTrade course (including
+  // reading + quiz lessons), so we don't gate on `isCodingLesson`.
+  if ("harness" in lesson && lesson.harness === "trade") return true;
+  if (/^hello-?trade(-|$)/i.test(course.id)) return true;
+  return false;
+}

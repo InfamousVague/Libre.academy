@@ -542,18 +542,28 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  /* Sized to seat an `xs` icon (~18px after the global +6px bump in
-     App.css) inside the circle with a comfortable ~4px ring of
-     padding all the way around. Was 16px back when xs icons were
-     12px — that left zero padding and the glyph spilled to the
-     edges, which read as "the icon IS the bubble" rather than
-     "the icon sits IN the bubble." */
+  /* 26px bubble. The icon size used to track @base's `xs` token
+     (18px after the global +6px bump in App.css), but at that
+     size the glyph filled 70% of the bubble's diameter and read
+     as "the icon IS the bubble" rather than "the icon sits IN
+     the bubble." We hard-clamp the inner glyph to 13px below
+     instead — ~50% fill — so the kind cue reads as a quiet
+     marker and the ring + completion-state colour does the
+     heavy lifting visually. */
   width: 26px;
   height: 26px;
   flex-shrink: 0;
   border-radius: 50%;
   transition: background 0.2s ease, border-color 0.2s ease, color var(--fb-motion-snappy),
     box-shadow 0.2s ease;
+}
+
+/* Same trick the TTSButton uses: hard-clamp the inner SVG to
+   override the global `.icon--xs` size. !important because the
+   global rule is same-specificity. */
+.fishbones__lesson-status svg {
+  width: 13px !important;
+  height: 13px !important;
 }
 
 /* Pending: hollow ring with a barely-there kind icon. The icon color sits

@@ -64,6 +64,27 @@ export interface RealtimeSyncHandle {
   /// Force-flush every buffered push synchronously. Useful before
   /// an unmount or sign-out so we don't lose the trailing edits.
   flush: () => Promise<void>;
+  /// Force a full re-pull from the server: pulls progress / solutions
+  /// / settings and runs them through the caller's `applyX` functions
+  /// just like sign-in does. Surface this in a debug panel so a user
+  /// who suspects local + server have drifted can manually catch up.
+  /// Returns when every applier finishes.
+  resync: () => Promise<void>;
+  /// Snapshot of how many rows are currently buffered for an upcoming
+  /// push (i.e. local edits that haven't been flushed to the relay
+  /// yet). Bumps as the user edits and drops back to zero after the
+  /// debounced flush succeeds.
+  pendingPushCount: { progress: number; solutions: number; settings: number };
+}
+
+function errorMessage(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  if (typeof e === "string") return e;
+  try {
+    return JSON.stringify(e);
+  } catch {
+    return String(e);
+  }
 }
 
 export function useRealtimeSync(opts: RealtimeSyncOpts): RealtimeSyncHandle {
@@ -100,6 +121,22 @@ export function useRealtimeSync(opts: RealtimeSyncOpts): RealtimeSyncHandle {
   const settingsBuf = useRef(new Map<string, SettingRow>());
   const flushTimer = useRef<number | null>(null);
 
+  /// Mirror of the buffer sizes as React state so the SyncDebugPanel
+  /// can display them. Mutating refs alone don't trigger re-renders;
+  /// we bump this whenever a buffer adds or drains.
+  const [pendingPushCount, setPendingPushCount] = useState({
+    progress: 0,
+    solutions: 0,
+    settings: 0,
+  });
+  const refreshPendingCount = useCallback(() => {
+    setPendingPushCount({
+      progress: progressBuf.current.size,
+      solutions: solutionsBuf.current.size,
+      settings: settingsBuf.current.size,
+    });
+  }, []);
+
   const flush = useCallback(async (): Promise<void> => {
     if (flushTimer.current !== null) {
       window.clearTimeout(flushTimer.current);
@@ -111,6 +148,7 @@ export function useRealtimeSync(opts: RealtimeSyncOpts): RealtimeSyncHandle {
     progressBuf.current.clear();
     solutionsBuf.current.clear();
     settingsBuf.current.clear();
+    refreshPendingCount();
     try {
       // Run in parallel — they're independent endpoints. Failures
       // log but don't stop the others.
@@ -149,24 +187,53 @@ export function useRealtimeSync(opts: RealtimeSyncOpts): RealtimeSyncHandle {
   const pushProgress = useCallback(
     (row: ProgressRow) => {
       progressBuf.current.set(`${row.course_id}:${row.lesson_id}`, row);
+      refreshPendingCount();
       scheduleFlush();
     },
-    [scheduleFlush],
+    [scheduleFlush, refreshPendingCount],
   );
   const pushSolution = useCallback(
     (row: SolutionRow) => {
       solutionsBuf.current.set(`${row.course_id}:${row.lesson_id}`, row);
+      refreshPendingCount();
       scheduleFlush();
     },
-    [scheduleFlush],
+    [scheduleFlush, refreshPendingCount],
   );
   const pushSetting = useCallback(
     (row: SettingRow) => {
       settingsBuf.current.set(row.key, row);
+      refreshPendingCount();
       scheduleFlush();
     },
-    [scheduleFlush],
+    [scheduleFlush, refreshPendingCount],
   );
+
+  /// Force a full re-pull. Cheapest implementation: bump the
+  /// `resyncEpoch` state below — the main pull / subscribe effect
+  /// lists `resyncEpoch` in its deps, so the bump tears down the
+  /// (potentially stale) WS, re-opens a fresh one, and re-pulls
+  /// everything via the same applier path sign-in uses. Returns a
+  /// promise that resolves once the next pull settles, so a debug
+  /// panel can show a spinner against the actual round-trip.
+  const resyncSettlePromiseRef = useRef<{
+    promise: Promise<void>;
+    resolve: () => void;
+  } | null>(null);
+  const resync = useCallback(async (): Promise<void> => {
+    if (resyncSettlePromiseRef.current) {
+      // Already a pull in flight from a previous resync click; share
+      // its promise rather than queueing a second.
+      return resyncSettlePromiseRef.current.promise;
+    }
+    let resolveFn: () => void = () => {};
+    const settle = new Promise<void>((r) => {
+      resolveFn = r;
+    });
+    resyncSettlePromiseRef.current = { promise: settle, resolve: resolveFn };
+    setResyncEpoch((n) => n + 1);
+    return settle;
+  }, []);
 
   // Initial pull + WS subscription. Re-fires when the user toggles
   // sign-in state. The cleanup tears down both the WS and any
@@ -185,22 +252,72 @@ export function useRealtimeSync(opts: RealtimeSyncOpts): RealtimeSyncHandle {
     setStatus("syncing");
     setError(null);
     void (async () => {
-      try {
-        const [progress, solutions, settings] = await Promise.all([
-          cloud.pullProgress(),
-          cloud.pullSolutions(),
-          cloud.pullSettings(),
-        ]);
-        if (cancelled) return;
-        applyProgressRef.current?.(progress);
-        applySolutionsRef.current?.(solutions);
-        applySettingsRef.current?.(settings);
-        setStatus("live");
-      } catch (e) {
-        if (cancelled) return;
-        setStatus("error");
-        setError(e instanceof Error ? e.message : String(e));
+      // CRITICAL: use `allSettled`, NOT `all`. The three pull
+      // endpoints are independent — if the relay returns 404 on
+      // one (e.g. `/fishbones/settings` is unimplemented on a
+      // staging deploy or older relay version), `Promise.all`
+      // would reject the whole batch and the progress + solutions
+      // pulls — which DID succeed — would silently never apply.
+      // That was the actual root cause of the "level 103 on
+      // desktop, 0 on mobile" sync drift the user kept seeing:
+      // settings 404'd, the catch branch flipped status to
+      // "error", and the just-fetched progress array was never
+      // handed to applyProgressRef. With allSettled each fulfilled
+      // value applies independently; rejected ones get logged but
+      // don't block the rest. Status flips to "error" only when
+      // EVERY endpoint failed — partial success still reads as
+      // "live" with a console warning.
+      const [progressR, solutionsR, settingsR] = await Promise.allSettled([
+        cloud.pullProgress(),
+        cloud.pullSolutions(),
+        cloud.pullSettings(),
+      ]);
+      if (cancelled) {
+        const pending = resyncSettlePromiseRef.current;
+        resyncSettlePromiseRef.current = null;
+        pending?.resolve();
+        return;
       }
+      const failures: string[] = [];
+      if (progressR.status === "fulfilled") {
+        applyProgressRef.current?.(progressR.value);
+      } else {
+        const msg = errorMessage(progressR.reason);
+        failures.push(`progress: ${msg}`);
+        console.warn("[realtime-sync] pull progress failed:", progressR.reason);
+      }
+      if (solutionsR.status === "fulfilled") {
+        applySolutionsRef.current?.(solutionsR.value);
+      } else {
+        const msg = errorMessage(solutionsR.reason);
+        failures.push(`solutions: ${msg}`);
+        console.warn("[realtime-sync] pull solutions failed:", solutionsR.reason);
+      }
+      if (settingsR.status === "fulfilled") {
+        applySettingsRef.current?.(settingsR.value);
+      } else {
+        const msg = errorMessage(settingsR.reason);
+        failures.push(`settings: ${msg}`);
+        console.warn("[realtime-sync] pull settings failed:", settingsR.reason);
+      }
+      // Three-way outcome:
+      //   - all 3 ok   → live, no error
+      //   - some ok    → live, surface the failures so the debug
+      //                  panel can still flag them, but don't
+      //                  pretend the successful pulls didn't apply
+      //   - all failed → error
+      if (failures.length === 3) {
+        setStatus("error");
+        setError(failures.join(" · "));
+      } else {
+        setStatus("live");
+        setError(failures.length > 0 ? failures.join(" · ") : null);
+      }
+      // Resolve the pending `resync()` promise so a debug panel
+      // spinner stops. Idempotent.
+      const pending = resyncSettlePromiseRef.current;
+      resyncSettlePromiseRef.current = null;
+      pending?.resolve();
     })();
 
     const teardownSocket = cloud.subscribeSync((event: SyncEvent) => {
@@ -210,20 +327,23 @@ export function useRealtimeSync(opts: RealtimeSyncOpts): RealtimeSyncHandle {
           // initial pull settles (above).
           break;
         case "resync": {
-          // Backlog overflowed — re-pull everything. Cheap insurance.
-          void Promise.all([
-            cloud.pullProgress(),
-            cloud.pullSolutions(),
-            cloud.pullSettings(),
-          ])
-            .then(([p, s, st]) => {
-              applyProgressRef.current?.(p);
-              applySolutionsRef.current?.(s);
-              applySettingsRef.current?.(st);
-            })
-            .catch((e) => {
-              console.warn("[realtime-sync] resync failed:", e);
-            });
+          // Backlog overflowed — re-pull everything. Same partial-
+          // failure tolerance as the initial pull above (allSettled,
+          // not all) so a 404 on one endpoint doesn't black-hole
+          // the others.
+          void (async () => {
+            const [pr, sr, str] = await Promise.allSettled([
+              cloud.pullProgress(),
+              cloud.pullSolutions(),
+              cloud.pullSettings(),
+            ]);
+            if (pr.status === "fulfilled") applyProgressRef.current?.(pr.value);
+            else console.warn("[realtime-sync] resync progress failed:", pr.reason);
+            if (sr.status === "fulfilled") applySolutionsRef.current?.(sr.value);
+            else console.warn("[realtime-sync] resync solutions failed:", sr.reason);
+            if (str.status === "fulfilled") applySettingsRef.current?.(str.value);
+            else console.warn("[realtime-sync] resync settings failed:", str.reason);
+          })();
           break;
         }
         case "progress":
@@ -308,5 +428,7 @@ export function useRealtimeSync(opts: RealtimeSyncOpts): RealtimeSyncHandle {
     pushSolution,
     pushSetting,
     flush,
+    resync,
+    pendingPushCount,
   };
 }

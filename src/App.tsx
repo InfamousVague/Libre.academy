@@ -22,6 +22,7 @@ import PracticeView from "./components/Practice/PracticeView";
 import EvmDockBanner from "./components/ChainDock/EvmDockBanner";
 import BitcoinDockBanner from "./components/BitcoinChainDock/BitcoinDockBanner";
 import SvmDockBanner from "./components/SvmDock/SvmDockBanner";
+import TradeDockBanner from "./components/TradeDock/TradeDockBanner";
 import ChallengeFrame from "./components/ChallengeFrame/ChallengeFrame";
 import LessonView from "./components/Lesson/LessonView";
 import {
@@ -31,6 +32,7 @@ import {
   shouldShowEvmDock,
   shouldShowBitcoinDock,
   shouldShowSvmDock,
+  shouldShowTradeDock,
 } from "./lessonHelpers";
 import { useLocalStorageState } from "./hooks/useLocalStorageState";
 import ImportDialog from "./components/dialogs/ImportDialog/ImportDialog";
@@ -114,10 +116,17 @@ export default function App() {
   // kinds (puzzle / cloze / micropuzzle) from every desktop nav
   // surface. Those kinds were retired in favour of the unified
   // BlocksData render mode — the helper is now an identity
-  // pass-through kept only for ABI compatibility. Eventually we
-  // collapse this to `const courses = coursesAll;`.
+  // pass-through kept only for ABI compatibility.
+  //
+  // `hidden` filter: courses flagged `hidden: true` in the catalog
+  // manifest are reachable by direct link (`?courseId=…`) but NEVER
+  // appear in any listing (Library / Discover / Sidebar / Trees).
+  // We filter them out of `courses` here — the listing-side derivation
+  // — but keep them in `coursesAll` so the deep-link lookups below
+  // can still resolve a hidden course by id.
   const courses = useMemo(
-    () => coursesAll.map(filterCourseForDesktop),
+    () =>
+      coursesAll.map(filterCourseForDesktop).filter((c) => !c.hidden),
     [coursesAll],
   );
 
@@ -672,8 +681,24 @@ export default function App() {
       // tour navigation, post-completion routing, etc. The single
       // call site keeps the perceived-latency fix consistent
       // across surfaces.
+      //
+      // Timing log goes to the dev console so we can see exactly
+      // how long each view-swap takes — Library ↔ Discover used to
+      // pin the main thread for several seconds because every
+      // CourseLibrary mount re-fetched + re-hashed every course.
+      // The cache in courseSync.ts now keeps these swaps under
+      // ~50ms once warm; the log is the receipt.
+      const t0 = performance.now();
       startViewTransition(() => {
         setViewRaw(next);
+      });
+      // Measure on the next frame — by then React has finished the
+      // commit for this transition's first paint.
+      requestAnimationFrame(() => {
+        // eslint-disable-next-line no-console
+        console.log(
+          `[nav] → ${next} in ${(performance.now() - t0).toFixed(0)}ms`,
+        );
       });
     },
     [startViewTransition],
@@ -893,8 +918,15 @@ export default function App() {
     if (didAutoOpen.current) return;
     if (!coursesLoaded || courses.length === 0 || openTabs.length !== 0) return;
 
+    // pendingOpen comes from the deep link's `?courseId=…`; resolve
+    // against `coursesAll` (NOT `courses`) so hidden / unlisted
+    // courses are still openable by direct URL — that's the whole
+    // point of the unlisted flag. Falling back to `courses[0]` uses
+    // the filtered list because if no deep link was supplied, we
+    // want the user landing on something they can also see in the
+    // library.
     let target = pendingOpen
-      ? courses.find((c) => c.id === pendingOpen.courseId)
+      ? coursesAll.find((c) => c.id === pendingOpen.courseId)
       : undefined;
     if (!target) target = courses[0];
 
@@ -941,8 +973,11 @@ export default function App() {
   useEffect(() => {
     if (!pendingOpen) return;
     if (!didAutoOpen.current) return; // cold-start path handles it
-    if (!coursesLoaded || courses.length === 0) return;
-    const course = courses.find((c) => c.id === pendingOpen.courseId);
+    if (!coursesLoaded || coursesAll.length === 0) return;
+    // Same `coursesAll` rationale as the cold-start path above:
+    // hidden courses must be resolvable by deep link, but listings
+    // shouldn't see them.
+    const course = coursesAll.find((c) => c.id === pendingOpen.courseId);
     if (!course) {
       setPendingOpen(null);
       return;
@@ -1018,7 +1053,12 @@ export default function App() {
   }, [coursesLoaded, courses]);
 
   const activeTab = openTabs[activeTabIndex];
-  const activeCourse = courses.find((c) => c.id === activeTab?.courseId) ?? null;
+  // Active-tab lookup goes against `coursesAll` so a tab opened from
+  // a deep-link target with `hidden: true` still resolves to a real
+  // Course record (otherwise activeCourse drops to null mid-session
+  // and the lesson view blanks).
+  const activeCourse =
+    coursesAll.find((c) => c.id === activeTab?.courseId) ?? null;
   const activeLesson = findLesson(activeCourse, activeTab?.lessonId);
 
   function selectLesson(courseId: string, lessonId: string) {
@@ -1123,7 +1163,11 @@ export default function App() {
   /// (which upserts an open tab) and targets the first lesson if the
   /// course isn't already open.
   function openCourseFromLibrary(courseId: string) {
-    const c = courses.find((x) => x.id === courseId);
+    // `coursesAll` so deep-link / shared-link entry points can
+    // still call this with a hidden course id — Library users
+    // never see hidden tiles so they can't reach this code path
+    // for one in the first place.
+    const c = coursesAll.find((x) => x.id === courseId);
     if (!c) return;
     const existing = openTabs.find((t) => t.courseId === courseId);
     const lessonId = existing?.lessonId ?? c.chapters[0]?.lessons[0]?.id;
@@ -1330,7 +1374,11 @@ export default function App() {
   }
 
   const tabs = openTabs.map((t) => {
-    const c = courses.find((x) => x.id === t.courseId);
+    // Tab metadata reads from `coursesAll` so a tab opened on a
+    // hidden course (via deep link) still resolves the right
+    // title / language / colour for the tab strip — otherwise
+    // the chip would render as "Unknown course".
+    const c = coursesAll.find((x) => x.id === t.courseId);
     const group = t.groupId
       ? tabGroups.find((g) => g.id === t.groupId)
       : undefined;
@@ -1542,7 +1590,18 @@ export default function App() {
               }
             >
               <CourseLibrary
-                key={view}
+                // Intentionally NO `key={view}` — see CourseLibrary's
+                // `useDeferredValue(scope)` for how it handles the
+                // library↔discover swap incrementally without
+                // unmount/remount. Forcing a fresh instance on every
+                // nav freezes the main thread while React mounts a
+                // new component, refires every useEffect (cover
+                // prefetch, update-check, catalog fetch), and
+                // re-renders 30+ cards from scratch. Holding the
+                // instance and letting it re-derive its data is
+                // dramatically faster, and the deferred memos keep
+                // the new card list off the critical path so the
+                // chrome paints immediately when the user clicks.
                 mode="inline"
                 scope={view === "discover" ? "discover" : "library"}
                 courses={courses}
@@ -1670,6 +1729,17 @@ export default function App() {
                   path catches Solana lessons before this mounts. */}
               {shouldShowSvmDock(activeLesson, activeCourse) && (
                 <SvmDockBanner />
+              )}
+              {/* HelloTrade-style API tester. Mounts above any
+                  coding lesson with `harness: "trade"` (or in the
+                  HelloTrade course by default). Pure HTTP + WS
+                  client — runs in mock mode against canned data
+                  out of the box and toggles to live mode for the
+                  actual staging API. No chain runtime + no
+                  backend needed, so it works on web AND
+                  desktop. */}
+              {shouldShowTradeDock(activeLesson, activeCourse) && (
+                <TradeDockBanner />
               )}
               {/* Challenge-pack frame — quiet 1-row strip showing
                   the pack name, difficulty tier, topic chip and

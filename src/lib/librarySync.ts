@@ -44,6 +44,36 @@
 /// defensively (older versions might have written a different shape).
 export const LIBRARY_INSTALLED_IDS_KEY = "fishbones.library.installedIds";
 
+/// Sentinel lesson id used to piggy-back the installed-library list
+/// on the working `/fishbones/progress` endpoint. The current relay
+/// deployment 404s on `/fishbones/settings` (where the library
+/// allowlist would naturally live), so we encode "device X has
+/// course Y installed" as a fake completion row:
+///
+///   { course_id: <real id>, lesson_id: LIBRARY_MARKER_LESSON_ID,
+///     completed_at: <push time> }
+///
+/// Both sides know the marker. The apply path splits incoming
+/// progress into real completions + library markers; the markers
+/// only update an in-memory "synced library ids" set, never the
+/// real `history` array (so they don't pollute XP / streak math).
+/// Markers ride along on the same WS / pull / push the rest of
+/// progress uses, so they propagate in real time without a new
+/// relay route.
+///
+/// The id is namespaced + visibly-fake so a future settings
+/// endpoint deployment can ignore it (or migrate it cleanly) and
+/// no real lesson can ever collide with it.
+export const LIBRARY_MARKER_LESSON_ID = "__fb_library_marker__";
+
+/// Predicate for filtering progress rows. Used by both apply paths
+/// (mobile + desktop) to split real completions from library markers.
+export function isLibraryMarkerRow(row: {
+  lesson_id: string;
+}): boolean {
+  return row.lesson_id === LIBRARY_MARKER_LESSON_ID;
+}
+
 /// Parse the JSON-encoded library allowlist. Returns null when the
 /// value is absent / unparseable / not an array of strings — null
 /// means "no published allowlist, render every local course" so the

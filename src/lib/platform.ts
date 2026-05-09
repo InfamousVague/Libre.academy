@@ -34,19 +34,37 @@ export const isDesktop = TARGET === "desktop";
 /// layout (single column, bottom tab bar, no sidebar, no AI orb).
 ///
 /// We don't have a separate "mobile" build target; the same Tauri
-/// binary ships to iOS and macOS Catalyst. We check at runtime via the
-/// CSS-like `pointer:coarse` + `max-width` heuristic, plus a sanity
-/// check on `navigator.platform` for the iOS sim. Inlined into a const
-/// at first read so the rest of the app can branch on it without a
-/// hook.
+/// binary ships to iOS and macOS Catalyst. Detection layers three
+/// checks because each one alone is unreliable inside Tauri 2's
+/// WKWebView:
+///
+///   1. UA includes iPhone / iPad / iPod — works on iPhone, fails on
+///      iPadOS 13+ (which masquerades as Mac for desktop-class web
+///      compatibility).
+///   2. UA mentions Macintosh AND `navigator.maxTouchPoints > 1` —
+///      catches iPadOS 13+ (no touchscreen Mac exists, so this combo
+///      is iPad-or-nothing).
+///   3. Viewport width below 768 — catches narrow desktop windows the
+///      user explicitly resized for the phone-style chrome.
+///
+/// Routing iPad to the mobile UI matters more than aesthetics: the
+/// desktop App.tsx pulls in Monaco + the multi-pane editor + the
+/// ingest panel + every dock variant at module-eval time, and that
+/// import tree alone freezes the iPad's main thread for several
+/// seconds on cold launch. Mobile's tree is single-column with no
+/// editor, which the iPad CPU handles cleanly.
 function detectMobile(): boolean {
   if (typeof window === "undefined") return false;
-  // Width is the most reliable signal in a Tauri WKWebView. The desktop
-  // Tauri config pins `minWidth: 900` (see tauri.conf.json), so a
-  // viewport narrower than 768px is structurally only possible on a
-  // phone-sized device. UA / platform sniffing is unreliable inside
-  // iOS WKWebView under Tauri 2 — Tauri sets a custom UA that doesn't
-  // always contain "iPhone".
+  const ua = (typeof navigator !== "undefined" && navigator.userAgent) || "";
+  if (/iPhone|iPad|iPod/i.test(ua)) return true;
+  if (
+    typeof navigator !== "undefined" &&
+    typeof navigator.maxTouchPoints === "number" &&
+    navigator.maxTouchPoints > 1 &&
+    /Macintosh|Mac\s?OS\s?X/i.test(ua)
+  ) {
+    return true;
+  }
   return window.innerWidth < 768;
 }
 

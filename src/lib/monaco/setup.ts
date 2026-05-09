@@ -120,6 +120,7 @@ import { zigLang, zigConf } from "./zig";
 import { moveLang, moveConf } from "./move";
 import { cairoLang, cairoConf } from "./cairo";
 import { swayLang, swayConf } from "./sway";
+import { registerMonacoThemes } from "../../theme/monaco-themes";
 
 /// Tell Monaco how to spawn a worker for a given language label. The
 /// `workerId` argument is unused — Monaco only cares which worker
@@ -209,6 +210,19 @@ for (const { id, language, conf } of BASIC_LANGUAGES) {
   monaco.languages.setMonarchTokensProvider(id, language);
   monaco.languages.setLanguageConfiguration(id, conf);
 }
+
+/// Eagerly register every custom Monaco theme so any `<Editor>` that
+/// mounts after this module loads can resolve a theme name without
+/// having to call `registerMonacoThemes` itself. Originally only
+/// EditorPane registered themes inside its `onMount` — that meant
+/// any Monaco instance mounted on a page that doesn't render the
+/// workbench (e.g. inline `<InlineSandbox>` snippets in a lesson's
+/// reading body) fell back to Monaco's default `vs` LIGHT theme.
+/// Registering centrally here, one tick after `loader.config`,
+/// guarantees that every editor — workbench, inline sandbox, future
+/// surfaces — gets the dark theme on first paint. Idempotent:
+/// `defineTheme` replaces by name on repeat calls.
+registerMonacoThemes(monaco);
 
 /// Re-export the monaco namespace so callers that need direct API
 /// access (theme registration, ambient `addExtraLib` calls) can import

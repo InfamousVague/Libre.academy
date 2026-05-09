@@ -559,6 +559,16 @@ export function useFishbonesCloud(): UseFishbonesCloud {
       let stopped = false;
       let backoff = 500;
       let reconnectTimer: number | null = null;
+      // Defer the very first connect by a microtask so React 18
+      // StrictMode (which mounts every effect twice in dev) doesn't
+      // spam "WebSocket is closed before the connection is
+      // established" errors. The pattern: mount → opens socket →
+      // cleanup fires synchronously → second mount → opens
+      // ANOTHER socket. Without the defer, the first socket gets
+      // close()'d mid-handshake and the browser logs an error;
+      // with the defer, the cleanup flips `stopped` and the
+      // deferred connect bails out.
+      let initialConnectTimer: number | null = null;
 
       const wsUrl = (): string => {
         // http(s) → ws(s); always preserve TLS so we don't downgrade.
@@ -609,17 +619,38 @@ export function useFishbonesCloud(): UseFishbonesCloud {
         }, delay);
       };
 
-      connect();
+      // Defer the first connect by a tick so a synchronous
+      // mount-cleanup-mount in dev doesn't open + close a socket
+      // mid-handshake (which the browser surfaces as a noisy
+      // "WebSocket is closed before the connection is established"
+      // error). Production behaves identically — one tick is
+      // imperceptible.
+      initialConnectTimer = window.setTimeout(() => {
+        initialConnectTimer = null;
+        if (stopped) return;
+        connect();
+      }, 0);
 
       return () => {
         stopped = true;
+        if (initialConnectTimer !== null) {
+          window.clearTimeout(initialConnectTimer);
+          initialConnectTimer = null;
+        }
         if (reconnectTimer !== null) {
           window.clearTimeout(reconnectTimer);
           reconnectTimer = null;
         }
         if (socket) {
           try {
-            socket.close();
+            // Only call close() if the socket is past the handshake.
+            // Closing during CONNECTING also produces the browser
+            // warning we're trying to avoid; readyState === 0 means
+            // the handshake hasn't finished, so we just drop the
+            // reference and let the GC + browser tear it down.
+            if (socket.readyState === WebSocket.OPEN) {
+              socket.close();
+            }
           } catch {
             /* swallow */
           }

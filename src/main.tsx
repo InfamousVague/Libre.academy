@@ -1,44 +1,29 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App";
-import PoppedWorkbench from "./components/Workbench/PoppedWorkbench";
-import PhonePopoutView from "./components/PhonePopout/PhonePopoutView";
-import { ChainDock } from "./components/ChainDock/ChainDock";
-import { BitcoinChainDock } from "./components/BitcoinChainDock/BitcoinChainDock";
-import { SvmDock } from "./components/SvmDock/SvmDock";
 import { applyTheme, loadTheme } from "./theme/themes";
 import { prewarmCoursesSummary } from "./hooks/useCourses";
+import { isMobile } from "./lib/platform";
 import "./theme/themes.css";
 import "./App.css";
+
+// Boot-phase markers. Pushed to the dev console buffer (devconsole.js
+// patched console.log before this script even started parsing) so we
+// have a timeline of where startup time goes — critical for the iPad
+// case where the app freezes mid-boot and there's no Web Inspector.
+//
+// Search the console output for "[boot]" to see the sequence.
+const tBoot0 = performance.now();
+function bootLog(label: string) {
+  // eslint-disable-next-line no-console
+  console.log(`[boot] +${(performance.now() - tBoot0).toFixed(0)}ms ${label}`);
+}
+bootLog("main.tsx start");
 
 // Apply the user's chosen theme (or system preference for the first-run
 // default) before React mounts so we don't flash the wrong palette.
 applyTheme(loadTheme());
+bootLog("theme applied");
 
-// Kick off the courses-summary IPC BEFORE React mounts. By the time
-// `useCourses`'s effect runs, the IPC is typically already settled,
-// so the library renders against fresh data on the very first paint
-// instead of waiting on a post-mount round-trip. Skipped on the
-// popout / dock variants below — they don't render the library.
-if (typeof window !== "undefined") {
-  const params = new URLSearchParams(window.location.search);
-  const popoutMode =
-    params.get("popped") === "1" ||
-    params.get("phone") === "1" ||
-    params.get("evmDock") === "1" ||
-    params.get("btcDock") === "1" ||
-    params.get("svmDock") === "1";
-  if (!popoutMode) prewarmCoursesSummary();
-}
-
-// Three render modes out of a single bundle:
-// - default: full App (sidebar + reader + workbench)
-// - ?popped=1&course=…&lesson=…: standalone workbench only. Used by
-//   the pop-out window opened via window.open from the main window,
-//   so learners can drag the editor + console onto a second monitor.
-// - ?phone=1&scope=…: standalone phone simulator window. RN previews
-//   open in a separate OS window and the main editor pushes new
-//   preview URLs over a bus.
 const params = new URLSearchParams(window.location.search);
 const isPopped = params.get("popped") === "1";
 const isPhone = params.get("phone") === "1";
@@ -49,24 +34,74 @@ const isPhone = params.get("phone") === "1";
 const isEvmDock = params.get("evmDock") === "1";
 const isBtcDock = params.get("btcDock") === "1";
 const isSvmDock = params.get("svmDock") === "1";
+const popoutMode = isPopped || isPhone || isEvmDock || isBtcDock || isSvmDock;
+
+// Kick off the courses-summary IPC BEFORE React mounts. Skip on the
+// popout / dock variants — they don't render the library so warming
+// it just wastes a roundtrip. By the time the lazy App or MobileApp
+// chunk loads and `useCourses`'s effect runs, the IPC has typically
+// already settled, and the library renders against fresh data on the
+// first paint instead of waiting on a post-mount round-trip.
+if (!popoutMode) {
+  prewarmCoursesSummary();
+  bootLog("courses prewarm fired");
+}
+
+// Pick the right page lazily so we only download + parse the chunk
+// the user actually needs. Critical on iPad: the desktop App pulls in
+// Monaco, the multi-pane editor, ingest panel, AI assistant, and
+// every dock variant at module-eval time. That single import tree
+// blocks the iPad's main thread for seconds on cold launch — long
+// enough that the inline preloader never advances and even the
+// pre-React tap zone (devconsole.js's pink corner box) freezes
+// mid-gesture. With `React.lazy`, main.tsx's own chunk stays small
+// (this file + theme + storage prewarm) and the heavy code only
+// loads after first paint, so the preloader stays alive and
+// responsive while React's chunk downloads in the background.
+//
+// The Suspense fallback is `null` on purpose — the inline preloader
+// in index.html is already painted and the body's `is-booted` class
+// hasn't been added yet (App / MobileApp does that on first commit),
+// so the user sees the preloader the whole time.
+const Page = (() => {
+  if (isEvmDock) {
+    return lazy(() =>
+      import("./components/ChainDock/ChainDock").then((m) => ({
+        default: () => <m.ChainDock variant="popout" />,
+      })),
+    );
+  }
+  if (isBtcDock) {
+    return lazy(() =>
+      import("./components/BitcoinChainDock/BitcoinChainDock").then((m) => ({
+        default: () => <m.BitcoinChainDock variant="popout" />,
+      })),
+    );
+  }
+  if (isSvmDock) {
+    return lazy(() =>
+      import("./components/SvmDock/SvmDock").then((m) => ({
+        default: () => <m.SvmDock variant="popout" />,
+      })),
+    );
+  }
+  if (isPhone) return lazy(() => import("./components/PhonePopout/PhonePopoutView"));
+  if (isPopped) return lazy(() => import("./components/Workbench/PoppedWorkbench"));
+  return isMobile
+    ? lazy(() => import("./mobile/MobileApp"))
+    : lazy(() => import("./App"));
+})();
+
+bootLog(`page picked: ${isMobile ? "MobileApp" : popoutMode ? "popout" : "App"}`);
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    {isEvmDock ? (
-      <ChainDock variant="popout" />
-    ) : isBtcDock ? (
-      <BitcoinChainDock variant="popout" />
-    ) : isSvmDock ? (
-      <SvmDock variant="popout" />
-    ) : isPhone ? (
-      <PhonePopoutView />
-    ) : isPopped ? (
-      <PoppedWorkbench />
-    ) : (
-      <App />
-    )}
+    <Suspense fallback={null}>
+      <Page />
+    </Suspense>
   </React.StrictMode>,
 );
+bootLog("createRoot.render scheduled");
 
 // Hand off from the inline index.html preloader to React's in-app
 // bootloader. `is-booted` fades the preloader out via the CSS rule in
@@ -79,8 +114,15 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
 // `queueMicrotask`/`setTimeout(0)` fired before React painted on slow
 // devices (esp. iOS WebKit cold-starting the bundle), leaving a black
 // gap between the inline preloader fading and the React loader
-// appearing. The 4s safety timeout below only kicks in if React fails
-// to mount entirely (e.g. a syntax error in a downstream module) — at
-// that point the user is going to see *something* broken, but at least
-// the preloader doesn't camp the screen forever.
-setTimeout(() => document.body.classList.add("is-booted"), 4000);
+// appearing. The 6s safety timeout below only kicks in if React fails
+// to mount entirely (e.g. a syntax error in a downstream module, or
+// the iPad gets so jammed loading the lazy chunk it never paints) —
+// at that point the user is going to see *something* broken, but at
+// least the preloader doesn't camp the screen forever. Bumped from
+// 4s → 6s to give the lazy chunk extra headroom on cold iPad launches.
+setTimeout(() => {
+  if (!document.body.classList.contains("is-booted")) {
+    bootLog("safety timeout hit — forcing is-booted");
+    document.body.classList.add("is-booted");
+  }
+}, 6000);

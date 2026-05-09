@@ -5,11 +5,16 @@ import { check as checkIcon } from "@base/primitives/icon/icons/check";
 import "@base/primitives/icon/icon.css";
 import { applyTheme, loadTheme, type ThemeName } from "../../../theme/themes";
 import type { UseFishbonesCloud } from "../../../hooks/useFishbonesCloud";
+import type { RealtimeSyncHandle } from "../../../hooks/useRealtimeSync";
+import type { Completion } from "../../../hooks/useProgress";
+import type { Course } from "../../../data/types";
 import ModalBackdrop from "../../Shared/ModalBackdrop";
 import AccountSection from "./AccountSection";
 import AiPane from "./AiPane";
+import DeveloperPane from "./DeveloperPane";
 import DiagnosticsPanel from "./DiagnosticsPanel";
 import GeneralPane from "./GeneralPane";
+import SyncDebugPanel from "./SyncDebugPanel";
 import ThemePane from "./ThemePane";
 import "./SettingsDialog.css";
 
@@ -20,6 +25,17 @@ interface Props {
   /// rendered inside App where `cloud` is in scope, so we don't
   /// bother making it optional.
   cloud: UseFishbonesCloud;
+  /// Realtime sync hook handle (also from App.tsx). Drives the
+  /// Sync section's status badge, pending-push counter, manual
+  /// resync button, and diff view.
+  realtime?: RealtimeSyncHandle;
+  /// Local completion history. Source of truth for the "On this
+  /// device" column of the Sync diff. Optional so the dialog still
+  /// renders when called from a surface that doesn't have it.
+  history?: readonly Completion[];
+  /// Live course list — used to format Sync diff entries with
+  /// "Course Title · Lesson Title" instead of raw IDs. Optional.
+  courses?: readonly Course[];
   /// Open the sign-in modal. Wired from App.tsx so the Account
   /// section can offer a "Sign in" CTA to signed-out users without
   /// each section having to know about the modal-state plumbing.
@@ -41,7 +57,9 @@ type SectionId =
   | "ai"
   | "theme"
   | "data"
+  | "sync"
   | "diagnostics"
+  | "developer"
   | "account";
 
 interface SectionDef {
@@ -55,7 +73,9 @@ const BASE_SECTIONS: SectionDef[] = [
   { id: "ai", label: "AI & API", hint: "Anthropic key + model" },
   { id: "theme", label: "Theme", hint: "App + editor colors" },
   { id: "data", label: "Data", hint: "Caches + courses" },
+  { id: "sync", label: "Sync", hint: "Cloud diff + force pull/push" },
   { id: "diagnostics", label: "Resources", hint: "What's installed + what's not" },
+  { id: "developer", label: "Developer", hint: "Floating console for debugging" },
 ];
 
 const ACCOUNT_SECTION: SectionDef = {
@@ -67,7 +87,14 @@ const ACCOUNT_SECTION: SectionDef = {
 /// Two-column settings dialog with a left-rail section nav and a right-side
 /// scrollable pane. Keeps the panel at a bounded max-height so additional
 /// sections never push the Save button off the screen.
-export default function SettingsDialog({ onDismiss, cloud, onRequestSignIn }: Props) {
+export default function SettingsDialog({
+  onDismiss,
+  cloud,
+  realtime,
+  history,
+  courses,
+  onRequestSignIn,
+}: Props) {
   const [section, setSection] = useState<SectionId>("general");
   const [apiKey, setApiKey] = useState("");
   const [openaiKey, setOpenaiKey] = useState("");
@@ -359,7 +386,35 @@ export default function SettingsDialog({ onDismiss, cloud, onRequestSignIn }: Pr
               </section>
             )}
 
+            {section === "sync" && (
+              realtime ? (
+                <SyncDebugPanel
+                  cloud={cloud}
+                  realtime={realtime}
+                  history={history ?? []}
+                  describeLesson={(courseId, lessonId) => {
+                    const course = courses?.find((c) => c.id === courseId);
+                    if (!course) return `${courseId} · ${lessonId}`;
+                    for (const ch of course.chapters) {
+                      const lesson = ch.lessons.find((l) => l.id === lessonId);
+                      if (lesson) return `${course.title} · ${lesson.title}`;
+                    }
+                    return `${course.title} · ${lessonId}`;
+                  }}
+                />
+              ) : (
+                <section>
+                  <h3 className="fishbones-settings-section">Sync</h3>
+                  <p className="fishbones-settings-blurb">
+                    Sync diagnostics aren't available in this build.
+                  </p>
+                </section>
+              )
+            )}
+
             {section === "diagnostics" && <DiagnosticsPanel />}
+
+            {section === "developer" && <DeveloperPane />}
 
             {section === "account" &&
               onRequestSignIn &&

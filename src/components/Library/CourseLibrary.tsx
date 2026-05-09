@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Icon } from "@base/primitives/icon";
 import { libraryBig } from "@base/primitives/icon/icons/library-big";
 import "@base/primitives/icon/icon.css";
@@ -152,6 +152,29 @@ export default function CourseLibrary({
 }: Props) {
   const isInline = mode === "inline";
   const ctxMenu = useCourseMenu();
+
+  // Deferred scope. The chrome (header title, count, filter pills)
+  // reads `scope` directly, so it commits IMMEDIATELY when the user
+  // clicks Discover — they see "Discover" and the right count
+  // within a frame. The heavy `enriched` + `filtered` memos below
+  // read `derivedScope` instead, which lags one render behind under
+  // load. React renders the chrome first with the new scope, lets
+  // the browser paint, THEN computes the new card list with the
+  // updated derivedScope and renders again.
+  //
+  // This is the structural fix for the multi-second freeze users
+  // hit on Library ↔ Discover navigation: the work to derive
+  // 50+ catalog placeholders + filter + sort + diff against the
+  // old card list takes hundreds of ms on a modest CPU, and
+  // putting it on the critical path delayed the entire view swap.
+  // Deferring it via React's concurrent scheduler keeps the chrome
+  // responsive and lets the body stream in once the work finishes.
+  //
+  // The `isCardListPending` flag below drives the dim-and-hint
+  // affordance so the user knows fresh cards are on their way
+  // rather than thinking the click was lost.
+  const derivedScope = useDeferredValue(scope);
+  const isCardListPending = derivedScope !== scope;
   // Top-level domain filter — All / Crypto / Programming. Sits above
   // the language pills so picking "Crypto" narrows everything below
   // to blockchain material, then language pills further refine within
@@ -298,7 +321,7 @@ export default function CourseLibrary({
   // bug report where switching Discover → Library briefly showed
   // uninstalled tiles in the library view.
   const enriched = useMemo(() => {
-    if (scope === "discover") {
+    if (derivedScope === "discover") {
       return placeholderCourses.map((c) => ({
         course: c,
         total: 0,
@@ -330,7 +353,7 @@ export default function CourseLibrary({
         pct: total > 0 ? done / total : 0,
       };
     });
-  }, [scope, courses, completed, placeholderCourses]);
+  }, [derivedScope, courses, completed, placeholderCourses]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -340,7 +363,9 @@ export default function CourseLibrary({
       // explicit filter here means an accidental future change to
       // `enriched` can't silently mix the two surfaces.
       .filter((e) =>
-        scope === "discover" ? !!e.course.placeholder : !e.course.placeholder,
+        derivedScope === "discover"
+          ? !!e.course.placeholder
+          : !e.course.placeholder,
       )
       .filter(
         (e) =>
@@ -380,7 +405,7 @@ export default function CourseLibrary({
       });
   }, [
     enriched,
-    scope,
+    derivedScope,
     categoryFilter,
     chainFilter,
     langFilter,
@@ -637,7 +662,12 @@ export default function CourseLibrary({
           `updatingIds`. This avoids re-firing in-flight syncs and
           gives the banner a real-time count as updates complete.
         */}
-        <div className="fishbones-library-body">
+        <div
+          className={
+            "fishbones-library-body" +
+            (isCardListPending ? " is-deferred-pending" : "")
+          }
+        >
           {/* Update-all banner. Rendered INSIDE the body (not as a
               sibling above) so its absolute positioning anchors to
               the scroll container — that lets the banner float
@@ -684,17 +714,23 @@ export default function CourseLibrary({
             );
           })()}
 
-          {scope === "discover" && !catalogLoaded ? (
+          {derivedScope === "discover" && !catalogLoaded ? (
             // Catalog fetch in flight. The desktop build hits a Tauri
             // command that walks the bundled-packs dir; the web build
             // fetches a static JSON manifest. Either way, on cold
             // start the catalog can take a moment — show the
             // FishbonesLoader instead of the misleading "No courses
             // yet" or "No matches" empty states.
+            //
+            // Reads derivedScope (not scope) so we don't briefly
+            // flash "Loading catalog…" while React is still
+            // committing the chrome of a discover→library swap; the
+            // body keeps showing the previous Library cards until
+            // the deferred recomputation lands.
             <div className="fishbones-library-empty">
               <FishbonesLoader size="md" label="Loading catalog…" />
             </div>
-          ) : courses.length === 0 && scope !== "discover" ? (
+          ) : courses.length === 0 && derivedScope !== "discover" ? (
             <div className="fishbones-library-empty">
               <div className="fishbones-library-empty-glyph" aria-hidden>
                 <Icon icon={libraryBig} size="2xl" color="currentColor" weight="light" />

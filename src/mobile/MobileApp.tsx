@@ -1,6 +1,6 @@
 /// Mobile root. Renders a totally separate tree from the desktop App
 /// — no TopBar, no Sidebar, no editor, no Playground, no AI orb.
-/// Four bottom tabs: Library / Lesson / Profile / Settings.
+/// Five bottom tabs: Library / Lesson / Practice / Profile / Settings.
 ///
 /// The desktop App.tsx short-circuits to <MobileApp /> when the
 /// `isMobile` predicate fires, so we don't pay for any of the
@@ -24,15 +24,18 @@ import { useRealtimeSync } from "../hooks/useRealtimeSync";
 import { useStreakAndXp } from "../hooks/useStreakAndXp";
 import {
   LIBRARY_INSTALLED_IDS_KEY,
+  isLibraryMarkerRow,
   parseLibraryAllowlist,
   reconcilePerception,
   serializeLibraryAllowlist,
 } from "../lib/librarySync";
 import type { Course, Lesson } from "../data/types";
+import { isoToUnixSeconds } from "../lib/timestamps";
 import MobileLibrary from "./MobileLibrary";
 import MobileLesson from "./MobileLesson";
 import MobileProfile from "./MobileProfile";
 import MobileSettings from "./MobileSettings";
+import PracticeView from "../components/Practice/PracticeView";
 import MobileSearchPalette from "./MobileSearchPalette";
 import SignInDialog from "../components/dialogs/SignInDialog/SignInDialog";
 import MobileTabBar, { type MobileTab } from "../components/MobileTabBar/MobileTabBar";
@@ -40,7 +43,7 @@ import AiAssistant from "../components/AiAssistant/AiAssistant";
 import FishbonesLoader from "../components/Shared/FishbonesLoader";
 import "./MobileApp.css";
 
-type View = "library" | "lesson" | "profile" | "settings";
+type View = "library" | "lesson" | "practice" | "profile" | "settings";
 
 interface ActiveLesson {
   course: Course;
@@ -50,7 +53,8 @@ interface ActiveLesson {
 
 export default function MobileApp() {
   const { courses: coursesAll, loaded, hydrateCourse } = useCourses();
-  const { completed, history, markCompleted, resetProgress } = useProgress();
+  const { completed, history, markCompleted, markCompletedBatch, resetProgress } =
+    useProgress();
   const cloud = useFishbonesCloud();
 
   /// Cross-device library allowlist. Hydrated from localStorage on
@@ -69,16 +73,86 @@ export default function MobileApp() {
     },
   );
 
-  /// Visible course list = intersection of local IndexedDB courses
-  /// and the cloud-synced allowlist. The allowlist exists so a phone
-  /// that bootstrapped from the 19-course web seed doesn't display
-  /// books the user removed on their desktop. When no allowlist has
-  /// been published yet (fresh account), pass through unchanged so
-  /// the user still sees something to start with.
+  /// Library-marker-derived allowlist. Updated by the progress
+  /// apply path whenever a marker row arrives from the relay. Lets
+  /// desktop's installed-library list propagate even when the
+  /// `/fishbones/settings` endpoint isn't deployed (the marker
+  /// rows ride the always-available `/fishbones/progress` endpoint
+  /// instead). Persisted to localStorage so a cold-start before
+  /// the next pull settles still shows the right library.
+  const SYNCED_LIBRARY_KEY = "fishbones.library.markers.v1";
+  const [syncedLibraryIds, setSyncedLibraryIds] = useState<Set<string> | null>(
+    () => {
+      try {
+        const raw = localStorage.getItem(SYNCED_LIBRARY_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw) as unknown;
+        if (!Array.isArray(parsed)) return null;
+        const ids = parsed.filter((v): v is string => typeof v === "string");
+        return new Set(ids);
+      } catch {
+        return null;
+      }
+    },
+  );
+
+  /// Visible course list. Three signals, in priority order:
+  ///
+  ///   1. **Library markers** — sentinel rows desktop pushes to
+  ///      `/fishbones/progress` carrying its installed-course-id
+  ///      list. AUTHORITATIVE when present: desktop owns the
+  ///      library (mobile has no Discover catalog), so seeing
+  ///      markers means "show exactly these courses, hide the
+  ///      rest." Fixes the case where mobile's web seed has 19
+  ///      bundled books but desktop has only installed 11 of them.
+  ///
+  ///   2. **Settings allowlist** — the legacy path, populated by
+  ///      `applySettings` when the relay's `/fishbones/settings`
+  ///      endpoint is deployed. Several relay deployments 404 on
+  ///      this; markers (above) cover that gap.
+  ///
+  ///   3. **Completion-derived** — any course referenced by a
+  ///      completion in `completed`. Backstop for the case where
+  ///      neither marker nor allowlist sync has landed yet but the
+  ///      user has progress. Less complete than (1) — won't
+  ///      surface installed-but-untouched books — but better than
+  ///      a fully empty library.
+  ///
+  /// When signed-out, we pass through the local seed so the
+  /// first-launch experience isn't an empty shell. Once signed in
+  /// AND we have any signal, the strict regime takes over.
   const courses = useMemo(() => {
-    if (!libraryAllowlist) return coursesAll;
-    return coursesAll.filter((c) => libraryAllowlist.has(c.id));
-  }, [coursesAll, libraryAllowlist]);
+    if (!cloud.signedIn) return coursesAll;
+    // Markers are authoritative — when present they REPLACE every
+    // other signal, since they encode desktop's full list.
+    if (syncedLibraryIds && syncedLibraryIds.size > 0) {
+      return coursesAll.filter((c) => syncedLibraryIds.has(c.id));
+    }
+    // Backstop: settings allowlist OR completion-derived ids.
+    const touchedCourseIds = new Set<string>();
+    for (const key of completed) {
+      const colon = key.indexOf(":");
+      if (colon > 0) touchedCourseIds.add(key.slice(0, colon));
+    }
+    const haveAllowlist = libraryAllowlist !== null;
+    const haveCompletions = touchedCourseIds.size > 0;
+    if (!haveAllowlist && !haveCompletions) {
+      // No signal at all — fresh sign-in, sync hasn't landed.
+      // Show the seed so the user has something while we wait.
+      return coursesAll;
+    }
+    return coursesAll.filter(
+      (c) =>
+        (libraryAllowlist?.has(c.id) ?? false) ||
+        touchedCourseIds.has(c.id),
+    );
+  }, [
+    coursesAll,
+    libraryAllowlist,
+    syncedLibraryIds,
+    completed,
+    cloud.signedIn,
+  ]);
 
   const stats = useStreakAndXp(history, courses);
 
@@ -93,10 +167,79 @@ export default function MobileApp() {
   const realtime = useRealtimeSync({
     cloud,
     applyProgress: useCallback(
-      (rows: Array<{ course_id: string; lesson_id: string }>) => {
-        for (const r of rows) markCompleted(r.course_id, r.lesson_id);
+      (
+        rows: Array<{
+          course_id: string;
+          lesson_id: string;
+          /// ISO 8601 — the relay's wire format. We convert to unix
+          /// seconds before handing to `markCompletedBatch` so the
+          /// local history carries the original completion time
+          /// across devices (without this, sign-in stamped every
+          /// pulled row with `now()` and the streak/level/heatmap
+          /// collapsed to a single day).
+          completed_at: string;
+        }>,
+      ) => {
+        // Split incoming rows into two streams:
+        //   - real completions → markCompletedBatch (XP / streak)
+        //   - library-marker rows (sentinel lesson id) →
+        //     `syncedLibraryIds` set, used by the visible-courses
+        //     filter so mobile converges on desktop's installed
+        //     library even when the relay's settings endpoint 404s.
+        const real: typeof rows = [];
+        const markerCourseIds: string[] = [];
+        for (const r of rows) {
+          if (isLibraryMarkerRow(r)) markerCourseIds.push(r.course_id);
+          else real.push(r);
+        }
+        // Bulk-apply real completions: one IDB tx + one React
+        // setState pass for the whole batch. The previous per-row
+        // path triggered 150+ separate transactions on a typical
+        // sign-in, and on iOS WKWebView the awaited per-row reads
+        // silently deactivated the tx so half the writes never
+        // landed (the root cause of "phone shows 3-day streak
+        // even after pull").
+        markCompletedBatch(
+          real.map((r) => ({
+            courseId: r.course_id,
+            lessonId: r.lesson_id,
+            completedAtSec: isoToUnixSeconds(r.completed_at) ?? undefined,
+          })),
+        );
+        if (markerCourseIds.length > 0) {
+          setSyncedLibraryIds((prev) => {
+            // Replace semantics: each pull/WS event is a fresh
+            // snapshot of the desktop's installed list, so we
+            // overwrite rather than union. (Union would let
+            // removed-on-desktop books linger forever on mobile.)
+            const next = new Set(markerCourseIds);
+            // Mirror into localStorage so cold-start sees it before
+            // the next sync round.
+            try {
+              localStorage.setItem(
+                SYNCED_LIBRARY_KEY,
+                JSON.stringify(Array.from(next).sort()),
+              );
+            } catch {
+              /* swallow */
+            }
+            // Bail out of the setState if nothing changed — saves
+            // a re-render of the library + tab bar on every WS tick.
+            if (prev && prev.size === next.size) {
+              let same = true;
+              for (const id of next) {
+                if (!prev.has(id)) {
+                  same = false;
+                  break;
+                }
+              }
+              if (same) return prev;
+            }
+            return next;
+          });
+        }
       },
-      [markCompleted],
+      [markCompletedBatch],
     ),
     applySolutions: useCallback(
       (
@@ -290,11 +433,13 @@ export default function MobileApp() {
   const activeTab: MobileTab =
     view === "lesson"
       ? "courses"
-      : view === "profile"
-        ? "profile"
-        : view === "settings"
-          ? "settings"
-          : "library";
+      : view === "practice"
+        ? "practice"
+        : view === "profile"
+          ? "profile"
+          : view === "settings"
+            ? "settings"
+            : "library";
 
   return (
     <div className="m-app">
@@ -311,6 +456,11 @@ export default function MobileApp() {
             completed={completed}
             onOpenLesson={openLesson}
             onOpenSearch={() => setSearchOpen(true)}
+            // Pull-to-refresh → realtime resync. Pulls progress
+            // (and library markers) from the relay, applies via
+            // earliest-wins merge so the visible library + streak
+            // / level converge with desktop.
+            onRefresh={() => realtime.resync()}
           />
         )}
         {view === "lesson" && active && lesson && (
@@ -330,6 +480,30 @@ export default function MobileApp() {
             isCompleted={completed.has(`${active.course.id}:${lesson.id}`)}
           />
         )}
+        {view === "practice" && (
+          <PracticeView
+            courses={courses}
+            completed={completed}
+            history={history}
+            onOpenLesson={(courseId, lessonId) => {
+              // Practice uses (courseId, lessonId) string keys; the
+              // mobile openLesson wants (course, chapterIndex,
+              // lessonIndex). Resolve the indices off the live
+              // course tree before handing off.
+              const course = courses.find((c) => c.id === courseId);
+              if (!course) return;
+              for (let ci = 0; ci < course.chapters.length; ci++) {
+                const li = course.chapters[ci].lessons.findIndex(
+                  (l) => l.id === lessonId,
+                );
+                if (li >= 0) {
+                  void openLesson(course, ci, li);
+                  return;
+                }
+              }
+            }}
+          />
+        )}
         {view === "profile" && (
           <MobileProfile
             courses={courses}
@@ -338,11 +512,17 @@ export default function MobileApp() {
             completed={completed}
             onOpenLesson={openLesson}
             onOpenSearch={() => setSearchOpen(true)}
+            // Pull-to-refresh → realtime resync. Stats / heatmap
+            // re-derive from the freshly-pulled history.
+            onRefresh={() => realtime.resync()}
           />
         )}
         {view === "settings" && (
           <MobileSettings
             cloud={cloud}
+            realtime={realtime}
+            history={history}
+            courses={courses}
             onRequestSignIn={() => setSignInOpen(true)}
             onResetProgress={resetLocalProgress}
           />
@@ -356,6 +536,7 @@ export default function MobileApp() {
         onLesson={() => {
           if (active) setView("lesson");
         }}
+        onPractice={() => setView("practice")}
         onProfile={() => setView("profile")}
         onSettings={() => setView("settings")}
       />

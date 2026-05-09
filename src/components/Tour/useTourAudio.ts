@@ -37,10 +37,41 @@ interface TourManifest {
 }
 
 /// Where the bundled tour manifest lives. Vite copies `public/`
-/// straight into the output, so this path resolves to
-/// `/tour-audio/manifest.json` at runtime — same origin as the
-/// app, no CDN hop, works offline.
-const MANIFEST_URL = "/tour-audio/manifest.json";
+/// straight into the output, so the file ends up at
+/// `<base>/tour-audio/manifest.json`. We compose the URL from
+/// Vite's `import.meta.env.BASE_URL` (which is `/` for the
+/// desktop / Tauri build, `/learn/` for the fishbones.academy
+/// embed, `/fishbones/learn/` for the legacy mattssoftware embed)
+/// so the same code works under every base path. Hardcoding the
+/// root-absolute `/tour-audio/manifest.json` previously made the
+/// embed surface fall through to the marketing site's SPA
+/// fallback (`try_files /index.html`), which returns the academy
+/// homepage's HTML — the hook then sees `Content-Type: text/html`,
+/// the JSON parse guard rejects, and tour audio silently fails.
+///
+/// `BASE_URL` always ends with a `/`, so concatenating without a
+/// leading slash on the suffix yields a clean path.
+const MANIFEST_URL = `${import.meta.env.BASE_URL}tour-audio/manifest.json`;
+
+/// Per-step MP3 URLs in the manifest are root-absolute (`/tour-
+/// audio/<id>.<sha7>.mp3`) — same trap as the manifest path. We
+/// rewrite them to be base-relative as the manifest lands so every
+/// downstream `<audio>.src = entry.url` Just Works under any base
+/// path. Idempotent — a URL that already starts with `<base>` is
+/// left alone, as is anything off-origin (http(s)://...).
+function rewriteEntryUrl(url: string): string {
+  if (!url) return url;
+  // Off-origin (CDN) URLs pass through. The manifest hasn't
+  // historically used these, but the rewrite stays defensive so
+  // a future "host audio on a separate CDN" migration doesn't
+  // need to revisit this code.
+  if (/^[a-z]+:\/\//i.test(url)) return url;
+  const base = import.meta.env.BASE_URL ?? "/";
+  if (url.startsWith(base)) return url;
+  // Strip any leading slash so the join is clean (BASE_URL always
+  // ends with a slash).
+  return base + url.replace(/^\//, "");
+}
 
 let manifest: TourManifest | null = null;
 let manifestPromise: Promise<TourManifest | null> | null = null;
@@ -55,6 +86,17 @@ async function fetchManifest(): Promise<TourManifest | null> {
       const ct = r.headers.get("content-type") ?? "";
       if (!ct.toLowerCase().includes("json")) return null;
       const json = (await r.json()) as TourManifest;
+      // Rewrite per-step URLs so they resolve under the current
+      // base path (see `rewriteEntryUrl` for the full rationale).
+      // Done once at manifest-load time so the rest of the hook
+      // can treat URLs as opaque.
+      if (json.steps) {
+        for (const step of Object.values(json.steps)) {
+          if (step && typeof step.url === "string") {
+            step.url = rewriteEntryUrl(step.url);
+          }
+        }
+      }
       manifest = json;
       return json;
     } catch {

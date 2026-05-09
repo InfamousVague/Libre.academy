@@ -44,6 +44,8 @@ import { award } from "@base/primitives/icon/icons/award";
 import { crown } from "@base/primitives/icon/icons/crown";
 import { medal } from "@base/primitives/icon/icons/medal";
 import { target } from "@base/primitives/icon/icons/target";
+import PullToRefresh from "./PullToRefresh";
+import { usePullToRefresh } from "./usePullToRefresh";
 import "./MobileProfile.css";
 
 interface Props {
@@ -56,6 +58,12 @@ interface Props {
   /// MobileLibrary signature so MobileApp can wire the same handler
   /// to both screens.
   onOpenSearch?: () => void;
+  /// Optional — pull-to-refresh handler. When provided, dragging
+  /// down at the top of the page triggers this callback (typically
+  /// `realtime.resync()` so streak / XP / heatmap re-pull from the
+  /// relay) and shows the system-style ring indicator until the
+  /// returned promise resolves.
+  onRefresh?: () => Promise<void> | void;
 }
 
 interface RecentRow {
@@ -139,7 +147,14 @@ export default function MobileProfile({
   completed,
   onOpenLesson,
   onOpenSearch,
+  onRefresh,
 }: Props) {
+  // Pull-to-refresh — triggers the realtime resync when wired by
+  // the host. Inert when the host doesn't pass `onRefresh`.
+  const { pullDistance, isRefreshing } = usePullToRefresh({
+    onRefresh: onRefresh ?? (() => {}),
+    enabled: !!onRefresh,
+  });
   // Per-course aggregates for the "in progress" rail.
   const courseProgress = useMemo(() => {
     const out: Array<{ course: Course; pct: number; done: number; total: number }> = [];
@@ -361,7 +376,17 @@ export default function MobileProfile({
   );
 
   return (
-    <div className="m-prof">
+    <div
+      className="m-prof"
+      style={{
+        transform: pullDistance > 0 ? `translateY(${pullDistance}px)` : undefined,
+        transition:
+          pullDistance > 0 && !isRefreshing
+            ? "none"
+            : "transform 200ms cubic-bezier(0.22, 1, 0.36, 1)",
+      }}
+    >
+      <PullToRefresh pullDistance={pullDistance} isRefreshing={isRefreshing} />
       <header className="m-prof__head">
         <h1 className="m-prof__title">Profile</h1>
         {onOpenSearch && (

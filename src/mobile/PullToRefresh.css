@@ -1,0 +1,76 @@
+/* Pull-to-refresh indicator. Floats above the page content from a
+ * fixed position at the top; the host page translates its body down
+ * by `pullDistance` to make room. The indicator itself is small +
+ * monochrome so it reads as a system-level primitive rather than
+ * branded chrome. */
+
+.fb-ptr {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  margin-left: -16px;
+  width: 32px;
+  height: 32px;
+  pointer-events: none;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  color: var(--color-text-secondary);
+  transition: transform 0ms;
+}
+
+.fb-ptr--refreshing {
+  /* Lock the indicator at the trigger height while the refresh is
+   * running so it doesn't snap back the moment the finger lifts. */
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fb-ptr--armed {
+  color: var(--color-text-primary);
+}
+
+.fb-ptr__svg {
+  display: block;
+  /* Spin only while refreshing. While pulling, the gauge fills based
+   * on distance — no rotation. */
+}
+
+.fb-ptr--refreshing .fb-ptr__svg {
+  animation: fb-ptr-spin 0.9s linear infinite;
+}
+
+.fb-ptr__track {
+  stroke: var(--color-border-default);
+  stroke-width: 2.5;
+}
+
+.fb-ptr__fill {
+  stroke: currentColor;
+  stroke-width: 2.5;
+  transition: stroke-dashoffset 80ms linear;
+}
+
+.fb-ptr--armed .fb-ptr__fill {
+  /* Subtle pulse when armed — gives the user a "yes, release will
+   * refresh" hint without being loud about it. */
+  animation: fb-ptr-pulse 1s ease-in-out infinite;
+}
+
+@keyframes fb-ptr-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fb-ptr-pulse {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fb-ptr--refreshing .fb-ptr__svg {
+    animation: none;
+  }
+  .fb-ptr--armed .fb-ptr__fill {
+    animation: none;
+  }
+}

@@ -95,6 +95,16 @@ export default function LessonView({
   onRetryLesson?: (lessonId: string) => void;
 }) {
   const hasExercise = isExerciseKind(lesson);
+  /// Lessons that opt into the Trade harness use the API tester
+  /// dock above the lesson body as their interactive surface —
+  /// the workbench/editor below would just show a placeholder
+  /// console.log and would dilute the dock's prominence. We treat
+  /// these the same as reading lessons everywhere downstream:
+  ///   - the workbench-wrap doesn't render
+  ///   - Next auto-completes the lesson on click (no "run tests"
+  ///     gate to satisfy)
+  const hasTradeHarness =
+    "harness" in lesson && lesson.harness === "trade";
   // Multi-file workbench state. We always deal in arrays here — legacy
   // single-file lessons get synthesized into a one-element array by
   // `deriveStarterFiles`. Storing an array even for the single-file case
@@ -445,7 +455,12 @@ export default function LessonView({
   // Reading-only lessons have no run/quiz gate — the Next button stands in
   // as the "I read this" affordance. Exercise/quiz lessons get marked complete
   // when the user actually solves them, so Next there is just navigation.
-  const isReadingOnly = !hasExercise && !isQuiz(lesson);
+  // Trade-harness lessons surface their interaction in the dock
+  // above the lesson body, not in an editor. From the navigation
+  // / completion path's POV they behave exactly like reading
+  // lessons — Next auto-marks complete, no Run-the-tests gate.
+  const isReadingOnly =
+    (!hasExercise && !isQuiz(lesson)) || hasTradeHarness;
 
   function handleNext() {
     if (!neighbors.next) return;
@@ -545,7 +560,7 @@ export default function LessonView({
         onRetryLesson={onRetryLesson}
         requiresDevice={courseRequiresDevice}
       />
-      {hasExercise && !popped && (
+      {hasExercise && !popped && !hasTradeHarness && (
         <div className="fishbones__lesson-workbench-wrap">
           {showLessonToolchainBanner && lessonToolchainStatus && (
             // Proactive missing-toolchain nudge. Sits above the

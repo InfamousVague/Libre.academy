@@ -1,6 +1,14 @@
 import { memo } from "react";
 import type { Course } from "../../data/types";
 import LanguageChip from "../LanguageChip/LanguageChip";
+// Card chrome lives in CourseLibrary.css alongside the grid +
+// sidebar styles. Importing it from this file (rather than relying
+// on a parent like CourseLibrary to bring it in) means every
+// consumer — including MobileLibrary, which doesn't render
+// CourseLibrary at all — picks up the styles. Without this import
+// the iPad library renders cards as raw flow content with no card
+// chrome, no progress bar styling, no hover states.
+import "./CourseLibrary.css";
 
 /// One info-dense library card. Renders either:
 ///

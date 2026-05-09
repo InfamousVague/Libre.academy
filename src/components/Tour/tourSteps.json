@@ -63,7 +63,7 @@
     },
     {
       "id": "trees",
-      "page": "trees",
+      "page": "tracks",
       "target": ".fishbones-trees__section--tracks",
       "placement": "bottom",
       "icon": "trees",

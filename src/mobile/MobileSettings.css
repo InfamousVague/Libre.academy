@@ -118,3 +118,113 @@
   color: var(--color-text-tertiary);
   font-size: 14px;
 }
+
+/* ── Theme picker ──────────────────────────────────────────────── */
+/* Mobile theme list. Each row carries a colored `data-theme` swatch
+ * showing the chosen theme's app-chrome / accent / text triplet, so
+ * the user picks visually rather than by guessing what the label
+ * means. The swatch reads as the theme's "personality" in one
+ * glance; the label + description below clarify. */
+
+.m-set__theme-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.m-set__theme-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--fb-radius-lg);
+  font: inherit;
+  text-align: left;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--fb-motion-quick),
+              border-color var(--fb-motion-quick);
+}
+
+.m-set__theme-row:active {
+  background: var(--color-bg-elevated, var(--color-bg-tertiary));
+}
+
+.m-set__theme-row.is-active {
+  border-color: var(--color-text-primary);
+  background: var(--color-bg-elevated, var(--color-bg-tertiary));
+}
+
+/* Swatch — three vertical stripes giving a quick visual of the
+ * theme's app-bg / accent / text colors. The `data-theme` attribute
+ * on the swatch is the theme id; per-theme rules below paint the
+ * stripes with hardcoded reference colors so the swatch reads
+ * correctly regardless of which theme is currently *applied*. */
+.m-set__theme-swatch {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--fb-radius-md, 8px);
+  border: 1px solid var(--color-border-default);
+  background: linear-gradient(
+    to right,
+    var(--swatch-bg, #1a1a1f) 0%, var(--swatch-bg, #1a1a1f) 50%,
+    var(--swatch-fg, #f5f5f7) 50%, var(--swatch-fg, #f5f5f7) 75%,
+    var(--swatch-accent, #b69b5e) 75%, var(--swatch-accent, #b69b5e) 100%
+  );
+}
+
+/* Per-theme swatch palettes — kept in sync with the corresponding
+ * theme entries in src/theme/themes.css. Hardcoded RGB so the
+ * swatch always shows the destination theme regardless of which
+ * theme is currently active. */
+.m-set__theme-swatch[data-theme="default-dark"]      { --swatch-bg: #0e0f12; --swatch-fg: #e6e6ea; --swatch-accent: #b69b5e; }
+.m-set__theme-swatch[data-theme="synthwave"]         { --swatch-bg: #1f1147; --swatch-fg: #ffffff; --swatch-accent: #ff77e1; }
+.m-set__theme-swatch[data-theme="claude-code-dark"]  { --swatch-bg: #1d1815; --swatch-fg: #f0e6d8; --swatch-accent: #d97757; }
+.m-set__theme-swatch[data-theme="ayu-light"]         { --swatch-bg: #fafafa; --swatch-fg: #1a1f29; --swatch-accent: #ff9940; }
+.m-set__theme-swatch[data-theme="ayu-mirage"]        { --swatch-bg: #1f2430; --swatch-fg: #cbccc6; --swatch-accent: #ffcc66; }
+.m-set__theme-swatch[data-theme="ayu-dark"]          { --swatch-bg: #0a0e14; --swatch-fg: #b3b1ad; --swatch-accent: #ff8f40; }
+.m-set__theme-swatch[data-theme="catppuccin-latte"]  { --swatch-bg: #eff1f5; --swatch-fg: #4c4f69; --swatch-accent: #8839ef; }
+.m-set__theme-swatch[data-theme="catppuccin-frappe"] { --swatch-bg: #303446; --swatch-fg: #c6d0f5; --swatch-accent: #ca9ee6; }
+.m-set__theme-swatch[data-theme="catppuccin-macchiato"] { --swatch-bg: #24273a; --swatch-fg: #cad3f5; --swatch-accent: #c6a0f6; }
+.m-set__theme-swatch[data-theme="catppuccin-mocha"]  { --swatch-bg: #1e1e2e; --swatch-fg: #cdd6f4; --swatch-accent: #cba6f7; }
+.m-set__theme-swatch[data-theme="tokyo-night"]       { --swatch-bg: #1a1b26; --swatch-fg: #c0caf5; --swatch-accent: #bb9af7; }
+.m-set__theme-swatch[data-theme="rose-pine"]         { --swatch-bg: #191724; --swatch-fg: #e0def4; --swatch-accent: #ebbcba; }
+.m-set__theme-swatch[data-theme="ubuntu-dark"]       { --swatch-bg: #2c001e; --swatch-fg: #eeeeec; --swatch-accent: #e95420; }
+.m-set__theme-swatch[data-theme="absent-contrast"]   { --swatch-bg: #0d181d; --swatch-fg: #cbd5e1; --swatch-accent: #5eead4; }
+.m-set__theme-swatch[data-theme="vesper"]            { --swatch-bg: #101010; --swatch-fg: #ffffff; --swatch-accent: #ffc799; }
+.m-set__theme-swatch[data-theme="word"]              { --swatch-bg: #b1b1b1; --swatch-fg: #0000ee; --swatch-accent: #ff00ff; }
+
+.m-set__theme-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.m-set__theme-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.m-set__theme-desc {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.m-set__theme-check {
+  flex: 0 0 auto;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}

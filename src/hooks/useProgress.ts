@@ -45,31 +45,128 @@ export function useProgress() {
     };
   }, []);
 
-  function markCompleted(courseId: string, lessonId: string) {
+  /// Mark a lesson complete. `completedAtSec` is unix seconds; when
+  /// omitted we stamp `now()` (the local "I just finished this" path).
+  /// The cloud-sync path passes the row's original timestamp from the
+  /// relay so cross-device sync preserves the actual completion time
+  /// — without this, a fresh device pulling 100+ history rows
+  /// stamped them all with `now()`, collapsing the activity heatmap
+  /// to a single "today" column and the streak to one day.
+  ///
+  /// In-memory updates use "earliest wins" merge semantics to match
+  /// the storage layer: if we already have a record for this lesson
+  /// at an earlier timestamp, keep the earlier one. Avoids a
+  /// late-arriving sync row backdating a freshly self-marked lesson
+  /// to a value newer than what the user just did.
+  function markCompleted(
+    courseId: string,
+    lessonId: string,
+    completedAtSec?: number,
+  ) {
     const key = `${courseId}:${lessonId}`;
+    const supplied = completedAtSec ?? Math.floor(Date.now() / 1000);
     setCompleted((prev) => {
       if (prev.has(key)) return prev;
       const next = new Set(prev);
       next.add(key);
       return next;
     });
-    // Also append to the local history so streak/XP react instantly without
-    // waiting for a re-fetch. Uses client-side now() which may drift from
-    // the server-side now() by a second; harmless for stats display.
     setHistory((prev) => {
-      if (prev.some((r) => r.course_id === courseId && r.lesson_id === lessonId)) return prev;
+      const existingIdx = prev.findIndex(
+        (r) => r.course_id === courseId && r.lesson_id === lessonId,
+      );
+      if (existingIdx >= 0) {
+        const existing = prev[existingIdx];
+        const merged = Math.min(existing.completed_at, supplied);
+        if (merged === existing.completed_at) return prev;
+        const next = prev.slice();
+        next[existingIdx] = { ...existing, completed_at: merged };
+        return next;
+      }
       return [
         ...prev,
         {
           course_id: courseId,
           lesson_id: lessonId,
-          completed_at: Math.floor(Date.now() / 1000),
+          completed_at: supplied,
         },
       ];
     });
-    // Fire-and-forget persistence; the optimistic UI update above already
-    // reflects the new state, and storage is best-effort.
-    storage.markCompletion(courseId, lessonId).catch(() => {});
+    // Fire-and-forget persistence. Storage layer also runs the
+    // "earliest wins" merge so the on-disk row matches the in-memory
+    // history regardless of which arrived first.
+    storage.markCompletion(courseId, lessonId, supplied).catch(() => {});
+  }
+
+  /// Bulk-apply many completions at once. Used by the cloud-sync
+  /// apply path so a 150-row pull doesn't trigger 150 React renders
+  /// + 150 IDB transactions. One setState merges every row into
+  /// `completed` + `history` (earliest-wins per id), one storage
+  /// call writes them all in a single transaction.
+  ///
+  /// Each row's `completedAtSec` may be undefined → fall back to
+  /// `now()` like the single-row path. The cloud-sync path always
+  /// supplies one (converted from the relay's ISO 8601 timestamp);
+  /// this is just defensive.
+  function markCompletedBatch(
+    rows: ReadonlyArray<{
+      courseId: string;
+      lessonId: string;
+      completedAtSec?: number;
+    }>,
+  ) {
+    if (rows.length === 0) return;
+    const nowSec = Math.floor(Date.now() / 1000);
+    // Pre-resolve every supplied timestamp so the storage call and
+    // the React state merge see identical values.
+    const resolved = rows.map((r) => ({
+      courseId: r.courseId,
+      lessonId: r.lessonId,
+      completedAt: r.completedAtSec ?? nowSec,
+    }));
+    setCompleted((prev) => {
+      let mutated = false;
+      const next = new Set(prev);
+      for (const r of resolved) {
+        const key = `${r.courseId}:${r.lessonId}`;
+        if (!next.has(key)) {
+          next.add(key);
+          mutated = true;
+        }
+      }
+      return mutated ? next : prev;
+    });
+    setHistory((prev) => {
+      // Index existing rows for O(N+M) merge instead of O(N*M).
+      const byKey = new Map<string, number>();
+      prev.forEach((row, i) =>
+        byKey.set(`${row.course_id}:${row.lesson_id}`, i),
+      );
+      const next = prev.slice();
+      let mutated = false;
+      for (const r of resolved) {
+        const key = `${r.courseId}:${r.lessonId}`;
+        const existingIdx = byKey.get(key);
+        if (existingIdx !== undefined) {
+          const existing = next[existingIdx];
+          const merged = Math.min(existing.completed_at, r.completedAt);
+          if (merged !== existing.completed_at) {
+            next[existingIdx] = { ...existing, completed_at: merged };
+            mutated = true;
+          }
+          continue;
+        }
+        next.push({
+          course_id: r.courseId,
+          lesson_id: r.lessonId,
+          completed_at: r.completedAt,
+        });
+        byKey.set(key, next.length - 1);
+        mutated = true;
+      }
+      return mutated ? next : prev;
+    });
+    storage.markCompletionsBulk(resolved).catch(() => {});
   }
 
   /// Reset a single lesson's completion. Drops the key from the in-memory
@@ -178,6 +275,7 @@ export function useProgress() {
     completed,
     history,
     markCompleted,
+    markCompletedBatch,
     clearLessonCompletion,
     clearChapterCompletions,
     clearCourseCompletions,

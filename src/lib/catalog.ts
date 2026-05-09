@@ -69,6 +69,11 @@ export interface CatalogEntry {
   packType?: "course" | "challenges";
   releaseStatus?: "BETA" | "ALPHA" | "UNREVIEWED" | "PRE-RELEASE";
   lessonCount?: number;
+  /// Unlisted flag — see Course.hidden. The catalog layer drops
+  /// hidden entries before returning to the UI so Discover never
+  /// renders a placeholder tile for them; the manifest still
+  /// carries them so direct-link consumers can fetch on demand.
+  hidden?: boolean;
 }
 
 interface CatalogJson {
@@ -174,6 +179,12 @@ export function fetchCatalog(opts: { refresh?: boolean } = {}): Promise<
   // both surfaces honest.
   cachedPromise = (isWeb ? fetchWebCatalog() : fetchDesktopCatalog())
     .then(dedupeById)
+    // Drop unlisted entries (`hidden: true`) so they never reach
+    // the catalog UI — they're shareable-by-link only, the
+    // manifest still carries them so the on-demand fetch in
+    // App.tsx's deep-link path can pull the JSON when a visitor
+    // arrives via `?courseId=…`.
+    .then((entries) => entries.filter((e) => !e.hidden))
     .then((entries) => {
       // Persist successful fetches so the next launch can paint
       // from cache before this network round-trip completes. Empty

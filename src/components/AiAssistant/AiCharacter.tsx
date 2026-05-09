@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import "./AiCharacter.css";
 import DnaHelix from "./DnaHelix";
 
@@ -111,16 +111,47 @@ export default function AiCharacter({
   // restart on a parent transform.
   const speed = boostedAt != null ? CLICK_BOOST_SPEED : baselineSpeed;
 
-  // Wrap the consumer's onClick so a click both toggles the panel
-  // (parent state) AND restamps the boost timer. Re-clicking during
-  // an active boost extends it — feels right when the user is
-  // actively interacting with the assistant. State change to a new
-  // timestamp re-runs the effect above, clearing the old timeout
-  // and scheduling a fresh one.
+  // Wrap the consumer's onClick. Two paths depending on which way
+  // the click is about to push the panel:
+  //
+  //   - Closed → Open: stamp a fresh boost. The orb spins quickly
+  //     for the next minute as visible feedback that the assistant
+  //     is "listening." Re-clicking during an active boost
+  //     extends it — feels right when the user is actively
+  //     poking around.
+  //   - Open → Close: drop the boost immediately. The user is
+  //     stepping back from the assistant; the orb should slow
+  //     to its mood-baseline (idle = ~3s / breath) so it's no
+  //     longer demanding visual attention. Without this, the
+  //     orb kept spinning at 0.5s for the full minute even after
+  //     the panel closed — felt frantic when the user had clearly
+  //     moved on.
+  //
+  // `open` is the CURRENT state (true = panel currently visible);
+  // a click flips it, so reading `open` here tells us whether
+  // we're about to close.
   const handleClick = useCallback(() => {
-    setBoostedAt(Date.now());
+    if (open) {
+      setBoostedAt(null);
+    } else {
+      setBoostedAt(Date.now());
+    }
     onClick();
-  }, [onClick]);
+  }, [onClick, open]);
+
+  // Belt-and-brace: also drop the boost if the panel closes by
+  // ANY mechanism (click-outside, Escape, programmatic close from
+  // the parent), not just a click on the orb itself. We diff
+  // against the previous `open` value via a ref so this only
+  // fires on the actual true → false transition (and not on
+  // first mount when `open` is already false).
+  const wasOpenRef = useRef(open);
+  useEffect(() => {
+    if (wasOpenRef.current && !open) {
+      setBoostedAt(null);
+    }
+    wasOpenRef.current = open;
+  }, [open]);
 
   return (
     <button
