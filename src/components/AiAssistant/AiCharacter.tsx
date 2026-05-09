@@ -32,24 +32,25 @@ interface Props {
 ///   streaming   → cyan/violet palette + medium spin (matches "thinking")
 ///   idle        → neutral cool palette + slow drift
 /// Boost duration in ms after the orb is clicked. The DNA helix
-/// snaps to a fast 0.5s strand-cycle, then eases back to whatever
-/// the mood would dictate over the next minute. Interaction signal:
-/// the orb visibly "wakes up" in response to the user's tap, then
-/// settles back to its resting rhythm. Re-clicking resets the
-/// timer so the user can keep it lively if they're in conversation.
+/// runs at the rapid-spin speed for the full minute, then snaps
+/// back to the mood baseline.
+///
+/// Why a snap back rather than a smooth ramp: the helix's strands
+/// each carry a per-strand `--fb-dna-delay` computed against the
+/// active speed (so the wave staggers correctly across the helix
+/// length). Continuously changing `--fb-dna-speed` over time
+/// forces every node + connecting bar's CSS animation to RESTART
+/// at frame 0 — which reads as flickering every render. Snapping
+/// the speed at exactly two moments (click, +60s) means just two
+/// restarts per boost cycle: imperceptible at the click moment
+/// (the user just initiated the boost so motion change is
+/// expected), and fairly subtle at the 60s mark (the user is
+/// almost certainly looking somewhere else by then).
 const CLICK_BOOST_MS = 60_000;
-/// Speed (in seconds per strand-jump cycle) at the peak of the boost
-/// — i.e. immediately after a click. Lower = faster.
-const CLICK_BOOST_PEAK_SPEED = 0.5;
-
-/// Cubic-ease-out: starts moving fast in the early frames, slows
-/// gracefully near the end. `t` is 0..1 over the boost window;
-/// returns 0..1 with the easing applied. We use this to interpolate
-/// between the peak boost speed and the mood baseline so the helix
-/// doesn't snap back at the 60s mark — it eases.
-function easeOutCubic(t: number): number {
-  return 1 - Math.pow(1 - t, 3);
-}
+/// Speed (in seconds per strand-jump cycle) while boosted —
+/// immediately after a click and for the full duration. Lower =
+/// faster.
+const CLICK_BOOST_SPEED = 0.5;
 
 export default function AiCharacter({
   open,
@@ -76,51 +77,43 @@ export default function AiCharacter({
           : 16;
 
   // Click-boost state. `boostedAt` is the timestamp of the most
-  // recent tap (or null if the boost has expired); `boostTick` is a
-  // counter that we bump every second while the boost is active so
-  // the speed interpolation re-renders even though `boostedAt`
-  // itself doesn't change. Without the tick the speed prop would
-  // freeze at the value at the moment of the click and never ease
-  // back.
+  // recent tap (or null when the boost has expired). State only
+  // changes at exactly two moments per boost cycle:
+  //
+  //   1. The click itself (boostedAt: null → Date.now())
+  //   2. 60s later (boostedAt: number → null)
+  //
+  // No continuous re-renders in between — the CSS animations on the
+  // helix nodes + connecting bars stay running uninterrupted for
+  // the full minute. Earlier versions of this component ticked at
+  // 1Hz to interpolate the speed gradually; that re-rendered the
+  // speed prop every second, which forced every animation in the
+  // helix to restart at frame 0. The visible flicker — including
+  // when hovering, since hover landed on freshly-restarted frames
+  // — was that interpolation, not anything inherent to hover.
   const [boostedAt, setBoostedAt] = useState<number | null>(null);
-  const [, setBoostTick] = useState(0);
   useEffect(() => {
     if (boostedAt == null) return;
-    let cancelled = false;
-    const interval = window.setInterval(() => {
-      if (cancelled) return;
-      const elapsed = Date.now() - boostedAt;
-      if (elapsed >= CLICK_BOOST_MS) {
-        setBoostedAt(null);
-      } else {
-        setBoostTick((t) => t + 1);
-      }
-    }, 1000);
-    return () => {
-      cancelled = true;
-      window.clearInterval(interval);
-    };
+    const id = window.setTimeout(() => {
+      setBoostedAt(null);
+    }, CLICK_BOOST_MS);
+    return () => window.clearTimeout(id);
   }, [boostedAt]);
 
-  // Compute the actual `speed` prop for the helix. When boosted we
-  // interpolate between the peak boost speed (fast) and the mood
-  // baseline using cubic-ease-out — the helix moves rapidly right
-  // after the click and settles smoothly back to its resting rhythm.
-  // No boost active = baseline straight through.
-  let speed = baselineSpeed;
-  if (boostedAt != null) {
-    const elapsed = Date.now() - boostedAt;
-    const t = Math.min(1, Math.max(0, elapsed / CLICK_BOOST_MS));
-    const eased = easeOutCubic(t);
-    speed =
-      CLICK_BOOST_PEAK_SPEED +
-      (baselineSpeed - CLICK_BOOST_PEAK_SPEED) * eased;
-  }
+  // Two-state speed: boosted = 0.5s, otherwise mood-baseline. The
+  // user perceives a click → fast spin → snap back to normal at the
+  // minute mark. Hover doesn't enter into this — `:hover` only
+  // changes parent scale + tooltip opacity at the CSS layer; it
+  // never re-renders this component, and the helix animations don't
+  // restart on a parent transform.
+  const speed = boostedAt != null ? CLICK_BOOST_SPEED : baselineSpeed;
 
   // Wrap the consumer's onClick so a click both toggles the panel
   // (parent state) AND restamps the boost timer. Re-clicking during
   // an active boost extends it — feels right when the user is
-  // actively interacting with the assistant.
+  // actively interacting with the assistant. State change to a new
+  // timestamp re-runs the effect above, clearing the old timeout
+  // and scheduling a fresh one.
   const handleClick = useCallback(() => {
     setBoostedAt(Date.now());
     onClick();
@@ -162,10 +155,12 @@ export default function AiCharacter({
       {/* DNA double-helix glyph. Mood drives the baseline `speed`
           (thinking + celebrating push faster, alert slows to "locked
           / waiting on human", idle settles to the slowest 16s
-          rhythm) and click-boost layers on top: tap the orb and the
-          helix snaps to a 0.5s cycle for the next 60s, easing back
-          to baseline via cubic-ease-out. The interpolated value
-          comes out of the `speed` local computed above; the helix
+          rhythm). Click-boost layers on top with a hard switch:
+          tap the orb and the helix snaps to a 0.5s cycle for the
+          next 60s, then snaps back. Two state changes per boost
+          (click + 60s expiry), no continuous interpolation —
+          continuous updates would restart the underlying CSS
+          animations on every render and look glitchy. The helix
           itself is colour-randomised at mount time — see DnaHelix
           for the palette + per-strand stagger maths. */}
       <DnaHelix className="fishbones-ai-character-icon" speed={speed} />
