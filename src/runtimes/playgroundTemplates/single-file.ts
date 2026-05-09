@@ -240,7 +240,7 @@ fn greet(name: &str) -> String {
 
 fn main() {
     // Local sanity-check so the snippet runs as a plain Rust program.
-    println!("{}", greet("Fishbones"));
+    println!("{}", greet("Libre"));
 }
 `,
   },

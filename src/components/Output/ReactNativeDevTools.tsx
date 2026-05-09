@@ -200,7 +200,7 @@ export default function ReactNativeDevTools({ previewUrl }: Props) {
               <div className="fishbones-rndev-card-hint">
                 No Expo dev server found on the usual ports. Full Expo Go
                 support needs your own Expo project and Metro bundler —
-                Fishbones doesn't host one. The playground runtime here
+                Libre doesn't host one. The playground runtime here
                 uses{" "}
                 <code className="fishbones-rndev-code">react-native-web</code>
                 {" "}so same APIs, different rendering path.

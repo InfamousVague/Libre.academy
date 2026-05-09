@@ -6,7 +6,7 @@ interface PhoneFrameProps {
   /// status bar / below the home indicator. The component handles
   /// scrolling internally so a tall preview stays inside the frame.
   children: ReactNode;
-  /// Optional fake status-bar carrier label. Defaults to "Fishbones".
+  /// Optional fake status-bar carrier label. Defaults to "FISH".
   carrier?: string;
 }
 

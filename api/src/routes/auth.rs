@@ -356,19 +356,19 @@ pub async fn password_reset_request(
         token
     );
     let html = format!(
-        "<p>Someone (hopefully you) asked to reset the password for your Fishbones account.</p>\
+        "<p>Someone (hopefully you) asked to reset the password for your Libre account.</p>\
          <p><a href=\"{link}\">Reset your password</a></p>\
          <p>The link expires in 1 hour. If you didn't ask for this, you can safely ignore this email — no action is needed and your account is unchanged.</p>",
     );
     let text = format!(
-        "Someone (hopefully you) asked to reset the password for your Fishbones account.\n\n\
+        "Someone (hopefully you) asked to reset the password for your Libre account.\n\n\
          Reset your password: {link}\n\n\
          The link expires in 1 hour. If you didn't ask for this, you can safely ignore this email — no action is needed and your account is unchanged."
     );
 
     state
         .mailer
-        .send(&email, "Reset your Fishbones password", &html, &text)
+        .send(&email, "Reset your Libre password", &html, &text)
         .await;
 
     StatusCode::NO_CONTENT

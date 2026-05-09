@@ -19,9 +19,9 @@
          WKWebView (where we control the host) it's still honored,
          and the maximum-scale=1.0 alone stops the auto-zoom. -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <link rel="icon" type="image/png" href="/fishbones_appicon.png" />
-    <link rel="apple-touch-icon" href="/fishbones_appicon.png" />
-    <title>Fishbones</title>
+    <link rel="icon" type="image/png" href="/libre_app_icon.png" />
+    <link rel="apple-touch-icon" href="/libre_app_icon.png" />
+    <title>Libre</title>
     <!-- Pre-React preloader. The main bundle + Monaco take ~1s to parse
          on a cold launch and React's bootloader can't paint until the
          module graph resolves — so without this inline block the user
@@ -107,7 +107,7 @@
       #preloader-logo {
         width: 48px;
         height: 48px;
-        background: url("/fishbones.png") no-repeat center / contain;
+        background: url("/libre_app_icon.png") no-repeat center / contain;
         border-radius: 6px;
       }
       #preloader-label {
@@ -140,14 +140,14 @@
     <script src="/devconsole.js"></script>
   </head>
   <body>
-    <div id="preloader" role="status" aria-label="Loading Fishbones">
+    <div id="preloader" role="status" aria-label="Loading Libre">
       <div id="preloader-wash" aria-hidden="true"></div>
       <div id="preloader-dots" aria-hidden="true"></div>
       <div id="preloader-stack" aria-hidden="true">
         <div id="preloader-ring"></div>
         <div id="preloader-logo"></div>
       </div>
-      <div id="preloader-label">loading Fishbones…</div>
+      <div id="preloader-label">loading Libre…</div>
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

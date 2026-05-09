@@ -278,13 +278,13 @@ export default function TopBar({
           aria-label="Fishbones Academy home"
           data-tauri-drag-region={false}
         >
-          {/* Match the marketing-site nav: skinny fish-skeleton
+          {/* Match the marketing-site nav: ribbon-snake "Libre"
               wordmark followed by the `.academy` TLD. Same asset
-              ships at libre.academy/fishbones_skinny_white.png
-              and inside the embedded /learn/ build. */}
+              ships at libre.academy/libre_wide.png and inside the
+              embedded /learn/ build. */}
           <img
-            src={`${import.meta.env.BASE_URL}fishbones_skinny_white.png`}
-            alt="Fishbones"
+            src={`${import.meta.env.BASE_URL}libre_wide.png`}
+            alt="Libre"
             className="fishbones__topbar-brand-icon"
           />
           <span className="fishbones__topbar-brand-tld">.academy</span>

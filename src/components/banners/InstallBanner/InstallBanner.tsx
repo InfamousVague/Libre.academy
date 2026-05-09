@@ -68,7 +68,7 @@ export function InstallBanner() {
     <aside
       className="fishbones-install-banner"
       role="complementary"
-      aria-label="Get the Fishbones desktop app"
+      aria-label="Get the Libre desktop app"
     >
       <button
         type="button"
@@ -79,7 +79,7 @@ export function InstallBanner() {
         <Icon icon={xIcon} size="xs" color="currentColor" />
       </button>
       <div className="fishbones-install-banner__title">
-        Get the full Fishbones
+        Get the full Libre
       </div>
       <div className="fishbones-install-banner__body">
         Run Rust, Swift, C, C++, Java, Kotlin, C#, SvelteKit, and

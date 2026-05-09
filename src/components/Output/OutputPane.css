@@ -282,7 +282,7 @@
 .fishbones-output-running-logo {
   width: 48px;
   height: 48px;
-  background: url("/fishbones.png") no-repeat center / contain;
+  background: url("/libre_app_icon.png") no-repeat center / contain;
   border-radius: var(--fb-radius-sm);
   animation: fishbones-output-logo-pulse 1.8s ease-in-out infinite;
 }

@@ -250,7 +250,7 @@ echo "   SMTP_HOST=localhost"
 echo "   SMTP_PORT=25"
 echo "   SMTP_STARTTLS=false"
 echo "   SMTP_FROM=noreply@${MAIL_DOMAIN}"
-echo "   SMTP_FROM_NAME=Fishbones"
+echo "   SMTP_FROM_NAME=Libre"
 echo
 echo "Then re-run ./deploy.sh — the API will start sending via Postfix"
 echo "instead of falling back to the tracing log."

@@ -199,7 +199,7 @@ export default function AddCourseButton({
                   Browse catalog…
                 </span>
                 <span className="fishbones-addcourse-item-hint">
-                  Search and install books from the Fishbones library
+                  Search and install books from the Libre library
                 </span>
               </span>
             </button>

@@ -114,7 +114,7 @@ export default function MobileSettings({
           <>
             <p className="m-set__blurb">
               Sign in to sync progress, streaks, and lesson history between
-              devices. Fishbones runs entirely offline without an account —
+              devices. Libre runs entirely offline without an account —
               signing in is purely additive.
             </p>
             <button
@@ -192,7 +192,7 @@ export default function MobileSettings({
         <h3 className="m-set__section-title">About</h3>
         <div className="m-set__row m-set__row--passive">
           <div className="m-set__row-text">
-            <span className="m-set__row-title">Fishbones</span>
+            <span className="m-set__row-title">Libre</span>
             <span className="m-set__row-meta">v{appVersion}</span>
           </div>
         </div>

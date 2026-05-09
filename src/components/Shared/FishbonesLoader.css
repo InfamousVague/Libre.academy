@@ -50,7 +50,7 @@
 }
 
 .fishbones-loader-logo {
-  background: url("/fishbones.png") no-repeat center / contain;
+  background: url("/libre_app_icon.png") no-repeat center / contain;
   border-radius: var(--fb-radius-sm);
   /* No pulse animation. The new bone-textured fish has detail that
      scaling and opacity-fading would lose; the rotating ring is the

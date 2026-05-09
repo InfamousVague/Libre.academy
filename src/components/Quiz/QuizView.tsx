@@ -131,7 +131,7 @@ function QuestionCard({
             className="fishbones-quiz-ask"
             onClick={askAi}
             title="Discuss this question with the local assistant"
-            aria-label="Ask Fishbones for a hint"
+            aria-label="Ask Libre for a hint"
           >
             ?
           </button>

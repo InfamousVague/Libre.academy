@@ -748,15 +748,15 @@ fn error_redirect(
 fn handoff_page(redirect_url: &str, success: bool) -> Response {
     let escaped = html_escape(redirect_url);
     let title = if success {
-        "Signed in — return to Fishbones"
+        "Signed in — return to Libre"
     } else {
-        "Sign-in failed — return to Fishbones"
+        "Sign-in failed — return to Libre"
     };
     let heading = if success { "Signed in!" } else { "Sign-in didn't complete" };
     let body_text = if success {
-        "Return to the Fishbones app to keep going. You can close this tab."
+        "Return to the Libre app to keep going. You can close this tab."
     } else {
-        "We couldn't finish the sign-in. Return to the Fishbones app and try again — you can close this tab."
+        "We couldn't finish the sign-in. Return to the Libre app and try again — you can close this tab."
     };
 
     // The HTML/CSS is intentionally inline + small. Caddy compresses
