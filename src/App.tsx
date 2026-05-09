@@ -1497,6 +1497,10 @@ export default function App() {
         history={history}
         shields={shields}
         onOpenProfile={() => setView("profile")}
+        // The brand wordmark was removed from the top bar (Library
+        // already renders it as a hero band, and the rail's Library
+        // entry is the canonical "home" affordance). The
+        // `onOpenLibrary` prop went with it.
         // Sidebar-collapse toggle moved out of the topbar and into
         // the navigation rail's bottom cluster (NavigationRail.tsx).
         // `sidebarCollapsed` + `onToggleSidebar` no longer flow

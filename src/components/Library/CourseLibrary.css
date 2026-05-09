@@ -71,20 +71,33 @@
    header below provides its own border so we leave the wordmark
    without one and let the spacing do the separating. */
 /* Library hero card — wide rounded surface holding the LibreHeader
-   artwork. The card itself supplies the chrome (border, shadow,
-   gradient base) so the cream-backed PNG doesn't sit as a hard
-   rectangle on the dark library background. The artwork fills the
-   card edge-to-edge; the card aspect-ratio matches the source PNG
-   so we don't crop or letterbox. */
+   artwork. Aspect-ratio is LOCKED to the source PNG (2016×864 ≈
+   2.33:1) so the wordmark in the artwork is never cropped or
+   letterboxed at any library width — the card scales width-first
+   and the height follows the image's natural proportions. The
+   gradient base sits behind the PNG so the brand colour shows
+   through any feathered mask edges baked into the asset. Card
+   centred + capped at ~880px so it stays balanced inside the
+   library shell instead of dominating wide windows. */
 .fishbones-library-hero {
-  margin: 18px 22px 14px;
+  margin: 18px auto 14px;
   flex-shrink: 0;
+  /* Width: stretch to the library shell minus the standard
+     22px gutter, capped at 880px so the hero stays a hero
+     and doesn't stretch into a billboard on widescreens. */
+  width: calc(100% - 44px);
+  max-width: 880px;
+  /* Lock the card to the image's natural ratio. Because the
+     <img> below uses width: 100% and height: auto, the card
+     and the image share the exact same box — the wordmark
+     reads fully at every width. */
+  aspect-ratio: 2016 / 864;
   border-radius: 14px;
   overflow: hidden;
   position: relative;
-  /* Brand cream → warm-orange gradient base. Sits BEHIND the PNG
-     and shows at the feathered mask edges, so the card reads as
-     one continuous brand surface. */
+  /* Brand cream → warm-orange gradient base. Shows through any
+     feathered mask edges in the asset so the card reads as one
+     continuous brand surface, not a clipped rectangle. */
   background:
     radial-gradient(120% 90% at 70% 20%, rgba(255, 191, 130, 0.5), transparent 60%),
     linear-gradient(160deg, #fef3e8 0%, #fcdcc1 55%, #f6b89a 100%);
@@ -94,31 +107,27 @@
     0 18px 40px -12px rgba(243, 114, 57, 0.28),
     0 4px 12px rgba(0, 0, 0, 0.32),
     inset 0 0 0 1px rgba(255, 255, 255, 0.18);
-  /* Cap the height on wide windows so the hero doesn't dominate
-     the library view — the artwork is ~2.4:1 so a height cap
-     translates to a comfortable banner. */
-  max-height: 240px;
 }
 .fishbones-library-hero-img {
   display: block;
   width: 100%;
   height: 100%;
-  /* `cover` keeps the image filling the card edge-to-edge at any
-     window width; the artwork's central composition keeps the
-     wordmark visible across crops. `object-position: center` is
-     the default; left intentional. */
-  object-fit: cover;
+  /* `contain` is the safety net — even if the parent's aspect-ratio
+     drifts a hair due to subpixel rounding, the wordmark stays
+     fully visible (letterbox falls onto the gradient base, which
+     reads as continuous brand surface). */
+  object-fit: contain;
   object-position: center;
   user-select: none;
   -webkit-user-drag: none;
 }
 
-/* Tighter hero on narrow library widths — the cap goes lower so
-   the catalogue grid below stays the page's main attraction. */
+/* Tighter hero on narrow library widths — slimmer side margin
+   and softer corner radius so the card fits the dense layout. */
 @media (max-width: 720px) {
   .fishbones-library-hero {
-    margin: 12px 14px 10px;
-    max-height: 160px;
+    margin: 12px auto 10px;
+    width: calc(100% - 28px);
     border-radius: 10px;
   }
 }

@@ -131,11 +131,6 @@ interface Props {
   /// selectLesson + sidebar tap-throughs; the search dropdown calls
   /// this when the user picks a lesson result.
   onOpenLesson?: (courseId: string, lessonId: string) => void;
-  /// Click target for the brand wordmark in the top-left of the bar.
-  /// Routes the main pane to the Library view (parent App.tsx wires
-  /// this to `setView("library")`). Optional — when omitted, the
-  /// wordmark renders as a non-interactive logo with no hover state.
-  onOpenLibrary?: () => void;
 }
 
 /// Custom window top bar. The window is configured with
@@ -167,7 +162,6 @@ export default function TopBar({
   onOpenSearch,
   courses,
   onOpenLesson,
-  onOpenLibrary,
 }: Props) {
   // Always show the chip when stats are wired — the dropdown carries
   // both the level/streak detail and the cloud-sync sign-in path, so
@@ -286,35 +280,15 @@ export default function TopBar({
       {!isWeb && (
         <div className="fishbones__topbar-window-controls" data-tauri-drag-region />
       )}
-      {/* Brand wordmark — `libre_wide.png` (the wide ribbon-snake
-          wordmark, no separate text). Click routes to the local
-          Library view via `onOpenLibrary` rather than navigating
-          to the external marketing site, so the lockup behaves as
-          an in-app home button. Renders as a `<button>` when the
-          handler is wired, a non-interactive `<div>` otherwise. */}
-      {onOpenLibrary ? (
-        <button
-          type="button"
-          className="fishbones__topbar-brand"
-          aria-label="Open Library"
-          onClick={onOpenLibrary}
-          data-tauri-drag-region={false}
-        >
-          <img
-            src={`${import.meta.env.BASE_URL}libre_wide.png`}
-            alt="Libre"
-            className="fishbones__topbar-brand-icon"
-          />
-        </button>
-      ) : (
-        <div className="fishbones__topbar-brand fishbones__topbar-brand--static">
-          <img
-            src={`${import.meta.env.BASE_URL}libre_wide.png`}
-            alt="Libre"
-            className="fishbones__topbar-brand-icon"
-          />
-        </div>
-      )}
+      {/* Brand wordmark removed — the Library page already renders
+          the `libre_wide.png` lockup as its own hero band, so
+          carrying the logo across every other view doubled the
+          brand presence and stole horizontal space from the tab
+          strip on narrow windows. The traffic-light spacer above
+          still anchors the left edge on desktop; on web the row
+          flows from the sidebar toggle. If we want a "home"
+          affordance back, that's what the rail's Library entry
+          does — wiring it here was redundant. */}
 
       {onToggleSidebar && (
         <button

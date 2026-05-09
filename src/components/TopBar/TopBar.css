@@ -45,54 +45,11 @@
   height: 100%;
 }
 
-/* Brand wordmark sitting in the top-left of the bar. Sole content
-   is the wide `libre_wide.png` — the standalone "Libre" ribbon-
-   snake wordmark, no separate text. Click routes to the in-app
-   Library view via `onOpenLibrary` (parent App.tsx wires this);
-   no external link to the marketing site any more. The `<button>`
-   reset below kills the default browser button chrome so the
-   lockup reads as a clean image. */
-.fishbones__topbar-brand {
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-  height: 100%;
-  padding: 0 16px;
-  background: transparent;
-  border: 0;
-  border-radius: var(--fb-radius-sm);
-  cursor: pointer;
-  color: var(--color-text-primary, #fafafa);
-  text-decoration: none;
-  transition: opacity var(--fb-motion-snappy);
-  -webkit-tap-highlight-color: transparent;
-}
-.fishbones__topbar-brand:hover {
-  opacity: 0.78;
-}
-.fishbones__topbar-brand:focus-visible {
-  outline: 2px solid var(--color-text-primary);
-  outline-offset: -4px;
-}
-/* Non-interactive variant — used when the parent doesn't wire
-   `onOpenLibrary`. Disables the hover dim + cursor so the
-   wordmark reads as a static logo rather than a dead button. */
-.fishbones__topbar-brand--static {
-  cursor: default;
-}
-.fishbones__topbar-brand--static:hover {
-  opacity: 1;
-}
-.fishbones__topbar-brand-icon {
-  /* Wide ribbon-snake "Libre" wordmark — height pinned, width
-     auto-flows to preserve the natural ~2.4:1 aspect ratio. */
-  height: 24px;
-  width: auto;
-  display: block;
-  flex-shrink: 0;
-  user-select: none;
-  -webkit-user-drag: none;
-}
+/* Brand wordmark removed — see TopBar.tsx. The Library page
+   renders the same `libre_wide.png` lockup as its own hero band,
+   so carrying it here too doubled the brand presence and stole
+   horizontal space from the tab strip on narrow windows. The
+   rail's Library entry is the canonical "home" affordance now. */
 
 .fishbones__topbar-tabs {
   display: flex;
