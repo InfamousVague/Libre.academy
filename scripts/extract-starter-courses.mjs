@@ -378,9 +378,29 @@ async function main() {
     process.exit(1);
   }
 
-  // Fresh slate each run.
+  // Fresh slate each run — but preserve sidecar courses that the
+  // extract pipeline doesn't manage (HelloTrade is a python-generated
+  // JSON + a hand-resized cover, committed to git via a `.gitignore`
+  // negation rule). A blanket `rm -rf` would wipe them out before
+  // the marketing site's CI build copied `public/` into the deploy
+  // tree, leaving the live URL `/fishbones/learn/?courseId=hellotrade`
+  // 404'ing on the on-demand fetch.
+  //
+  // Strategy: walk the dir, delete only files matching `<id>.json` /
+  // `<id>.jpg` for ids in ALL_PACK_IDS plus `manifest.json`. Anything
+  // else (e.g. hellotrade.json, hellotrade.jpg) survives untouched.
   if (existsSync(OUT)) {
-    await rm(OUT, { recursive: true, force: true });
+    const managed = new Set(["manifest.json"]);
+    for (const id of ALL_PACK_IDS) {
+      managed.add(`${id}.json`);
+      managed.add(`${id}.jpg`);
+    }
+    const { readdir } = await import("node:fs/promises");
+    for (const entry of await readdir(OUT)) {
+      if (managed.has(entry)) {
+        await rm(join(OUT, entry), { force: true });
+      }
+    }
   }
   await mkdir(OUT, { recursive: true });
 
