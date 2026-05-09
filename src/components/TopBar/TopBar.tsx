@@ -275,19 +275,25 @@ export default function TopBar({
         <a
           href="../"
           className="fishbones__topbar-brand"
-          aria-label="Fishbones Academy home"
+          aria-label="Libre home"
           data-tauri-drag-region={false}
         >
-          {/* Match the marketing-site nav: ribbon-snake "Libre"
-              wordmark followed by the `.academy` TLD. Same asset
-              ships at libre.academy/libre_wide.png and inside the
+          {/* Mirrors the academy nav lockup: squircle Libre app
+              icon + text wordmark "Libre.academy". The icon
+              carries the visual brand, the text reads the name —
+              cleaner + sharper at retina densities than embedding
+              the wide PNG. Same asset ships at
+              libre.academy/libre_app_icon.png and inside the
               embedded /learn/ build. */}
           <img
-            src={`${import.meta.env.BASE_URL}libre_wide.png`}
-            alt="Libre"
+            src={`${import.meta.env.BASE_URL}libre_app_icon.png`}
+            alt=""
             className="fishbones__topbar-brand-icon"
+            aria-hidden
           />
-          <span className="fishbones__topbar-brand-tld">.academy</span>
+          <span className="fishbones__topbar-brand-mark">
+            Libre<span className="fishbones__topbar-brand-tld">.academy</span>
+          </span>
         </a>
       ) : (
         <div className="fishbones__topbar-window-controls" data-tauri-drag-region />
