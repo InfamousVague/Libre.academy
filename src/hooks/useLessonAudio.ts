@@ -27,14 +27,14 @@ import { useEffect, useRef, useState } from "react";
 /// at build time, or fall back to the production default. Trailing
 /// slash stripped so we can append paths uniformly.
 ///
-/// Default points at fishbones.academy/audio — same Vultr VPS that
+/// Default points at libre.academy/audio — same Vultr VPS that
 /// hosts the marketing site + /learn/ web build. Audio MP3s are
 /// pushed via `scripts/upload-lesson-audio.mjs` and live alongside
 /// the academy's own /var/www tree (excluded from the academy's
 /// `rsync --delete` so site deploys can't wipe them).
 const TTS_CDN_BASE = (
   import.meta.env.VITE_FB_TTS_CDN_BASE ??
-  "https://fishbones.academy/audio"
+  "https://libre.academy/audio"
 ).replace(/\/+$/, "");
 
 const MANIFEST_URL = `${TTS_CDN_BASE}/manifest.json`;

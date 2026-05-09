@@ -11,7 +11,7 @@ interface ImportMetaEnv {
   /// the hook falls back to the production default.
   readonly VITE_FISHBONES_RELAY_URL?: string;
   /// CDN base for pre-generated lesson narration MP3s. Read by
-  /// `useLessonAudio`. Optional — defaults to `https://fishbones.academy/audio`.
+  /// `useLessonAudio`. Optional — defaults to `https://libre.academy/audio`.
   readonly VITE_FB_TTS_CDN_BASE?: string;
 }
 

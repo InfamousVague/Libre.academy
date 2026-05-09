@@ -23,7 +23,7 @@ pub struct AppState {
     /// (admin reads the URL out of journalctl).
     pub mailer: Mailer,
     /// Web URL the password-reset email links to. Built from
-    /// `WEB_BASE_URL` (defaults to `https://fishbones.academy`). The
+    /// `WEB_BASE_URL` (defaults to `https://libre.academy`). The
     /// reset link shape is `<web_base_url>/reset-password?token=…`.
     pub web_base_url: String,
 

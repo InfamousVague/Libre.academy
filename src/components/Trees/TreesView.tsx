@@ -20,7 +20,7 @@ import { TreeDetail } from "./TreeDetail";
 import TreeCard from "./TreeCard";
 import "./TreesView.css";
 
-// Re-export so the fishbones.academy marketing site (and any other
+// Re-export so the libre.academy marketing site (and any other
 // external caller importing from this path) keeps working after the
 // internal split into TreeDetail.tsx / SkillPanel.tsx / etc.
 export { TreeDetail } from "./TreeDetail";

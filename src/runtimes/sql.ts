@@ -44,7 +44,7 @@ async function getSql(): Promise<{ Database: new () => SqlDatabase }> {
   // sql.js ships its WASM as a sibling file. The loader needs a
   // `locateFile` callback so it knows where to fetch the .wasm from
   // — Vite resolves `?url` imports to a hashed asset URL at build
-  // time, which means production deploys (kata web at fishbones.academy)
+  // time, which means production deploys (kata web at libre.academy)
   // get the WASM served from `/assets/sql-wasm-<hash>.wasm` with
   // proper caching. Dev (`vite dev`) gets the file served from
   // `node_modules/.vite/deps`.

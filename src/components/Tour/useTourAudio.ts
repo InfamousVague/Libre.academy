@@ -40,7 +40,7 @@ interface TourManifest {
 /// straight into the output, so the file ends up at
 /// `<base>/tour-audio/manifest.json`. We compose the URL from
 /// Vite's `import.meta.env.BASE_URL` (which is `/` for the
-/// desktop / Tauri build, `/learn/` for the fishbones.academy
+/// desktop / Tauri build, `/learn/` for the libre.academy
 /// embed, `/fishbones/learn/` for the legacy mattssoftware embed)
 /// so the same code works under every base path. Hardcoding the
 /// root-absolute `/tour-audio/manifest.json` previously made the

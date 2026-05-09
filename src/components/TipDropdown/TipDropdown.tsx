@@ -1,6 +1,6 @@
 // Tip-jar trigger + floating deck panel for the Fishbones desktop /
 // web app. Mirrors the CryptoTipDock that lives on
-// fishbones.academy/support: trigger pill in the TopBar opens a
+// libre.academy/support: trigger pill in the TopBar opens a
 // chrome-less floating panel anchored top-right of the trigger,
 // containing a stacked deck of glass-morphism crypto cards. Wheel
 // ticks, swipe gestures, arrow keys, and clicking a peeking sliver

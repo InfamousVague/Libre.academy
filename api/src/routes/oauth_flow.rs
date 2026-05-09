@@ -142,7 +142,7 @@ pub struct StartParams {
 ///
 /// Add new origins explicitly. Don't widen this to a wildcard.
 const WEB_RETURN_ALLOWLIST: &[&str] = &[
-    "https://fishbones.academy/oauth/done",
+    "https://libre.academy/oauth/done",
 ];
 
 /// Build the deep-link return URL the desktop should be redirected
@@ -159,7 +159,7 @@ fn build_return_url(
     // Reject any return_to that isn't either:
     //   - a custom-scheme URL the desktop / iOS app handles, or
     //   - an exact-match entry from WEB_RETURN_ALLOWLIST (the
-    //     fishbones.academy `/oauth/done` page that postMessages
+    //     libre.academy `/oauth/done` page that postMessages
     //     the token back to the popup opener).
     // The browser-OAuth handoff is the only sanctioned shape, and an
     // attacker who got the user to click a malicious link with

@@ -24,7 +24,7 @@ const isWebBuild = target === "web";
 // expect to be served from. Different consumers want different
 // values:
 //   /fishbones/learn/  ← mattssoftware.com (legacy embed at that path)
-//   /learn/            ← fishbones.academy (the new product domain)
+//   /learn/            ← libre.academy (the new product domain)
 //   /                  ← any other host that mounts the app at root
 //
 // Override at build time with FISHBONES_BASE; falls back to the

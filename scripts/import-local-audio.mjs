@@ -72,7 +72,7 @@ const VOICE_NAME = process.env.ELEVEN_VOICE_NAME || "Verity";
 const MODEL_ID = process.env.ELEVEN_MODEL || "eleven_multilingual_v2";
 /// CDN base — defaults to the academy host because that's where
 /// `upload-lesson-audio.mjs` rsyncs to (`/var/www/fishbones-academy/audio`,
-/// served at `https://fishbones.academy/audio`). The MP3s live next to
+/// served at `https://libre.academy/audio`). The MP3s live next to
 /// the manifest on that one server, so URLs pointing there are correct
 /// by construction.
 ///
@@ -84,7 +84,7 @@ const MODEL_ID = process.env.ELEVEN_MODEL || "eleven_multilingual_v2";
 /// importer's job is just to wire up files that are about to be
 /// uploaded to the academy host, so it should always emit URLs there.
 /// Pass `--cdn-base <url>` if you genuinely need a different host.
-const CDN_BASE = "https://fishbones.academy/audio";
+const CDN_BASE = "https://libre.academy/audio";
 
 const args = process.argv.slice(2);
 const flag = (name) => {

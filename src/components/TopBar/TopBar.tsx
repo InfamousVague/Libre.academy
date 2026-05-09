@@ -280,7 +280,7 @@ export default function TopBar({
         >
           {/* Match the marketing-site nav: skinny fish-skeleton
               wordmark followed by the `.academy` TLD. Same asset
-              ships at fishbones.academy/fishbones_skinny_white.png
+              ships at libre.academy/fishbones_skinny_white.png
               and inside the embedded /learn/ build. */}
           <img
             src={`${import.meta.env.BASE_URL}fishbones_skinny_white.png`}

@@ -5,7 +5,7 @@ import { isWeb } from "../lib/platform";
 /// Web-build cover URL. Resolves against the page's BASE_URL so the
 /// cover loads correctly regardless of whether the app is mounted at
 /// the page root (`/`), a subpath (`/fishbones/learn/`), or the
-/// fishbones.academy `/learn/` embed. Returns null when courseId is
+/// libre.academy `/learn/` embed. Returns null when courseId is
 /// empty so the caller can skip rendering.
 ///
 /// `cacheBust` is appended as a `?v=<n>` query param so a re-seed

@@ -7,8 +7,8 @@
 #   make install      — install notarized app to /Applications
 #   make release      — bump patch, commit, tag, push (no build)
 #   make local-release — bump + build + sign + notarize + upload DMG
-#   make deploy       — local-release + push fishbones.academy (site + /learn)
-#   make deploy-site  — push fishbones.academy only (skip the DMG rebuild)
+#   make deploy       — local-release + push libre.academy (site + /learn)
+#   make deploy-site  — push libre.academy only (skip the DMG rebuild)
 #   make dev          — run in dev mode
 #   make clean        — remove build artifacts
 
@@ -233,7 +233,7 @@ update-manifest:
 	}
 
 ## Full ship: cut a GitHub release for the current version, then push
-## fishbones.academy (site copy + /learn/ embed). The download buttons on
+## libre.academy (site copy + /learn/ embed). The download buttons on
 ## the site fetch GitHub Releases at runtime, so step 1 is what
 ## "updates the download link" — step 2 just makes sure the embedded
 ## /learn/ build and any marketing copy you changed go live.
@@ -249,8 +249,8 @@ deploy: local-release deploy-site
 	@echo ""
 	@echo "✓ Fishbones v$(VERSION) shipped end-to-end."
 	@echo "  Release: https://github.com/InfamousVague/Fishbones/releases/tag/v$(VERSION)"
-	@echo "  Site:    https://fishbones.academy/"
-	@echo "  Learn:   https://fishbones.academy/learn/"
+	@echo "  Site:    https://libre.academy/"
+	@echo "  Learn:   https://libre.academy/learn/"
 
 ## Site-only deploy: rebuild Fishbones for /learn/, build the academy
 ## site, rsync to VPS. Use after editing marketing copy or when the
@@ -266,7 +266,7 @@ deploy: local-release deploy-site
 ## blocks-free bundled .fishbones packs. Without that chain, every
 ## site deploy would silently ship a /learn/ build without blocks.
 deploy-site:
-	@echo "=== Deploying fishbones.academy (site + /learn/ embed) ==="
+	@echo "=== Deploying libre.academy (site + /learn/ embed) ==="
 	@if [ ! -d "$(ACADEMY_ROOT)" ]; then \
 		echo "ERROR: academy site not found at $(ACADEMY_ROOT)"; \
 		echo "       Set ACADEMY_ROOT=/path/to/fishbones-academy and re-run,"; \
@@ -283,7 +283,7 @@ deploy-site:
 # --- Audio + content deploy -----------------------------------------------
 # Audio MP3s and the manifest live on the academy VPS at
 # `/var/www/fishbones-academy/audio/`, served at
-# https://fishbones.academy/audio/. They're independent of the academy
+# https://libre.academy/audio/. They're independent of the academy
 # site's webroot — `--exclude=audio/` in the academy's deploy rsync
 # means a `make deploy-site` won't touch them — so audio gets its own
 # pipeline.
@@ -315,7 +315,7 @@ audio-upload:
 ## Audio sync end-to-end: import + upload.
 audio-deploy: audio-import audio-upload
 	@echo ""
-	@echo "✓ Audio synced — verify: curl -I https://fishbones.academy/audio/manifest.json"
+	@echo "✓ Audio synced — verify: curl -I https://libre.academy/audio/manifest.json"
 
 ## Generate ElevenLabs MP3s for the guided-tour steps.
 ## Reads `src/components/Tour/tourSteps.json`, synthesises one MP3
@@ -336,7 +336,7 @@ tour-audio:
 ## on a content-only push).
 deploy-content: audio-deploy deploy-site
 	@echo ""
-	@echo "✓ Content deployed — audio + academy site live at https://fishbones.academy/"
+	@echo "✓ Content deployed — audio + academy site live at https://libre.academy/"
 
 ## Remove build artifacts
 clean:
@@ -378,7 +378,7 @@ run-clean:
 # `tauri ios build` always rebuilds the web bundle via the
 # `beforeBuildCommand` in tauri.conf.json, so dist/ is fresh on each
 # invocation — no manual `npm run build` step needed first.
-## Mobile ship: redeploy fishbones.academy AND install a fresh release-mode
+## Mobile ship: redeploy libre.academy AND install a fresh release-mode
 ## build on the connected iPhone in one command. Use after a code change
 ## that affects BOTH the iPad/web path (which loads from the deployed
 ## site) AND the native iOS app — so a single invocation lands the new
@@ -392,8 +392,8 @@ run-clean:
 ship-phone: deploy-site release-phone
 	@echo ""
 	@echo "✓ Mobile shipped end-to-end."
-	@echo "  Site:    https://fishbones.academy/"
-	@echo "  Embed:   https://fishbones.academy/learn/"
+	@echo "  Site:    https://libre.academy/"
+	@echo "  Embed:   https://libre.academy/learn/"
 	@echo "  Phone:   release-mode v$(VERSION) installed on the cached iPhone"
 
 release-phone:
@@ -552,7 +552,7 @@ help:
 	@echo "  make release      — bump patch ($(VERSION) → next), tag, push (no build)"
 	@echo "  make local-release — full local build + sign + notarize + upload to GitHub"
 	@echo ""
-	@echo "Web deploy targets (fishbones.academy):"
+	@echo "Web deploy targets (libre.academy):"
 	@echo "  make deploy         — local-release + rsync site + /learn/ to VPS"
 	@echo "  make deploy-site    — site + /learn/ (course JSONs + blocks); no DMG"
 	@echo "  make deploy-content — audio + site in one shot (no DMG)"

@@ -70,7 +70,7 @@ const VOICE_NAME = process.env.ELEVEN_VOICE_NAME || "Jessa";
 let MODEL_ID = process.env.ELEVEN_MODEL || "eleven_multilingual_v2";
 const CDN_BASE = process.env.FB_TTS_CDN_BASE
   ? process.env.FB_TTS_CDN_BASE.replace(/\/+$/, "")
-  : "https://fishbones.academy/audio"; // Vultr VPS — same machine that hosts the marketing site + /learn/ web build.
+  : "https://libre.academy/audio"; // Vultr VPS — same machine that hosts the marketing site + /learn/ web build.
 
 // ── arg parsing ─────────────────────────────────────────────────
 const args = process.argv.slice(2);

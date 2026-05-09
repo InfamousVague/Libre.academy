@@ -125,7 +125,7 @@ PUBLIC_URL=${PUBLIC_URL:-}
 DATABASE_PATH=/var/lib/fishbones-api/api.sqlite
 HOST=127.0.0.1
 PORT=${API_PORT:-9443}
-WEB_BASE_URL=${WEB_BASE_URL:-https://fishbones.academy}
+WEB_BASE_URL=${WEB_BASE_URL:-https://libre.academy}
 
 APPLE_CLIENT_ID=${APPLE_CLIENT_ID:-}
 APPLE_TEAM_ID=${APPLE_TEAM_ID:-}
@@ -146,7 +146,7 @@ GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
 #   SMTP_HOST=localhost
 #   SMTP_PORT=25
 #   SMTP_STARTTLS=false
-#   SMTP_FROM=noreply@fishbones.academy
+#   SMTP_FROM=noreply@libre.academy
 #   SMTP_FROM_NAME=Fishbones
 # SMTP (external relay like Mailgun / SES):
 #   SMTP_HOST=smtp.mailgun.org SMTP_PORT=587 SMTP_STARTTLS=true
@@ -205,7 +205,7 @@ $SSH "command -v caddy >/dev/null 2>&1 || {
 # not just the API. Caddy is a single-process router; any host omitted
 # here goes dark on the next reload. The earlier version of this
 # script wrote only the Tap + API blocks and clobbered the
-# fishbones.academy + mattssoftware.com sites every time we deployed
+# libre.academy + mattssoftware.com sites every time we deployed
 # the relay — TLS handshake failures, "server unexpectedly dropped
 # the connection" in browsers, etc. Adding all four hosts up front so
 # every deploy keeps the whole VPS reachable.
@@ -245,7 +245,7 @@ mattssoftware.com, www.mattssoftware.com {
 
 # Fishbones marketing + /learn embed. SPA fallback so client-side
 # routes serve index.html and the React Router handles them.
-fishbones.academy, www.fishbones.academy {
+libre.academy, www.libre.academy {
     root * /var/www/fishbones-academy
     try_files {path} {path}/ /index.html
     file_server
@@ -255,7 +255,7 @@ fishbones.academy, www.fishbones.academy {
     # fetch the lesson-narration manifest + MP3 files cross-origin
     # (the WebView's effective origin is \`tauri://localhost\` on
     # iOS/Mac and \`http://tauri.localhost\` on Windows, neither of
-    # which is fishbones.academy). Without CORS the manifest fetch
+    # which is libre.academy). Without CORS the manifest fetch
     # fails preflight, useLessonAudio gets null, and the speaker
     # icon never appears in the app.
     #

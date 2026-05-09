@@ -269,7 +269,7 @@ export default function App() {
               );
             }
           } else if (host === "open") {
-            // "Open in Fishbones" handoff from fishbones.academy. The
+            // "Open in Fishbones" handoff from libre.academy. The
             // courseId is required; lessonId is optional (we fall
             // through to the course's first lesson if it's missing or
             // doesn't match anything in the course). We only stash a
@@ -872,7 +872,7 @@ export default function App() {
   // Pending-open: a request to land on a specific course+lesson at boot,
   // sourced from either:
   //   - the web build's URL params (`?courseId=…&lessonId=…`) — set when
-  //     fishbones.academy hands the learner over via "Start in browser"
+  //     libre.academy hands the learner over via "Start in browser"
   //     or "Open in Fishbones".
   //   - a desktop `fishbones://open?courseId=…&lessonId=…` deep link,
   //     handled by the listener above (which calls setPendingOpen).

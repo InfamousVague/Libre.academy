@@ -25,8 +25,8 @@
 # are overwritten with the same content, the DKIM key is preserved).
 #
 # Required env (read from ./.env if present; override on command line):
-#   MAIL_DOMAIN=fishbones.academy   — the bare domain you send `From:`
-#   MAIL_HOSTNAME=mail.fishbones.academy
+#   MAIL_DOMAIN=libre.academy   — the bare domain you send `From:`
+#   MAIL_HOSTNAME=mail.libre.academy
 #                                   — the FQDN announced by Postfix in
 #                                     EHLO. Set Vultr's reverse DNS
 #                                     for this VPS to this value too,
@@ -60,7 +60,7 @@ export SSHPASS="$VPS_PASSWORD"
 SSH="sshpass -e ssh -o StrictHostKeyChecking=accept-new -p $VPS_PORT $VPS_USER@$VPS_HOST"
 
 # Mail-specific config — sane defaults that the user can override.
-MAIL_DOMAIN="${MAIL_DOMAIN:-fishbones.academy}"
+MAIL_DOMAIN="${MAIL_DOMAIN:-libre.academy}"
 MAIL_HOSTNAME="${MAIL_HOSTNAME:-mail.${MAIL_DOMAIN}}"
 MAIL_DKIM_SELECTOR="${MAIL_DKIM_SELECTOR:-mail}"
 

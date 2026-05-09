@@ -117,7 +117,7 @@ async fn main() -> anyhow::Result<()> {
     // Where the password-reset email's link points. Defaults to the
     // public marketing site since that's where /reset-password lives.
     let web_base_url = read_env("WEB_BASE_URL")
-        .unwrap_or_else(|| "https://fishbones.academy".to_string());
+        .unwrap_or_else(|| "https://libre.academy".to_string());
 
     let oauth_flow_ready = public_url.is_some()
         && (google_client_secret.is_some() || apple_private_key_pem.is_some());

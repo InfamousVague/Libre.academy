@@ -17,7 +17,7 @@ import { ICON_REGISTRY } from "./iconRegistry";
 import { layoutWeb, NODE_RADIUS } from "./layout";
 import SkillPanel from "./SkillPanel";
 
-/// Exported so the fishbones.academy marketing site can mount the
+/// Exported so the libre.academy marketing site can mount the
 /// real tree visualiser on its homepage with mock courses /
 /// completion data. Internal navigation (TreesView shelf <-> detail)
 /// still uses this directly; nothing here knows it's being

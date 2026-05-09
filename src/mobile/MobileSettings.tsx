@@ -5,7 +5,7 @@
 ///
 /// Sections:
 ///   - Account     — sign-in CTA when signed out, profile + sign-out when signed in
-///   - About       — version, link to fishbones.academy
+///   - About       — version, link to libre.academy
 ///   - Reset       — wipe local progress (with click-to-confirm)
 ///
 /// Triggered from the bottom-tab bar's "Settings" button.
@@ -198,11 +198,11 @@ export default function MobileSettings({
         </div>
         <a
           className="m-set__row m-set__row--link"
-          href="https://fishbones.academy"
+          href="https://libre.academy"
           target="_blank"
           rel="noopener noreferrer"
         >
-          <span className="m-set__row-title">fishbones.academy</span>
+          <span className="m-set__row-title">libre.academy</span>
           <span className="m-set__row-chevron" aria-hidden>
             ↗
           </span>

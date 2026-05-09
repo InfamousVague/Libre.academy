@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /// Upload `dist/audio/` to the Fishbones Vultr VPS so the MP3s live
-/// at `https://fishbones.academy/audio/<courseId>/<lessonId>.<sha>.mp3`.
+/// at `https://libre.academy/audio/<courseId>/<lessonId>.<sha>.mp3`.
 ///
 /// Mirrors the academy site's deploy pattern (sshpass + rsync) so
 /// auth flows through the same `api/.env`'s `VPS_PASSWORD`. The
@@ -170,6 +170,6 @@ if (courseFilter) {
 
 if (!DRY_RUN) {
   console.error(
-    `[upload-audio] verify: curl -I https://fishbones.academy/audio/manifest.json`,
+    `[upload-audio] verify: curl -I https://libre.academy/audio/manifest.json`,
   );
 }

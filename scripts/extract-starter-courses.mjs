@@ -523,7 +523,7 @@ async function main() {
       }
 
       // Normalise the editorial tier into the manifest so the
-      // marketing site (fishbones.academy) can group cards by tier
+      // marketing site (libre.academy) can group cards by tier
       // without having to fetch each course's full JSON. Legacy
       // `PRE-RELEASE` collapses to `UNREVIEWED` to match the renamed
       // pipeline. Anything missing or unrecognised falls back to
