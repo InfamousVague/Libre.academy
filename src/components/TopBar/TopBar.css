@@ -45,63 +45,53 @@
   height: 100%;
 }
 
-/* Web-build replacement for the traffic-light gutter — Fishbones
-   logo + wordmark, anchored at the same left position the lights
-   would sit at on desktop. Clickable; navigates back to the
-   marketing site one path-segment above the embed. */
+/* Brand wordmark sitting in the top-left of the bar. Sole content
+   is the wide `libre_wide.png` — the standalone "Libre" ribbon-
+   snake wordmark, no separate text. Click routes to the in-app
+   Library view via `onOpenLibrary` (parent App.tsx wires this);
+   no external link to the marketing site any more. The `<button>`
+   reset below kills the default browser button chrome so the
+   lockup reads as a clean image. */
 .fishbones__topbar-brand {
   display: inline-flex;
-  /* Bottom-align the icon + wordmark so the ".academy" descender
-     line sits at the icon's bottom edge — matches the academy
-     site's nav lockup. */
-  align-items: flex-end;
-  gap: 8px;
+  align-items: center;
   flex-shrink: 0;
   height: 100%;
   padding: 0 16px;
-  text-decoration: none;
+  background: transparent;
+  border: 0;
+  border-radius: var(--fb-radius-sm);
+  cursor: pointer;
   color: var(--color-text-primary, #fafafa);
-  font-weight: 700;
-  font-size: 14px;
-  letter-spacing: -0.1px;
+  text-decoration: none;
   transition: opacity var(--fb-motion-snappy);
+  -webkit-tap-highlight-color: transparent;
 }
 .fishbones__topbar-brand:hover {
   opacity: 0.78;
 }
+.fishbones__topbar-brand:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: -4px;
+}
+/* Non-interactive variant — used when the parent doesn't wire
+   `onOpenLibrary`. Disables the hover dim + cursor so the
+   wordmark reads as a static logo rather than a dead button. */
+.fishbones__topbar-brand--static {
+  cursor: default;
+}
+.fishbones__topbar-brand--static:hover {
+  opacity: 1;
+}
 .fishbones__topbar-brand-icon {
-  /* Squircle Libre app icon — sits to the left of the text wordmark.
-     Mirrors the academy site's `.nav__brand-icon`; both fixed at
-     a square aspect so non-square fallbacks don't stretch the row. */
-  height: 22px;
-  width: 22px;
+  /* Wide ribbon-snake "Libre" wordmark — height pinned, width
+     auto-flows to preserve the natural ~2.4:1 aspect ratio. */
+  height: 24px;
+  width: auto;
   display: block;
   flex-shrink: 0;
-  /* Pull the icon down so its bottom edge sits flush with the
-     wordmark's descender baseline. The TopBar uses center
-     vertical alignment elsewhere; this padding-bottom counters
-     the row's vertical centering enough that the icon visually
-     bottom-aligns without changing the row height. */
-  margin-bottom: 4px;
-}
-.fishbones__topbar-brand-mark {
-  /* Inline lockup so "Libre" + ".academy" share a baseline and read
-     as one brand block. Baseline-aligned within the wordmark; the
-     parent's flex-end takes care of bottom-aligning the icon. */
-  display: inline-flex;
-  align-items: baseline;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  line-height: 1;
-}
-.fishbones__topbar-brand-tld {
-  /* Warm-orange brand accent on the TLD — replaces the prior
-     monochrome gradient so the desktop TopBar carries the same
-     brand warmth the academy site nav now does. */
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: #e8954a;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .fishbones__topbar-tabs {

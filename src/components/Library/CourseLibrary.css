@@ -70,24 +70,57 @@
    Padded generously top + bottom so it has room to breathe; the
    header below provides its own border so we leave the wordmark
    without one and let the spacing do the separating. */
-.fishbones-library-brand {
-  display: flex;
-  justify-content: center;
-  padding: 22px 22px 14px;
+/* Library hero card — wide rounded surface holding the LibreHeader
+   artwork. The card itself supplies the chrome (border, shadow,
+   gradient base) so the cream-backed PNG doesn't sit as a hard
+   rectangle on the dark library background. The artwork fills the
+   card edge-to-edge; the card aspect-ratio matches the source PNG
+   so we don't crop or letterbox. */
+.fishbones-library-hero {
+  margin: 18px 22px 14px;
   flex-shrink: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  position: relative;
+  /* Brand cream → warm-orange gradient base. Sits BEHIND the PNG
+     and shows at the feathered mask edges, so the card reads as
+     one continuous brand surface. */
+  background:
+    radial-gradient(120% 90% at 70% 20%, rgba(255, 191, 130, 0.5), transparent 60%),
+    linear-gradient(160deg, #fef3e8 0%, #fcdcc1 55%, #f6b89a 100%);
+  /* Tasteful contact shadow + warm halo so the card has presence
+     against the dark library bg without screaming. */
+  box-shadow:
+    0 18px 40px -12px rgba(243, 114, 57, 0.28),
+    0 4px 12px rgba(0, 0, 0, 0.32),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+  /* Cap the height on wide windows so the hero doesn't dominate
+     the library view — the artwork is ~2.4:1 so a height cap
+     translates to a comfortable banner. */
+  max-height: 240px;
 }
-.fishbones-library-brand-img {
-  /* Cap the wordmark's display height so it scales gracefully on
-     narrow windows; the source PNG is ~600×140 so this preserves
-     aspect at a comfortable hero size. Filter pulls the white-on-
-     transparent asset toward the warm-orange accent so it ties
-     into the brand-warmth the rest of the page now carries. */
-  height: 64px;
-  width: auto;
-  max-width: 80%;
+.fishbones-library-hero-img {
   display: block;
+  width: 100%;
+  height: 100%;
+  /* `cover` keeps the image filling the card edge-to-edge at any
+     window width; the artwork's central composition keeps the
+     wordmark visible across crops. `object-position: center` is
+     the default; left intentional. */
+  object-fit: cover;
+  object-position: center;
   user-select: none;
   -webkit-user-drag: none;
+}
+
+/* Tighter hero on narrow library widths — the cap goes lower so
+   the catalogue grid below stays the page's main attraction. */
+@media (max-width: 720px) {
+  .fishbones-library-hero {
+    margin: 12px 14px 10px;
+    max-height: 160px;
+    border-radius: 10px;
+  }
 }
 
 /* "Update all" banner. Floats absolutely over the library so it

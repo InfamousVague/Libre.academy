@@ -131,6 +131,11 @@ interface Props {
   /// selectLesson + sidebar tap-throughs; the search dropdown calls
   /// this when the user picks a lesson result.
   onOpenLesson?: (courseId: string, lessonId: string) => void;
+  /// Click target for the brand wordmark in the top-left of the bar.
+  /// Routes the main pane to the Library view (parent App.tsx wires
+  /// this to `setView("library")`). Optional — when omitted, the
+  /// wordmark renders as a non-interactive logo with no hover state.
+  onOpenLibrary?: () => void;
 }
 
 /// Custom window top bar. The window is configured with
@@ -162,6 +167,7 @@ export default function TopBar({
   onOpenSearch,
   courses,
   onOpenLesson,
+  onOpenLibrary,
 }: Props) {
   // Always show the chip when stats are wired — the dropdown carries
   // both the level/streak detail and the cloud-sync sign-in path, so
@@ -271,60 +277,43 @@ export default function TopBar({
           there are no traffic lights, so we use the same width
           for a brand element — Fishbones logo + wordmark — that
           links back to the marketing site one path-segment up. */}
-      {isWeb ? (
-        <a
-          href="../"
+      {/* macOS traffic-light spacer — the OS draws close / minimise
+          / maximise buttons in this region on Tauri; we leave it
+          empty so they don't collide with our chrome. The web
+          build has no traffic lights, so this gutter is just a
+          left-edge spacer keeping the brand wordmark from sitting
+          flush against the window edge. */}
+      {!isWeb && (
+        <div className="fishbones__topbar-window-controls" data-tauri-drag-region />
+      )}
+      {/* Brand wordmark — `libre_wide.png` (the wide ribbon-snake
+          wordmark, no separate text). Click routes to the local
+          Library view via `onOpenLibrary` rather than navigating
+          to the external marketing site, so the lockup behaves as
+          an in-app home button. Renders as a `<button>` when the
+          handler is wired, a non-interactive `<div>` otherwise. */}
+      {onOpenLibrary ? (
+        <button
+          type="button"
           className="fishbones__topbar-brand"
-          aria-label="Libre home"
+          aria-label="Open Library"
+          onClick={onOpenLibrary}
           data-tauri-drag-region={false}
         >
-          {/* Mirrors the academy nav lockup: squircle Libre app
-              icon + text wordmark "Libre.academy". The icon
-              carries the visual brand, the text reads the name —
-              cleaner + sharper at retina densities than embedding
-              the wide PNG. Same asset ships at
-              libre.academy/libre_app_icon.png and inside the
-              embedded /learn/ build. */}
           <img
-            src={`${import.meta.env.BASE_URL}libre_app_icon.png`}
-            alt=""
+            src={`${import.meta.env.BASE_URL}libre_wide.png`}
+            alt="Libre"
             className="fishbones__topbar-brand-icon"
-            aria-hidden
           />
-          <span className="fishbones__topbar-brand-mark">
-            Libre<span className="fishbones__topbar-brand-tld">.academy</span>
-          </span>
-        </a>
+        </button>
       ) : (
-        <>
-          {/* macOS traffic-light spacer — the OS draws close /
-              minimise / maximise buttons in this region; we leave
-              it empty so they don't collide with our chrome. */}
-          <div className="fishbones__topbar-window-controls" data-tauri-drag-region />
-          {/* Desktop Tauri brand lockup — same icon + wordmark the
-              web build (above) uses, so the desktop's TopBar carries
-              the Libre.academy brand right of the traffic-light area
-              and immediately before the tabs strip. Renders as a
-              link to the marketing site (libre.academy) — `target`
-              is intentionally omitted so the deep-link plugin can
-              intercept and open in the system browser. */}
-          <a
-            href="https://libre.academy/"
-            className="fishbones__topbar-brand"
-            aria-label="Libre Academy home"
-            data-tauri-drag-region={false}
-          >
-            <img
-              src={`${import.meta.env.BASE_URL}libre_app_icon.png`}
-              alt=""
-              className="fishbones__topbar-brand-icon"
-              aria-hidden
-            />
-            <span className="fishbones__topbar-brand-mark">
-              Libre<span className="fishbones__topbar-brand-tld">.academy</span>
-            </span>
-          </a>
-        </>
+        <div className="fishbones__topbar-brand fishbones__topbar-brand--static">
+          <img
+            src={`${import.meta.env.BASE_URL}libre_wide.png`}
+            alt="Libre"
+            className="fishbones__topbar-brand-icon"
+          />
+        </div>
       )}
 
       {onToggleSidebar && (

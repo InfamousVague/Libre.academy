@@ -539,19 +539,19 @@ export default function CourseLibrary({
       className={`fishbones-library-panel ${isInline ? "fishbones-library-panel--inline" : ""}`}
       onClick={(e) => e.stopPropagation()}
     >
-        {/* Brand wordmark anchoring the page top — uses the wide
-            text-version asset (libre_wide.png) rather than just the
-            squircle icon, so the Library / Discover view carries
-            the full Libre Academy lockup as its hero element.
-            Renders only when scope is "library" since Discover
-            views typically appear inside a modal where the
-            wordmark would compete with the modal's chrome. */}
+        {/* Library hero card — wide LibreHeader artwork sits inside
+            a rounded surface card at the top of the library, so the
+            page opens with the brand statement before the catalogue
+            grid. Renders only when scope is "library" since Discover
+            views typically appear inside a modal where a hero would
+            compete with the modal chrome. */}
         {scope === "library" && (
-          <div className="fishbones-library-brand" aria-hidden>
+          <div className="fishbones-library-hero" aria-hidden>
             <img
-              src={`${import.meta.env.BASE_URL}libre_wide.png`}
-              alt="Libre Academy"
-              className="fishbones-library-brand-img"
+              src={`${import.meta.env.BASE_URL}libre_header.png`}
+              alt=""
+              className="fishbones-library-hero-img"
+              draggable={false}
             />
           </div>
         )}
