@@ -35,6 +35,34 @@ fi
 
 echo "=== Signing with: $IDENTITY ==="
 
+# Sign every nested Mach-O binary under Contents/Resources FIRST.
+# Apple notarization fails the entire bundle if any inner executable
+# is unsigned / missing hardened runtime / missing a secure timestamp,
+# so we can't rely on the outer `.app` sign alone. Notable inner
+# binaries that need this:
+#   - Contents/Resources/resources/solana/bin/* (Solana CLI tools
+#     fetched by scripts/fetch-solana-cli.mjs and dropped into
+#     bundleResources by tauri.conf.json's resources field)
+#   - Contents/Resources/resources/node/bin/node (the bundled Node
+#     used by the AI ingest pipeline; same fetch pattern)
+#   - Any future third-party binary added to bundleResources
+#
+# `file` filters to actual Mach-O executables — text scripts, JSON,
+# certs etc. live in the same directory tree but don't need signing.
+# `--options runtime --timestamp` enable hardened runtime + Apple's
+# secure timestamp service; both are notarization requirements.
+echo "=== Signing nested Mach-O binaries ==="
+NESTED_COUNT=0
+while IFS= read -r BIN; do
+    if file "$BIN" 2>/dev/null | grep -q "Mach-O"; then
+        codesign --force --options runtime --timestamp \
+            --sign "$IDENTITY" \
+            "$BIN" >/dev/null 2>&1 || echo "  WARN: failed to sign $BIN"
+        NESTED_COUNT=$((NESTED_COUNT + 1))
+    fi
+done < <(find "$APP_BUNDLE/Contents/Resources" -type f 2>/dev/null)
+echo "Signed: $NESTED_COUNT nested Mach-O binaries"
+
 # Sign the main binary with hardened runtime + entitlements. The binary
 # name matches the `[package] name` in Cargo.toml — `fishbones`.
 codesign --force --options runtime --timestamp \
@@ -43,7 +71,9 @@ codesign --force --options runtime --timestamp \
     "$APP_BUNDLE/Contents/MacOS/fishbones"
 echo "Signed: main binary"
 
-# Sign the entire .app bundle (outermost, must be last)
+# Sign the entire .app bundle (outermost, must be last). Inner Mach-O
+# binaries were signed above so the outer signature's Code Directory
+# hashes them all and notarization sees a fully-signed bundle.
 codesign --force --options runtime --timestamp \
     --sign "$IDENTITY" \
     --entitlements "$TAURI_DIR/Entitlements.plist" \
