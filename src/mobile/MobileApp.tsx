@@ -123,11 +123,18 @@ export default function MobileApp() {
   /// first-launch experience isn't an empty shell. Once signed in
   /// AND we have any signal, the strict regime takes over.
   const courses = useMemo(() => {
-    if (!cloud.signedIn) return coursesAll;
+    // Drop hidden courses up-front — these are installable via direct
+    // URL / import but never surface in the Library tree (matches the
+    // desktop App.tsx filter). Currently used for the HelloTrade
+    // partner-preview pack; mirrors the catalog filter in
+    // `lib/catalog.ts` so a deep-linked install doesn't leak it back
+    // into the public shelf via the seed → IndexedDB path.
+    const visibleAll = coursesAll.filter((c) => !c.hidden);
+    if (!cloud.signedIn) return visibleAll;
     // Markers are authoritative — when present they REPLACE every
     // other signal, since they encode desktop's full list.
     if (syncedLibraryIds && syncedLibraryIds.size > 0) {
-      return coursesAll.filter((c) => syncedLibraryIds.has(c.id));
+      return visibleAll.filter((c) => syncedLibraryIds.has(c.id));
     }
     // Backstop: settings allowlist OR completion-derived ids.
     const touchedCourseIds = new Set<string>();
@@ -139,10 +146,11 @@ export default function MobileApp() {
     const haveCompletions = touchedCourseIds.size > 0;
     if (!haveAllowlist && !haveCompletions) {
       // No signal at all — fresh sign-in, sync hasn't landed.
-      // Show the seed so the user has something while we wait.
-      return coursesAll;
+      // Show the seed (still hidden-filtered) so the user has
+      // something while we wait.
+      return visibleAll;
     }
-    return coursesAll.filter(
+    return visibleAll.filter(
       (c) =>
         (libraryAllowlist?.has(c.id) ?? false) ||
         touchedCourseIds.has(c.id),

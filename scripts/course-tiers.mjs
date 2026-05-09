@@ -176,6 +176,31 @@ export function tierFor(packId) {
   return CORE_PACK_IDS.includes(packId) ? "core" : "remote";
 }
 
+/// Pack ids that should be installed-able but NOT browsable. Each id
+/// here gets `hidden: true` stamped onto its catalog manifest entry,
+/// which kicks in three filters downstream:
+///
+///   1. `lib/catalog.ts` drops hidden entries from `fetchCatalog()`,
+///      so the Discover grid never lists them.
+///   2. The desktop App + mobile App filter `coursesAll.filter(c =>
+///      !c.hidden)` so the Library tree doesn't show them either.
+///   3. `data/webSeedCourses.ts` still seeds hidden entries into the
+///      browser's IndexedDB, but stamps the `hidden: true` flag
+///      onto the saved record so the library filter above kicks in
+///      from the first paint.
+///
+/// Net effect: a hidden course is fully installed + ready, but only
+/// reachable via a direct lesson URL (`?course=<id>&lesson=<id>`) or
+/// a manual `.fishbones` import. Useful for partner / preview content
+/// we want the URL of without exposing in the public shelf.
+export const HIDDEN_PACK_IDS = new Set([
+  "hellotrade",
+]);
+
+export function isHiddenPack(packId) {
+  return HIDDEN_PACK_IDS.has(packId);
+}
+
 /// Default base URL where the remote `.fishbones` archives are
 /// hosted. The catalog includes per-course archive URLs derived from
 /// this — change here OR set FISHBONES_CATALOG_BASE_URL at build time

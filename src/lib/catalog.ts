@@ -243,6 +243,18 @@ interface BundledCatalogEntryFromRust {
   local_path: string;
 }
 
+/// Desktop-side mirror of `HIDDEN_PACK_IDS` from
+/// `scripts/course-tiers.mjs`. The web build reads `hidden: true` off
+/// the manifest entries (because extract-starter-courses.mjs stamps
+/// it from course-tiers.mjs at manifest-write time), but the desktop
+/// catalog comes from the Rust `list_bundled_catalog_entries` IPC,
+/// which currently doesn't surface the flag. Mirroring the set here
+/// is the smallest fix — adding a `hidden` field to the Rust struct
+/// + bumping the IPC schema would be cleaner long-term, but for the
+/// one-or-two-id scale this set lives at, parallel ownership in TS
+/// is fine. Keep in lockstep with course-tiers.mjs.
+const HIDDEN_DESKTOP_PACK_IDS: ReadonlySet<string> = new Set(["hellotrade"]);
+
 async function fetchDesktopCatalog(): Promise<CatalogEntry[]> {
   try {
     const { invoke } = await import("@tauri-apps/api/core");
@@ -267,6 +279,11 @@ async function fetchDesktopCatalog(): Promise<CatalogEntry[]> {
       tier: "core",
       packType: (r.pack_type as "course" | "challenges" | undefined) ?? "course",
       lessonCount: r.lesson_count,
+      // Stamp `hidden: true` on entries the bundle ships but we don't
+      // want surfaced in Discover. The catalog's `.filter(e => !e.hidden)`
+      // step (in fetchCatalog above) drops them; install via direct
+      // lesson URL or `.fishbones` import still works.
+      ...(HIDDEN_DESKTOP_PACK_IDS.has(r.id) ? { hidden: true } : {}),
     }));
   } catch (e) {
     console.warn(

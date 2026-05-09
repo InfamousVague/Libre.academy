@@ -27,6 +27,7 @@ import {
   ALL_PACK_IDS,
   tierFor,
   releaseStatusFor,
+  isHiddenPack,
   REMOTE_ARCHIVE_BASE,
 } from "./course-tiers.mjs";
 
@@ -581,6 +582,13 @@ async function main() {
         // The single source of truth lives in
         // `scripts/course-tiers.mjs`.
         tier: tierFor(id),
+        // Hidden packs (see HIDDEN_PACK_IDS in course-tiers.mjs) are
+        // installable + reachable via a direct lesson URL but never
+        // listed in the Library or Discover grids. Used for partner /
+        // preview content we want shippable but not surfaced. Field
+        // is OMITTED for non-hidden packs so the manifest stays
+        // compact and only carries the flag where it matters.
+        ...(isHiddenPack(id) ? { hidden: true } : {}),
         lessonCount,
       });
       console.log(
