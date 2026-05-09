@@ -214,6 +214,19 @@ export default function MobileLibrary({
       }}
     >
       <PullToRefresh pullDistance={pullDistance} isRefreshing={isRefreshing} />
+      {/* Brand wordmark sitting at the top of the Library page —
+          uses the wide text-version asset (libre_wide.png) rather
+          than just the squircle icon, so the mobile Library
+          carries the full Libre Academy lockup as its hero band.
+          The "Library" title row below stays as the section
+          marker; the wordmark is the brand anchor above it. */}
+      <div className="m-lib__brand" aria-hidden>
+        <img
+          src={`${import.meta.env.BASE_URL}libre_wide.png`}
+          alt="Libre Academy"
+          className="m-lib__brand-img"
+        />
+      </div>
       <header className="m-lib__head">
         <div className="m-lib__head-text">
           <h1 className="m-lib__title">Library</h1>

@@ -51,7 +51,10 @@
    marketing site one path-segment above the embed. */
 .fishbones__topbar-brand {
   display: inline-flex;
-  align-items: center;
+  /* Bottom-align the icon + wordmark so the ".academy" descender
+     line sits at the icon's bottom edge — matches the academy
+     site's nav lockup. */
+  align-items: flex-end;
   gap: 8px;
   flex-shrink: 0;
   height: 100%;
@@ -74,25 +77,31 @@
   width: 22px;
   display: block;
   flex-shrink: 0;
+  /* Pull the icon down so its bottom edge sits flush with the
+     wordmark's descender baseline. The TopBar uses center
+     vertical alignment elsewhere; this padding-bottom counters
+     the row's vertical centering enough that the icon visually
+     bottom-aligns without changing the row height. */
+  margin-bottom: 4px;
 }
 .fishbones__topbar-brand-mark {
   /* Inline lockup so "Libre" + ".academy" share a baseline and read
-     as one brand block. Bottom-aligned so the descenders line up. */
+     as one brand block. Baseline-aligned within the wordmark; the
+     parent's flex-end takes care of bottom-aligning the icon. */
   display: inline-flex;
   align-items: baseline;
   font-weight: 700;
   letter-spacing: -0.01em;
+  line-height: 1;
 }
 .fishbones__topbar-brand-tld {
-  /* Subtle gradient on the TLD half so the wordmark reads as a
-     deliberate brand element, not a debug label. */
+  /* Warm-orange brand accent on the TLD — replaces the prior
+     monochrome gradient so the desktop TopBar carries the same
+     brand warmth the academy site nav now does. */
   font-size: 15px;
   font-weight: 700;
   letter-spacing: -0.01em;
-  background: linear-gradient(135deg, #fafafa 0%, #c7c7d0 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #e8954a;
 }
 
 .fishbones__topbar-tabs {

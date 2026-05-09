@@ -64,6 +64,32 @@
   flex-shrink: 0;
 }
 
+/* Brand wordmark sitting at the top of the Library page — the wide
+   "Libre.academy" text-version asset rather than the squircle icon.
+   Centered so it reads as a hero band above the per-page title row.
+   Padded generously top + bottom so it has room to breathe; the
+   header below provides its own border so we leave the wordmark
+   without one and let the spacing do the separating. */
+.fishbones-library-brand {
+  display: flex;
+  justify-content: center;
+  padding: 22px 22px 14px;
+  flex-shrink: 0;
+}
+.fishbones-library-brand-img {
+  /* Cap the wordmark's display height so it scales gracefully on
+     narrow windows; the source PNG is ~600×140 so this preserves
+     aspect at a comfortable hero size. Filter pulls the white-on-
+     transparent asset toward the warm-orange accent so it ties
+     into the brand-warmth the rest of the page now carries. */
+  height: 64px;
+  width: auto;
+  max-width: 80%;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
 /* "Update all" banner. Floats absolutely over the library so it
    doesn't push the grid down — the user wants the panel-style
    backdrop gone and the callout to sit on top of whatever's

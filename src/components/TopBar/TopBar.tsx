@@ -296,7 +296,35 @@ export default function TopBar({
           </span>
         </a>
       ) : (
-        <div className="fishbones__topbar-window-controls" data-tauri-drag-region />
+        <>
+          {/* macOS traffic-light spacer — the OS draws close /
+              minimise / maximise buttons in this region; we leave
+              it empty so they don't collide with our chrome. */}
+          <div className="fishbones__topbar-window-controls" data-tauri-drag-region />
+          {/* Desktop Tauri brand lockup — same icon + wordmark the
+              web build (above) uses, so the desktop's TopBar carries
+              the Libre.academy brand right of the traffic-light area
+              and immediately before the tabs strip. Renders as a
+              link to the marketing site (libre.academy) — `target`
+              is intentionally omitted so the deep-link plugin can
+              intercept and open in the system browser. */}
+          <a
+            href="https://libre.academy/"
+            className="fishbones__topbar-brand"
+            aria-label="Libre Academy home"
+            data-tauri-drag-region={false}
+          >
+            <img
+              src={`${import.meta.env.BASE_URL}libre_app_icon.png`}
+              alt=""
+              className="fishbones__topbar-brand-icon"
+              aria-hidden
+            />
+            <span className="fishbones__topbar-brand-mark">
+              Libre<span className="fishbones__topbar-brand-tld">.academy</span>
+            </span>
+          </a>
+        </>
       )}
 
       {onToggleSidebar && (

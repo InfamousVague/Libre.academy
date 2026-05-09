@@ -2,6 +2,29 @@
   padding: 18px 16px 8px;
 }
 
+/* Brand wordmark sitting at the very top of the Library page —
+   the wide "Libre.academy" text-version asset rather than just the
+   squircle icon, so the mobile Library has the same hero brand
+   moment the desktop Library does. Centered, generous breathing
+   room above the section title row. */
+.m-lib__brand {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 14px;
+}
+.m-lib__brand-img {
+  /* Cap height for narrow phone screens — the source asset is
+     ~600×140, so 48px keeps it comfortably proportioned and
+     matches a roughly 200px wide visual footprint that doesn't
+     dominate the layout above the section title. */
+  height: 48px;
+  width: auto;
+  max-width: 70%;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
 /* Header layout: title block on the left, search-trigger button on
    the far right. Flex with `space-between` so the button keeps
    right-aligned regardless of title-block width. */
