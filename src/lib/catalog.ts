@@ -393,5 +393,24 @@ export function placeholderCourseFromCatalog(entry: CatalogEntry): Course {
     downloadUrl: entry.archiveUrl,
     archiveSize: entry.archiveSizeBytes,
     tier: entry.tier,
+    /// Cache-bust the placeholder cover URL using the catalog
+    /// cover-set version. `useCourseCover` keys its in-memory + IPC
+    /// cache on `${courseId}:${cacheBust ?? 0}` — without this, every
+    /// placeholder tile hashes to `${id}:0` for the lifetime of the
+    /// install, so a returning user keeps seeing the cover that was
+    /// in the bundled archive when they first launched even after
+    /// we ship new artwork. Bumping CATALOG_COVER_VERSION below
+    /// produces a fresh key, the IPC re-reads cover.jpg, and the
+    /// shelf paints the current art.
+    coverFetchedAt: CATALOG_COVER_VERSION,
   };
 }
+
+/// Bump this any time the bundled-archive cover set is regenerated.
+/// Drives cache-busting for placeholder tiles in the Library — see
+/// `placeholderCourseFromCatalog` above. Format is YYYYMMDD as a
+/// number (date the new cover set landed) for easy git-blame.
+///
+/// 20260510 — Refresh full library + tighten resize parameters
+///            (288x432 q68 web / 384x576 q78 bundle).
+const CATALOG_COVER_VERSION = 20260510;
