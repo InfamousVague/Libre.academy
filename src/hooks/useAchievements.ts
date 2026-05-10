@@ -73,8 +73,32 @@ export function useAchievements(
   // Track the last-seen unlock ids so the effect can detect new
   // ones without comparing big sets every render.
   const lastSatisfiedIdsRef = useRef<Set<string>>(new Set());
-  const initRef = useRef(false);
+  // Boot-time grace deadline. Within this window, both the
+  // achievement-detection effect and the level-up effect skip
+  // celebrations (sound + confetti) but still record / track state.
+  // The window covers the noisy hydration period when:
+  //   - history loads from disk → satisfied set jumps from empty to
+  //     "everything the user already earned"
+  //   - streakAndXp.level hydrates from initial 1 to the user's real
+  //     level → looks like a level-up to the change-detector
+  // 2.5 s is comfortably past every hydration path I've measured
+  // (cold boot to fully-paint runs ~600-1500 ms typical) without
+  // being so long that a genuine in-session unlock during the first
+  // few seconds would get swallowed silently.
+  const graceDeadlineRef = useRef<number>(0);
   const lastLevelRef = useRef(streakAndXp.level);
+
+  useEffect(() => {
+    graceDeadlineRef.current = (typeof performance !== "undefined"
+      ? performance.now()
+      : Date.now()) + 2500;
+  }, []);
+
+  function withinGrace(): boolean {
+    const now =
+      typeof performance !== "undefined" ? performance.now() : Date.now();
+    return now < graceDeadlineRef.current;
+  }
 
   // Cross-tab sync: another tab unlocking an achievement should
   // light up this tab's list too. localStorage `storage` events fire
@@ -120,33 +144,18 @@ export function useAchievements(
     // overwhelming "30 achievements unlocked!" carousel on first
     // launch after an update.
     const fresh = diffUnlocks(satisfied, unlockedRecords);
-    // Only consider us initialised once we've seen actual data flow
-    // through. Cold-boot order is:
-    //   pass 1: history=[], courses=[] → satisfied=empty → fresh=empty
-    //   pass 2: history loads → satisfied={...10 things...} → fresh=[...10 things...]
-    // If pass 1 set initRef=true, pass 2 would mistake every
-    // already-earned achievement for a brand-new unlock and fire
-    // confetti + sound for the whole catalogue on every cold launch.
-    // Gating initRef on real-data presence (any history, any course,
-    // any persisted unlock) means we wait for actual signal before
-    // accepting the silent baseline.
-    const haveSignal =
-      history.length > 0 ||
-      courses.length > 0 ||
-      unlockedRecords.length > 0;
-    if (fresh.length === 0) {
-      if (haveSignal) initRef.current = true;
-      return;
-    }
-    if (!initRef.current) {
-      // Silent record on first pass.
+    if (fresh.length === 0) return;
+
+    // Inside the boot grace window, every fresh-looking unlock is
+    // assumed to be a discovery (data hydrating up to its true
+    // shape), not a real-time earn. Persist quietly and bail —
+    // no toast, no sound, no celebration cue. This is the simple,
+    // robust replacement for the earlier `initRef` two-pass
+    // bookkeeping which broke as soon as the eval order saw
+    // multiple empty passes before the first non-empty one.
+    if (withinGrace()) {
       const merged = recordUnlocks(fresh, Date.now(), unlockedRecords);
       setUnlockedRecords(merged);
-      // Same gate — only declare init complete once there's real
-      // data behind the satisfied set, so a wave of fresh-looking
-      // unlocks from a delayed-load pass still gets the silent
-      // record path.
-      if (haveSignal) initRef.current = true;
       return;
     }
 
@@ -178,12 +187,12 @@ export function useAchievements(
   useEffect(() => {
     const prev = lastLevelRef.current;
     if (streakAndXp.level > prev) {
-      // Skip the very first paint after a fresh launch — we don't
-      // want to celebrate "your level is 7 (because you've been
-      // playing for months)" as a level-up the moment the app
-      // boots. The initRef guard above handles this: until the
-      // first eval pass completes, we don't celebrate.
-      if (initRef.current) {
+      // Skip celebrations during the boot grace window. Cold-boot
+      // hydration looks like a "level 1 → level 7" transition the
+      // moment streakAndXp finishes loading, which the change
+      // detector would otherwise celebrate every launch. Real
+      // in-session level-ups happen well outside the 2.5 s window.
+      if (!withinGrace()) {
         setLevelUp({ from: prev, to: streakAndXp.level });
         playSound("level-up");
         void celebrate("medium", { x: 0.5, y: 0.4 });
