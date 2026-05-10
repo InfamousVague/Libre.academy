@@ -30,7 +30,7 @@ import {
   recordUnlocks,
 } from "../lib/achievements";
 import type { ProgressSnapshot, UnlockedRecord } from "../lib/achievements";
-import { confettiBurst } from "../lib/confetti";
+import { celebrate } from "../lib/celebrate";
 import { playSound } from "../lib/sfx";
 import type { Course } from "../data/types";
 import type { Completion } from "../lib/storage";
@@ -162,7 +162,7 @@ export function useAchievements(
     const meta = TIER_META[highest.tier];
     playSound(meta.sound);
     if (meta.confetti !== "none") {
-      void confettiBurst(meta.confetti);
+      void celebrate(meta.confetti);
     }
     // We intentionally do NOT include `unlockedRecords` in the deps
     // — recordUnlocks updates it via setUnlockedRecords, and adding
@@ -186,7 +186,7 @@ export function useAchievements(
       if (initRef.current) {
         setLevelUp({ from: prev, to: streakAndXp.level });
         playSound("level-up");
-        void confettiBurst("medium", { x: 0.5, y: 0.4 });
+        void celebrate("medium", { x: 0.5, y: 0.4 });
       }
     }
     lastLevelRef.current = streakAndXp.level;

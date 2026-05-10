@@ -13,7 +13,7 @@ import { useEffect } from "react";
 
 import type { Achievement } from "../../data/achievements";
 import { TIER_META } from "../../data/achievements";
-import { confettiBurst } from "../../lib/confetti";
+import { celebrate } from "../../lib/celebrate";
 import ModalBackdrop from "../Shared/ModalBackdrop";
 import AchievementBadge from "./AchievementBadge";
 import "./Achievements.css";
@@ -34,7 +34,7 @@ export default function AchievementModal({ achievement, onDismiss }: Props) {
   useEffect(() => {
     if (achievement.tier !== "platinum") return;
     const timer = setTimeout(() => {
-      void confettiBurst("medium", { x: 0.5, y: 0.35 });
+      void celebrate("medium", { x: 0.5, y: 0.35 });
     }, 1200);
     return () => clearTimeout(timer);
   }, [achievement.tier]);

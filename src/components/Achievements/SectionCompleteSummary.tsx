@@ -24,7 +24,7 @@ import { coins } from "@base/primitives/icon/icons/coins";
 import { bookCheck } from "@base/primitives/icon/icons/book-check";
 
 import type { Achievement } from "../../data/achievements";
-import { confettiBurst } from "../../lib/confetti";
+import { celebrate } from "../../lib/celebrate";
 import { playSound } from "../../lib/sfx";
 import ModalBackdrop from "../Shared/ModalBackdrop";
 import AchievementBadge from "./AchievementBadge";
@@ -69,15 +69,15 @@ export default function SectionCompleteSummary({
     const t = setTimeout(() => {
       if (kind === "book") {
         playSound("complete-book");
-        void confettiBurst("large", { x: 0.5, y: 0.35 });
+        void celebrate("large", { x: 0.5, y: 0.35 });
         // Second burst at the 1.6 s mark so the wash sustains for
         // the full sound cue.
         setTimeout(() => {
-          void confettiBurst("medium", { x: 0.5, y: 0.35 });
+          void celebrate("medium", { x: 0.5, y: 0.35 });
         }, 1600);
       } else {
         playSound("complete-section");
-        void confettiBurst("small", { x: 0.5, y: 0.35 });
+        void celebrate("small", { x: 0.5, y: 0.35 });
       }
     }, 60);
     return () => clearTimeout(t);
