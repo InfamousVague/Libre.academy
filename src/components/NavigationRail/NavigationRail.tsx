@@ -189,6 +189,14 @@ export default function NavigationRail({
             aria-hidden
           />
         )}
+        {/* Notification bell sits at the very top of the rail so the
+            unread chip (when present) is the first thing the eye
+            lands on. Previously bottom-clustered with settings /
+            help / sidebar, but conceptually it's a "what's new"
+            beacon — a content signal, not a configuration knob —
+            so it groups with the navigation items, not the chrome
+            controls. */}
+        <NotificationDrawer />
         {/* Order rationale (top → bottom):
               1. Library      — the home + most-visited surface
               2. Playground   — open-ended editor, surfaced near the
@@ -267,13 +275,23 @@ export default function NavigationRail({
         )}
       </div>
       <div className="fishbones-nav-rail__bottom">
-        {/* Notification bell — self-contained component that reads
-            achievement-unlock records straight from localStorage and
-            shows a popover drawer of the most recent items. Sits
-            above the help / settings cluster so the unread chip
-            (when present) is the first thing the eye lands on at
-            the rail's bottom. */}
-        <NotificationDrawer />
+        {/* Chrome controls only. Order, top → bottom: sidebar toggle,
+            help, settings — with settings anchored at the very bottom
+            (the conventional Mac-app spot) and help docked one row
+            up so the "I need a hint" affordance is right next to the
+            knob it usually nudges the user toward. NotificationDrawer
+            moved up to the top cluster — it's a content signal, not
+            chrome. */}
+        {onToggleSidebar && (
+          <RailItem
+            icon={sidebarCollapsed ? panelLeftOpen : panelLeftClose}
+            label={
+              sidebarCollapsed ? "Show sidebar (⌘\\)" : "Hide sidebar (⌘\\)"
+            }
+            onClick={onToggleSidebar}
+            pressed={sidebarCollapsed}
+          />
+        )}
         {onStartTour && (
           <RailItem
             icon={circleHelp}
@@ -286,16 +304,6 @@ export default function NavigationRail({
           label="Settings"
           onClick={onSettings}
         />
-        {onToggleSidebar && (
-          <RailItem
-            icon={sidebarCollapsed ? panelLeftOpen : panelLeftClose}
-            label={
-              sidebarCollapsed ? "Show sidebar (⌘\\)" : "Hide sidebar (⌘\\)"
-            }
-            onClick={onToggleSidebar}
-            pressed={sidebarCollapsed}
-          />
-        )}
       </div>
     </nav>
   );
