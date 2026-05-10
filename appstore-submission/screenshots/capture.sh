@@ -38,17 +38,37 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 
 case "$PLATFORM" in
   iphone)
-    UDID="F2AA1DE6-9170-4548-B274-762221F26819"   # iPhone 17 Pro Max (1320×2868)
+    # Resolve the iPhone 6.9" simulator UDID dynamically (so the
+    # script keeps working when Xcode renames or refreshes the
+    # device set — iPhone 16 Pro Max one cycle, iPhone 17 Pro Max
+    # the next, etc.). Override with FB_IPHONE_UDID=... if you've
+    # got a specific one.
+    UDID="${FB_IPHONE_UDID:-$(xcrun simctl list devices available 2>/dev/null \
+      | grep -E "iPhone 1[6-9] Pro Max|iPhone 2[0-9] Pro Max" \
+      | head -1 \
+      | grep -oE "[0-9A-F-]{36}")}"
     DEST="$HERE/iphone-6.9"
+    LABEL="iPhone 6.9\" (1320×2868)"
     ;;
   ipad)
-    UDID="6A9135A7-64B9-48CF-A454-31C03C7CB124"   # iPad Pro 13" (M5)  (2064×2752)
+    UDID="${FB_IPAD_UDID:-$(xcrun simctl list devices available 2>/dev/null \
+      | grep -E "iPad Pro 13-inch \(M[0-9]+\)" \
+      | head -1 \
+      | grep -oE "[0-9A-F-]{36}")}"
     DEST="$HERE/ipad-13"
+    LABEL="iPad 13\" (2064×2752)"
     ;;
   *)
     usage
     ;;
 esac
+
+if [ -z "$UDID" ]; then
+  echo "Error: no matching $PLATFORM simulator found." >&2
+  echo "Run 'xcrun simctl list devices available' to see what's installed." >&2
+  echo "Or set FB_${PLATFORM^^}_UDID=<udid> to override." >&2
+  exit 1
+fi
 
 # Make sure the simulator is up. `boot` is idempotent — already-booted
 # returns an error we swallow.
