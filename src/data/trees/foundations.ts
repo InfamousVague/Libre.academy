@@ -50,7 +50,6 @@ export const FOUNDATIONS: SkillTree = {
       summary: "true/false values and the operators that produce them.",
       prereqs: ["variables"],
       matches: [
-        { courseId: "learning-zig", lessonId: "booleans-and-comparisons" },
         { courseId: "python-crash-course", lessonId: "intro-to-conditionals" },
       ],
     },
@@ -62,7 +61,6 @@ export const FOUNDATIONS: SkillTree = {
       matches: [
         { courseId: "python-crash-course", lessonId: "intro-to-conditionals" },
         { courseId: "python-crash-course", lessonId: "combining-conditions-and-or" },
-        { courseId: "learning-zig", lessonId: "booleans-and-comparisons" },
       ],
     },
     {
@@ -82,7 +80,6 @@ export const FOUNDATIONS: SkillTree = {
       summary: "Repeat a block while a condition is true.",
       prereqs: ["if-else"],
       matches: [
-        { courseId: "learning-zig", lessonId: "loops-while-and-for" },
         { courseId: "learning-go", lessonId: "for-loop-formats" },
       ],
     },
@@ -178,7 +175,6 @@ export const FOUNDATIONS: SkillTree = {
       prereqs: ["functions"],
       matches: [
         { courseId: "composing-programs", lessonId: "ch01-reading" },
-        { courseId: "learning-zig", lessonId: "recursion" },
       ],
     },
     {

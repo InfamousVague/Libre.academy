@@ -18,7 +18,6 @@ export const SYSTEMS: SkillTree = {
       prereqs: [],
       matches: [
         { courseId: "the-rust-programming-language", lessonId: "stack-and-heap" },
-        { courseId: "learning-zig", lessonId: "three-memory-areas" },
       ],
     },
     {
@@ -27,8 +26,6 @@ export const SYSTEMS: SkillTree = {
       summary: "Address-of, dereference, pass-by-pointer.",
       prereqs: ["memory-stack-heap"],
       matches: [
-        { courseId: "learning-zig", lessonId: "address-of" },
-        { courseId: "learning-zig", lessonId: "pass-by-pointer" },
       ],
     },
     {
@@ -37,7 +34,6 @@ export const SYSTEMS: SkillTree = {
       summary: "Contiguous memory, null-terminated strings, indexing.",
       prereqs: ["pointers-c"],
       matches: [
-        { courseId: "learning-zig", lessonId: "arrays" },
       ],
     },
     {
@@ -46,7 +42,6 @@ export const SYSTEMS: SkillTree = {
       summary: "User-defined record types, layout, alignment.",
       prereqs: ["pointers-c"],
       matches: [
-        { courseId: "learning-zig", lessonId: "structs" },
       ],
     },
     {

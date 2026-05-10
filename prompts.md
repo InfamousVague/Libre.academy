@@ -265,6 +265,7 @@ These ids appear in legacy prune lists (`webSeedCourses.ts` LEGACY_STARTER_IDS, 
 - `you-don-t-know-js-yet` — retired 2026-05-07.
 - `functional-light-javascript` — retired 2026-05-10. Coverage absorbed into **A to TS** (#2) + **Haskell Challenges** (#44) for the FP track.
 - `learning-react-native`, `fluent-react` — retired in the 2026-05-07 cleanup. **React Native** (#17) is the active replacement.
+- `learning-zig` — retired 2026-05-10. Replaced by the in-house **A to Zig** course (#1). Tree-node lesson links stripped from `foundations.ts` (4 matches) and `systems.ts` (5 matches); the docs/skill-tree-gaps.md note about `malloc`/`free` parity is moot now that the book is gone.
 
 ## Additions — books still in the Discover catalog cache that need new covers
 
@@ -276,13 +277,10 @@ These ids show up on the Discover tab from cached snapshots / older catalog stat
 #### A2. Learning React Native — `learning-react-native.png`
 > Hero shape: **two ribbon phone outlines stacked at a 3/4 angle**, the front phone slightly larger than the rear, suggesting before/after tutorial states. Inside the front phone's screen sits a single ribbon React-atom orbit (one ellipse — simpler than the React Native cover at #17). A small **ribbon bookmark** flag pokes out of the top edge of the front phone, signalling "study material in progress." Light-cyan React glow inside the orbits, with a warm cream tint along the bookmark's underside.
 
-#### A3. Learning Zig — `learning-zig.png`
-> Hero shape: a **mountain range** rendered in coral ribbon — three jagged ribbon ridges fanned across the centre with the tallest peak in the middle, the bases overlapping like layered cuts of paper. A small ribbon-snake head perches on the highest summit, looking out over the range. Sun rays from the upper right cast long shadows down each ridge across the cream floor. Subtle warm amber sub-surface glow (Zig's brand orange). One background squircle reflects a faint allocator-stack diagram (rectangles stacked with thin gaps) as caustic detail. *Visually distinct from A to Zig (#1), which leads with the lowercase "z" letterform — Learning Zig is the mountain hero.*
-
-#### A4. Solidity: Smart Contracts from First Principles — `solidity-smart-contracts-from-first-principles.png`
+#### A3. Solidity: Smart Contracts from First Principles — `solidity-smart-contracts-from-first-principles.png`
 > Hero shape: a **partially unfurled ribbon scroll** in 3/4 perspective — the upper half rolled tight, the lower half spilling forward toward the viewer. A small ribbon **wax-seal medallion** dangles off the lower-right corner via a short ribbon cord, embossed with a faint Ethereum-diamond imprint. Two smaller floating ribbon-Ξ glyphs drift in the background squircles. Slate-grey sub-surface glow inside the scroll (Solidity's brand grey). The ribbon-snake head emerges from the upper-left edge of the scroll, looking down at the contract.
 
-#### A5. Svelte 5 Complete — `svelte-5-complete.png`
+#### A4. Svelte 5 Complete — `svelte-5-complete.png`
 > Hero shape: a **three-tongue ribbon flame** mirroring the Learning Svelte cover (#13), with the central tongue containing a **stylised "5"** rendered as a tighter ribbon coil within the larger flame's body — like a heart-glyph nested inside the flame. The "5" forms one continuous fold, its tail merging seamlessly into the surrounding flame. The ribbon-snake head replaces the topmost flame tip. Bright orange-red Svelte brand glow saturated slightly warmer than Learning Svelte to read as the higher-version variant.
 
 ## Iteration tips
