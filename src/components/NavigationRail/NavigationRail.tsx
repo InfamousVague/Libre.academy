@@ -189,14 +189,6 @@ export default function NavigationRail({
             aria-hidden
           />
         )}
-        {/* Notification bell sits at the very top of the rail so the
-            unread chip (when present) is the first thing the eye
-            lands on. Previously bottom-clustered with settings /
-            help / sidebar, but conceptually it's a "what's new"
-            beacon — a content signal, not a configuration knob —
-            so it groups with the navigation items, not the chrome
-            controls. */}
-        <NotificationDrawer />
         {/* Order rationale (top → bottom):
               1. Library      — the home + most-visited surface
               2. Playground   — open-ended editor, surfaced near the
@@ -275,13 +267,15 @@ export default function NavigationRail({
         )}
       </div>
       <div className="fishbones-nav-rail__bottom">
-        {/* Chrome controls only. Order, top → bottom: sidebar toggle,
-            help, settings — with settings anchored at the very bottom
-            (the conventional Mac-app spot) and help docked one row
-            up so the "I need a hint" affordance is right next to the
-            knob it usually nudges the user toward. NotificationDrawer
-            moved up to the top cluster — it's a content signal, not
-            chrome. */}
+        {/* Bottom cluster, top → bottom: notification bell, sidebar
+            toggle, help, settings. The bell anchors the top of this
+            group so the unread chip lives in the "things you might
+            want to do" cluster (not the navigation list above);
+            settings is at the very bottom (conventional Mac-app
+            spot) with help docked one row up so the "I need a hint"
+            affordance sits beside the knob it usually nudges the
+            user toward. */}
+        <NotificationDrawer />
         {onToggleSidebar && (
           <RailItem
             icon={sidebarCollapsed ? panelLeftOpen : panelLeftClose}
