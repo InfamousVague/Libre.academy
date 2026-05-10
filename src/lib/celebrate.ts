@@ -151,12 +151,13 @@ function staticPuff(target?: { x: number; y: number } | HTMLElement): Promise<vo
 /// it before falling back to WebM (it CAN decode WebM the rest of
 /// the way through but the alpha channel is dropped).
 ///
-/// Audio: try unmuted autoplay first since the achievement trigger
-/// always follows a user gesture (lesson submit, level transition,
-/// etc.) which satisfies the browser's autoplay-with-audio policy.
-/// If the play() promise rejects, we retry muted so the visual
-/// still fires; the user just loses the audio cue for that one
-/// unlock.
+/// Audio: the baked-in coin chime plays at 40% volume so it lands as
+/// a quiet flourish rather than a notification klaxon. Achievement
+/// unlocks always follow a user gesture (lesson submit, level
+/// transition, etc.) which satisfies the browser's autoplay-with-
+/// audio policy — but if play() rejects anyway, we retry muted so
+/// the visual still fires; the user just loses the audio cue for
+/// that one unlock.
 /// Pick the right transparent-video URL for this browser. Safari /
 /// WKWebView (Tauri desktop on macOS) decodes HEVC + alpha .mov via
 /// VideoToolbox; Chrome / Firefox / Edge decode VP8/VP9 + alpha .webm.
@@ -190,13 +191,14 @@ function playVideo(srcBase: string): Promise<void> {
 
     const video = document.createElement("video");
     video.src = src;
-    // Always muted — the celebration is a brief visual flourish;
-    // layering audio on top of every unlock reads as too much
-    // (the original baked-in audio is loud enough to feel like
-    // a notification chime). Unmuted autoplay is also subject to
-    // the browser's gesture policy, which made the play() promise
-    // reject in some flows. Muted autoplay always works.
-    video.muted = true;
+    // Play with audio at 40% so the baked-in coin chime registers as
+    // a quiet flourish rather than a notification klaxon (the source
+    // mix is hot — full volume reads as a wallet tipping over). The
+    // `muted` flag stays false so the audio actually plays; we fall
+    // back to muted re-attempt below if the autoplay-with-audio
+    // policy rejects play() despite the user gesture.
+    video.muted = false;
+    video.volume = 0.4;
     video.playsInline = true;
     video.autoplay = true;
     video.controls = false;
@@ -243,12 +245,23 @@ function playVideo(srcBase: string): Promise<void> {
     window.setTimeout(() => finish("timeout"), 12_000);
 
     document.body.appendChild(video);
-    // Muted autoplay always works — no fallback dance needed.
+    // First attempt: unmuted at 40%. The achievement trigger always
+    // follows a user gesture so this should satisfy the autoplay
+    // policy. If the browser still rejects (some Safari builds are
+    // strict on cross-origin / auto-attached element flows), retry
+    // muted so the visual at least fires — the user just loses the
+    // chime for that one unlock.
     void video.play().catch((err) => {
       if (typeof console !== "undefined") {
-        console.warn("[celebrate] play() rejected", err);
+        console.warn("[celebrate] play() rejected, retrying muted", err);
       }
-      finish("play-rejected");
+      video.muted = true;
+      void video.play().catch((err2) => {
+        if (typeof console !== "undefined") {
+          console.warn("[celebrate] muted retry rejected", err2);
+        }
+        finish("play-rejected");
+      });
     });
   });
 }
