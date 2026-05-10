@@ -89,9 +89,13 @@ function ensureCanvas(): boolean {
   canvas.style.position = "fixed";
   canvas.style.inset = "0";
   canvas.style.pointerEvents = "none";
-  // One above the confetti canvas so layered effects (rare) sit on
-  // top, rather than under, the existing storm.
-  canvas.style.zIndex = "9998";
+  // Sits above page chrome (sidebar/topbar at 80, AI orb at 90)
+  // but BELOW modal backdrops (200). When an achievement modal pops,
+  // its dim backdrop covers the canvas → particles bloom behind the
+  // panel instead of painting over the badge artwork. Stays above
+  // the rest of the page so non-modal celebrations (toasts, level-up
+  // overlay) get the particles in front.
+  canvas.style.zIndex = "90";
   canvas.setAttribute("aria-hidden", "true");
   cctx = canvas.getContext("2d");
   if (!cctx) {

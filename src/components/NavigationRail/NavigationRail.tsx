@@ -36,6 +36,7 @@ import { panelLeftOpen } from "@base/primitives/icon/icons/panel-left-open";
 import { Tooltip } from "@base/primitives/tooltip";
 import "@base/primitives/icon/icon.css";
 import "@base/primitives/tooltip/tooltip.css";
+import NotificationDrawer from "./NotificationDrawer";
 import "./NavigationRail.css";
 
 export interface NavigationRailProps {
@@ -266,6 +267,13 @@ export default function NavigationRail({
         )}
       </div>
       <div className="fishbones-nav-rail__bottom">
+        {/* Notification bell — self-contained component that reads
+            achievement-unlock records straight from localStorage and
+            shows a popover drawer of the most recent items. Sits
+            above the help / settings cluster so the unread chip
+            (when present) is the first thing the eye lands on at
+            the rail's bottom. */}
+        <NotificationDrawer />
         {onStartTour && (
           <RailItem
             icon={circleHelp}

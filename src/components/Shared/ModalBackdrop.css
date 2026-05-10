@@ -12,6 +12,13 @@
   backdrop-filter: blur(4px);
   display: grid;
   place-items: center;
+  /* Beat the celebration / confetti canvases (z-index 90/91) so
+     the modal panel stays in front while particles bloom behind
+     the dimmed backdrop. Without this, an achievement-modal pop
+     would paint particles ON TOP of the badge artwork instead of
+     framing it. 200 leaves room for any future "always on top"
+     surfaces (toasts, scanner) to sit above. */
+  z-index: 200;
 }
 
 /* Inner wrapper exists so the click-stop handler has a definite

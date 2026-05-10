@@ -1,0 +1,292 @@
+/* Notification bell + popover drawer for the rail's bottom cluster.
+   The bell sits inline as a normal RailItem-shaped button; the
+   drawer panel is positioned: absolute relative to the wrapper so
+   it floats out to the right of the rail at the bell's vertical
+   anchor without the rail's flex layout absorbing it. */
+
+.fb-notif {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.fb-notif__trigger {
+  /* Mirror the RailItem's footprint so the bell sits cleanly in
+     the rail's bottom cluster without throwing off the alignment
+     of the surrounding icons. The actual RailItem styles live in
+     NavigationRail.css; we mirror enough of them here that the
+     bell reads as a sibling button rather than a custom element.
+  */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  height: 56px;
+  padding: 8px 4px;
+  background: transparent;
+  border: 0;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font: inherit;
+  border-radius: var(--fb-radius-sm);
+  transition: background var(--fb-motion-snappy),
+    color var(--fb-motion-snappy);
+}
+
+.fb-notif__trigger:hover,
+.fb-notif__trigger[aria-expanded="true"] {
+  color: var(--color-text-primary);
+  background: var(--color-bg-secondary);
+}
+
+.fb-notif__trigger:focus-visible {
+  outline: 2px solid var(--color-accent-warm, #e8954a);
+  outline-offset: -3px;
+}
+
+/* Unread-count chip floats over the upper-right corner of the bell
+   icon. Capped at "9+" so a long unbroken streak doesn't push the
+   chip wider than the rail. */
+.fb-notif__badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--color-accent-warm, #e8954a);
+  color: #1f2330;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  letter-spacing: -0.02em;
+  /* Slim glow ring so the chip pops against dark themes without
+     bleeding into the bell silhouette. */
+  box-shadow: 0 0 0 1.5px var(--color-bg-primary, #0b0c10);
+}
+
+/* ─── Popover panel ────────────────────────────────────── */
+
+/* Floats out to the right of the rail at the bell's vertical
+   position. Cap width so the panel reads as a glanceable preview,
+   not a real drawer; vertical scroll kicks in only if a future
+   source pushes the list past ~7 rows. */
+.fb-notif__panel {
+  position: absolute;
+  /* Anchor at the bell's bottom edge so the panel grows upward
+     visually balanced against the rail's bottom cluster. */
+  bottom: 0;
+  /* Pop OUT of the rail to the right with a slim gutter so it
+     reads as adjacent, not glued. */
+  left: calc(100% + 10px);
+  width: 320px;
+  max-height: 420px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--fb-radius-md, 10px);
+  box-shadow:
+    0 18px 40px -8px rgba(0, 0, 0, 0.45),
+    0 4px 12px rgba(0, 0, 0, 0.22);
+  display: flex;
+  flex-direction: column;
+  /* Above the rail (which sits in the page chrome z-band ~80) but
+     below modal backdrops (200) so a celebration popping from inside
+     a modal doesn't get hidden under the panel. */
+  z-index: 95;
+  overflow: hidden;
+  /* Soft entrance — the panel scales up slightly from the bell */
+  animation: fb-notif-pop 140ms ease-out;
+  transform-origin: left bottom;
+}
+
+@keyframes fb-notif-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.fb-notif__panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--color-border-default);
+  flex-shrink: 0;
+}
+
+.fb-notif__panel-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+.fb-notif__panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.fb-notif__panel-link {
+  background: transparent;
+  border: 0;
+  color: var(--color-accent-warm, #e8954a);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--fb-radius-sm);
+  transition: background var(--fb-motion-snappy);
+}
+
+.fb-notif__panel-link:hover {
+  background: color-mix(
+    in srgb,
+    var(--color-accent-warm, #e8954a) 14%,
+    transparent
+  );
+}
+
+.fb-notif__panel-close {
+  background: transparent;
+  border: 0;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--fb-radius-sm);
+  display: inline-flex;
+}
+.fb-notif__panel-close:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-tertiary);
+}
+
+/* ─── List ──────────────────────────────────────────────── */
+
+.fb-notif__list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  overflow-y: auto;
+}
+
+.fb-notif__item {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-left: 2px solid transparent;
+  transition: background var(--fb-motion-snappy);
+}
+
+.fb-notif__item:hover {
+  background: var(--color-bg-tertiary);
+}
+
+/* Unread accent rail along the left edge of unread rows so the
+   eye lands on what's new without needing to read timestamps. */
+.fb-notif__item--unread {
+  border-left-color: var(--color-accent-warm, #e8954a);
+  background: color-mix(
+    in srgb,
+    var(--color-accent-warm, #e8954a) 6%,
+    transparent
+  );
+}
+
+.fb-notif__item-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--color-bg-tertiary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+}
+
+.fb-notif__item-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 1px 3px rgba(243, 114, 57, 0.18));
+}
+
+.fb-notif__item-body {
+  min-width: 0;
+}
+
+.fb-notif__item-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: -0.005em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fb-notif__item-blurb {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.fb-notif__item-ts {
+  font-size: 10.5px;
+  color: var(--color-text-tertiary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  align-self: flex-start;
+  padding-top: 1px;
+}
+
+/* ─── Empty state ───────────────────────────────────────── */
+
+.fb-notif__empty {
+  padding: 28px 18px;
+  text-align: center;
+  color: var(--color-text-tertiary);
+}
+
+.fb-notif__empty-glyph {
+  display: block;
+  font-size: 22px;
+  color: var(--color-accent-warm, #e8954a);
+  margin-bottom: 8px;
+}
+
+.fb-notif__empty-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+
+.fb-notif__empty-blurb {
+  font-size: 11.5px;
+  color: var(--color-text-tertiary);
+  line-height: 1.4;
+  max-width: 220px;
+  margin: 0 auto;
+}

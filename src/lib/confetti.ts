@@ -102,7 +102,11 @@ function ensureCanvas(): boolean {
   canvas.style.position = "fixed";
   canvas.style.inset = "0";
   canvas.style.pointerEvents = "none";
-  canvas.style.zIndex = "9999";
+  // Same band as celebrate.ts — above page chrome (80) but below
+  // modal backdrops (200) so confetti fires behind a popped modal
+  // rather than over the panel artwork. One up from celebrate's 90
+  // so layered confetti+celebrate (rare) draws confetti in front.
+  canvas.style.zIndex = "91";
   canvas.setAttribute("aria-hidden", "true");
   cctx = canvas.getContext("2d");
   if (!cctx) {
