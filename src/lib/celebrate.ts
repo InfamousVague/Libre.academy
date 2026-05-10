@@ -198,7 +198,13 @@ function playVideo(srcBase: string): Promise<void> {
 
     const video = document.createElement("video");
     video.src = src;
-    video.muted = false;
+    // Always muted — the celebration is a brief visual flourish;
+    // layering audio on top of every unlock reads as too much
+    // (the original baked-in audio is loud enough to feel like
+    // a notification chime). Unmuted autoplay is also subject to
+    // the browser's gesture policy, which made the play() promise
+    // reject in some flows. Muted autoplay always works.
+    video.muted = true;
     video.playsInline = true;
     video.autoplay = true;
     video.controls = false;
@@ -245,19 +251,12 @@ function playVideo(srcBase: string): Promise<void> {
     window.setTimeout(() => finish("timeout"), 12_000);
 
     document.body.appendChild(video);
-    // Try unmuted autoplay first; fall back to muted if the browser
-    // blocks (NotAllowedError) so the visual cue still fires.
+    // Muted autoplay always works — no fallback dance needed.
     void video.play().catch((err) => {
       if (typeof console !== "undefined") {
-        console.warn("[celebrate] unmuted play() rejected, retrying muted", err);
+        console.warn("[celebrate] play() rejected", err);
       }
-      video.muted = true;
-      void video.play().catch((err2) => {
-        if (typeof console !== "undefined") {
-          console.warn("[celebrate] muted play() also rejected", err2);
-        }
-        finish("play-rejected");
-      });
+      finish("play-rejected");
     });
   });
 }

@@ -267,15 +267,15 @@ export default function NavigationRail({
         )}
       </div>
       <div className="fishbones-nav-rail__bottom">
-        {/* Bottom cluster, top → bottom: notification bell, sidebar
-            toggle, help, settings. The bell anchors the top of this
-            group so the unread chip lives in the "things you might
-            want to do" cluster (not the navigation list above);
-            settings is at the very bottom (conventional Mac-app
-            spot) with help docked one row up so the "I need a hint"
-            affordance sits beside the knob it usually nudges the
-            user toward. */}
-        <NotificationDrawer />
+        {/* Bottom cluster, top → bottom: sidebar toggle, notification
+            bell, help, settings. The sidebar toggle anchors the top
+            of this group (the most common bottom-rail interaction),
+            with the bell just below it so the unread chip lives
+            next to a frequently-clicked button without sitting on
+            top of the navigation list above. Settings is at the
+            very bottom (conventional Mac-app spot) with help docked
+            one row up so the "I need a hint" affordance sits beside
+            the knob it usually nudges the user toward. */}
         {onToggleSidebar && (
           <RailItem
             icon={sidebarCollapsed ? panelLeftOpen : panelLeftClose}
@@ -286,6 +286,7 @@ export default function NavigationRail({
             pressed={sidebarCollapsed}
           />
         )}
+        <NotificationDrawer />
         {onStartTour && (
           <RailItem
             icon={circleHelp}
