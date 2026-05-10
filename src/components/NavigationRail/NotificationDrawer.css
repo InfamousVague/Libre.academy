@@ -207,15 +207,23 @@
 }
 
 .fb-notif__item-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--color-bg-tertiary);
+  /* Achievement PNGs ship with their own circular medallion baked
+     into the alpha channel + a warm halo around the rim. Wrapping
+     them in a 36-px disc with `overflow: hidden` cropped the rim
+     and chopped the corners off the artwork (the badges read as
+     half-moons in the panel). Sized up to 44 px so the image has
+     breathing room AND drops the disc/clip — the PNG IS the disc.
+     Plain inline-flex + center keeps the fallback bell glyph
+     centered when an item has no `image`. The slot stays a fixed
+     square so the row gutter doesn't shift between PNG vs. glyph
+     items. */
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: var(--color-text-secondary);
-  overflow: hidden;
 }
 
 .fb-notif__item-img {
@@ -223,7 +231,9 @@
   height: 100%;
   object-fit: contain;
   display: block;
-  filter: drop-shadow(0 1px 3px rgba(243, 114, 57, 0.18));
+  /* Same drop-shadow as the toast / modal badge so the row reads as
+     one of those tiles, scaled down. */
+  filter: drop-shadow(0 2px 6px rgba(243, 114, 57, 0.22));
 }
 
 .fb-notif__item-body {
