@@ -38,6 +38,7 @@
 import type { Course, LanguageId } from "../data/types";
 import { isWeb } from "./platform";
 import { isHiddenCourse } from "./hiddenCourses";
+import { REMOTE_CATALOG_FALLBACK } from "./remoteCatalogFallback";
 
 export interface CatalogEntry {
   id: string;
@@ -230,6 +231,13 @@ export function fetchCatalog(opts: { refresh?: boolean } = {}): Promise<
   // manifest so this is a no-op there, but having one funnel keeps
   // both surfaces honest.
   cachedPromise = (isWeb ? fetchWebCatalog() : fetchDesktopCatalog())
+    // Merge the hardcoded remote-tier placeholders in BEFORE dedupe
+    // so any id that has a live archive (in bundled-packs/ on
+    // desktop or in the deployed manifest on web) wins, with the
+    // fallback row only filling slots the live source doesn't cover.
+    // This keeps Discover populated with the next-up books even
+    // when the user has installed everything we currently ship.
+    .then((entries) => [...entries, ...REMOTE_CATALOG_FALLBACK])
     .then(dedupeById)
     // Drop unlisted entries — they're shareable-by-link only, the
     // manifest still carries them so the on-demand fetch in
