@@ -57,7 +57,13 @@
 
 .fishbones-library-header {
   display: flex;
-  align-items: center;
+  /* Bottom-align everything in the row so the action buttons sit
+     flush with the wordmark's baseline instead of floating mid-
+     wordmark. The wordmark is now the row's tallest child (~64px
+     after the 15% bump) and centering looked off-balance against
+     the ~36px-tall buttons. flex-end pins both to the row's
+     bottom edge. */
+  align-items: flex-end;
   /* `gap` clusters the brand-mark + titleblock on the left side
      of the row; `margin-left: auto` on `.fishbones-library-header-actions`
      (below) pushes the action buttons to the right. We dropped
