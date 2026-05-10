@@ -1,9 +1,10 @@
 /// Two-state overlay paired with `useArchiveDrop`:
 ///
-///   - When a `.fishbones`/`.kata` is being dragged over the app
-///     window, render a full-window drop target ("Drop courses here")
-///     so the user gets unambiguous feedback that the OS-level drag
-///     is being recognised by the right surface.
+///   - When a `.academy` (or legacy `.fishbones` / `.kata`) is being
+///     dragged over the app window, render a full-window drop target
+///     ("Drop courses here") so the user gets unambiguous feedback
+///     that the OS-level drag is being recognised by the right
+///     surface.
 ///   - Once the drop happens, fade to a small bottom-center status
 ///     pill ("Importing 2 of 5…") that stays up until the queue
 ///     drains. Non-blocking — the rest of the app is interactable
@@ -55,7 +56,8 @@ export default function ArchiveDropOverlay({
             Drop to add to your library
           </div>
           <div className="fishbones-archive-drop__sub">
-            Accepts <code>.fishbones</code> and <code>.kata</code> archives.
+            Accepts <code>.academy</code> archives (and legacy{" "}
+            <code>.fishbones</code> / <code>.kata</code> exports).
           </div>
         </div>
       </div>

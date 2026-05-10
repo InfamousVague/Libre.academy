@@ -295,7 +295,7 @@ export default function DocsImportDialog({ onDismiss, onStart }: Props) {
             </label>
             <div className="fishbones-docs-section-hint">
               Downloads every image referenced on each page and inlines
-              it as a data URL so the exported <code>.fishbones</code>{" "}
+              it as a data URL so the exported <code>.academy</code>{" "}
               archive is portable. Roughly doubles crawl time for
               image-heavy sites; recommended.
             </div>

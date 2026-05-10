@@ -142,10 +142,11 @@ fn check_resource_dir(app: &tauri::AppHandle) -> CheckResult {
     }
 }
 
-/// Check the bundled .fishbones archives — catches the Windows
-/// "Discover empty" regression from v0.1.7/v0.1.8. Walks the same
-/// candidate paths `list_bundled_catalog_entries` does so the
-/// diagnostic + the running code stay aligned.
+/// Check the bundled course archives (`.academy`, plus legacy
+/// `.fishbones` / `.kata`) — catches the Windows "Discover empty"
+/// regression from v0.1.7/v0.1.8. Walks the same candidate paths
+/// `list_bundled_catalog_entries` does so the diagnostic + the
+/// running code stay aligned.
 fn check_bundled_packs(app: &tauri::AppHandle) -> CheckResult {
     let base = match resource_dir(app) {
         Ok(p) => p,
@@ -173,11 +174,9 @@ fn check_bundled_packs(app: &tauri::AppHandle) -> CheckResult {
             let count = entries
                 .filter_map(|e| e.ok())
                 .filter(|e| {
-                    e.path()
-                        .extension()
-                        .and_then(|s| s.to_str())
-                        .map(|s| s == "fishbones" || s == "kata")
-                        .unwrap_or(false)
+                    crate::courses::is_archive_ext(
+                        e.path().extension().and_then(|s| s.to_str()),
+                    )
                 })
                 .count();
             if count > 0 {
@@ -198,7 +197,7 @@ fn check_bundled_packs(app: &tauri::AppHandle) -> CheckResult {
         label: "Course archives present".into(),
         status: CheckStatus::Fail,
         detail: format!(
-            "no .fishbones archives found under any of: {:?}",
+            "no .academy/.fishbones archives found under any of: {:?}",
             candidates
         ),
         remedy: Some(

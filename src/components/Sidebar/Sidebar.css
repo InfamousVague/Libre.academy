@@ -6,6 +6,28 @@
    macOS use for navigation chrome. The hairline border keeps the
    sidebar reading as a distinct floating panel against the flat
    `--color-bg-primary` floor it sits on top of. */
+/* Brand wordmark at the top of the sidebar. Moved here from the
+   library / discover page headers — the rail is the canonical
+   "always visible" surface, so the lockup anchors page identity
+   without being repeated per-view. Naked image, left-aligned
+   inside the rail's content gutter; the frosted-glass sidebar
+   surface is the framing. */
+.fishbones__sidebar-brand {
+  display: flex;
+  align-items: center;
+  padding: 14px 14px 0 14px;
+  margin-bottom: -7px;
+  flex-shrink: 0;
+}
+.fishbones__sidebar-brand-img {
+  display: block;
+  height: 52px;
+  width: auto;
+  max-width: 100%;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
 .fishbones__sidebar {
   width: 260px;
   margin: 10px 0 10px 10px;

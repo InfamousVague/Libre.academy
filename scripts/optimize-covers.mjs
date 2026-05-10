@@ -228,13 +228,17 @@ function main() {
   console.log("");
 
   // ── Bundled archives ─────────────────────────────────────────
-  console.log("== bundled-packs/*.fishbones ==");
+  // Accept both `.academy` (post-rebrand canonical extension) and
+  // `.fishbones` (legacy) so partial migrations still get optimised.
+  const ARCHIVE_EXTS = [".academy", ".fishbones"];
+  console.log("== bundled-packs/*.{academy,fishbones} ==");
   let totalBundledBefore = 0;
   let totalBundledAfter = 0;
   let bundledChanged = 0;
   for (const name of readdirSync(BUNDLE_DIR).sort()) {
-    if (!name.endsWith(".fishbones")) continue;
-    const packId = name.slice(0, -".fishbones".length);
+    const ext = ARCHIVE_EXTS.find((e) => name.endsWith(e));
+    if (!ext) continue;
+    const packId = name.slice(0, -ext.length);
     const archive = join(BUNDLE_DIR, name);
     const r = optimizeBundledArchive(archive, packId);
     if (!r) {

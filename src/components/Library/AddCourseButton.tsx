@@ -10,10 +10,10 @@ import "./AddCourseButton.css";
 
 interface Props {
   /// Smart file picker: open the OS file dialog with all supported
-  /// course formats (.pdf, .epub, .fishbones, .kata, .zip, .json),
-  /// then sniff each result and dispatch to the right handler. Fires
-  /// when the user clicks the main split-button face OR the matching
-  /// dropdown item.
+  /// course formats (.pdf, .epub, .academy, .fishbones, .kata, .zip,
+  /// .json), then sniff each result and dispatch to the right
+  /// handler. Fires when the user clicks the main split-button face
+  /// OR the matching dropdown item.
   onSmartPick: () => void;
   /// Bulk PDF/EPUB queue (the existing batch-import wizard). Hidden
   /// when omitted. Useful when the user wants to import many books
@@ -23,9 +23,10 @@ interface Props {
   /// Crawl a docs site URL. URL-only, no file → kept as a separate
   /// menu item rather than folded into the smart picker.
   onDocsUrl?: () => void;
-  /// Imports a previously-exported `.fishbones` archive. The smart
-  /// picker handles archives too, so this is a redundant convenience
-  /// — kept for users who specifically want the "Archive" affordance.
+  /// Imports a previously-exported `.academy` archive (or its legacy
+  /// `.fishbones` predecessor). The smart picker handles archives
+  /// too, so this is a redundant convenience — kept for users who
+  /// specifically want the "Archive" affordance.
   onArchive?: () => void;
   /// Opens the catalog browser modal so the user can search the
   /// official Fishbones library and install courses they don't
@@ -92,7 +93,7 @@ export default function AddCourseButton({
           type="button"
           className="fishbones-addcourse-main"
           onClick={onSmartPick}
-          title="Pick a PDF, EPUB, .fishbones archive, or course.json — we'll figure out which pipeline to run"
+          title="Pick a PDF, EPUB, .academy archive, or course.json — we'll figure out which pipeline to run"
         >
           <Icon icon={plus} size="xs" color="currentColor" />
           <span>Add course</span>
@@ -128,7 +129,7 @@ export default function AddCourseButton({
                 Pick file(s)…
               </span>
               <span className="fishbones-addcourse-item-hint">
-                PDF, EPUB, .fishbones, course.json — we sniff and route
+                PDF, EPUB, .academy, course.json — we sniff and route
               </span>
             </span>
           </button>
@@ -181,7 +182,7 @@ export default function AddCourseButton({
                   Import archive…
                 </span>
                 <span className="fishbones-addcourse-item-hint">
-                  .fishbones / .kata exports (also handled by the smart picker)
+                  .academy / .fishbones / .kata exports (also handled by the smart picker)
                 </span>
               </span>
             </button>

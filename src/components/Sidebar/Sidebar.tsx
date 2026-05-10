@@ -131,13 +131,28 @@ export default function Sidebar({
 
   return (
     <aside className="fishbones__sidebar">
+      {/* Brand wordmark — pinned at the very top of the sidebar so the
+          Libre.academy lockup anchors the rail and stays visible
+          regardless of which view is active. Moved here from the
+          Library / Discover headers (where it doubled up the page
+          identity with the title block). Naked image, no card chrome
+          — the rail's frosted-glass surface is the framing. */}
+      <div className="fishbones__sidebar-brand" aria-hidden>
+        <img
+          src={`${import.meta.env.BASE_URL}libreacademy.png`}
+          alt="Libre.academy"
+          className="fishbones__sidebar-brand-img"
+          draggable={false}
+        />
+      </div>
+
       {/* Primary nav — vertical list with icon + label. Claude-Code-style:
           full-width rows, clear call-outs, no ambiguity about what each
           chip does. Routes (Profile / Playground) show an active state
           when their view is open; one-shot actions (Library / Import /
           Settings) stay neutral. */}
       {/* Sidebar nav is now a thin trio: Library (which owns all the
-          import flows — PDF + bulk PDF + .fishbones archive), the
+          import flows — PDF + bulk PDF + .academy archive), the
           Playground route, and Settings. Profile lives on the top-bar
           streak pill alongside level/XP so it's adjacent to the data
           it belongs with, not hiding in the left rail. */}

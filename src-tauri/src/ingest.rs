@@ -763,7 +763,7 @@ pub fn load_course_cover(
         return Ok(None);
     }
     // 2. Filename match — fast path.
-    for ext in ["fishbones", "kata"] {
+    for ext in crate::courses::ARCHIVE_EXTS {
         let archive = resource_dir.join(format!("{course_id}.{ext}"));
         if archive.is_file() {
             if let Ok(Some((bytes, mime))) = read_cover_from_archive(&archive) {
@@ -780,9 +780,8 @@ pub fn load_course_cover(
             if !path.is_file() {
                 continue;
             }
-            match path.extension().and_then(|s| s.to_str()) {
-                Some("fishbones") | Some("kata") => {}
-                _ => continue,
+            if !crate::courses::is_archive_ext(path.extension().and_then(|s| s.to_str())) {
+                continue;
             }
             // Cheaply check the id first so we don't repeatedly
             // base64-encode covers that don't match.

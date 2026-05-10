@@ -120,6 +120,28 @@ export default function CourseSettingsModal({
   const [metadataError, setMetadataError] = useState<string | null>(null);
   const [metadataSaved, setMetadataSaved] = useState(false);
 
+  // ────────── Share link ─────────────────────────────────────────
+  // Public URL anyone can paste into a browser. `libre.academy/install`
+  // routes to the catalog detail page if the course is a known
+  // bundled pack; otherwise it falls through to a generic install
+  // hint that points the recipient at the desktop app's "Import
+  // archive" flow. The URL is intentionally extension-agnostic — the
+  // server resolves to `.academy` (or legacy `.fishbones`) by id.
+  const shareUrl = `https://libre.academy/install?course=${encodeURIComponent(course.id)}`;
+  const [shareCopied, setShareCopied] = useState(false);
+  async function copyShareLink() {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setShareCopied(true);
+      window.setTimeout(() => setShareCopied(false), 2200);
+    } catch {
+      // Clipboard API can fail in non-HTTPS contexts or when the
+      // tab isn't focused. Fall back to a manual prompt so the user
+      // can still grab the URL.
+      window.prompt("Copy this link:", shareUrl);
+    }
+  }
+
   // Has the user actually changed anything? Strict-equal compare
   // against the current course; whitespace differences count as
   // edits intentionally so a user "tightening" trailing spaces gets
@@ -651,10 +673,35 @@ export default function CourseSettingsModal({
             <div className="fishbones-coursesettings-section">Share</div>
             <div className="fishbones-coursesettings-row">
               <div className="fishbones-coursesettings-row-text">
-                <div className="fishbones-coursesettings-row-label">Export as .fishbones</div>
+                <div className="fishbones-coursesettings-row-label">
+                  Copy share link
+                </div>
                 <div className="fishbones-coursesettings-row-hint">
-                  Save the course as a portable `.fishbones` archive. Anyone
-                  with Fishbones can import it.
+                  Public URL anyone can open. If the course is in the
+                  Libre catalog they install with one click; otherwise
+                  the page guides them to import your shared file.
+                </div>
+              </div>
+              <button
+                className="fishbones-coursesettings-btn"
+                onClick={() => {
+                  void copyShareLink();
+                }}
+                aria-label="Copy course share link"
+              >
+                {shareCopied ? "Copied!" : "Copy link"}
+              </button>
+            </div>
+            <div className="fishbones-coursesettings-row">
+              <div className="fishbones-coursesettings-row-text">
+                <div className="fishbones-coursesettings-row-label">
+                  Export as .academy
+                </div>
+                <div className="fishbones-coursesettings-row-hint">
+                  Save the course as a portable <code>.academy</code> archive
+                  (the new name for the previous <code>.fishbones</code>
+                  format). Anyone with Libre can drop it onto the app
+                  window to import.
                 </div>
               </div>
               <button

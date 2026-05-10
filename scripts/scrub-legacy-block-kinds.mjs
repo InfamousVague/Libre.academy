@@ -61,14 +61,15 @@ async function main() {
     console.log(`[scrub] (no staged starter courses at ${STAGED}; skipping)`);
   }
 
-  // 2) Bundled .fishbones archives. Re-zip after patching the inner
-  //    course.json. Skipping when the pack didn't contain any legacy
-  //    kinds keeps re-runs cheap.
+  // 2) Bundled course archives (`.academy` + legacy `.fishbones`).
+  //    Re-zip after patching the inner course.json. Skipping when
+  //    the pack didn't contain any legacy kinds keeps re-runs cheap.
   if (existsSync(BUNDLED)) {
     console.log(`\n[scrub] bundled packs → ${BUNDLED}`);
     for (const file of await readdir(BUNDLED)) {
-      if (!file.endsWith(".fishbones")) continue;
-      const courseId = file.replace(/\.fishbones$/, "");
+      const ext = [".academy", ".fishbones"].find((e) => file.endsWith(e));
+      if (!ext) continue;
+      const courseId = file.slice(0, -ext.length);
       if (args.course && args.course !== courseId) continue;
       const removed = await scrubBundledPack(join(BUNDLED, file));
       if (removed > 0) {

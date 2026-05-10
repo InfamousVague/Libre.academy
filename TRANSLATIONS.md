@@ -80,13 +80,63 @@ the lesson reader through `localizedLesson()`; React's referential
 equality on the source lesson + memoisation in `LessonView` keep the
 hot path cheap.
 
-## Translating a course
+## Authoring translations by hand
 
-The pipeline is a Node script that walks the course JSON, sends each
-lesson through Claude Sonnet 4.5, and writes the result back inline.
-It's idempotent — re-running only fills in lessons / locales that
-don't already have a complete translation, so a partial run can resume
-from any crash or cancellation.
+Two paths are wired in. Pick whichever matches the situation:
+
+### Hand-authored overlays + merge script (no API spend)
+
+`scripts/apply-translations.mjs` reads `public/starter-courses/i18n/<courseId>*.json`
+and merges the per-locale overlays into the course JSON. Each course can have
+multiple sibling overlay files (e.g. `hellotrade.json` for the spine of titles,
+`hellotrade-01-intro.json` for the intro chapter bodies, etc.) — the script
+globs them in lex order so a clean naming scheme like
+`<courseId>-<NN>-<chapter>.json` keeps things organised without ever needing
+to hand-edit the giant course JSON directly.
+
+Overlay shape:
+
+```jsonc
+{
+  "ru": {
+    "course": { "title": "...", "description": "..." },
+    "chapters": {
+      "intro": {
+        "title": "Введение",
+        "lessons": {
+          "what-is-hellotrade": {
+            "title": "Что такое HelloTrade?",
+            "body": "...markdown...",
+            "objectives": ["...", "..."],
+            "hints": ["...", "..."],
+            "questions": [{ "prompt": "...", "options": ["...", "..."], "explanation": "..." }]
+          }
+        }
+      }
+    }
+  },
+  "es": { /* mirror the ru shape */ },
+  "fr": { /* ... */ },
+  "kr": { /* ... */ },
+  "jp": { /* ... */ }
+}
+```
+
+Run after editing any overlay:
+
+```bash
+node scripts/apply-translations.mjs hellotrade
+```
+
+The script reports how many translation blocks merged. Idempotent — re-applying
+the same overlay rewrites the same fields.
+
+### API-powered translations (translate-course.mjs)
+
+The pipeline below is the hands-off path that uses the Anthropic API
+to translate everything in bulk. Idempotent — re-running only fills
+in lessons / locales that don't already have a complete translation,
+so a partial run can resume from any crash or cancellation.
 
 ```bash
 # One-time: have ANTHROPIC_API_KEY exported in your shell.

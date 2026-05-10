@@ -313,7 +313,29 @@ const OUT = join(ROOT, "public", "starter-courses");
 /// without touching the source pack.
 const COVER_OVERRIDES = join(ROOT, "cover-overrides");
 
-/// Curated browser-compatible starter set. IDs match the .fishbones
+/// Course-archive extensions in priority order. `.academy` is the
+/// canonical extension after the rebrand; `.fishbones` is the
+/// previous name and remains accepted so packs that haven't been
+/// renamed on disk still work. The first match for `${id}.<ext>`
+/// wins. Mirrors `ARCHIVE_EXTS` in `src-tauri/src/courses.rs`.
+const ARCHIVE_EXTS = ["academy", "fishbones", "kata"];
+
+/// Resolve the on-disk archive path for a pack id. Returns the first
+/// `${id}.<ext>` that exists, or null if nothing matches. Lets the
+/// build script straddle the renaming window — packs that have been
+/// migrated to `.academy` resolve, the ones still on `.fishbones` do
+/// too.
+function findPackArchive(packsDir, id) {
+  for (const ext of ARCHIVE_EXTS) {
+    const candidate = join(packsDir, `${id}.${ext}`);
+    if (existsSync(candidate)) {
+      return { path: candidate, ext };
+    }
+  }
+  return null;
+}
+
+/// Curated browser-compatible starter set. IDs match the archive
 /// filenames (without the extension). Order here is the order the
 /// library renders them in on first launch.
 ///
@@ -430,27 +452,30 @@ async function main() {
   void LEGACY_PACK_IDS;
   const manifest = [];
   for (const id of ALL_PACK_IDS) {
-    const packPath = join(PACKS_DIR, `${id}.fishbones`);
-    if (!existsSync(packPath)) {
-      console.warn(`[starter-courses] missing pack: ${packPath}, skipping`);
+    const found = findPackArchive(PACKS_DIR, id);
+    if (!found) {
+      console.warn(
+        `[starter-courses] missing pack: ${join(PACKS_DIR, id)}.{${ARCHIVE_EXTS.join("|")}}, skipping`,
+      );
       continue;
     }
-    // Capture the .fishbones archive size BEFORE extraction so the
-    // catalog can show learners "X MB to download" on the placeholder
-    // tile. Cheap stat — both desktop + web manifests get this.
+    const { path: packPath, ext: packExt } = found;
+    // Capture the archive size BEFORE extraction so the catalog can
+    // show learners "X MB to download" on the placeholder tile.
+    // Cheap stat — both desktop + web manifests get this.
     const archiveStat = await stat(packPath);
 
-    // .fishbones is a zip — use the system `unzip` (BSD on macOS,
-    // InfoZIP on Linux; both ship by default on the GitHub Actions
-    // ubuntu image). Avoids pulling in a JS zip library just for
-    // five files at build time.
+    // The archive (whatever extension it carries) is a zip — use the
+    // system `unzip` (BSD on macOS, InfoZIP on Linux; both ship by
+    // default on the GitHub Actions ubuntu image). Avoids pulling in
+    // a JS zip library just for five files at build time.
     const work = await mkdtemp(join(tmpdir(), "fb-starter-"));
     try {
       execFileSync("unzip", ["-q", packPath, "-d", work], { stdio: "pipe" });
       const courseJsonPath = join(work, "course.json");
       if (!existsSync(courseJsonPath)) {
         console.warn(
-          `[starter-courses] no course.json inside ${id}.fishbones, skipping`,
+          `[starter-courses] no course.json inside ${id}.${packExt}, skipping`,
         );
         continue;
       }
@@ -584,11 +609,16 @@ async function main() {
         // downloader's progress UI + by the placeholder tile to show
         // "Y MB" on hover.
         archiveSizeBytes: archiveStat.size,
-        // Where the desktop downloader fetches the .fishbones from
+        // Where the desktop downloader fetches the archive from
         // when the user clicks Install on a remote placeholder.
-        // Web build ignores this — it fetches the per-course JSON
-        // from `file` (same-origin) instead.
-        archiveUrl: `${REMOTE_ARCHIVE_BASE.replace(/\/$/, "")}/${id}.fishbones`,
+        // Tracks whichever extension the source bundled-pack
+        // actually carries (`.academy` post-rebrand, `.fishbones`
+        // for packs that haven't been migrated yet) so the URL
+        // matches what the user will upload to
+        // mattssoftware.com/fishbones/courses/. Web build ignores
+        // this — it fetches the per-course JSON from `file`
+        // (same-origin) instead.
+        archiveUrl: `${REMOTE_ARCHIVE_BASE.replace(/\/$/, "")}/${id}.${packExt}`,
         packType: course.packType || "course",
         releaseStatus,
         // Whether this pack is bundled with the app (extracted on

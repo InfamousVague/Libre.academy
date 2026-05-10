@@ -1152,14 +1152,20 @@ export default function App() {
 
   /// Ask for a destination then shell out to the Rust `export_course` command,
   /// which zips the course folder (course.json + any sibling assets) into a
-  /// `.fishbones` archive. We derive a default filename from the course title
+  /// `.academy` archive. We derive a default filename from the course title
   /// so the save sheet starts on a useful name.
+  ///
+  /// `.academy` is the canonical extension post-rebrand; the picker also
+  /// lists `.fishbones` (the previous name) so a user re-saving over an
+  /// older export still sees their existing files.
   async function exportCourse(courseId: string, courseTitle: string) {
     try {
-      const defaultName = slugify(courseTitle) + ".fishbones";
+      const defaultName = slugify(courseTitle) + ".academy";
       const destination = await save({
         defaultPath: defaultName,
-        filters: [{ name: "Libre course", extensions: ["fishbones", "kata"] }],
+        filters: [
+          { name: "Libre course", extensions: ["academy", "fishbones", "kata"] },
+        ],
         title: `Export "${courseTitle}"`,
       });
       if (!destination) return; // user cancelled
@@ -1173,7 +1179,7 @@ export default function App() {
   }
 
   /// Export every course in the library into a single directory as
-  /// `.fishbones` archives. One prompt, no per-course save sheets.
+  /// `.academy` archives. One prompt, no per-course save sheets.
   /// Failures don't halt the batch — they're collected and surfaced at
   /// the end so a flaky file doesn't strand the rest.
   async function bulkExportLibrary() {
@@ -1190,7 +1196,7 @@ export default function App() {
       if (typeof destDir !== "string") return;
       const failures: Array<{ title: string; error: string }> = [];
       for (const c of courses) {
-        const filename = slugify(c.title) + ".fishbones";
+        const filename = slugify(c.title) + ".academy";
         const destination = `${destDir}/${filename}`;
         try {
           await invoke("export_course", { courseId: c.id, destination });
@@ -1290,14 +1296,17 @@ export default function App() {
     return courseId;
   }
 
-  /// Opens the native file picker filtered to both extensions, then
-  /// imports the chosen path. Wraps `importArchiveAtPath` with the
-  /// picker + error reporting.
+  /// Opens the native file picker filtered to all accepted course-
+  /// archive extensions (`.academy` + the legacy `.fishbones` /
+  /// `.kata`), then imports the chosen path. Wraps
+  /// `importArchiveAtPath` with the picker + error reporting.
   async function importCourseArchive() {
     try {
       const picked = await openDialog({
         multiple: false,
-        filters: [{ name: "Libre course", extensions: ["fishbones", "kata"] }],
+        filters: [
+          { name: "Libre course", extensions: ["academy", "fishbones", "kata"] },
+        ],
       });
       if (typeof picked !== "string") return; // user cancelled
       await importArchiveAtPath(picked);
@@ -2400,7 +2409,8 @@ export default function App() {
   /// import buttons (Book / Bulk books / Docs site / Archive) with
   /// a single OS file picker that sniffs each chosen file and
   /// dispatches to the right pipeline:
-  ///   * `.fishbones` / `.kata` / `.zip` → `importArchiveAtPath`
+  ///   * `.academy` / `.fishbones` / `.kata` / `.zip` →
+  ///                                       `importArchiveAtPath`
   ///   * `.pdf` / `.epub` (single)       → ImportDialog with
   ///                                       `preselectedPath`
   ///   * `.pdf` / `.epub` (multi)        → BulkImportDialog (no
@@ -2415,7 +2425,7 @@ export default function App() {
         filters: [
           {
             name: "Course files",
-            extensions: ["pdf", "epub", "fishbones", "kata", "zip"],
+            extensions: ["pdf", "epub", "academy", "fishbones", "kata", "zip"],
           },
         ],
       });
@@ -2426,7 +2436,12 @@ export default function App() {
       for (const p of paths) {
         const ext = p.toLowerCase().split(".").pop() ?? "";
         if (ext === "pdf" || ext === "epub") pdfs.push(p);
-        else if (ext === "fishbones" || ext === "kata" || ext === "zip")
+        else if (
+          ext === "academy" ||
+          ext === "fishbones" ||
+          ext === "kata" ||
+          ext === "zip"
+        )
           archives.push(p);
       }
 

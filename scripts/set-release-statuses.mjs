@@ -107,7 +107,7 @@ function applyMarker(json) {
 function listBundledArchives() {
   if (!existsSync(BUNDLE_DIR)) return [];
   return readdirSync(BUNDLE_DIR)
-    .filter((n) => n.endsWith(".fishbones"))
+    .filter((n) => n.endsWith(".academy") || n.endsWith(".fishbones"))
     .map((n) => join(BUNDLE_DIR, n));
 }
 

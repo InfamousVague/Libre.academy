@@ -540,21 +540,20 @@ export default function CourseLibrary({
       onClick={(e) => e.stopPropagation()}
     >
         <div className="fishbones-library-header">
-          {/* Libreacademy wordmark in place of any title block —
-              the brand IS the page identity here, regardless of
-              scope. Library and Discover used to render their
-              own "Library / N courses" / "Discover / N books"
-              labels, but the wordmark anchors both surfaces
-              consistently and the count metadata isn't important
-              enough to keep the title block alive. Same lockup,
-              same row position, on either scope. */}
-          <img
-            src={`${import.meta.env.BASE_URL}libreacademy.png`}
-            alt="Libre.academy"
-            className="fishbones-library-brand-band__img"
-            draggable={false}
-            aria-hidden
-          />
+          {/* Title block — back to the pre-logo treatment. The
+              Libre.academy wordmark moved out to the sidebar, so
+              the page identity here is just "Library" / "Discover"
+              + the count metadata. */}
+          <div className="fishbones-library-titleblock">
+            <span className="fishbones-library-title">
+              {scope === "discover" ? "Discover" : "Library"}
+            </span>
+            <span className="fishbones-library-subtitle">
+              {scope === "discover"
+                ? `${placeholderCourses.length} book${placeholderCourses.length === 1 ? "" : "s"} available to install`
+                : `${courses.length} course${courses.length === 1 ? "" : "s"} on this machine`}
+            </span>
+          </div>
           <div className="fishbones-library-header-actions">
             {/* Single "Import" label + a segmented cluster of destinations.
                 Beats repeating "Import from PDF…", "Import archive…",
@@ -606,7 +605,7 @@ export default function CourseLibrary({
                 className="fishbones-library-bulk-export"
                 onClick={onBulkExport}
                 disabled={filtered.length === 0 && courses.length === 0}
-                title="Export every course in the library as .fishbones archives to a folder of your choice"
+                title="Export every course in the library as .academy archives to a folder of your choice"
               >
                 Export all
               </button>
@@ -754,7 +753,7 @@ export default function CourseLibrary({
               <div className="fishbones-library-empty-title">No courses yet</div>
               <div className="fishbones-library-empty-blurb">
                 {onImport
-                  ? "Import your first book to get started. Fishbones splits a PDF or EPUB into lessons and generates exercises with the Claude API, or you can import a `.fishbones` course someone else shared."
+                  ? "Import your first book to get started. Libre splits a PDF or EPUB into lessons and generates exercises with the Claude API, or you can import a `.academy` course someone else shared."
                   : "Sign in to sync courses from another device, or grab the desktop app to ingest your own books."}
               </div>
               <div className="fishbones-library-empty-actions">
@@ -777,7 +776,7 @@ export default function CourseLibrary({
                     className="fishbones-library-empty-secondary"
                     onClick={onImportArchive}
                   >
-                    Import .fishbones archive…
+                    Import .academy archive…
                   </button>
                 )}
               </div>

@@ -86,11 +86,28 @@ function listCourseFolders() {
   });
 }
 
+/// Bundled-pack archive extensions. `.academy` is the canonical
+/// post-rebrand extension; `.fishbones` is the previous name and
+/// remains accepted so promote-runs over a partially-migrated
+/// directory don't lose track of existing packs.
+const ARCHIVE_EXTS_PROMOTE = [".academy", ".fishbones"];
+
 function listBundledArchives() {
   if (!existsSync(BUNDLE_DIR)) return [];
-  return readdirSync(BUNDLE_DIR)
-    .filter((n) => n.endsWith(".fishbones"))
-    .map((n) => n.slice(0, -".fishbones".length));
+  // Returns a Map<id, { name, ext }> so we can later rewrite the
+  // archive at its existing path (or upgrade `.fishbones` → `.academy`
+  // by writing the new path + removing the old one).
+  const out = new Map();
+  for (const name of readdirSync(BUNDLE_DIR)) {
+    const ext = ARCHIVE_EXTS_PROMOTE.find((e) => name.endsWith(e));
+    if (!ext) continue;
+    const id = name.slice(0, -ext.length);
+    // Prefer .academy when both extensions exist for the same id.
+    if (!out.has(id) || ext === ".academy") {
+      out.set(id, { name, ext });
+    }
+  }
+  return out;
 }
 
 /**
@@ -133,7 +150,8 @@ function main() {
   }
 
   const localIds = listCourseFolders();
-  const bundledIds = new Set(listBundledArchives());
+  const bundledMap = listBundledArchives();
+  const bundledIds = new Set(bundledMap.keys());
 
   if (localIds.length === 0) {
     abort(`local library is empty — nothing to promote`);
@@ -143,9 +161,18 @@ function main() {
   const refreshed = [];
   for (const id of localIds) {
     const src = join(COURSES_DIR, id);
-    const dest = join(BUNDLE_DIR, `${id}.fishbones`);
+    // Always WRITE under `.academy` (the canonical post-rebrand
+    // extension). If a `.fishbones` legacy archive exists for the
+    // same id, drop it after the new one lands so we don't ship
+    // both extensions for the same course.
+    const dest = join(BUNDLE_DIR, `${id}.academy`);
+    const existing = bundledMap.get(id);
     const wasAlready = bundledIds.has(id);
     const size = zipCourseFolder(src, dest);
+    if (existing && existing.ext === ".fishbones" && !DRY_RUN) {
+      const legacyPath = join(BUNDLE_DIR, existing.name);
+      if (existsSync(legacyPath)) rmSync(legacyPath);
+    }
     (wasAlready ? refreshed : added).push({ id, size });
   }
 
@@ -154,7 +181,9 @@ function main() {
   const pruned = [];
   if (!KEEP_EXTRA) {
     for (const id of orphans) {
-      const path = join(BUNDLE_DIR, `${id}.fishbones`);
+      const existing = bundledMap.get(id);
+      if (!existing) continue;
+      const path = join(BUNDLE_DIR, existing.name);
       if (!DRY_RUN) rmSync(path);
       pruned.push(id);
     }

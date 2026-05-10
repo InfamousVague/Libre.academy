@@ -1,11 +1,11 @@
-/// Drag-and-drop a `.fishbones` (or legacy `.kata`) archive onto the
-/// app window to import it. Wraps Tauri 2's `onDragDropEvent` API and
-/// gives the caller two pieces of state plus a sequential import
-/// runner:
+/// Drag-and-drop a `.academy` (or legacy `.fishbones` / `.kata`)
+/// archive onto the app window to import it. Wraps Tauri 2's
+/// `onDragDropEvent` API and gives the caller two pieces of state
+/// plus a sequential import runner:
 ///
 ///   - `isDragging` — true while the OS reports a drag over the
 ///     window AND at least one of the file paths under the cursor
-///     looks like a fishbones archive. Drives the drop-target overlay.
+///     looks like a course archive. Drives the drop-target overlay.
 ///   - `isImporting` — true while we're awaiting `invoke("import_course")`
 ///     calls after a drop. Multiple files import sequentially so the
 ///     UI can show a stable count.
@@ -28,7 +28,12 @@
 import { useEffect, useRef, useState } from "react";
 import { isWeb } from "../lib/platform";
 
-const ARCHIVE_EXTENSIONS = [".fishbones", ".kata"];
+/// Course-archive extensions, in priority order. `.academy` is the
+/// canonical extension after the Fishbones → Libre rebrand;
+/// `.fishbones` and `.kata` are the previous names and remain
+/// accepted on import for backwards compat with archives shipped /
+/// exported by older builds. Mirrors `ARCHIVE_EXTS` in `courses.rs`.
+const ARCHIVE_EXTENSIONS = [".academy", ".fishbones", ".kata"];
 
 function isArchivePath(path: string): boolean {
   const lower = path.toLowerCase();

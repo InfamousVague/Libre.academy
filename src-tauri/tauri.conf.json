@@ -56,7 +56,7 @@
       "icons/icon.ico"
     ],
     "resources": [
-      "resources/bundled-packs/*.fishbones",
+      "resources/bundled-packs/*.academy",
       "resources/bundled-packs/README.md",
       "resources/vendor/*",
       "resources/node/**/*",

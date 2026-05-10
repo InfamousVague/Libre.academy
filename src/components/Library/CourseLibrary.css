@@ -57,82 +57,11 @@
 
 .fishbones-library-header {
   display: flex;
-  /* Bottom-align everything in the row so the action buttons sit
-     flush with the wordmark's baseline instead of floating mid-
-     wordmark. The wordmark is now the row's tallest child (~64px
-     after the 15% bump) and centering looked off-balance against
-     the ~36px-tall buttons. flex-end pins both to the row's
-     bottom edge. */
-  align-items: flex-end;
-  /* `gap` clusters the brand-mark + titleblock on the left side
-     of the row; `margin-left: auto` on `.fishbones-library-header-actions`
-     (below) pushes the action buttons to the right. We dropped
-     `justify-content: space-between` because with three children
-     (brand, title, actions) it would space them apart instead of
-     keeping the first two grouped against the left edge. */
-  gap: 16px;
-  /* Asymmetric padding — keep the 18px top so the wordmark has
-     breathing room from the panel's top edge, but trim the
-     bottom from 18 → 6 so the row doesn't push the controls
-     strip too far down. The wordmark's `margin-bottom: -12px`
-     visually extends past the content edge into this 6px region,
-     leaving a tight gap between its baseline and the controls
-     strip below — closer to the "two rows hugging" rhythm the
-     user asked for. */
-  padding: 18px 22px 6px;
-  /* No `border-bottom` here — the controls strip directly below
-     paints a bg-primary surface against the header's transparent
-     bg, and that colour transition is enough of a separator.
-     Adding a 1px line on top doubled up with the bg edge and read
-     as two stacked dividers. */
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--color-border-default);
   flex-shrink: 0;
-}
-
-/* Hero wordmark in the Library header — moved here from the
-   top bar, where the same lockup was repeating across every view
-   and stealing horizontal space from the tab strip.
-   Wrapped in a card surface so the lockup reads as a deliberate
-   identity tile rather than a free-floating PNG. The card uses
-   the panel's tertiary surface tone, a 1px border to delineate
-   the edge against the header chrome, generous padding so the
-   wordmark has visible breathing room on every side, and a
-   subtle inner / drop shadow combo so it lifts off the header
-   without looking like a button (no hover treatment — this is
-   identifying chrome, not a click target). */
-/* Libreacademy wordmark — replaces the "Library / N courses"
-   title block in the library-scope header. Lives directly inside
-   `.fishbones-library-header`, sharing the row with the action
-   buttons (which still get pushed right via `margin-left: auto`
-   on `.fishbones-library-header-actions`). No card chrome —
-   the wordmark is the page identity, not a tile to be framed.
-   Negative vertical margins (-14px top + -14px bottom) shrink
-   the wordmark's contribution to the header's intrinsic height
-   without changing its rendered size: the image still draws at
-   56px tall but the surrounding flex container reserves only
-   28px for it, so the header's outer height drops from
-   ~92px (18 padding + 56 image + 18 padding) to ~64px. The
-   image visually overshoots the header's content edge by 14px
-   on each side, bleeding subtly into the panel chrome above
-   and the controls strip below — the desired "skinny row, big
-   wordmark" effect the user asked for. */
-.fishbones-library-brand-band__img {
-  display: block;
-  /* Bumped 15% (56 → 64) to match the academy site's nav/footer
-     scale-up — keeps the libreacademy lockup at a consistent
-     visual weight across web + desktop surfaces. */
-  height: 64px;
-  width: auto;
-  max-width: 100%;
-  flex-shrink: 0;
-  /* Top margin: 0 — wordmark sits naturally below the header's
-     full 18px top padding, giving it the breathing room the user
-     wants above. Bottom: -12px negative offset compresses the
-     row from the bottom side only, so the wordmark overshoots
-     the header's content edge below (bleeding subtly into the
-     controls strip) but stays cleanly anchored from the top. */
-  margin: 0 0 -12px;
-  user-select: none;
-  -webkit-user-drag: none;
 }
 
 /* "Update all" banner. Floats absolutely over the library so it
@@ -238,20 +167,6 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  /* Push to the right edge of the header. `.fishbones-library-header`
-     no longer uses `justify-content: space-between` — that mode would
-     splay three children evenly instead of keeping the brand-mark
-     and titleblock clustered on the left. `margin-left: auto`
-     produces the "left-cluster + right-actions" layout we want. */
-  margin-left: auto;
-  /* The buttons inherit the header's `align-items: center` from the
-     parent flex container, so they vertically centre against the
-     wordmark. Earlier we tried `align-self: flex-end` to seat them
-     against the header's bottom edge — it made the row read like
-     every toolbar in the panel was bottom-aligning, even though the
-     rule was scoped to this one. Reverted to default centring;
-     the wordmark's negative bottom margin already provides the
-     "skinny row" effect on its own. */
 }
 
 /* Import group: one "Import" label on the left anchors the action, then
@@ -354,13 +269,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  /* Top padding trimmed 14 → 8 so the strip sits closer to the
-     header above it. Combined with the header's bottom-padding
-     reduction (18 → 6), the inter-row gap drops from ~32px to
-     ~14px — the "less space" the user asked for. Bottom stays
-     at 14 so the strip's baseline against the cards isn't
-     affected. */
-  padding: 8px 22px 14px;
+  padding: 14px 22px;
   border-bottom: 1px solid var(--color-border-default);
   flex-shrink: 0;
   flex-wrap: wrap;

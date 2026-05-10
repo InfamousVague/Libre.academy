@@ -11,8 +11,11 @@
 //! Lessons are inlined in the JSON for V1 (no separate .md files yet). A
 //! future step will split prose out into sibling .md files.
 //!
-//! Share/export uses a `.fishbones` archive — a zip of the course folder.
-//! Legacy `.kata` archives are still accepted on import for backwards compat.
+//! Share/export uses a `.academy` archive — a zip of the course folder.
+//! `.fishbones` (the previous name) and `.kata` (the original Tauri-era
+//! name before the Fishbones → Libre rebrand) are still accepted on
+//! import for backwards compatibility with archives shipped or
+//! exported by older builds.
 //! Import unpacks the archive into `<app_data_dir>/courses/<course-id>/`.
 
 use std::fs;
@@ -112,7 +115,22 @@ const RETIRED_PACK_IDS: &[&str] = &[
     "challenges-reactnative-visual",
 ];
 
-/// Whether a `.fishbones` file in `resources/bundled-packs/` should be
+/// Course-archive file extensions, in priority order. `.academy` is
+/// the canonical extension after the Fishbones → Libre rebrand;
+/// `.fishbones` and `.kata` remain accepted for backwards compat with
+/// older shipped archives + user exports. Used by every match arm
+/// that sniffs the bundled-packs directory (here + ingest.rs +
+/// diagnostics.rs).
+pub const ARCHIVE_EXTS: &[&str] = &["academy", "fishbones", "kata"];
+
+/// True when the given path's extension is one of our course-archive
+/// extensions. Pass the result of `path.extension().and_then(|s|
+/// s.to_str())` directly — the helper handles the `Option`.
+pub fn is_archive_ext(ext: Option<&str>) -> bool {
+    matches!(ext, Some(e) if ARCHIVE_EXTS.contains(&e))
+}
+
+/// Whether a course archive in `resources/bundled-packs/` should be
 /// auto-seeded into a fresh install. The default library is small —
 /// just two foundational books plus every challenge pack — and the
 /// user discovers + installs everything else from the in-app catalog
@@ -120,11 +138,11 @@ const RETIRED_PACK_IDS: &[&str] = &[
 /// mattssoftware.com/fishbones/catalog/manifest.json).
 ///
 /// In dev mode, `app.path().resource_dir()` resolves to the source
-/// `src-tauri/resources/` directory, which contains every
-/// `.fishbones` we've ever shipped (60+ files). Without this filter,
-/// every dev launch would seed the full catalog into a fresh install
-/// — wrong for the curated default-library spec and wrong for
-/// matching production behaviour during dev.
+/// `src-tauri/resources/` directory, which contains every archive
+/// we've ever shipped (60+ files). Without this filter, every dev
+/// launch would seed the full catalog into a fresh install — wrong
+/// for the curated default-library spec and wrong for matching
+/// production behaviour during dev.
 ///
 /// Files NOT matching this filter still ship in the build (they
 /// exist on disk for the catalog), but only ids that pass get
@@ -133,7 +151,10 @@ const RETIRED_PACK_IDS: &[&str] = &[
 /// desktop + web seed the same minimal default set.
 #[cfg(not(mobile))]
 fn should_seed_pack(filename: &str) -> bool {
-    let stem = filename.trim_end_matches(".fishbones").trim_end_matches(".kata");
+    let stem = filename
+        .trim_end_matches(".academy")
+        .trim_end_matches(".fishbones")
+        .trim_end_matches(".kata");
     matches!(
         stem,
         "the-rust-programming-language" | "mastering-ethereum"
@@ -275,9 +296,8 @@ pub fn ensure_seed(app: &tauri::AppHandle) -> anyhow::Result<()> {
         if !path.is_file() {
             continue;
         }
-        match path.extension().and_then(|s| s.to_str()) {
-            Some("fishbones") | Some("kata") => {}
-            _ => continue,
+        if !is_archive_ext(path.extension().and_then(|s| s.to_str())) {
+            continue;
         }
 
         // Allow-list filter (see should_seed_pack above). Files
@@ -619,7 +639,7 @@ pub fn read_bundled_course(
         return Ok(None);
     }
     // Fast path — filename matches the id.
-    for ext in ["fishbones", "kata"] {
+    for ext in ARCHIVE_EXTS {
         let candidate = resource_dir.join(format!("{course_id}.{ext}"));
         if candidate.is_file() {
             if let Ok(course) = read_course_json_from_archive(&candidate) {
@@ -634,9 +654,8 @@ pub fn read_bundled_course(
         if !path.is_file() {
             continue;
         }
-        match path.extension().and_then(|s| s.to_str()) {
-            Some("fishbones") | Some("kata") => {}
-            _ => continue,
+        if !is_archive_ext(path.extension().and_then(|s| s.to_str())) {
+            continue;
         }
         if let Ok(id) = peek_archive_id(&path) {
             if id == course_id {
@@ -714,26 +733,21 @@ pub fn list_bundled_catalog_entries(
             eprintln!("[fishbones:catalog] candidate missing: {:?}", c);
             continue;
         }
-        // Quick probe: does this dir contain any .fishbones at all?
-        // We don't want to silently pick `base` (the resource_dir
-        // root) just because it exists — only the dir that actually
-        // holds course archives wins.
-        let has_fishbones = match fs::read_dir(c) {
+        // Quick probe: does this dir contain any course archive at
+        // all (.academy / .fishbones / .kata)? We don't want to
+        // silently pick `base` (the resource_dir root) just because
+        // it exists — only the dir that actually holds course
+        // archives wins.
+        let has_archives = match fs::read_dir(c) {
             Ok(rd) => rd
                 .filter_map(|e| e.ok())
-                .any(|e| {
-                    e.path()
-                        .extension()
-                        .and_then(|s| s.to_str())
-                        .map(|s| s == "fishbones" || s == "kata")
-                        .unwrap_or(false)
-                }),
+                .any(|e| is_archive_ext(e.path().extension().and_then(|s| s.to_str()))),
             Err(e) => {
                 eprintln!("[fishbones:catalog] read_dir({:?}) failed: {}", c, e);
                 false
             }
         };
-        if has_fishbones {
+        if has_archives {
             eprintln!("[fishbones:catalog] using {:?}", c);
             chosen = Some(c.clone());
             break;
@@ -744,7 +758,7 @@ pub fn list_bundled_catalog_entries(
         Some(p) => p,
         None => {
             eprintln!(
-                "[fishbones:catalog] no .fishbones archives found under any of: {:?}",
+                "[fishbones:catalog] no course archives found under any of: {:?}",
                 candidates
             );
             return Ok(Vec::new());
@@ -762,9 +776,8 @@ pub fn list_bundled_catalog_entries(
         if !path.is_file() {
             continue;
         }
-        match path.extension().and_then(|s| s.to_str()) {
-            Some("fishbones") | Some("kata") => {}
-            _ => continue,
+        if !is_archive_ext(path.extension().and_then(|s| s.to_str())) {
+            continue;
         }
         let size_bytes = entry.metadata().map(|m| m.len()).unwrap_or(0);
         match peek_archive_metadata(&path) {
@@ -1011,9 +1024,8 @@ pub fn refresh_bundled_courses(app: tauri::AppHandle) -> Result<RefreshReport, S
         if !path.is_file() {
             continue;
         }
-        match path.extension().and_then(|s| s.to_str()) {
-            Some("fishbones") | Some("kata") => {}
-            _ => continue,
+        if !is_archive_ext(path.extension().and_then(|s| s.to_str())) {
+            continue;
         }
 
         let id = match peek_archive_id(&path) {
