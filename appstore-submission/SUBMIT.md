@@ -15,8 +15,8 @@ A snapshot of every asset you need to drag into App Store Connect, plus the orde
 | App Privacy nutrition label answers | ✅ done | `metadata/privacy-labels.md` |
 | Reviewer notes block | ✅ done | `metadata/review-notes.md` |
 | Export-compliance answers | ✅ done | `metadata/export-compliance.md` |
-| iPhone 6.9" screenshots (1320×2868) | 🟡 **YOU DO** | See "Screenshot capture" below |
-| iPad 13" screenshots (2064×2752) | 🟡 **YOU DO** | Same recipe, swap simulator |
+| iPhone 6.9" screenshots (1320×2868) | 🟡 1/6 captured | `01-library.png` ✅; navigate + capture 02–06 |
+| iPad 13" screenshots (2064×2752) | 🟡 1/6 captured | `01-library.png` ✅; same nav recipe |
 | `https://libre.academy/privacy` | ✅ live | 200 OK |
 | `https://libre.academy/support` | ✅ live | 200 OK |
 | Apple Developer Program active | ⚠️ verify | https://developer.apple.com/account |
@@ -24,25 +24,13 @@ A snapshot of every asset you need to drag into App Store Connect, plus the orde
 
 ## Screenshot capture
 
-Both simulators are pre-booted (`iPhone 17 Pro Max` for 6.9", `iPad Pro 13" (M5)` for 13"). The Tauri app build for the iOS simulator is the one cog left to turn — once `tauri ios build --target aarch64-sim --debug` finishes, install + launch + capture.
+✅ **Already done for you:**
+- Tauri iOS sim build at `src-tauri/gen/apple/build/arm64-sim/Libre.app`
+- iPhone 17 Pro Max sim booted, app installed + launched
+- iPad Pro 13" (M5) sim booted, app installed + launched
+- `01-library.png` captured on both (open the simulator windows to see)
 
-### One-time install per simulator
-
-```bash
-cd /Users/matt/Development/Apps/Fishbones
-
-# iPhone — UDID F2AA1DE6 → iPhone 17 Pro Max
-xcrun simctl install F2AA1DE6-9170-4548-B274-762221F26819 \
-  src-tauri/gen/apple/build/arm64-sim/Libre.app
-xcrun simctl launch F2AA1DE6-9170-4548-B274-762221F26819 com.mattssoftware.kata
-
-# iPad — UDID 6A9135A7 → iPad Pro 13" (M5)
-xcrun simctl install 6A9135A7-64B9-48CF-A454-31C03C7CB124 \
-  src-tauri/gen/apple/build/arm64-sim/Libre.app
-xcrun simctl launch 6A9135A7-64B9-48CF-A454-31C03C7CB124 com.mattssoftware.kata
-```
-
-> If the .app bundle is named `Fishbones.app` instead of `Libre.app`, the `PRODUCT_NAME` change hasn't propagated to the build output yet. `cd src-tauri/gen/apple && xcodegen generate` once more, then rebuild.
+**You drive the rest** — the simulators are open, the app is on the Library tab; just tap your way through and run the capture command for each shot.
 
 ### Capture each screen
 
