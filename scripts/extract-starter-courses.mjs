@@ -516,13 +516,21 @@ async function main() {
       // 404 in the embedded /learn/ shelf and fall back to the
       // language-tinted glyph tile.
       const courseId = course.id || id;
-      const packOverride = join(COVER_OVERRIDES, `${id}.png`);
-      const courseOverride = join(COVER_OVERRIDES, `${courseId}.png`);
-      const overridePath = existsSync(packOverride)
-        ? packOverride
-        : existsSync(courseOverride)
-          ? courseOverride
-          : null;
+      // Accept both .png and .jpg masters. .png stays the historical
+      // default (lossless), but .jpg overrides are way smaller for
+      // photographic art (the GPT-Image-2 ribbon covers compress at
+      // q88/720px to ~70KB vs ~650KB as PNGs). Both feed `resizeCover`
+      // identically since ImageMagick / sips don't care about input
+      // format. `.jpg` wins over `.png` when both are present so a
+      // designer can drop a leaner replacement in without having to
+      // delete the old PNG first.
+      const overrideCandidates = [
+        join(COVER_OVERRIDES, `${id}.jpg`),
+        join(COVER_OVERRIDES, `${courseId}.jpg`),
+        join(COVER_OVERRIDES, `${id}.png`),
+        join(COVER_OVERRIDES, `${courseId}.png`),
+      ];
+      const overridePath = overrideCandidates.find((p) => existsSync(p)) ?? null;
       const inZipJpgPath = join(work, "cover.jpg");
       const inZipPngPath = join(work, "cover.png");
       // Manifest references the pack-id JPEG so existing tooling
