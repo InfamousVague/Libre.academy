@@ -540,21 +540,34 @@ export default function CourseLibrary({
       onClick={(e) => e.stopPropagation()}
     >
         <div className="fishbones-library-header">
-          {/* Brand wordmark — moved here from the top bar. Renders
+          {/* Brand-mark card — fish skeleton glyph + libreacademy
+              wordmark together inside one identity tile. Renders
               only in the Library scope so the Discover modal isn't
-              double-branded with the main app frame. Left-aligned
-              and sized large enough that it reads as the page
-              identity rather than chrome. The titleblock to the
-              right keeps the "Library / N courses" subtitle so the
-              count metadata stays visible. */}
+              double-branded with the main app frame. The fish
+              skeleton is the original Fishbones-era brand mark
+              kept as a visual anchor next to the new wordmark; the
+              two side-by-side read as a single lockup that ties the
+              old icon back into the rebrand. */}
           {scope === "library" && (
-            <img
-              src={`${import.meta.env.BASE_URL}libreacademy.png`}
-              alt="Libre.academy"
+            <div
               className="fishbones-library-brand-mark"
-              draggable={false}
-              aria-hidden
-            />
+              aria-label="Libre.academy"
+            >
+              <img
+                src={`${import.meta.env.BASE_URL}ai-fish-skeleton.svg`}
+                alt=""
+                className="fishbones-library-brand-mark__fish"
+                draggable={false}
+                aria-hidden
+              />
+              <img
+                src={`${import.meta.env.BASE_URL}libreacademy.png`}
+                alt="Libre.academy"
+                className="fishbones-library-brand-mark__wordmark"
+                draggable={false}
+                aria-hidden
+              />
+            </div>
           )}
           <div className="fishbones-library-titleblock">
             <span className="fishbones-library-title">

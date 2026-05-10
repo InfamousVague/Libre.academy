@@ -82,27 +82,22 @@
    without looking like a button (no hover treatment — this is
    identifying chrome, not a click target). */
 .fishbones-library-brand-mark {
-  /* The img element itself is the card — no wrapper div is
-     needed. Padding gives the lockup room to breathe; border +
+  /* Wrapper carries TWO glyphs side-by-side — fish skeleton +
+     libreacademy wordmark — inside one identity tile. flex row
+     with a small gap aligns the two children to a single
+     baseline. Padding gives the lockup room to breathe; border +
      radius produce the card outline; box-shadow adds a gentle
-     1px lift so the card reads as a layer above the header
-     surface. No hover treatment because this is identifying
-     chrome, not a click target. */
-  display: block;
+     lift so the card reads as a layer above the header surface.
+     No hover treatment because this is identifying chrome, not a
+     click target. */
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
   flex-shrink: 0;
-  height: 56px;
-  width: auto;
-  /* `box-sizing: content-box` so `padding` extends the card
-     OUTWARD instead of eating the image's height. Without this,
-     the global `* { box-sizing: border-box }` reset (App.css)
-     would shrink the image to ~32px tall to make room for the
-     padding inside the 56px box, and the wordmark would look
-     scrunched. */
-  box-sizing: content-box;
-  /* 14px vertical / 22px horizontal padding sets the card height
-     to ~84px (56 + 14 + 14) and gives the wordmark the
-     hero-tile breathing room the rest of the design system
-     reserves for landscape glyphs. */
+  /* 14px vertical / 22px horizontal padding lands the card at
+     ~84px tall (56px child + 14px × 2) — same height the
+     single-img variant used previously, so the surrounding
+     header layout stays balanced. */
   padding: 14px 22px;
   background: var(--color-bg-tertiary, var(--color-bg-secondary));
   border: 1px solid var(--color-border-default);
@@ -112,6 +107,31 @@
     0 4px 14px rgba(0, 0, 0, 0.18);
   user-select: none;
   -webkit-user-drag: none;
+}
+
+/* Fish-skeleton glyph — the original Fishbones-era logo, kept as
+   a visual anchor next to the new wordmark so the lockup ties
+   the legacy mark into the rebrand. The shipped SVG hardcodes
+   `stroke="#000"` / `fill="#000"` (invisible on the dark surface);
+   `filter: invert(1)` flips it to white against the bg-tertiary
+   card fill. */
+.fishbones-library-brand-mark__fish {
+  height: 56px;
+  width: 56px;
+  flex-shrink: 0;
+  display: block;
+  filter: invert(1);
+}
+
+/* Libreacademy wordmark inside the brand-mark card. Sized to the
+   same height as the fish glyph so the two children align on a
+   shared baseline; width auto-flows so the wordmark's intrinsic
+   wide aspect ratio is preserved. */
+.fishbones-library-brand-mark__wordmark {
+  height: 56px;
+  width: auto;
+  flex-shrink: 0;
+  display: block;
 }
 
 /* "Update all" banner. Floats absolutely over the library so it
