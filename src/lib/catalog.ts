@@ -104,8 +104,54 @@ function defaultCatalogUrl(): string {
 let cachedPromise: Promise<CatalogEntry[]> | null = null;
 let cachedAt = 0;
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes (in-memory)
-const PERSIST_KEY = "fb:catalog-cache-v1";
+/// Bumped to v2 on 2026-05-10 to invalidate snapshots that included
+/// retired books (eloquent-javascript, fluent-react, programming-bitcoin,
+/// learning-zig, …). The old key still lives in localStorage on returning
+/// installs but is now ignored — it'll be overwritten by the next
+/// successful fetch under v2 and can be GC'd by the browser whenever.
+const PERSIST_KEY = "fb:catalog-cache-v2";
 const PERSIST_TTL_MS = 1000 * 60 * 60 * 24; // 24h (localStorage)
+
+/// Pack ids we've shipped at some point but pulled from the catalog.
+/// Mirrors `RETIRED_PACK_IDS` in `src-tauri/src/courses.rs` — kept in
+/// sync by hand because the desktop catalog already filters via that
+/// constant, and the web catalog (manifest.json) can have stale entries
+/// from a deploy that pre-dates a retirement. Either path produces a
+/// CatalogEntry the Discover tab would render unless we drop it here.
+///
+/// Don't trim the list when adding new retirees; an install that's been
+/// dormant since the very first version still needs the older ids
+/// filtered on its next launch.
+const RETIRED_PACK_IDS: ReadonlySet<string> = new Set([
+  // Pre-2026-05 cleanup. NOTE: bun-complete, svelte-5-complete and
+  // learning-react-native were briefly listed here but are back in
+  // the active catalog as of 2026-05-10 (Discover-cache strays the
+  // team decided to keep + author covers for) — kept out of the set.
+  "bun-fundamentals",
+  "javascript-crash-course",
+  "challenges-reactnative-visual",
+  // 2026-05-07 cleanup
+  "eloquent-javascript",
+  "the-modern-javascript-tutorial-fundamentals",
+  "you-dont-know-js-yet",
+  "you-don-t-know-js-yet",
+  "python-crash-course",
+  "crafting-interpreters-javascript",
+  "crafting-interpreters-js",
+  "fluent-react",
+  "interactive-web-development-with-three-js-and-a-frame",
+  // 2026-05-10 cleanup
+  "programming-bitcoin",
+  "javascript-the-definitive-guide",
+  "introduction-to-computer-organization-arm",
+  "functional-light-javascript",
+  "functional-light-js",
+  "learning-zig",
+]);
+
+export function isRetiredPack(id: string): boolean {
+  return RETIRED_PACK_IDS.has(id);
+}
 
 interface PersistedCatalog {
   ts: number;
@@ -125,7 +171,12 @@ export function readPersistedCatalog(): CatalogEntry[] | null {
     const parsed = JSON.parse(raw) as PersistedCatalog;
     if (!parsed || !Array.isArray(parsed.entries)) return null;
     if (Date.now() - parsed.ts > PERSIST_TTL_MS) return null;
-    return parsed.entries;
+    // Filter retired ids on read too — the persisted snapshot is what
+    // useCatalog paints in the first frame before the network revalidates,
+    // and we don't want a 200ms flash of retired tiles. The cache key bump
+    // covers most cases, but the same key can persist across multiple
+    // retirement waves, so the filter is the durable guard.
+    return parsed.entries.filter((e) => !RETIRED_PACK_IDS.has(e.id));
   } catch {
     return null;
   }
@@ -193,7 +244,9 @@ export function fetchCatalog(opts: { refresh?: boolean } = {}): Promise<
     // back onto the Discover grid until the SWR revalidation
     // finished).
     .then((entries) =>
-      entries.filter((e) => !e.hidden && !isHiddenCourse(e.id)),
+      entries.filter(
+        (e) => !e.hidden && !isHiddenCourse(e.id) && !RETIRED_PACK_IDS.has(e.id),
+      ),
     )
     .then((entries) => {
       // Persist successful fetches so the next launch can paint

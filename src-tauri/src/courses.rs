@@ -95,7 +95,7 @@ pub fn courses_dir(app: &tauri::AppHandle) -> anyhow::Result<PathBuf> {
 // extracted copies on disk — bumping forces re-extraction so the
 // "this exercise hasn't been authored for blocks mode yet" message
 // stops appearing on every challenge.
-const SEED_VERSION: u32 = 11;
+const SEED_VERSION: u32 = 12;
 
 /// Ids that previously shipped via `resources/bundled-packs/` but have
 /// since been retired. On a SEED_VERSION bump, ensure_seed deletes
@@ -108,11 +108,32 @@ const SEED_VERSION: u32 = 11;
 /// been dormant since the very first version still needs the older
 /// ids cleaned up on its next launch.
 const RETIRED_PACK_IDS: &[&str] = &[
-    "bun-complete",
+    // bun-complete, svelte-5-complete, learning-react-native and
+    // solidity-smart-contracts-from-first-principles were briefly
+    // retired but came back into the active catalog on 2026-05-10
+    // (Discover-cache strays the team decided to keep + author
+    // covers for). Keep them OUT of this list — anything here is
+    // pruned wholesale on next launch.
     "bun-fundamentals",
-    "svelte-5-complete",
     "javascript-crash-course",
     "challenges-reactnative-visual",
+    // 2026-05-07 cleanup
+    "eloquent-javascript",
+    "the-modern-javascript-tutorial-fundamentals",
+    "you-dont-know-js-yet",
+    "you-don-t-know-js-yet",
+    "python-crash-course",
+    "crafting-interpreters-javascript",
+    "crafting-interpreters-js",
+    "fluent-react",
+    "interactive-web-development-with-three-js-and-a-frame",
+    // 2026-05-10 cleanup
+    "programming-bitcoin",
+    "javascript-the-definitive-guide",
+    "introduction-to-computer-organization-arm",
+    "functional-light-javascript",
+    "functional-light-js",
+    "learning-zig",
 ];
 
 /// Course-archive file extensions, in priority order. `.academy` is
@@ -782,6 +803,20 @@ pub fn list_bundled_catalog_entries(
         let size_bytes = entry.metadata().map(|m| m.len()).unwrap_or(0);
         match peek_archive_metadata(&path) {
             Ok((id, title, author, language, pack_type, lesson_count)) => {
+                // Defensive filter — RETIRED_PACK_IDS lists every pack
+                // we've ever shipped and pulled. If an old archive
+                // survived a build-target cleanup or a user dropped a
+                // stale .fishbones into resources/bundled-packs by hand,
+                // it won't surface in Discover. ensure_seed already
+                // prunes the corresponding installed dir on a SEED_VERSION
+                // bump — this complements that for the catalog side.
+                if RETIRED_PACK_IDS.contains(&id.as_str()) {
+                    eprintln!(
+                        "[fishbones:catalog] skipping retired archive {:?} (id={})",
+                        path, id
+                    );
+                    continue;
+                }
                 out.push(BundledCatalogEntry {
                     id,
                     title,
