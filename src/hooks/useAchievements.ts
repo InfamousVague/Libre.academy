@@ -120,15 +120,33 @@ export function useAchievements(
     // overwhelming "30 achievements unlocked!" carousel on first
     // launch after an update.
     const fresh = diffUnlocks(satisfied, unlockedRecords);
+    // Only consider us initialised once we've seen actual data flow
+    // through. Cold-boot order is:
+    //   pass 1: history=[], courses=[] → satisfied=empty → fresh=empty
+    //   pass 2: history loads → satisfied={...10 things...} → fresh=[...10 things...]
+    // If pass 1 set initRef=true, pass 2 would mistake every
+    // already-earned achievement for a brand-new unlock and fire
+    // confetti + sound for the whole catalogue on every cold launch.
+    // Gating initRef on real-data presence (any history, any course,
+    // any persisted unlock) means we wait for actual signal before
+    // accepting the silent baseline.
+    const haveSignal =
+      history.length > 0 ||
+      courses.length > 0 ||
+      unlockedRecords.length > 0;
     if (fresh.length === 0) {
-      initRef.current = true;
+      if (haveSignal) initRef.current = true;
       return;
     }
     if (!initRef.current) {
       // Silent record on first pass.
       const merged = recordUnlocks(fresh, Date.now(), unlockedRecords);
       setUnlockedRecords(merged);
-      initRef.current = true;
+      // Same gate — only declare init complete once there's real
+      // data behind the satisfied set, so a wave of fresh-looking
+      // unlocks from a delayed-load pass still gets the silent
+      // record path.
+      if (haveSignal) initRef.current = true;
       return;
     }
 
