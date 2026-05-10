@@ -19,6 +19,7 @@ import { lock } from "@base/primitives/icon/icons/lock";
 import type { Achievement } from "../../data/achievements";
 import { TIER_META } from "../../data/achievements";
 import { resolveAchievementIcon } from "../../lib/achievementIcons";
+import { resolveAchievementImage } from "../../data/achievementImages";
 import "./Achievements.css";
 
 interface Props {
@@ -57,6 +58,10 @@ export default function AchievementBadge({
 }: Props) {
   const meta = TIER_META[achievement.tier];
   const showLock = locked || mystery;
+  // Prefer the ribbon-snake PNG when we have one staged. Locked /
+  // mystery slots always fall back to the lucide lock glyph so the
+  // PNG silhouette doesn't leak the badge identity.
+  const imageSrc = showLock ? null : resolveAchievementImage(achievement.id);
   const iconPath = mystery
     ? lock
     : showLock
@@ -73,6 +78,7 @@ export default function AchievementBadge({
     "fb-ach-badge",
     SIZE_PX[size],
     showLock ? "fb-ach-badge--locked" : "",
+    imageSrc ? "fb-ach-badge--has-image" : "",
     `fb-ach-badge--${achievement.tier}`,
     className ?? "",
   ]
@@ -82,12 +88,22 @@ export default function AchievementBadge({
     <div className={cls} style={styleVars} aria-hidden>
       <span className="fb-ach-badge__disc" />
       <span className="fb-ach-badge__icon">
-        <Icon
-          icon={iconPath}
-          size={ICON_SIZE[size]}
-          color="currentColor"
-          weight="regular"
-        />
+        {imageSrc ? (
+          <img
+            src={imageSrc}
+            alt=""
+            className="fb-ach-badge__image"
+            draggable={false}
+            loading="lazy"
+          />
+        ) : (
+          <Icon
+            icon={iconPath}
+            size={ICON_SIZE[size]}
+            color="currentColor"
+            weight="regular"
+          />
+        )}
       </span>
       <span className="fb-ach-badge__ring" />
     </div>

@@ -38,6 +38,42 @@
   position: relative;
   z-index: 1;
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* When the badge has a PNG image, the slot fills the whole disc so
+     the ribbon-snake artwork extends edge-to-edge. The lucide-icon
+     fallback keeps its native sizing (set by the Icon component). */
+}
+
+/* Image-backed badges: the PNG sits in front of the gradient disc but
+   covers the whole inner area, since the artwork has its own circular
+   medallion baked into the alpha channel. The disc still shows around
+   the edges as a soft tint when the PNG's transparent border catches
+   light, and the tier glow ring still sits behind everything via
+   z-index. Sized to match the parent .fb-ach-badge--{sm,md,lg}. */
+.fb-ach-badge--has-image .fb-ach-badge__icon {
+  position: absolute;
+  inset: 0;
+}
+.fb-ach-badge__image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+  /* Subtle warm halo so the badge sits on dark library / profile
+     surfaces with depth — same aesthetic as the academy hero artwork
+     without competing with the tier glow ring. */
+  filter: drop-shadow(0 2px 6px rgba(243, 114, 57, 0.22));
+}
+/* Locked-state image-backed badges desaturate the PNG so the lock
+   glyph reads against a quieted artwork. We don't render the image
+   in the locked state at all (the component branches on showLock),
+   so this rule mostly exists for the rare case where a future
+   surface wants the image visible-but-locked (mystery teaser). */
+.fb-ach-badge--locked .fb-ach-badge__image {
+  filter: grayscale(0.85) opacity(0.45);
 }
 
 /* Outer ring: ambient tier glow. Slow pulse at the gold/platinum
