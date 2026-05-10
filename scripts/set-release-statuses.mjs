@@ -78,11 +78,9 @@ const STATUSES = {
   // ───── ALPHA ─────  Next in the queue
   "mastering-bitcoin": "ALPHA",
   "solana-programs": "ALPHA",
-  // "the react course" → fluent-react (web React fundamentals; the
   // RN courses `react-native` + `learning-react-native` are kept at
   // UNREVIEWED since they're mobile-specific and the user said
   // "the react course" singular).
-  "fluent-react": "ALPHA",
 };
 
 const VALID_STATUSES = new Set(["UNREVIEWED", "ALPHA", "BETA"]);

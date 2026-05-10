@@ -47,7 +47,6 @@ export const FUNCTIONAL: SkillTree = {
       summary: "The discipline of not mutating in place.",
       prereqs: ["pure-functions"],
       matches: [
-        { courseId: "fluent-react", lessonId: "immutable-state" },
         { courseId: "composing-programs", lessonId: "ch05-reading" },
       ],
     },

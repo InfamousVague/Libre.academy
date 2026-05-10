@@ -123,7 +123,6 @@ export const ALL_PACK_IDS = [
 
   // ── Smart-contract / web3 / crypto ─────────────────────────────
   "mastering-bitcoin",
-  "programming-bitcoin",
   "mastering-ethereum",
   "mastering-lightning-network",
   "vyper-fundamentals-pythonic-smart-contracts",

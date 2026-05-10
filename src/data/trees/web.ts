@@ -152,8 +152,6 @@ export const WEB: SkillTree = {
       summary: ".then chains, error handling, the microtask queue.",
       prereqs: ["fetch"],
       matches: [
-        { courseId: "javascript-the-definitive-guide", lessonId: "introduction-to-promises" },
-        { courseId: "javascript-the-definitive-guide", lessonId: "chaining-promises" },
       ],
     },
     {
@@ -162,7 +160,6 @@ export const WEB: SkillTree = {
       summary: "Sequential async code without .then nesting.",
       prereqs: ["promises"],
       matches: [
-        { courseId: "javascript-the-definitive-guide", lessonId: "async-await-basics" },
         { courseId: "javascript-info", lessonId: "ch09-reading" },
       ],
     },
@@ -252,7 +249,6 @@ export const WEB: SkillTree = {
       matches: [
         { courseId: "react-native", lessonId: "the-basics-reactnative-dev-docs-intro-react" },
         { courseId: "learning-react-native", lessonId: "jsx-in-react-native" },
-        { courseId: "fluent-react", lessonId: "react-value-proposition" },
       ],
     },
     {
@@ -261,8 +257,6 @@ export const WEB: SkillTree = {
       summary: "Local component state, immutable updates.",
       prereqs: ["react-components"],
       matches: [
-        { courseId: "fluent-react", lessonId: "immutable-state" },
-        { courseId: "fluent-react", lessonId: "usestate-vs-usereducer" },
       ],
     },
     {
@@ -271,8 +265,6 @@ export const WEB: SkillTree = {
       summary: "Side effects, dependency arrays, cleanup.",
       prereqs: ["react-state"],
       matches: [
-        { courseId: "fluent-react", lessonId: "commit-phase-effects" },
-        { courseId: "fluent-react", lessonId: "rules-and-server-actions" },
       ],
     },
     {
@@ -281,7 +273,6 @@ export const WEB: SkillTree = {
       summary: "Sharing state across the tree.",
       prereqs: ["react-state"],
       matches: [
-        { courseId: "fluent-react", lessonId: "advanced-patterns-recap" },
       ],
     },
     {
@@ -290,7 +281,6 @@ export const WEB: SkillTree = {
       summary: "Action-driven state for complex transitions.",
       prereqs: ["react-state"],
       matches: [
-        { courseId: "fluent-react", lessonId: "usestate-vs-usereducer" },
       ],
     },
     {
@@ -358,9 +348,6 @@ export const WEB: SkillTree = {
       summary: "Trade-offs, hydration, server components.",
       prereqs: ["react-components"],
       matches: [
-        { courseId: "fluent-react", lessonId: "limitations-of-client-side-rendering" },
-        { courseId: "fluent-react", lessonId: "benefits-of-server-rendering" },
-        { courseId: "fluent-react", lessonId: "understanding-hydration" },
       ],
     },
     {
@@ -369,8 +356,6 @@ export const WEB: SkillTree = {
       summary: "App router, server components, server actions.",
       prereqs: ["ssr-vs-csr"],
       matches: [
-        { courseId: "fluent-react", lessonId: "nextjs-overview" },
-        { courseId: "fluent-react", lessonId: "server-side-data-fetching" },
       ],
     },
     {

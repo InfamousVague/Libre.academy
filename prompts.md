@@ -88,9 +88,6 @@ Every prompt below leads with the same paragraph so the family reads as one set.
 #### 19. Mastering Bitcoin — `mastering-bitcoin.png`
 > Hero shape: the ribbon forms the **Bitcoin "₿"** glyph — the vertical stem with the two horizontal serifs at top and bottom, and the two stacked half-loops on the right side, all rendered as one continuous folded coral ribbon. Pumpkin-orange saturation pushed slightly warmer than the base palette to match Bitcoin's brand orange. A subtle hash-pattern caustic inside the background glass squircles (looks like 64-character hex but unreadable, just texture). One floating coin disc behind the glyph reflects a faint sun.
 
-#### 20. Programming Bitcoin — `programming-bitcoin.png`
-> Hero shape: the ribbon forms a **smaller Bitcoin ₿ glyph in the foreground**, with a thin coiled ribbon-snake (paying homage to Python — the language the book teaches in) woven loosely through the two right-side loops of the ₿. The python-ribbon is a discrete, slightly tighter coil than the main ribbon — a subtle "two threads, one cover" effect. Pumpkin-orange Bitcoin saturation; a hint of Python yellow inside the python-ribbon. Background squircles carry the same hex-string caustics as Mastering Bitcoin so the two covers visually rhyme.
-
 #### 21. Mastering Lightning Network — `mastering-lightning-network.png`
 > Hero shape: a **branching lightning bolt** rendered in coral ribbon — a sharp jagged stroke down the centre, with two smaller forks splitting off the main stroke (channel branches) and ending in tiny ribbon-node dots (channel endpoints). The bolt is one continuous folded ribbon with hard 60° folds. Bright electric-yellow sub-surface glow inside the ribbon, intensifying near the forks. The ribbon-snake head replaces the topmost endpoint, looking down the bolt. Background squircles flicker with faint lightning-trace caustics.
 
@@ -256,9 +253,37 @@ The mapping lives in `scripts/extract-starter-courses.mjs`'s alias loop — same
 
 These ids appear in legacy prune lists (`webSeedCourses.ts` LEGACY_STARTER_IDS, `extract-starter-courses.mjs` LEGACY_PACK_IDS) so first-launch on returning installs cleans them up; they no longer ship and don't need cover prompts.
 
-- `eloquent-javascript` — retired 2026-05-07; coverage replaced by the in-house **A to TS** course (#2). Tree-node lesson links have been stripped from `src/data/trees/functional.ts`, `foundations.ts`, and `web.ts`; the local install dir is removed; the bundled archive was never present.
-- `python-crash-course` — retired 2026-05-07; superseded by **Composing Programs** (#8) in the foundations slot.
-- `the-modern-javascript-tutorial-fundamentals`, `you-don-t-know-js-yet`, `learning-zig`, `crafting-interpreters-javascript`, `learning-react-native`, `fluent-react`, `interactive-web-development-with-three-js-and-a-frame` — retired in the same 2026-05-07 cleanup. Replaced or implicitly covered by the in-house "A to <lang>" tutorials and the 2026 expansion challenge packs.
+- `eloquent-javascript` — retired 2026-05-07. Replaced by **A to TS** (#2). Tree-node lesson links stripped from `functional.ts`, `foundations.ts`, `web.ts`.
+- `python-crash-course` — retired 2026-05-07. Superseded by **Composing Programs** (#8).
+- `programming-bitcoin` — retired 2026-05-10. Coverage absorbed by **Mastering Bitcoin** (#19) for the conceptual track and the in-house TradeDock + **HelloTrade** (#27) for the Python-on-Bitcoin programming angle. Tree links removed; cover-overrides PNG deleted; ALL_PACK_IDS entry pulled.
+- `fluent-react` — retired 2026-05-10. Replaced by **React Native** (#17). Tree refs in `functional.ts`/`web.ts` stripped; release-status entry in `set-release-statuses.mjs` dropped.
+- `javascript-the-definitive-guide` — retired 2026-05-10. Tree refs in `web.ts` stripped.
+- `introduction-to-computer-organization-arm` — retired 2026-05-10. Coverage shifts to **Assembly Challenges** (#40). Tree refs in `systems.ts` stripped.
+- `interactive-web-development-with-three-js-and-a-frame` — retired 2026-05-07.
+- `crafting-interpreters-javascript` — retired 2026-05-07.
+- `the-modern-javascript-tutorial-fundamentals` — retired 2026-05-07.
+- `you-don-t-know-js-yet` — retired 2026-05-07.
+- `functional-light-javascript` — retired 2026-05-10. Coverage absorbed into **A to TS** (#2) + **Haskell Challenges** (#44) for the FP track.
+- `learning-react-native`, `fluent-react` — retired in the 2026-05-07 cleanup. **React Native** (#17) is the active replacement.
+
+## Additions — books still in the Discover catalog cache that need new covers
+
+These ids show up on the Discover tab from cached snapshots / older catalog states. If you decide to keep them around, the prompts below extend the family. If you'd rather retire them (the way we did for the books above), drop the prompt entry and add the id to the prune lists.
+
+#### A1. Bun: The Complete Runtime — `bun-complete.png`
+> Hero shape: the ribbon coils into a **rounded soft-loaf** silhouette with two small ribbon "ear" curls at the top, a clear nod to Bun's bunny-eared mascot rendered as a single continuous folded ribbon. The ribbon-snake head emerges from one of the side curls, peeking forward. A pale cream-pink sub-surface glow (Bun's brand cream). One background glass squircle catches a faint speed-line caustic — short, parallel slashes — to register Bun's "fast runtime" identity without literal text.
+
+#### A2. Learning React Native — `learning-react-native.png`
+> Hero shape: **two ribbon phone outlines stacked at a 3/4 angle**, the front phone slightly larger than the rear, suggesting before/after tutorial states. Inside the front phone's screen sits a single ribbon React-atom orbit (one ellipse — simpler than the React Native cover at #17). A small **ribbon bookmark** flag pokes out of the top edge of the front phone, signalling "study material in progress." Light-cyan React glow inside the orbits, with a warm cream tint along the bookmark's underside.
+
+#### A3. Learning Zig — `learning-zig.png`
+> Hero shape: a **mountain range** rendered in coral ribbon — three jagged ribbon ridges fanned across the centre with the tallest peak in the middle, the bases overlapping like layered cuts of paper. A small ribbon-snake head perches on the highest summit, looking out over the range. Sun rays from the upper right cast long shadows down each ridge across the cream floor. Subtle warm amber sub-surface glow (Zig's brand orange). One background squircle reflects a faint allocator-stack diagram (rectangles stacked with thin gaps) as caustic detail. *Visually distinct from A to Zig (#1), which leads with the lowercase "z" letterform — Learning Zig is the mountain hero.*
+
+#### A4. Solidity: Smart Contracts from First Principles — `solidity-smart-contracts-from-first-principles.png`
+> Hero shape: a **partially unfurled ribbon scroll** in 3/4 perspective — the upper half rolled tight, the lower half spilling forward toward the viewer. A small ribbon **wax-seal medallion** dangles off the lower-right corner via a short ribbon cord, embossed with a faint Ethereum-diamond imprint. Two smaller floating ribbon-Ξ glyphs drift in the background squircles. Slate-grey sub-surface glow inside the scroll (Solidity's brand grey). The ribbon-snake head emerges from the upper-left edge of the scroll, looking down at the contract.
+
+#### A5. Svelte 5 Complete — `svelte-5-complete.png`
+> Hero shape: a **three-tongue ribbon flame** mirroring the Learning Svelte cover (#13), with the central tongue containing a **stylised "5"** rendered as a tighter ribbon coil within the larger flame's body — like a heart-glyph nested inside the flame. The "5" forms one continuous fold, its tail merging seamlessly into the surrounding flame. The ribbon-snake head replaces the topmost flame tip. Bright orange-red Svelte brand glow saturated slightly warmer than Learning Svelte to read as the higher-version variant.
 
 ## Iteration tips
 

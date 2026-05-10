@@ -19,7 +19,6 @@ export const SYSTEMS: SkillTree = {
       matches: [
         { courseId: "the-rust-programming-language", lessonId: "stack-and-heap" },
         { courseId: "learning-zig", lessonId: "three-memory-areas" },
-        { courseId: "introduction-to-computer-organization-arm", lessonId: "memory-segments-overview" },
       ],
     },
     {
@@ -30,7 +29,6 @@ export const SYSTEMS: SkillTree = {
       matches: [
         { courseId: "learning-zig", lessonId: "address-of" },
         { courseId: "learning-zig", lessonId: "pass-by-pointer" },
-        { courseId: "introduction-to-computer-organization-arm", lessonId: "passing-arguments-overview" },
       ],
     },
     {
@@ -39,8 +37,6 @@ export const SYSTEMS: SkillTree = {
       summary: "Contiguous memory, null-terminated strings, indexing.",
       prereqs: ["pointers-c"],
       matches: [
-        { courseId: "introduction-to-computer-organization-arm", lessonId: "array-basics-in-c" },
-        { courseId: "introduction-to-computer-organization-arm", lessonId: "array-indexing-assembly" },
         { courseId: "learning-zig", lessonId: "arrays" },
       ],
     },
@@ -50,8 +46,6 @@ export const SYSTEMS: SkillTree = {
       summary: "User-defined record types, layout, alignment.",
       prereqs: ["pointers-c"],
       matches: [
-        { courseId: "introduction-to-computer-organization-arm", lessonId: "record-basics-in-c" },
-        { courseId: "introduction-to-computer-organization-arm", lessonId: "passing-records-to-functions" },
         { courseId: "learning-zig", lessonId: "structs" },
       ],
     },
@@ -180,9 +174,6 @@ export const SYSTEMS: SkillTree = {
       summary: "User → kernel boundary, svc, exception vector.",
       prereqs: ["pointers-c"],
       matches: [
-        { courseId: "introduction-to-computer-organization-arm", lessonId: "svc-instruction-basics" },
-        { courseId: "introduction-to-computer-organization-arm", lessonId: "exception-vector-table" },
-        { courseId: "introduction-to-computer-organization-arm", lessonId: "intro-to-exceptions-and-interrupts" },
       ],
     },
     {
@@ -191,9 +182,6 @@ export const SYSTEMS: SkillTree = {
       summary: "Instructions, registers, load/store.",
       prereqs: ["memory-stack-heap"],
       matches: [
-        { courseId: "introduction-to-computer-organization-arm", lessonId: "assembly-line-structure" },
-        { courseId: "introduction-to-computer-organization-arm", lessonId: "mov-instruction-variants" },
-        { courseId: "introduction-to-computer-organization-arm", lessonId: "load-store-instructions" },
       ],
     },
   ],
