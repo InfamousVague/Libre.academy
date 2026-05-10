@@ -165,12 +165,39 @@ function staticPuff(target?: { x: number; y: number } | HTMLElement): Promise<vo
 /// If the play() promise rejects, we retry muted so the visual
 /// still fires; the user just loses the audio cue for that one
 /// unlock.
+/// Pick the right transparent-video URL for this browser. Safari /
+/// WKWebView (Tauri desktop on macOS) decodes HEVC + alpha .mov via
+/// VideoToolbox; Chrome / Firefox / Edge decode VP8/VP9 + alpha .webm.
+/// We feature-detect with `canPlayType` so the call site doesn't need
+/// to know which we're in. Falls back to .webm if neither is "probably"
+/// — the browser will at least try the load.
+function pickSrc(srcBase: string): string {
+  if (typeof document === "undefined") return `${srcBase}.webm`;
+  const probe = document.createElement("video");
+  // Safari returns "" or "maybe" for hvc1; both signal "may work".
+  // Explicitly prefer .mov when ANY non-empty answer comes back, so
+  // WKWebView gets the alpha-bearing format even when the support
+  // probe is conservative.
+  const movResult = probe.canPlayType('video/mp4; codecs="hvc1"');
+  if (movResult === "probably" || movResult === "maybe") {
+    return `${srcBase}.mov`;
+  }
+  return `${srcBase}.webm`;
+}
+
 function playVideo(srcBase: string): Promise<void> {
   if (typeof document === "undefined") return Promise.resolve();
   return new Promise<void>((resolve) => {
+    const src = pickSrc(srcBase);
+    // Surface the play attempt in the dev console so a developer
+    // can confirm the right asset is being loaded. Cheap — a single
+    // log line per unlock celebration.
+    if (typeof console !== "undefined") {
+      console.log("[celebrate] play", src);
+    }
+
     const video = document.createElement("video");
-    // Don't set video.src — we use child <source> elements below so
-    // the browser picks the first decodable codec.
+    video.src = src;
     video.muted = false;
     video.playsInline = true;
     video.autoplay = true;
@@ -190,38 +217,47 @@ function playVideo(srcBase: string): Promise<void> {
     video.style.zIndex = "9999";
     video.style.pointerEvents = "none";
 
-    // Source order: HEVC .mov first (Safari/WKWebView), WebM .webm
-    // second (Chrome/Firefox/Edge). Browser picks the first source
-    // whose `type` it can decode.
-    const movSrc = document.createElement("source");
-    movSrc.src = `${srcBase}.mov`;
-    movSrc.type = 'video/mp4; codecs="hvc1"';
-    video.appendChild(movSrc);
-    const webmSrc = document.createElement("source");
-    webmSrc.src = `${srcBase}.webm`;
-    webmSrc.type = "video/webm";
-    video.appendChild(webmSrc);
-
     let resolved = false;
-    const finish = () => {
+    const finish = (reason?: string) => {
       if (resolved) return;
       resolved = true;
+      if (reason && typeof console !== "undefined") {
+        console.log("[celebrate] finish", reason, src);
+      }
       video.remove();
       resolve();
     };
-    video.addEventListener("ended", finish, { once: true });
-    video.addEventListener("error", finish, { once: true });
+    video.addEventListener("ended", () => finish("ended"), { once: true });
+    video.addEventListener("error", () => {
+      const err = video.error;
+      if (typeof console !== "undefined") {
+        console.warn("[celebrate] video error", {
+          src,
+          code: err?.code,
+          message: err?.message,
+        });
+      }
+      finish("error");
+    }, { once: true });
     // Hard timeout in case `ended` never fires on a malformed asset.
     // The longest video in the pool is ~8 s; 12 s gives generous
     // headroom for a slow load before the cleanup kicks in.
-    window.setTimeout(finish, 12_000);
+    window.setTimeout(() => finish("timeout"), 12_000);
 
     document.body.appendChild(video);
     // Try unmuted autoplay first; fall back to muted if the browser
     // blocks (NotAllowedError) so the visual cue still fires.
-    void video.play().catch(() => {
+    void video.play().catch((err) => {
+      if (typeof console !== "undefined") {
+        console.warn("[celebrate] unmuted play() rejected, retrying muted", err);
+      }
       video.muted = true;
-      void video.play().catch(() => finish());
+      void video.play().catch((err2) => {
+        if (typeof console !== "undefined") {
+          console.warn("[celebrate] muted play() also rejected", err2);
+        }
+        finish("play-rejected");
+      });
     });
   });
 }
