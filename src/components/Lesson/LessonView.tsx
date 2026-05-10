@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Course,
   ExerciseLesson,
@@ -7,6 +7,8 @@ import {
   isExerciseKind,
   isQuiz,
 } from "../../data/types";
+import { localizedLesson } from "../../data/localize";
+import { useLocale } from "../../hooks/useLocale";
 import { Icon } from "@base/primitives/icon";
 import { panelLeftOpen } from "@base/primitives/icon/icons/panel-left-open";
 import "@base/primitives/icon/icon.css";
@@ -58,7 +60,7 @@ export default function LessonView({
   courseLanguage,
   courseRequiresDevice,
   isChallenge = false,
-  lesson,
+  lesson: rawLesson,
   neighbors,
   isCompleted,
   onComplete,
@@ -94,6 +96,17 @@ export default function LessonView({
   /// a demoted lesson. App wires this to `startRetryLesson`.
   onRetryLesson?: (lessonId: string) => void;
 }) {
+  // Translate the lesson into the user's chosen locale BEFORE any
+  // downstream component sees it. Reader, EditorPane (hints), QuizView,
+  // BlocksView, the audio + read-cursor hooks — every consumer reads
+  // the localized version. Identity-stable when locale is `en` or no
+  // overlay exists for this lesson, so React's referential-equality
+  // checks downstream still skip re-renders.
+  const [locale] = useLocale();
+  const lesson = useMemo(
+    () => localizedLesson(rawLesson, locale),
+    [rawLesson, locale],
+  );
   const hasExercise = isExerciseKind(lesson);
   /// Lessons that opt into the Trade harness use the API tester
   /// dock above the lesson body as their interactive surface —

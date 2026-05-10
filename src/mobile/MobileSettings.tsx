@@ -17,6 +17,7 @@ import type { Completion } from "../hooks/useProgress";
 import type { Course } from "../data/types";
 import SyncDebugPanel from "../components/dialogs/SettingsDialog/SyncDebugPanel";
 import { applyTheme, loadTheme, THEMES, type ThemeName } from "../theme/themes";
+import LanguageDropdown from "../components/LanguageDropdown/LanguageDropdown";
 import "./MobileSettings.css";
 
 interface Props {
@@ -186,6 +187,16 @@ export default function MobileSettings({
             );
           })}
         </ul>
+      </section>
+
+      <section className="m-set__section">
+        <h3 className="m-set__section-title">Language</h3>
+        <p className="m-set__blurb">
+          Translates Libre-authored courses into your preferred language.
+          Third-party books stay in their original language. Choice persists
+          across launches and syncs to your other devices when signed in.
+        </p>
+        <LanguageDropdown variant="field" />
       </section>
 
       <section className="m-set__section">

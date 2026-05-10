@@ -161,6 +161,14 @@ export interface Course {
   description?: string;
   language: LanguageId;
   chapters: Chapter[];
+  /// Per-locale overlays for the course-level strings (`title`,
+  /// `description`). Keyed by non-EN locale (English is the source).
+  /// Missing locale or missing key → reader falls back to English.
+  /// See `src/data/locales.ts` for the `Locale` enum + the
+  /// `localizedCourse` helper that merges overlays at read time.
+  translations?: import("./locales").TranslationOverlay<
+    import("./locales").CourseTranslation
+  >;
   /// Distinguishes book-derived linear courses from kata-style challenge
   /// packs. Missing OR "course" means it's a linear course (default for
   /// everything imported before this field was added). "challenges" means
@@ -259,6 +267,11 @@ export interface Chapter {
   id: string;
   title: string;
   lessons: Lesson[];
+  /// Per-locale chapter-title overlays. Same merge semantics as
+  /// `Course.translations`.
+  translations?: import("./locales").TranslationOverlay<
+    import("./locales").ChapterTranslation
+  >;
 }
 
 export type Lesson =
@@ -286,6 +299,16 @@ interface LessonBase {
    * the reader degrades gracefully when `enrichment` is missing.
    */
   enrichment?: LessonEnrichment;
+  /**
+   * Per-locale overlays for every user-visible string on this lesson:
+   * title, body markdown, objectives, plus exercise hints + quiz
+   * questions when applicable. The reader merges via `localizedLesson`
+   * — missing overlay or missing key falls back to the English source.
+   * See `src/data/locales.ts`.
+   */
+  translations?: import("./locales").TranslationOverlay<
+    import("./locales").LessonTranslation
+  >;
 }
 
 /**
