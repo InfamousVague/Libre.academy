@@ -14,6 +14,7 @@ import AiPane from "./AiPane";
 import DeveloperPane from "./DeveloperPane";
 import DiagnosticsPanel from "./DiagnosticsPanel";
 import GeneralPane from "./GeneralPane";
+import SoundPane from "./SoundPane";
 import SyncDebugPanel from "./SyncDebugPanel";
 import ThemePane from "./ThemePane";
 import "./SettingsDialog.css";
@@ -56,6 +57,7 @@ type SectionId =
   | "general"
   | "ai"
   | "theme"
+  | "sounds"
   | "data"
   | "sync"
   | "diagnostics"
@@ -72,6 +74,7 @@ const BASE_SECTIONS: SectionDef[] = [
   { id: "general", label: "General", hint: "Version + updates" },
   { id: "ai", label: "AI & API", hint: "Anthropic key + model" },
   { id: "theme", label: "Theme", hint: "App + editor colors" },
+  { id: "sounds", label: "Sounds", hint: "SFX + achievement cues" },
   { id: "data", label: "Data", hint: "Caches + courses" },
   { id: "sync", label: "Sync", hint: "Cloud diff + force pull/push" },
   { id: "diagnostics", label: "Resources", hint: "What's installed + what's not" },
@@ -304,6 +307,7 @@ export default function SettingsDialog({
             {section === "theme" && (
               <ThemePane theme={theme} onThemeChange={handleThemeChange} />
             )}
+            {section === "sounds" && <SoundPane />}
 
             {section === "data" && (
               <section>

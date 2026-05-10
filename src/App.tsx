@@ -49,6 +49,11 @@ import CourseSettingsModal from "./components/dialogs/CourseSettings/CourseSetti
 import FloatingIngestPanel from "./components/IngestPanel/FloatingIngestPanel";
 import ProfileView from "./components/Profile/ProfileView";
 import PlaygroundView from "./components/Playground/PlaygroundView";
+import { useAchievements } from "./hooks/useAchievements";
+import AchievementOverlay from "./components/Achievements/AchievementOverlay";
+import AchievementsPage from "./components/Achievements/AchievementsPage";
+import SectionCompleteSummary from "./components/Achievements/SectionCompleteSummary";
+import { playSound, unlockAudioContext } from "./lib/sfx";
 import { isWeb, isMobile } from "./lib/platform";
 import { isoToUnixSeconds } from "./lib/timestamps";
 import DownloadButton from "./components/DownloadButton/DownloadButton";
@@ -95,6 +100,20 @@ import {
   type TabGroup,
 } from "./lib/openTabsState";
 import "./App.css";
+
+/// XP value for a given lesson kind. Mirrors the XP_PER_KIND map
+/// inside useStreakAndXp.ts (kept module-private there); copying the
+/// values is cheaper than re-exporting + re-typing the constant.
+function xpForLessonKind(kind: string | undefined): number {
+  switch (kind) {
+    case "reading": return 5;
+    case "quiz": return 10;
+    case "exercise":
+    case "mixed":
+      return 20;
+    default: return 0;
+  }
+}
 
 export default function App() {
   // Mobile short-circuit. Renders a totally separate component tree
@@ -586,8 +605,22 @@ export default function App() {
   const [celebrateAt, setCelebrateAt] = useState(0);
   function markCompletedAndCelebrate(courseId: string, lessonId: string) {
     const key = `${courseId}:${lessonId}`;
-    if (!completed.has(key)) {
+    const isFresh = !completed.has(key);
+    if (isFresh) {
       setCelebrateAt(Date.now());
+      // Compute and stash XP for the lesson so the section summary
+      // card can credit "+N XP" without re-walking the lesson body
+      // when the section card eventually triggers.
+      const course = coursesAll.find((c) => c.id === courseId);
+      const lesson = course?.chapters
+        .flatMap((c) => c.lessons)
+        .find((l) => l.id === lessonId);
+      const xp = xpForLessonKind(lesson?.kind);
+      lastLessonXpRef.current = xp;
+      // Small audible cue per fresh lesson — keeps the rhythm of
+      // completion tactile. Larger tier sounds (chime, fanfare) layer
+      // on top via the achievement engine's own dispatch.
+      playSound("xp-pop", { volume: 0.7 });
     }
     markCompleted(courseId, lessonId);
     // Mirror to the cloud via the realtime sync hook. Coalesces by
@@ -611,6 +644,96 @@ export default function App() {
   // data/types.ts.
   const shields = useStreakShields();
   const stats = useStreakAndXp(history, coursesAll, shields.frozenDays);
+
+  /// Achievement / sound / animation system. Reactive — re-evaluates
+  /// the registry whenever history / streak / level changes and
+  /// surfaces the freshly-unlocked rows via `pendingPresentation`
+  /// for the AchievementOverlay to drain.
+  const achievements = useAchievements(history, coursesAll, stats);
+
+  /// Track section / book completion transitions. We compare the
+  /// previous completed Set to the new one whenever it changes;
+  /// when the count of completed lessons in a chapter / course
+  /// flips from <total to ==total, that's our trigger.
+  ///
+  /// State is the chapter / book payload to render in the summary
+  /// card (null when no card is showing). Two cards never stack —
+  /// if a chapter wraps and that chapter was the last one, the book
+  /// card supersedes the chapter card (book wins, since the user
+  /// gets a card either way and stacking is noisy).
+  const [sectionSummary, setSectionSummary] = useState<
+    | { kind: "chapter"; courseId: string; chapterIdx: number; xpEarned: number }
+    | { kind: "book"; courseId: string; xpEarned: number }
+    | null
+  >(null);
+  const prevCompletedRef = useRef<Set<string>>(completed);
+  // Stash the per-lesson XP from the last lesson the learner finished
+  // so the section summary can show "+N XP earned" without re-walking
+  // the lesson body to look up its kind. Updated by markCompletedAndCelebrate.
+  const lastLessonXpRef = useRef<number>(0);
+  useEffect(() => {
+    const prev = prevCompletedRef.current;
+    if (prev === completed) return;
+    // Find new completions since last render — should usually be one,
+    // but a sync push could land several at once. We only celebrate
+    // section completions that close out a chapter / book; sync
+    // back-fill of historical completions doesn't get a card (the
+    // initRef-style guard below handles cold-start).
+    const newKeys: string[] = [];
+    for (const k of completed) if (!prev.has(k)) newKeys.push(k);
+    prevCompletedRef.current = completed;
+    if (newKeys.length === 0) return;
+    if (newKeys.length > 5) return; // bulk sync — not user-driven, no card.
+    // Walk backwards from the latest key. If completing it closed a
+    // chapter and/or a book, surface the right card. We pick the
+    // FIRST chapter / book event — typing speeds + Tauri IPC ordering
+    // mean a single user action only ever closes one section at a time.
+    for (const key of newKeys) {
+      const [courseId, lessonId] = key.split(":");
+      const course = coursesAll.find((c) => c.id === courseId);
+      if (!course) continue;
+      const chapterIdx = course.chapters.findIndex((ch) =>
+        ch.lessons.some((l) => l.id === lessonId),
+      );
+      if (chapterIdx < 0) continue;
+      const chapter = course.chapters[chapterIdx];
+      const allChapterDone = chapter.lessons.every((l) =>
+        completed.has(`${courseId}:${l.id}`),
+      );
+      if (!allChapterDone) continue;
+      const allBookDone = course.chapters.every((ch) =>
+        ch.lessons.every((l) => completed.has(`${courseId}:${l.id}`)),
+      );
+      if (allBookDone) {
+        setSectionSummary({
+          kind: "book",
+          courseId,
+          xpEarned: lastLessonXpRef.current,
+        });
+      } else {
+        setSectionSummary({
+          kind: "chapter",
+          courseId,
+          chapterIdx,
+          xpEarned: lastLessonXpRef.current,
+        });
+      }
+      break;
+    }
+  }, [completed, coursesAll]);
+
+  // First user gesture: warm the AudioContext so the very first
+  // sound cue plays without the iOS-Safari silent-first-play wart.
+  // We listen on `pointerdown` and remove ourselves after the first
+  // fire — no-op on subsequent gestures.
+  useEffect(() => {
+    const onGesture = () => {
+      void unlockAudioContext();
+      window.removeEventListener("pointerdown", onGesture);
+    };
+    window.addEventListener("pointerdown", onGesture, { passive: true });
+    return () => window.removeEventListener("pointerdown", onGesture);
+  }, []);
 
   /// Reactive flags for "is there transaction state on either
   /// in-process chain right now?" Used to gate the EVM and Bitcoin
@@ -662,6 +785,7 @@ export default function App() {
     | "trees"
     | "tracks"
     | "practice"
+    | "achievements"
   >("library");
 
   /// `useTransition` lets us mark the view-switch state update as
@@ -1485,6 +1609,52 @@ export default function App() {
         progress={archiveDrop.progress}
       />
 
+      {/* Achievement toast / modal overlay. Receives the queue from
+          useAchievements and drains it tier-first — bronze/silver as
+          stacked toasts in the top-right column, gold/platinum as
+          fullscreen modals. Sits above everything else (z-index 80
+          for toasts, 150 for modals). */}
+      <AchievementOverlay
+        pending={achievements.pendingPresentation}
+        onPresented={achievements.markPresented}
+      />
+
+      {/* Chapter / book completion summary. Shown once per
+          chapter/book the learner just finished; dismissable. The
+          chapter version slides up over the lesson view; the book
+          version is a fullscreen modal takeover. */}
+      {sectionSummary
+        ? (() => {
+            const course = coursesAll.find(
+              (c) => c.id === sectionSummary.courseId,
+            );
+            if (!course) return null;
+            const chapter =
+              sectionSummary.kind === "chapter"
+                ? course.chapters[sectionSummary.chapterIdx]
+                : null;
+            const heading =
+              sectionSummary.kind === "book"
+                ? course.title
+                : chapter?.title ??
+                  `Chapter ${sectionSummary.chapterIdx + 1}`;
+            const subheading =
+              sectionSummary.kind === "book"
+                ? "Book complete"
+                : course.title;
+            return (
+              <SectionCompleteSummary
+                kind={sectionSummary.kind}
+                heading={heading}
+                subheading={subheading}
+                xpEarned={sectionSummary.xpEarned}
+                streakDays={stats.streakDays}
+                onDismiss={() => setSectionSummary(null)}
+              />
+            );
+          })()
+        : null}
+
       <TopBar
         tabs={tabs}
         groups={tabGroups}
@@ -1560,6 +1730,7 @@ export default function App() {
           onTrees={() => setView("trees")}
           onTracks={() => setView("tracks")}
           onPractice={() => setView("practice")}
+          onAchievements={() => setView("achievements")}
           onPlayground={() => setView("playground")}
           onSettings={() => setSettingsOpen(true)}
           onStartTour={handleTourStart}
@@ -1625,6 +1796,11 @@ export default function App() {
                 selectLesson(courseId, lessonId);
                 setView("courses");
               }}
+            />
+          ) : view === "achievements" ? (
+            <AchievementsPage
+              unlocked={achievements.unlocked}
+              unlockedRecords={achievements.unlockedRecords}
             />
           ) : view === "library" || view === "discover" ? (
             // Library + Discover both render through CourseLibrary —

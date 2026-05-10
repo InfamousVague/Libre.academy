@@ -26,6 +26,7 @@ import { compass as compassIcon } from "@base/primitives/icon/icons/compass";
 import { trees as treesIcon } from "@base/primitives/icon/icons/trees";
 import { trainTrack } from "@base/primitives/icon/icons/train-track";
 import { dumbbell } from "@base/primitives/icon/icons/dumbbell";
+import { trophy } from "@base/primitives/icon/icons/trophy";
 import { terminal as terminalIcon } from "@base/primitives/icon/icons/terminal";
 import { settings as settingsIcon } from "@base/primitives/icon/icons/settings";
 import { circleHelp } from "@base/primitives/icon/icons/circle-help";
@@ -49,7 +50,8 @@ export interface NavigationRailProps {
     | "discover"
     | "trees"
     | "tracks"
-    | "practice";
+    | "practice"
+    | "achievements";
   onLibrary: () => void;
   /// Discover route — browse catalog books + challenge packs not
   /// yet in the user's library. Optional; embeddings without one
@@ -68,6 +70,9 @@ export interface NavigationRailProps {
   /// random-access "drill weak spots" surface that closes the
   /// learn → review loop.
   onPractice?: () => void;
+  /// Achievements route — browse-all surface for the unlock
+  /// library. Optional; when omitted the chip just doesn't render.
+  onAchievements?: () => void;
   /// Playground route — free-form coding sandbox.
   onPlayground?: () => void;
   onSettings: () => void;
@@ -127,6 +132,7 @@ export default function NavigationRail({
   onTrees,
   onTracks,
   onPractice,
+  onAchievements,
   onPlayground,
   onSettings,
   onStartTour,
@@ -169,7 +175,7 @@ export default function NavigationRail({
     // and Trees becomes available) would shift the active button's
     // offset without re-running the effect, leaving the pill
     // misaligned.
-  }, [activeView, onDiscover, onTrees, onTracks, onPractice, onPlayground]);
+  }, [activeView, onDiscover, onTrees, onTracks, onPractice, onAchievements, onPlayground]);
 
   return (
     <nav className="fishbones-nav-rail" aria-label="Primary navigation">
@@ -217,6 +223,14 @@ export default function NavigationRail({
             label="Practice"
             onClick={onPractice}
             active={activeView === "practice"}
+          />
+        )}
+        {onAchievements && (
+          <RailItem
+            icon={trophy}
+            label="Achievements"
+            onClick={onAchievements}
+            active={activeView === "achievements"}
           />
         )}
         {onPlayground && (
