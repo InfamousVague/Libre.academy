@@ -152,7 +152,6 @@ export const WEB: SkillTree = {
       summary: ".then chains, error handling, the microtask queue.",
       prereqs: ["fetch"],
       matches: [
-        { courseId: "eloquent-javascript", lessonId: "ch10-reading" },
         { courseId: "javascript-the-definitive-guide", lessonId: "introduction-to-promises" },
         { courseId: "javascript-the-definitive-guide", lessonId: "chaining-promises" },
       ],

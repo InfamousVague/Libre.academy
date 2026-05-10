@@ -20,7 +20,6 @@ export const FOUNDATIONS: SkillTree = {
       matches: [
         { courseId: "python-crash-course", lessonId: "creating-and-using-variables" },
         { courseId: "python-crash-course", lessonId: "variable-naming-rules" },
-        { courseId: "eloquent-javascript", lessonId: "ch01-reading" },
       ],
     },
     {
@@ -149,7 +148,6 @@ export const FOUNDATIONS: SkillTree = {
       prereqs: ["arrays"],
       matches: [
         { courseId: "python-crash-course", lessonId: "for-loops-through-lists" },
-        { courseId: "eloquent-javascript", lessonId: "ch04-reading" },
         { courseId: "the-rust-programming-language", lessonId: "iterating-over-vectors" },
       ],
     },
@@ -160,7 +158,6 @@ export const FOUNDATIONS: SkillTree = {
       prereqs: ["variables"],
       matches: [
         { courseId: "python-crash-course", lessonId: "what-is-a-dictionary" },
-        { courseId: "eloquent-javascript", lessonId: "ch03-reading" },
         { courseId: "learning-go", lessonId: "maps-declaration-and-operations" },
       ],
     },
@@ -182,7 +179,6 @@ export const FOUNDATIONS: SkillTree = {
       matches: [
         { courseId: "composing-programs", lessonId: "ch01-reading" },
         { courseId: "learning-zig", lessonId: "recursion" },
-        { courseId: "eloquent-javascript", lessonId: "ch02-reading" },
       ],
     },
     {
@@ -193,7 +189,6 @@ export const FOUNDATIONS: SkillTree = {
       matches: [
         { courseId: "python-crash-course", lessonId: "handling-exceptions" },
         { courseId: "python-crash-course", lessonId: "file-not-found-and-else-blocks" },
-        { courseId: "eloquent-javascript", lessonId: "ch07-reading" },
       ],
     },
     {

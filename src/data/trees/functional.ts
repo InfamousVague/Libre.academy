@@ -17,7 +17,6 @@ export const FUNCTIONAL: SkillTree = {
       summary: "Same input → same output, no hidden state.",
       prereqs: [],
       matches: [
-        { courseId: "eloquent-javascript", lessonId: "ch04-reading" },
         { courseId: "composing-programs", lessonId: "ch02-reading" },
       ],
     },
@@ -27,7 +26,6 @@ export const FUNCTIONAL: SkillTree = {
       summary: "Functions taking / returning functions.",
       prereqs: ["pure-functions"],
       matches: [
-        { courseId: "eloquent-javascript", lessonId: "ch04-reading" },
         { courseId: "composing-programs", lessonId: "ch02-reading" },
         { courseId: "rust-by-example", lessonId: "ch04-functions-closures-reading" },
       ],
@@ -59,7 +57,6 @@ export const FUNCTIONAL: SkillTree = {
       summary: "Standard collection combinators.",
       prereqs: ["higher-order"],
       matches: [
-        { courseId: "eloquent-javascript", lessonId: "ch04-reading" },
         { courseId: "composing-programs", lessonId: "ch02-reading" },
         { courseId: "javascript-info", lessonId: "ch04-reading" },
       ],

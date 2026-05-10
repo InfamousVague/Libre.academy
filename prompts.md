@@ -226,6 +226,40 @@ Each challenge pack is a tighter, more graphic single-symbol cover so the long r
    ```
 5. Push to `main`; the marketing-site deploy workflow picks up the new artwork on the next run.
 
+## Naming aliases (Discover-tab IDs that share existing prompts)
+
+The Discover tab on desktop reads bundled archives' inner `course.json` ids, which use a longer naming convention than the short-form ids in `ALL_PACK_IDS` and the prompt headings above. The **cover artwork is shared** — each long-form name reuses the prompt + generated PNG of its short-form twin. When you regenerate a cover, drop the same image into `cover-overrides/` under both names (or rely on the build script's alias map, which writes both per-name copies into `public/starter-courses/`).
+
+| Long-form (Discover inner id) | Reuses prompt for |
+| --- | --- |
+| `challenges-javascript-handwritten`     | #28 JavaScript Challenges (`javascript-challenges.png`) |
+| `challenges-typescript-mo9c9k2o`         | #29 TypeScript Challenge Pack (`typescript-challenge-pack.png`) |
+| `challenges-python-handwritten`          | #30 Python Challenges (`python-challenges.png`) |
+| `challenges-go-handwritten`              | #31 Go Challenges (`go-challenges.png`) |
+| `challenges-go-mo9kijkd`                 | #31 Go Challenges (auto-gen variant — same cover as `go-challenges`) |
+| `challenges-rust-handwritten`            | #32 Rust Challenges (`rust-challenges.png`) |
+| `challenges-rust-mo9bapm1`               | #32 Rust Challenges (auto-gen variant — same cover as `rust-challenges`) |
+| `challenges-reactnative-handwritten`     | #33 React Native Challenges (`react-native-challenges.png`) |
+| `challenges-c-handwritten`               | #34 C Challenges (`c-challenges.png`) |
+| `challenges-cpp-handwritten`             | #35 C++ Challenges (`cpp-challenges.png`) |
+| `challenges-java-handwritten`            | #36 Java Challenges (`java-challenges.png`) |
+| `challenges-kotlin-handwritten`          | #37 Kotlin Challenges (`kotlin-challenges.png`) |
+| `challenges-csharp-handwritten`          | #38 C# Challenges (`csharp-challenges.png`) |
+| `challenges-swift-handwritten`           | #39 Swift Challenges (`swift-challenges.png`) |
+| `challenges-assembly-handwritten`        | #40 Assembly Challenges (`assembly-challenges-arm64-macos.png`) |
+| `rustonomicon`                           | #7 The Rustonomicon (`the-rustonomicon.png`) |
+| `solana-programs`                        | #24 Solana Programs (`solana-programs-rust-on-the-svm.png`) |
+
+The mapping lives in `scripts/extract-starter-courses.mjs`'s alias loop — same map the cover-deploy script uses to keep `~/Library/Application Support/.../courses/<id>/cover.jpg` in sync with the `.academy` archive's embedded cover.jpg.
+
+## Removed / retired courses
+
+These ids appear in legacy prune lists (`webSeedCourses.ts` LEGACY_STARTER_IDS, `extract-starter-courses.mjs` LEGACY_PACK_IDS) so first-launch on returning installs cleans them up; they no longer ship and don't need cover prompts.
+
+- `eloquent-javascript` — retired 2026-05-07; coverage replaced by the in-house **A to TS** course (#2). Tree-node lesson links have been stripped from `src/data/trees/functional.ts`, `foundations.ts`, and `web.ts`; the local install dir is removed; the bundled archive was never present.
+- `python-crash-course` — retired 2026-05-07; superseded by **Composing Programs** (#8) in the foundations slot.
+- `the-modern-javascript-tutorial-fundamentals`, `you-don-t-know-js-yet`, `learning-zig`, `crafting-interpreters-javascript`, `learning-react-native`, `fluent-react`, `interactive-web-development-with-three-js-and-a-frame` — retired in the same 2026-05-07 cleanup. Replaced or implicitly covered by the in-house "A to <lang>" tutorials and the 2026 expansion challenge packs.
+
 ## Iteration tips
 
 - The shared preamble keeps the set visually unified. If a generated cover drifts (wrong colour temperature, missing glass squircles, ribbon too thin), regenerate with the preamble re-emphasised at the end of the prompt as a reminder.
