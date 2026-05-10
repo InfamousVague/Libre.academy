@@ -1,6 +1,7 @@
 /// Slim icon-only rail to the LEFT of the floating sidebar. Holds the
-/// app's primary navigation (Library / Discover / Trees / Tracks /
-/// Practice / Playground) plus the persistent footer cluster
+/// app's primary navigation (Library / Playground / Discover /
+/// Practice / Achievements / Tracks / Trees) plus the persistent
+/// footer cluster
 /// (Settings + sidebar toggle).
 ///
 /// Why a separate rail instead of more sidebar chrome:
@@ -187,34 +188,48 @@ export default function NavigationRail({
             aria-hidden
           />
         )}
+        {/* Order rationale (top → bottom):
+              1. Library      — the home + most-visited surface
+              2. Playground   — open-ended editor, surfaced near the
+                               top so devs can dive in without first
+                               picking a course
+              3. Discover     — catalog browser; sits next to
+                               Playground because both are entry
+                               points for "I want to start something"
+              4. Practice     — review-mode for cards already opened;
+                               middle of the rail because it's a
+                               recurring rhythm, not a one-off start
+              5. Achievements — unlock browser; below Practice so
+                               the run-of-day affordances cluster
+                               above the trophy case
+              6. Tracks       — curated linear paths (less primary
+                               than Library / Practice for the
+                               typical learner)
+              7. Trees        — full skill-DAG; bottom because it's
+                               the deepest / most exploratory affordance,
+                               and Tracks above it hands the learner
+                               a friendlier on-ramp into the same content
+        */}
         <RailItem
           icon={libraryBig}
           label="Library"
           onClick={onLibrary}
           active={activeView === "library"}
         />
+        {onPlayground && (
+          <RailItem
+            icon={terminalIcon}
+            label="Playground"
+            onClick={onPlayground}
+            active={activeView === "playground"}
+          />
+        )}
         {onDiscover && (
           <RailItem
             icon={compassIcon}
             label="Discover"
             onClick={onDiscover}
             active={activeView === "discover"}
-          />
-        )}
-        {onTrees && (
-          <RailItem
-            icon={treesIcon}
-            label="Trees"
-            onClick={onTrees}
-            active={activeView === "trees"}
-          />
-        )}
-        {onTracks && (
-          <RailItem
-            icon={trainTrack}
-            label="Tracks"
-            onClick={onTracks}
-            active={activeView === "tracks"}
           />
         )}
         {onPractice && (
@@ -233,12 +248,20 @@ export default function NavigationRail({
             active={activeView === "achievements"}
           />
         )}
-        {onPlayground && (
+        {onTracks && (
           <RailItem
-            icon={terminalIcon}
-            label="Playground"
-            onClick={onPlayground}
-            active={activeView === "playground"}
+            icon={trainTrack}
+            label="Tracks"
+            onClick={onTracks}
+            active={activeView === "tracks"}
+          />
+        )}
+        {onTrees && (
+          <RailItem
+            icon={treesIcon}
+            label="Trees"
+            onClick={onTrees}
+            active={activeView === "trees"}
           />
         )}
       </div>
