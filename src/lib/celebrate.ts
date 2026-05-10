@@ -7,16 +7,19 @@
 ///
 ///   1. confetti      — the existing ribbon-rectangle storm
 ///                      (delegates to lib/confetti.ts)
-///   2. sparkle-bloom — small four-point sparkle stars puff outward
-///                      with twinkle scaling, no gravity
+///   2. comet-streak  — one or two bright coral comets whip up across
+///                      the viewport with fading tails — single
+///                      dramatic trajectory rather than a particle
+///                      cloud
 ///   3. ribbon-swoosh — 4-6 coral ribbon arcs sweep outward from the
 ///                      origin in a flexed-bow pattern, then settle
-///   4. coin-shower   — gold coin discs cascade down with tumble +
+///   4. coin-shower   — gold coin discs cascade widely with tumble +
 ///                      bounce; reads as "treasure" not "party"
 ///   5. pulse-rings   — three concentric ribbon rings expand from
 ///                      origin and fade (the calm option)
-///   6. firefly       — warm dots drift upward with lateral wobble,
-///                      slow + ambient (the gentlest option)
+///   6. petal-drift   — coral and cream petals fall slowly from above
+///                      origin with rotation + sin-wave wobble — the
+///                      gentlest, most organic option
 ///
 /// All effects:
 ///   - run on the same fixed-position canvas overlay (one per page)
@@ -27,7 +30,7 @@
 ///   - accept the same `(preset, target?)` signature as the old
 ///     `confettiBurst` so call sites get a one-line swap
 ///
-/// Effect selection is weighted — calmer effects (pulse, firefly)
+/// Effect selection is weighted — calmer effects (pulse, petal)
 /// fire more often than the showy ones (confetti, coin-shower) so
 /// the every-other-unlock cadence reads as varied without being
 /// loud. Override the weights by passing `{ effect: "...", weight: 1 }`
@@ -38,11 +41,11 @@ import { confettiBurst, type ConfettiPreset } from "./confetti";
 
 export type CelebrationEffect =
   | "confetti"
-  | "sparkle-bloom"
+  | "comet-streak"
   | "ribbon-swoosh"
   | "coin-shower"
   | "pulse-rings"
-  | "firefly";
+  | "petal-drift";
 
 /// Default weights — higher = more likely. The calm effects out-vote
 /// the loud ones so a typical unlock burst feels novel without being
@@ -50,11 +53,11 @@ export type CelebrationEffect =
 /// asked for it to feel less ubiquitous.
 const DEFAULT_WEIGHTS: Record<CelebrationEffect, number> = {
   confetti: 1,
-  "sparkle-bloom": 3,
+  "comet-streak": 2,
   "ribbon-swoosh": 2,
   "coin-shower": 1,
   "pulse-rings": 3,
-  firefly: 2,
+  "petal-drift": 3,
 };
 
 export interface CelebrateOptions {
@@ -155,71 +158,111 @@ const PEACH = "#ffd4a3";
 const ROSE = "#ff9b8a";
 
 const RIBBON_PALETTE = [CORAL, CORAL_DEEP, AMBER, PEACH, ROSE];
-const SPARKLE_PALETTE = [AMBER, CREAM, PEACH, "#fff8d6"];
 const COIN_PALETTE = ["#f7c948", "#ffd97a", "#e09a1d", "#fff1b0"];
 
-// ─── Effect: sparkle bloom ───────────────────────────────────────
-// Small four-point stars puff outward in two waves and twinkle
-// (oscillating scale). No gravity. ~700ms total.
+// ─── Effect: comet streak ────────────────────────────────────────
+// One or two coral comets whip up across the viewport with fading
+// tails. Single-trajectory drama instead of a particle cloud — gives
+// the variety pool a "swoosh moment" that reads as motion-narrative
+// rather than the omnidirectional bursts every other effect is.
+//
+// Each comet keeps a short ring-buffer of past positions (the trail);
+// the renderer walks the trail back-to-front drawing line segments
+// with progressively lower alpha. Head is a bright disc on top.
 
-interface SparkleParticle {
+interface Comet {
   x: number;
   y: number;
   vx: number;
   vy: number;
+  ax: number; // small lateral curve so the trajectory arcs
+  ay: number;
+  trail: Array<{ x: number; y: number }>;
+  trailMax: number;
   size: number;
-  rot: number;
+  colour: string;
   age: number;
   ttl: number;
-  colour: string;
-  twinkle: number;
 }
 
-function effectSparkleBloom(origin: { x: number; y: number }, count: number): Promise<void> {
+function effectCometStreak(origin: { x: number; y: number }, count: number): Promise<void> {
   if (!ensureCanvas() || !cctx || !canvas) return Promise.resolve();
   const ox = origin.x * window.innerWidth;
   const oy = origin.y * window.innerHeight;
-  const particles: SparkleParticle[] = [];
+  const comets: Comet[] = [];
+  // Spawn comets in alternating directions so two-or-three of them
+  // criss-cross the viewport rather than streaming the same way.
   for (let i = 0; i < count; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const speed = 1.5 + Math.random() * 3.5;
-    particles.push({
-      x: ox + (Math.random() - 0.5) * 6,
-      y: oy + (Math.random() - 0.5) * 6,
+    // Aim around -π/2 (straight up) but rotate each comet a wider
+    // step so they fan distinctly across the upper hemisphere.
+    const fan = ((i / Math.max(1, count - 1)) - 0.5) * 1.6;
+    const angle = -Math.PI / 2 + fan;
+    const speed = 14 + Math.random() * 8;
+    const swirl = (i % 2 === 0 ? -1 : 1) * (0.04 + Math.random() * 0.06);
+    comets.push({
+      x: ox,
+      y: oy,
       vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed - 0.5, // slight upward bias
-      size: 4 + Math.random() * 6,
-      rot: Math.random() * Math.PI,
+      vy: Math.sin(angle) * speed,
+      // Small constant acceleration perpendicular to the launch
+      // angle = a curving arc instead of a straight line.
+      ax: -Math.sin(angle) * swirl,
+      ay: Math.cos(angle) * swirl,
+      trail: [],
+      trailMax: 16,
+      size: 3 + Math.random() * 2,
+      colour: i % 2 === 0 ? CORAL : AMBER,
       age: 0,
-      ttl: 38 + Math.floor(Math.random() * 22),
-      colour: SPARKLE_PALETTE[i % SPARKLE_PALETTE.length],
-      twinkle: Math.random() * Math.PI * 2,
+      ttl: 60 + Math.floor(Math.random() * 18),
     });
   }
   return new Promise<void>((resolve) => {
     startTicker((_now, dt) => {
       const ctx = cctx!;
       let alive = false;
-      for (const p of particles) {
-        p.age += dt;
-        if (p.age > p.ttl) continue;
-        p.x += p.vx * dt;
-        p.y += p.vy * dt;
-        p.vx *= 0.94;
-        p.vy *= 0.94;
-        p.twinkle += 0.32 * dt;
-        const f = p.age / p.ttl;
-        // Bell-curve alpha so each sparkle pops then fades.
-        const alpha = f < 0.25 ? f / 0.25 : 1 - (f - 0.25) / 0.75;
-        const scale = 0.6 + 0.4 * (0.5 + 0.5 * Math.sin(p.twinkle));
+      for (const c of comets) {
+        c.age += dt;
+        if (c.age > c.ttl) continue;
+        // Push current position into the trail, then advance.
+        c.trail.push({ x: c.x, y: c.y });
+        if (c.trail.length > c.trailMax) c.trail.shift();
+        c.vx += c.ax * dt;
+        c.vy += c.ay * dt;
+        c.x += c.vx * dt;
+        c.y += c.vy * dt;
+        const f = c.age / c.ttl;
+        const fade = f < 0.7 ? 1 : 1 - (f - 0.7) / 0.3;
+        // Walk the trail back-to-front with progressive alpha so the
+        // tail fades smoothly rather than ending in a hard cap.
         ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rot);
-        ctx.scale(scale, scale);
-        ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-        ctx.fillStyle = p.colour;
-        // Four-point sparkle star: two crossing diamonds.
-        drawSparkle(ctx, p.size);
+        ctx.lineCap = "round";
+        ctx.strokeStyle = c.colour;
+        for (let i = 1; i < c.trail.length; i++) {
+          const prev = c.trail[i - 1];
+          const cur = c.trail[i];
+          const seg = i / c.trail.length;
+          ctx.globalAlpha = seg * 0.85 * fade;
+          ctx.lineWidth = c.size * (0.4 + seg * 0.8);
+          ctx.beginPath();
+          ctx.moveTo(prev.x, prev.y);
+          ctx.lineTo(cur.x, cur.y);
+          ctx.stroke();
+        }
+        // Bright head — a small filled disc with a soft outer glow
+        // (radial gradient) so the leading point reads as energy, not
+        // just the end of a line.
+        const grad = ctx.createRadialGradient(
+          c.x, c.y, 0,
+          c.x, c.y, c.size * 4,
+        );
+        grad.addColorStop(0, c.colour);
+        grad.addColorStop(0.5, c.colour);
+        grad.addColorStop(1, "rgba(243, 114, 57, 0)");
+        ctx.globalAlpha = 0.9 * fade;
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, c.size * 4, 0, Math.PI * 2);
+        ctx.fill();
         ctx.restore();
         alive = true;
       }
@@ -230,20 +273,6 @@ function effectSparkleBloom(origin: { x: number; y: number }, count: number): Pr
       return true;
     });
   });
-}
-
-function drawSparkle(ctx: CanvasRenderingContext2D, s: number): void {
-  ctx.beginPath();
-  ctx.moveTo(0, -s);
-  ctx.lineTo(s * 0.25, 0);
-  ctx.lineTo(s, 0);
-  ctx.lineTo(s * 0.25, 0);
-  ctx.lineTo(0, s);
-  ctx.lineTo(-s * 0.25, 0);
-  ctx.lineTo(-s, 0);
-  ctx.lineTo(-s * 0.25, 0);
-  ctx.closePath();
-  ctx.fill();
 }
 
 // ─── Effect: ribbon swoosh ───────────────────────────────────────
@@ -345,10 +374,16 @@ function effectCoinShower(origin: { x: number; y: number }, count: number): Prom
   const ground = window.innerHeight - 40;
   const coins: Coin[] = [];
   for (let i = 0; i < count; i++) {
+    // Spawn region + initial lateral velocity widened so coins fan
+    // out across the lower viewport instead of clustering near the
+    // origin. `vx` ranges roughly ±8 instead of ±2 (4× the spread)
+    // and the spawn x ranges ±90 instead of ±15 (6× the spread) so
+    // the resulting cascade reads as a real "shower" instead of a
+    // tight column.
     coins.push({
-      x: ox + (Math.random() - 0.5) * 30,
-      y: oy + (Math.random() - 0.5) * 12,
-      vx: (Math.random() - 0.5) * 4,
+      x: ox + (Math.random() - 0.5) * 180,
+      y: oy + (Math.random() - 0.5) * 24,
+      vx: (Math.random() - 0.5) * 16,
       vy: -2 - Math.random() * 4,
       r: 5 + Math.random() * 4,
       spin: Math.random() * Math.PI,
@@ -457,66 +492,103 @@ function effectPulseRings(origin: { x: number; y: number }, count: number): Prom
   });
 }
 
-// ─── Effect: firefly drift ───────────────────────────────────────
-// Warm glowing dots drift upward with sin-wave wobble. Slow + gentle.
+// ─── Effect: petal drift ─────────────────────────────────────────
+// Cherry-blossom-style coral and cream petals fall slowly from above
+// the origin, rotating + drifting laterally with a sin-wave wobble.
+// The most organic + gentle effect in the pool — replaces firefly's
+// "calm" slot with something that has more shape than a dot.
+//
+// Petals spawn ABOVE the origin and fall PAST it (gravity-positive),
+// so the effect frames the achievement as "blossoms drifting down on
+// you" rather than "dots floating up away from the centre".
 
-interface Firefly {
+const PETAL_PALETTE = [CORAL, PEACH, ROSE, CREAM, "#ffd9c2"];
+
+interface Petal {
   x: number;
   y: number;
   vx: number;
   vy: number;
   size: number;
+  rot: number;
+  rotSpeed: number;
+  colour: string;
   age: number;
   ttl: number;
-  colour: string;
   wobble: number;
   wobbleSpeed: number;
+  wobbleAmp: number;
 }
 
-function effectFirefly(origin: { x: number; y: number }, count: number): Promise<void> {
+function effectPetalDrift(origin: { x: number; y: number }, count: number): Promise<void> {
   if (!ensureCanvas() || !cctx || !canvas) return Promise.resolve();
   const ox = origin.x * window.innerWidth;
   const oy = origin.y * window.innerHeight;
-  const flies: Firefly[] = [];
+  const petals: Petal[] = [];
   for (let i = 0; i < count; i++) {
-    flies.push({
-      x: ox + (Math.random() - 0.5) * 24,
-      y: oy + (Math.random() - 0.5) * 12,
-      vx: 0,
-      vy: -0.6 - Math.random() * 0.6,
-      size: 2 + Math.random() * 2,
+    petals.push({
+      // Spawn in a wide arc above the origin so the petal field
+      // covers the upper third of the viewport rather than streaming
+      // from a single point.
+      x: ox + (Math.random() - 0.5) * 320,
+      y: oy - 40 - Math.random() * 120,
+      // Tiny initial velocities — gravity dominates.
+      vx: (Math.random() - 0.5) * 0.6,
+      vy: 0.4 + Math.random() * 0.6,
+      size: 6 + Math.random() * 5,
+      rot: Math.random() * Math.PI * 2,
+      // Petals tumble slowly so the rotation reads as drift, not spin.
+      rotSpeed: (Math.random() - 0.5) * 0.06,
+      colour: PETAL_PALETTE[i % PETAL_PALETTE.length],
       age: 0,
-      ttl: 90 + Math.floor(Math.random() * 60),
-      colour: SPARKLE_PALETTE[i % SPARKLE_PALETTE.length],
+      ttl: 130 + Math.floor(Math.random() * 80),
       wobble: Math.random() * Math.PI * 2,
-      wobbleSpeed: 0.04 + Math.random() * 0.04,
+      wobbleSpeed: 0.03 + Math.random() * 0.03,
+      wobbleAmp: 0.6 + Math.random() * 0.6,
     });
   }
   return new Promise<void>((resolve) => {
     startTicker((_now, dt) => {
       const ctx = cctx!;
       let alive = false;
-      for (const f of flies) {
-        f.age += dt;
-        if (f.age > f.ttl) continue;
-        f.wobble += f.wobbleSpeed * dt;
-        f.x += Math.sin(f.wobble) * 0.6 * dt;
-        f.y += f.vy * dt;
-        const t = f.age / f.ttl;
-        const alpha = t < 0.2 ? t / 0.2 : 1 - (t - 0.2) / 0.8;
+      for (const p of petals) {
+        p.age += dt;
+        if (p.age > p.ttl) continue;
+        // Slow falling gravity — petals are light, so the constant
+        // is much smaller than the coin shower.
+        p.vy += 0.012 * dt;
+        // Air drag — keeps the lateral wobble from accumulating.
+        p.vx *= 0.99;
+        p.wobble += p.wobbleSpeed * dt;
+        // Lateral wobble adds the "leaf falling" character — petals
+        // sway side-to-side under their own air resistance.
+        p.x += (p.vx + Math.sin(p.wobble) * p.wobbleAmp) * dt;
+        p.y += p.vy * dt;
+        p.rot += p.rotSpeed * dt;
+        const t = p.age / p.ttl;
+        // Slow fade-in over first 15 % so petals appear gracefully
+        // from above rather than popping in; long bell-curve to fully
+        // off in the last 30 %.
+        const alpha =
+          t < 0.15 ? t / 0.15 : t > 0.7 ? 1 - (t - 0.7) / 0.3 : 1;
         ctx.save();
-        ctx.globalAlpha = Math.max(0, alpha);
-        // Glow halo + core dot for the "firefly" feel.
-        const grad = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.size * 4);
-        grad.addColorStop(0, f.colour);
-        grad.addColorStop(1, "rgba(255, 200, 87, 0)");
-        ctx.fillStyle = grad;
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        // Tumble — squash the petal vertically by |cos(wobble*0.6)|
+        // so it visually "flips" as it drifts.
+        ctx.scale(1, 0.5 + 0.5 * Math.abs(Math.cos(p.wobble * 0.6)));
+        ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+        ctx.fillStyle = p.colour;
+        // Teardrop / petal shape via two quadratic curves meeting at
+        // top + bottom points. The shape reads as a stylised petal at
+        // any size; bezier control points are tuned so the silhouette
+        // doesn't read as a leaf or a flame.
+        const s = p.size;
         ctx.beginPath();
-        ctx.arc(f.x, f.y, f.size * 4, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = f.colour;
-        ctx.beginPath();
-        ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
+        ctx.moveTo(0, -s);
+        ctx.quadraticCurveTo(s, -s * 0.2, 0, s);
+        ctx.quadraticCurveTo(-s, -s * 0.2, 0, -s);
+        ctx.closePath();
         ctx.fill();
         ctx.restore();
         alive = true;
@@ -566,15 +638,18 @@ function staticPuff(origin: { x: number; y: number }): Promise<void> {
 
 // ─── Public API ──────────────────────────────────────────────────
 
-const PRESET_INTENSITY: Record<ConfettiPreset, { confettiCount: number; sparkleCount: number; ribbonCount: number; coinCount: number; pulseCount: number; fireflyCount: number }> = {
-  small:  { confettiCount: 16, sparkleCount: 14, ribbonCount: 4, coinCount: 8,  pulseCount: 2, fireflyCount: 8  },
-  medium: { confettiCount: 60, sparkleCount: 28, ribbonCount: 6, coinCount: 16, pulseCount: 3, fireflyCount: 14 },
-  large:  { confettiCount: 140, sparkleCount: 48, ribbonCount: 8, coinCount: 28, pulseCount: 4, fireflyCount: 22 },
+const PRESET_INTENSITY: Record<ConfettiPreset, { confettiCount: number; cometCount: number; ribbonCount: number; coinCount: number; pulseCount: number; petalCount: number }> = {
+  // Comet count stays low (1-3) on purpose — comets are dramatic
+  // single trajectories, not a particle cloud, so even the "large"
+  // preset only needs a handful to fan across the upper viewport.
+  small:  { confettiCount: 16, cometCount: 1, ribbonCount: 4, coinCount: 10, pulseCount: 2, petalCount: 12 },
+  medium: { confettiCount: 60, cometCount: 2, ribbonCount: 6, coinCount: 22, pulseCount: 3, petalCount: 22 },
+  large:  { confettiCount: 140, cometCount: 3, ribbonCount: 8, coinCount: 36, pulseCount: 4, petalCount: 34 },
 };
 
 function pickEffect(weights: Record<CelebrationEffect, number>): CelebrationEffect {
   const entries = Object.entries(weights).filter(([, w]) => w > 0) as Array<[CelebrationEffect, number]>;
-  if (entries.length === 0) return "sparkle-bloom";
+  if (entries.length === 0) return "pulse-rings";
   const total = entries.reduce((s, [, w]) => s + w, 0);
   let r = Math.random() * total;
   for (const [eff, w] of entries) {
@@ -617,16 +692,16 @@ export function celebrate(
   switch (effect) {
     case "confetti":
       return confettiBurst(preset, target);
-    case "sparkle-bloom":
-      return effectSparkleBloom(origin, count.sparkleCount);
+    case "comet-streak":
+      return effectCometStreak(origin, count.cometCount);
     case "ribbon-swoosh":
       return effectRibbonSwoosh(origin, count.ribbonCount);
     case "coin-shower":
       return effectCoinShower(origin, count.coinCount);
     case "pulse-rings":
       return effectPulseRings(origin, count.pulseCount);
-    case "firefly":
-      return effectFirefly(origin, count.fireflyCount);
+    case "petal-drift":
+      return effectPetalDrift(origin, count.petalCount);
   }
 }
 

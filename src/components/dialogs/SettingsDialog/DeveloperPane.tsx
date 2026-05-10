@@ -22,9 +22,9 @@ const EFFECT_LABELS: Array<{
     hint: "Calm — three concentric ribbon rings expanding from the centre.",
   },
   {
-    id: "sparkle-bloom",
-    label: "Sparkle bloom",
-    hint: "Light — four-point sparkle stars puff outward, no gravity.",
+    id: "petal-drift",
+    label: "Petal drift",
+    hint: "Gentlest — coral and cream petals fall slowly with rotation + sway.",
   },
   {
     id: "ribbon-swoosh",
@@ -32,14 +32,14 @@ const EFFECT_LABELS: Array<{
     hint: "Mid — coral ribbon arcs flex outward like a bow opening.",
   },
   {
-    id: "firefly",
-    label: "Firefly drift",
-    hint: "Gentlest — warm dots drift up with sin-wave wobble.",
+    id: "comet-streak",
+    label: "Comet streak",
+    hint: "Dramatic — one or two coral comets whip across with fading tails.",
   },
   {
     id: "coin-shower",
     label: "Coin shower",
-    hint: "Treasure — gold disc coins cascade with tumble + bounce.",
+    hint: "Treasure — gold coins cascade widely with tumble + bounce.",
   },
   {
     id: "confetti",
