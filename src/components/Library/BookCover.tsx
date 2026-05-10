@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Icon } from "@base/primitives/icon";
 import { rocket } from "@base/primitives/icon/icons/rocket";
 import { flaskConical } from "@base/primitives/icon/icons/flask-conical";
@@ -130,6 +130,46 @@ function BookCoverImpl({
     setImageError(false);
     setImageLoaded(false);
   }, [coverUrl]);
+
+  // Cached-image edge case: when the browser already has the JPEG in
+  // its image cache (e.g. after prefetchCovers populated it on app
+  // boot, or after a previous mount of this same card), the <img>
+  // element's `load` event can fire SYNCHRONOUSLY during the React
+  // render commit, *before* React attaches its synthetic-event
+  // listener. The onLoad prop never sees the event, imageLoaded
+  // stays false, and the cover renders permanently blurred.
+  //
+  // The fix: a layout-effect that probes `img.complete` (the DOM
+  // property that reports "the image's data is already there") and
+  // manually fires the same state update onLoad would. Runs after
+  // every mount AND every coverUrl change since the reset effect
+  // above sets imageLoaded=false on each URL swap.
+  //
+  // Why this bug surfaced now: I added a CDN-fallback path in
+  // useCourseCover so placeholder books point at HTTPS URLs the
+  // browser caches aggressively. On first launch, the prefetch step
+  // (running while the splash is up) primes the cache; by the time
+  // the Library mounts BookCover, the GETs return synchronously
+  // from cache, and React loses the load-event race. Navigating
+  // away and back happens to remount fast enough that the listener
+  // attaches before the cached fetch resolves the second time.
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  useLayoutEffect(() => {
+    if (!coverUrl) return;
+    const img = imgRef.current;
+    if (!img) return;
+    if (img.complete && img.naturalWidth > 0) {
+      // Already loaded. Skip the blur-up — we'd just be running
+      // a one-shot CSS transition on an image that's already on
+      // screen, and the user reads that as latency on a cold
+      // launch when in fact the JPEG was ready instantly.
+      setImageLoaded(true);
+    } else if (img.complete && img.naturalWidth === 0) {
+      // `complete` is true but no pixels = decode failure (404,
+      // CSP block, malformed). Match the onError fallback path.
+      setImageError(true);
+    }
+  }, [coverUrl]);
   const hasCover = !!coverUrl && !imageError;
 
   // Brand-coloured language badge pinned to the top-right corner of
@@ -198,6 +238,7 @@ function BookCoverImpl({
           properly and shows alt text if it fails to load. */}
       {hasCover && (
         <img
+          ref={imgRef}
           className={`fishbones-book-cover ${
             imageLoaded ? "fishbones-book-cover--loaded" : "fishbones-book-cover--loading"
           }`}
