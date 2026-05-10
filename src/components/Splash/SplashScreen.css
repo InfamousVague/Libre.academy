@@ -1,0 +1,78 @@
+/* Boot-time splash overlay. Sits above everything (z-index 1500)
+   while the intro / idle video plays, fades out cleanly when the
+   parent flips `ready` and the intro has finished. */
+
+.fb-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-primary, #0b0710);
+  /* Transition only opacity here — the videos themselves swap via
+     their own `--active` class, so we don't double-animate. */
+  opacity: 1;
+  transition: opacity 360ms ease-out;
+  overflow: hidden;
+}
+
+.fb-splash--fading {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Each video fills the surface and crops via object-fit: cover so
+   the 1280x720 source looks correct at every aspect ratio. They're
+   stacked one on top of the other in the same grid cell; the active
+   one's opacity goes to 1, the inactive one stays at 0 so the swap
+   from intro → idle cross-fades over ~240 ms.
+ */
+.fb-splash__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  /* Snappy cross-fade — long enough to feel deliberate, short
+     enough that the user doesn't notice the swap when they're not
+     specifically looking for it. */
+  transition: opacity 240ms ease-in-out;
+  /* User can't drag/select video on the splash. */
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.fb-splash__video--active {
+  opacity: 1;
+}
+
+/* Screen-reader-only loading label. Sighted users get the video;
+   AT users get a polite "Loading Libre…" announcement via
+   role="status" + aria-live on the parent. */
+.fb-splash__sr-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Skip the cross-fade entirely so motion-sensitive users get the
+     splash as a still image swap rather than a video fade. The
+     videos themselves still play (they're not animated decoration —
+     they ARE the splash), but the inter-stage transition
+     collapses to an instant cut.
+   */
+  .fb-splash,
+  .fb-splash__video {
+    transition-duration: 0ms;
+  }
+}

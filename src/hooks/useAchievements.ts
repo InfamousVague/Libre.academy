@@ -163,15 +163,25 @@ export function useAchievements(
     const merged = recordUnlocks(fresh, Date.now(), unlockedRecords);
     setUnlockedRecords(merged);
     setPendingPresentation((prev) => [...prev, ...fresh]);
-    // Sound: highest tier only. Multiple unlocks fire one cue.
+    // Pick the highest-tier unlock to drive the celebration. Multiple
+    // unlocks in the same tick collapse to one cue — playing 5
+    // celebration sounds at once would be cacophony.
     const highest = fresh.reduce<Achievement>(
       (acc, a) => (TIER_RANK[a.tier] > TIER_RANK[acc.tier] ? a : acc),
       fresh[0],
     );
     const meta = TIER_META[highest.tier];
-    playSound(meta.sound);
     if (meta.confetti !== "none") {
+      // The celebrate WebMs carry their own baked-in audio, so we no
+      // longer fire the separate `playSound(meta.sound)` pip — having
+      // both would double-up on the audio cue. The meta.sound entries
+      // remain available for any future surface that wants the silent
+      // pip without the visual (e.g. a Settings preference).
       void celebrate(meta.confetti);
+    } else {
+      // Tier configured for "no celebration" still gets the audio
+      // pip so the unlock isn't completely silent.
+      playSound(meta.sound);
     }
     // We intentionally do NOT include `unlockedRecords` in the deps
     // — recordUnlocks updates it via setUnlockedRecords, and adding
@@ -194,7 +204,9 @@ export function useAchievements(
       // in-session level-ups happen well outside the 2.5 s window.
       if (!withinGrace()) {
         setLevelUp({ from: prev, to: streakAndXp.level });
-        playSound("level-up");
+        // The celebrate WebM carries its own audio; firing the
+        // separate `level-up` sfx pip here would double up. Drop
+        // the pip and trust the video for the audio cue.
         void celebrate("medium", { x: 0.5, y: 0.4 });
       }
     }

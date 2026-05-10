@@ -44,6 +44,9 @@ import ArchiveDropOverlay from "./components/Library/ArchiveDropOverlay";
 import { useArchiveDrop } from "./hooks/useArchiveDrop";
 import { DeferredMount, LoadingPane } from "./components/Shared/DeferredMount";
 import FishbonesLoader from "./components/Shared/FishbonesLoader";
+import SplashScreen from "./components/Splash/SplashScreen";
+import { prefetchCovers } from "./hooks/useCourseCover";
+import { REMOTE_CATALOG_FALLBACK } from "./lib/remoteCatalogFallback";
 import ConfirmDialog from "./components/dialogs/ConfirmDialog/ConfirmDialog";
 import CourseSettingsModal from "./components/dialogs/CourseSettings/CourseSettingsModal";
 import FloatingIngestPanel from "./components/IngestPanel/FloatingIngestPanel";
@@ -131,6 +134,90 @@ export default function App() {
     hydrateCourse,
     hydrating,
   } = useCourses();
+
+  /// Splash-screen state machine. The intro / idle videos play above
+  /// everything until BOTH the course list has loaded AND every
+  /// cover JPEG is cached locally (via the prefetchCovers IPC on
+  /// desktop, no-op on web where covers are just URLs the browser
+  /// fetches on demand). Once those signals are satisfied AND the
+  /// intro has played fully, SplashScreen fades + unmounts.
+  ///
+  /// `splashDismissed` flips when the fade completes; we use it to
+  /// decide whether to keep the SplashScreen in the tree at all.
+  /// `coversReady` flips when the cover prefetch promise resolves
+  /// (or its 5 s safety timer fires, whichever's first — we don't
+  /// want a flaky cover load to hold the splash forever).
+  const [splashDismissed, setSplashDismissed] = useState(false);
+  const [coversReady, setCoversReady] = useState(false);
+  useEffect(() => {
+    if (!coursesLoaded) return;
+    if (coursesAll.length === 0) {
+      // No courses → nothing to prefetch. Flip ready immediately.
+      setCoversReady(true);
+      return;
+    }
+    let cancelled = false;
+    // Safety watchdog — if any of the cover-fetch promises drag
+    // (a slow load_course_covers IPC OR a remote CDN cover takes
+    // its time), unblock the splash anyway. Five seconds is
+    // comfortably above measured cold-start prefetch (~500-800 ms
+    // for ~30 local covers; CDN warm-up is parallel and usually
+    // completes inside the local window) while still feeling
+    // prompt enough that a true hang doesn't trap the user.
+    const watchdog = window.setTimeout(() => {
+      if (!cancelled) setCoversReady(true);
+    }, 5000);
+
+    // (1) Local covers — installed copies + bundled archives via
+    // the Rust IPC. Returns data URLs the per-card useCourseCover
+    // hooks read out of the shared module cache synchronously.
+    const localPrefetch = prefetchCovers(
+      coursesAll.map((c) => ({
+        courseId: c.id,
+        cacheBust: c.coverFetchedAt,
+      })),
+    );
+
+    // (2) Remote placeholder covers — the 20-ish books in
+    // REMOTE_CATALOG_FALLBACK that don't yet have a `.fishbones`
+    // archive. Their cover JPGs live on libre.academy's CDN, so
+    // we warm the browser image cache here with one parallel
+    // `new Image()` per id. Filtering against installed ids first
+    // avoids re-fetching covers that already came back from the
+    // local IPC. We don't await individual loads — even one slow
+    // CDN response shouldn't gate the splash since (a) the
+    // watchdog catches it and (b) BookCover handles the late
+    // load gracefully (renders the language-tinted glyph then
+    // swaps in once the img onload fires).
+    const installedIds = new Set(coursesAll.map((c) => c.id));
+    const remotePending = REMOTE_CATALOG_FALLBACK.filter(
+      (e) => !installedIds.has(e.id),
+    );
+    const remoteWarmups = remotePending.map(
+      (e) =>
+        new Promise<void>((resolve) => {
+          const img = new Image();
+          // Resolve on both success and failure — a 404 here just
+          // means the CDN doesn't have the cover yet (or there's
+          // no network), and we don't want that to block the
+          // splash. The BookCover hook falls back to the language
+          // glyph cleanly.
+          img.onload = () => resolve();
+          img.onerror = () => resolve();
+          img.src = `https://libre.academy/learn/starter-courses/${e.id}.jpg`;
+        }),
+    );
+
+    void Promise.all([localPrefetch, ...remoteWarmups]).finally(() => {
+      if (cancelled) return;
+      window.clearTimeout(watchdog);
+      setCoversReady(true);
+    });
+    return () => {
+      cancelled = true;
+      window.clearTimeout(watchdog);
+    };
+  }, [coursesLoaded, coursesAll]);
 
   // `filterCourseForDesktop` used to strip mobile-only drill lesson
   // kinds (puzzle / cloze / micropuzzle) from every desktop nav
@@ -1589,6 +1676,13 @@ export default function App() {
         sidebarCollapsed ? "fishbones--sidebar-collapsed" : ""
       }`}
     >
+      {/* Static bootloader stays in place as the under-layer beneath
+          the SplashScreen. The reason both exist: the splash mounts
+          a frame or two after React boots (the import-time path is
+          mainly DOM setup), and the static loader fills that gap so
+          the user sees brand chrome instead of a black flash. The
+          splash sits above it on z-index 1500 vs. 1000, so once
+          mounted it covers this entirely. */}
       <div
         className={`fishbones__bootloader ${
           coursesLoaded ? "fishbones__bootloader--hidden" : ""
@@ -1597,6 +1691,19 @@ export default function App() {
       >
         <FishbonesLoader label="loading Libre…" />
       </div>
+
+      {/* Boot-time video splash. Plays splash.mp4 once, then loops
+          splash_idle.mp4 (optional — falls back to holding the
+          intro's last frame when the idle clip isn't shipped) until
+          the course list AND every cover JPG is cached locally,
+          THEN fades out. `splashDismissed` flips on fade-end so we
+          stop rendering the video element entirely afterwards. */}
+      {!splashDismissed ? (
+        <SplashScreen
+          ready={coursesLoaded && coversReady}
+          onDismissed={() => setSplashDismissed(true)}
+        />
+      ) : null}
 
       {/* Drag-and-drop import overlay. Listens at the app level via
           `useArchiveDrop` so .fishbones / .kata files can be dropped

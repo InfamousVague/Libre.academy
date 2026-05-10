@@ -139,12 +139,23 @@ function staticPuff(target?: { x: number; y: number } | HTMLElement): Promise<vo
 /// Mount a transparent WebM overlay covering the viewport, play it
 /// once, remove it, resolve. Centred + cover-fit so the video's
 /// composition fills the screen without distortion.
+///
+/// Audio: the WebMs carry baked-in unlock sound effects (Opus 96 kb/s
+/// at 48 kHz). We try unmuted autoplay first since the achievement
+/// trigger always follows a user gesture (lesson submit, level
+/// transition, etc.) which satisfies the browser's autoplay-with-
+/// audio policy. If the play() promise rejects (rare — would mean
+/// the gesture token expired), we retry muted so the visual still
+/// fires; the user just loses the audio cue for that one unlock.
 function playVideo(src: string): Promise<void> {
   if (typeof document === "undefined") return Promise.resolve();
   return new Promise<void>((resolve) => {
     const video = document.createElement("video");
     video.src = src;
-    video.muted = true;
+    // Default to unmuted — the video's audio IS the achievement
+    // sound now. The retry path below silently flips this if the
+    // browser blocks unmuted autoplay.
+    video.muted = false;
     video.playsInline = true;
     video.autoplay = true;
     video.controls = false;
@@ -159,15 +170,6 @@ function playVideo(src: string): Promise<void> {
     // achievement modal rather than over the badge artwork.
     video.style.zIndex = "90";
     video.style.pointerEvents = "none";
-    // Soft mix-blend so the video's coral/gold pops on dark surfaces
-    // without leaving any residual fringe from the chromakey edge —
-    // multiply also acts as a "darken-only" so light pixels in the
-    // alpha-keyed video stay vivid against light backdrops.
-    // (Subtle — not always visible but helps on dim themes.)
-    // Deliberately omitted for now — the WebM's own alpha is the
-    // primary compositing path; mix-blend was inconsistent across
-    // browsers when paired with the existing alpha. Re-enable if a
-    // future test shows fringe artefacts.
 
     let resolved = false;
     const finish = () => {
@@ -184,9 +186,12 @@ function playVideo(src: string): Promise<void> {
     window.setTimeout(finish, 12_000);
 
     document.body.appendChild(video);
-    // Some browsers reject autoplay without a user gesture — catch
-    // and resolve silently so the celebration doesn't hang.
-    void video.play().catch(() => finish());
+    // Try unmuted autoplay first; fall back to muted if the browser
+    // blocks (NotAllowedError) so the visual cue still fires.
+    void video.play().catch(() => {
+      video.muted = true;
+      void video.play().catch(() => finish());
+    });
   });
 }
 
