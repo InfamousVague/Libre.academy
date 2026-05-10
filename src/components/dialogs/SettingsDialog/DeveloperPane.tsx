@@ -1,6 +1,52 @@
 import { useEffect, useState } from "react";
+import {
+  celebrate,
+  celebrateWith,
+  type CelebrationEffect,
+} from "../../../lib/celebrate";
 
 const FLAG_KEY = "fishbones:devconsole";
+
+/// Names + short descriptions for the six celebration effects shown
+/// in the achievement-test panel below. Order matches the
+/// `CelebrationEffect` union — see `src/lib/celebrate.ts` for the
+/// rendering details.
+const EFFECT_LABELS: Array<{
+  id: CelebrationEffect;
+  label: string;
+  hint: string;
+}> = [
+  {
+    id: "pulse-rings",
+    label: "Pulse rings",
+    hint: "Calm — three concentric ribbon rings expanding from the centre.",
+  },
+  {
+    id: "sparkle-bloom",
+    label: "Sparkle bloom",
+    hint: "Light — four-point sparkle stars puff outward, no gravity.",
+  },
+  {
+    id: "ribbon-swoosh",
+    label: "Ribbon swoosh",
+    hint: "Mid — coral ribbon arcs flex outward like a bow opening.",
+  },
+  {
+    id: "firefly",
+    label: "Firefly drift",
+    hint: "Gentlest — warm dots drift up with sin-wave wobble.",
+  },
+  {
+    id: "coin-shower",
+    label: "Coin shower",
+    hint: "Treasure — gold disc coins cascade with tumble + bounce.",
+  },
+  {
+    id: "confetti",
+    label: "Confetti",
+    hint: "Loud — the legacy ribbon-rectangle storm.",
+  },
+];
 
 /// Developer settings — currently just a toggle for the floating
 /// dev console. The console (`public/devconsole.js`) loads on every
@@ -105,6 +151,119 @@ export default function DeveloperPane() {
         the top-left corner of the screen 5 times within 2.5 seconds.
         Same toggle, no UI required.
       </p>
+
+      {/* ── Achievement test panel ──────────────────────────────
+          Lets a designer / developer sample each celebration cue
+          without needing to actually earn an achievement, plus a
+          reset-unlocks affordance for stepping through the unlock
+          flow from a clean slate. Lives inside the Developer pane
+          so it doesn't add visible chrome to the user-facing rails.
+      */}
+      <h3
+        className="fishbones-settings-section"
+        style={{ marginTop: 28 }}
+      >
+        Achievements (test)
+      </h3>
+      <p className="fishbones-settings-blurb">
+        Sample each celebration effect, fire a random one (the live
+        unlock path), or wipe the persisted unlocks so the next
+        achievement event re-fires from scratch. The buttons here
+        skip the achievement-engine — they just trigger the visual
+        cue, so progress + persisted unlocks are unaffected unless
+        you press <em>Reset</em>.
+      </p>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr",
+          gap: 8,
+          marginTop: 8,
+        }}
+      >
+        {EFFECT_LABELS.map((eff) => (
+          <div className="fishbones-settings-data-row" key={eff.id}>
+            <div>
+              <div className="fishbones-settings-data-label">{eff.label}</div>
+              <div className="fishbones-settings-data-hint">{eff.hint}</div>
+            </div>
+            <button
+              type="button"
+              className="fishbones-settings-secondary"
+              onClick={() =>
+                void celebrateWith(eff.id, "medium", { x: 0.5, y: 0.5 })
+              }
+            >
+              Try
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <div
+        className="fishbones-settings-data-row"
+        style={{ marginTop: 16 }}
+      >
+        <div>
+          <div className="fishbones-settings-data-label">
+            Random celebration
+          </div>
+          <div className="fishbones-settings-data-hint">
+            Calls the same weighted random pick the achievement
+            unlock path uses. Hit it a few times — the effect
+            varies on each press.
+          </div>
+        </div>
+        <button
+          type="button"
+          className="fishbones-settings-secondary"
+          onClick={() => void celebrate("medium", { x: 0.5, y: 0.5 })}
+        >
+          Fire
+        </button>
+      </div>
+
+      <div className="fishbones-settings-data-row">
+        <div>
+          <div className="fishbones-settings-data-label">
+            Reset unlocked achievements
+          </div>
+          <div className="fishbones-settings-data-hint">
+            Clears <code>localStorage["fb:achievements:unlocked"]</code> so
+            the next progress event treats every persisted milestone as
+            freshly earned. Useful for re-running the unlock flow without
+            hand-editing storage. Streaks, XP, and progress are NOT
+            touched — only the unlocked-record list.
+          </div>
+        </div>
+        <button
+          type="button"
+          className="fishbones-settings-secondary"
+          onClick={() => {
+            try {
+              localStorage.removeItem("fb:achievements:unlocked");
+            } catch {
+              /* private mode / quota — silent fail is fine */
+            }
+            // Storage events don't fire in the writing tab, so nudge
+            // any subscribed UI by dispatching a synthetic one with
+            // the same key. The useAchievements cross-tab listener
+            // re-reads + re-renders.
+            try {
+              window.dispatchEvent(
+                new StorageEvent("storage", {
+                  key: "fb:achievements:unlocked",
+                }),
+              );
+            } catch {
+              /* SSR / older browsers — ignore */
+            }
+          }}
+        >
+          Reset
+        </button>
+      </div>
     </section>
   );
 }
