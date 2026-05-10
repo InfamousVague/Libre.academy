@@ -2,6 +2,30 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { isWeb } from "../lib/platform";
 
+/// Public CDN base for cover JPEGs the deployed Libre site serves.
+/// Used as a desktop fallback when `load_course_cover` returns null —
+/// a course has no installed cover.jpg AND no bundled archive (the
+/// case for remoteCatalogFallback placeholder books, which exist in
+/// the catalog but whose archives haven't been authored yet). The
+/// Tauri WebView fetches HTTPS by default so an `<img src=...>` with
+/// this URL just works as long as Caddy serves the JPEG.
+const COVER_CDN_BASE = "https://libre.academy/learn/starter-courses";
+
+/// Build the CDN fallback URL. Returns null for empty ids so the
+/// caller can short-circuit without rendering a broken image. The
+/// `cacheBust` param is the same `coverFetchedAt` value used for
+/// the local IPC cache key — appending it as `?v=<n>` ensures a
+/// returning user whose previous launch hit a 404 (no cover yet)
+/// re-fetches once the JPEG lands on the CDN.
+function desktopCdnCoverUrl(
+  courseId: string,
+  cacheBust?: number,
+): string | null {
+  if (!courseId) return null;
+  const path = `${COVER_CDN_BASE}/${courseId}.jpg`;
+  return cacheBust ? `${path}?v=${cacheBust}` : path;
+}
+
 /// Web-build cover URL. Resolves against the page's BASE_URL so the
 /// cover loads correctly regardless of whether the app is mounted at
 /// the page root (`/`), a subpath (`/fishbones/learn/`), or the
@@ -211,5 +235,13 @@ export function useCourseCover(
   if (isWeb) {
     return cacheBust ? webCoverUrl(courseId, cacheBust) : null;
   }
-  return dataUrl;
+  // Desktop: prefer the IPC-loaded data URL (installed copy or
+  // bundled archive). When that comes back null — typically a
+  // remoteCatalogFallback placeholder whose archive hasn't shipped
+  // yet — fall back to the deployed CDN at libre.academy. The img
+  // element fetches HTTPS directly (Tauri's CSP allows external
+  // image hosts by default), so we don't pay an extra IPC. If the
+  // CDN doesn't have it either, the BookCover renders the
+  // language-tinted glyph as before.
+  return dataUrl ?? desktopCdnCoverUrl(courseId, cacheBust);
 }

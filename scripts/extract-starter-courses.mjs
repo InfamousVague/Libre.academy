@@ -653,6 +653,39 @@ async function main() {
     }
   }
 
+  // ── Placeholder-cover sweep ───────────────────────────────────
+  // Walk `cover-overrides/` and emit `<id>.jpg` for any cover whose
+  // matching id ISN'T already in the manifest. These are the next-up
+  // books we have artwork for but no `.fishbones` archive yet — the
+  // desktop catalog merges these in via remoteCatalogFallback so
+  // they appear as install-able placeholders in Discover. Without
+  // this sweep, the placeholder tiles fall back to the language-
+  // tinted glyph (no covers anywhere on disk for the desktop IPC
+  // to find, no JPEGs deployed for the web build to fetch).
+  //
+  // The sweep doesn't write manifest entries for these — the
+  // remoteCatalogFallback list provides the metadata at runtime
+  // instead. We only need the JPEG bytes on the deployed CDN so
+  // useCourseCover's HTTPS fallback resolves.
+  const writtenIds = new Set(manifest.map((m) => m.id));
+  let placeholderCovers = 0;
+  if (existsSync(COVER_OVERRIDES)) {
+    const { readdir: readDir } = await import("node:fs/promises");
+    for (const entry of await readDir(COVER_OVERRIDES)) {
+      const dot = entry.lastIndexOf(".");
+      if (dot < 0) continue;
+      const stem = entry.slice(0, dot);
+      const ext = entry.slice(dot + 1).toLowerCase();
+      if (ext !== "jpg" && ext !== "png") continue;
+      if (writtenIds.has(stem)) continue;
+      const src = join(COVER_OVERRIDES, entry);
+      const dst = join(OUT, `${stem}.jpg`);
+      if (resizeCover(src, dst)) {
+        placeholderCovers += 1;
+      }
+    }
+  }
+
   await writeFile(
     join(OUT, "manifest.json"),
     JSON.stringify(
@@ -670,7 +703,10 @@ async function main() {
   const coreCount = manifest.filter((m) => m.tier === "core").length;
   const remoteCount = manifest.filter((m) => m.tier === "remote").length;
   console.log(
-    `[starter-courses] wrote manifest with ${manifest.length} courses (${coreCount} core, ${remoteCount} remote)`,
+    `[starter-courses] wrote manifest with ${manifest.length} courses (${coreCount} core, ${remoteCount} remote)` +
+      (placeholderCovers > 0
+        ? ` + ${placeholderCovers} placeholder cover JPG${placeholderCovers === 1 ? "" : "s"}`
+        : ""),
   );
 }
 
