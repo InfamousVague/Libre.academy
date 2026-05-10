@@ -290,8 +290,12 @@ function targetToOrigin(target: { x: number; y: number } | HTMLElement | undefin
 
 function srcFor(effect: CelebrationEffect): string {
   // Returns a base URL WITHOUT the `.mov` / `.webm` extension. The
-  // playVideo function appends both extensions as <source> elements
-  // so the browser picks the first codec it can decode.
+  // playVideo function appends the right extension after the
+  // canPlayType probe.
+  // The asset filenames carry the `unlock-` prefix
+  // (`public/celebrations/unlock-<effect>.{mov,webm}`) so the
+  // celebration set is grouped together when sorted alphabetically
+  // alongside any future non-unlock celebration assets we add.
   // Vite's BASE_URL prefix handles the embedded /learn/ build path
   // (/learn/celebrations/...) without any conditional logic at the
   // call site.
@@ -300,7 +304,7 @@ function srcFor(effect: CelebrationEffect): string {
       ? import.meta.env.BASE_URL
       : "/";
   const trimmed = base.endsWith("/") ? base.slice(0, -1) : base;
-  return `${trimmed}/celebrations/${effect}`;
+  return `${trimmed}/celebrations/unlock-${effect}`;
 }
 
 /// Fire a randomly-chosen unlock animation. Drop-in replacement for
