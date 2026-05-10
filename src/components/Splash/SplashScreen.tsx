@@ -1,45 +1,46 @@
 /// Boot-time splash overlay. Two-stage video sequence:
 ///
 ///   1. `splash.mp4` plays once start-to-end (intro animation, ~5 s).
-///   2. While the app is still loading, the last `BOUNCE_WINDOW_SEC`
-///      seconds of the same clip ping-pong back and forth — forward
-///      to the final frame, reverse to the bounce-floor, repeat —
-///      until `ready` flips true. The bounce stays on the same
-///      asset, so no second video file ships with the app.
+///   2. While the app is still loading, `splash_loop.mp4` plays in
+///      its place — a pre-rendered boomerang loop containing the
+///      intro's final two seconds REVERSED then FORWARD, so the
+///      first frame of the loop matches the last frame of the intro
+///      (the swap is invisible) and the loop reads as smooth
+///      reverse-then-forward "breathing" at native playback speed.
 ///   3. `ready` + intro-played + `minDisplayMs` floor satisfied →
 ///      fade out + unmount.
 ///
-/// Why bounce instead of a separate idle clip: the intro's last
-/// couple of seconds typically settle into a logo / brand beat that
-/// reads fine as a hold pattern; reversing it produces a subtle
-/// "breathing" loop without needing a second asset. Cheaper to ship,
-/// trivially in-sync with the intro's final frame.
+/// Why a pre-rendered loop instead of rAF-seeking the intro:
+/// H.264 only supports forward decoding from keyframes — seeking
+/// `currentTime` backward forces the decoder to jump to the prior
+/// keyframe and decode forward to the target, which produces
+/// stutter and dropped frames at any non-trivial frame rate.
+/// Shipping a real reversed-then-forward video file lets the
+/// browser play it forward at 1x natively, which is the smoothest
+/// path on every engine. The two clips share their last/first
+/// frame so the handoff is visually seamless.
 ///
-/// Reverse-playback note: HTML5 `<video>` doesn't reliably support
-/// `playbackRate < 0` across all engines (Safari historically just
-/// ignores it). The bounce instead drives the video frame-by-frame
-/// via `requestAnimationFrame`, setting `currentTime` to a triangle-
-/// wave position computed from elapsed wall time. Browsers handle
-/// fine-grained seeks on a small MP4 in cache without dropping frames
-/// for our 2-second window; if the device can't keep up, the worst
-/// case is a slightly less smooth ping-pong, which is still fine
-/// loading-screen material.
+/// Loop pipeline (re-run when splash.mp4 changes):
+///   ffmpeg -i splash.mp4 -ss 3.04 -t 2.0 -an forward.mp4
+///   ffmpeg -i forward.mp4 -vf reverse -an reverse.mp4
+///   ffmpeg -i reverse.mp4 -i forward.mp4 \
+///     -filter_complex "[0:v][1:v]concat=n=2:v=1[v]" \
+///     -map "[v]" -c:v libx264 -crf 23 -preset slow -movflags +faststart \
+///     -an public/splash_loop.mp4
 ///
 /// Graceful degradation:
-///   - The intro is muted + autoplay + playsInline so iOS / Safari
-///     don't block the first cue. Audio in the source file is
-///     ignored.
-///   - Slow first paint: the parent can pass `minDisplayMs` (default
-///     2400 ms) so the splash never flashes for less than long
-///     enough to be noticed. Helps when courses + covers load
-///     instantly (returning user with everything cached).
-///   - Cap: `maxDisplayMs` (default 12 000 ms) is a watchdog. If the
-///     readiness signal never fires (network hang on cover fetch
-///     etc.) the splash dismisses anyway so the user isn't stuck
-///     staring at a loop forever.
-///   - `prefers-reduced-motion`: the bounce stops at the final frame
-///     and holds there instead of ping-ponging — preserves the same
-///     dismissal flow without the constant motion.
+///   - The intro + loop are muted + autoplay + playsInline so iOS /
+///     Safari don't block the first cue. Audio in the source files
+///     is ignored.
+///   - If the loop file is missing (older deploy), we fall back to
+///     freezing on the intro's last frame. Same dismissal flow
+///     either way.
+///   - `minDisplayMs` (default 2400 ms) prevents a returning-user
+///     flash where the splash blinks for ~80 ms and disappears.
+///   - `maxDisplayMs` (default 12 000 ms) is a watchdog so a hung
+///     readiness signal doesn't trap the user.
+///   - `prefers-reduced-motion`: the loop is suppressed and the
+///     intro's last frame is held statically instead.
 
 import { useEffect, useRef, useState } from "react";
 import "./SplashScreen.css";
@@ -47,33 +48,30 @@ import "./SplashScreen.css";
 interface Props {
   /// Public-relative URL of the intro clip. Defaults to `/splash.mp4`.
   introSrc?: string;
+  /// Public-relative URL of the boomerang-loop clip. Defaults to
+  /// `/splash_loop.mp4`. Missing file → freeze on the intro's last
+  /// frame as a graceful fallback.
+  loopSrc?: string;
   /// `true` once the parent says everything we need is cached and
   /// the main UI is safe to reveal. The splash still won't dismiss
   /// until BOTH this flag is true AND the intro has played fully.
   ready: boolean;
   /// Don't dismiss before this many ms have elapsed since mount,
   /// even if both signals are satisfied early. Prevents a
-  /// returning-user flash where the splash blinks on for ~80 ms
-  /// then disappears.
+  /// returning-user flash.
   minDisplayMs?: number;
   /// Hard watchdog — if the splash hasn't dismissed by this many
-  /// ms after mount, force it off. Covers the "cover fetch hangs
-  /// forever" case so the user isn't trapped.
+  /// ms after mount, force it off so a flaky cover fetch can't
+  /// trap the user.
   maxDisplayMs?: number;
-  /// Fired exactly once after the fade-out finishes. The parent
-  /// uses this to unmount the splash from the tree (rendering an
-  /// unused `<video>` is a small but non-zero memory cost).
+  /// Fired exactly once after the fade-out finishes. Parent uses
+  /// it to unmount the splash from the tree.
   onDismissed: () => void;
 }
 
-type Stage = "intro" | "bouncing" | "fading" | "gone";
+type Stage = "intro" | "looping" | "fading" | "gone";
 
 const FADE_MS = 360;
-/// How many seconds at the tail of the clip to ping-pong while we
-/// wait for the readiness signal. Two seconds gives a noticeable
-/// loop without exposing earlier parts of the intro that don't
-/// read as a hold pattern.
-const BOUNCE_WINDOW_SEC = 2;
 
 function prefersReducedMotion(): boolean {
   if (typeof window === "undefined" || !window.matchMedia) return false;
@@ -82,6 +80,7 @@ function prefersReducedMotion(): boolean {
 
 export default function SplashScreen({
   introSrc = "/splash.mp4",
+  loopSrc = "/splash_loop.mp4",
   ready,
   minDisplayMs = 2400,
   maxDisplayMs = 12_000,
@@ -92,86 +91,37 @@ export default function SplashScreen({
   /// Required (alongside `ready` + the minDisplayMs floor) before we
   /// can dismiss — yanking the splash mid-intro feels jarring.
   const [introPlayed, setIntroPlayed] = useState(false);
+  /// Tracks whether the loop file is reachable. If the `<video>`'s
+  /// onError fires we flip this to false and the component falls
+  /// back to freezing on the intro's last frame.
+  const [loopAvailable, setLoopAvailable] = useState(true);
   const mountedAtRef = useRef<number>(performance.now());
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const introVideoRef = useRef<HTMLVideoElement>(null);
+  const loopVideoRef = useRef<HTMLVideoElement>(null);
 
-  // Stage 1 → 2 transition: when the intro fires `ended`, kick the
-  // bounce loop into the last BOUNCE_WINDOW_SEC of the clip. The
-  // rAF loop owns playback from here on; the native autoplay path
-  // doesn't fire again.
+  // Stage 1 → 2 transition: when the intro fires `ended`, hand off
+  // to the loop file (or freeze on the intro's last frame under
+  // reduced-motion / missing-loop conditions).
   useEffect(() => {
-    const v = videoRef.current;
+    const v = introVideoRef.current;
     if (!v) return;
     const onEnded = () => {
       setIntroPlayed(true);
-      setStage("bouncing");
+      if (prefersReducedMotion() || !loopAvailable) {
+        // Hold on the final frame. The browser keeps painting
+        // whatever the video was showing on its pause moment.
+        try {
+          v.pause();
+        } catch {
+          /* already paused — ignore */
+        }
+        return;
+      }
+      setStage("looping");
     };
     v.addEventListener("ended", onEnded);
     return () => v.removeEventListener("ended", onEnded);
-  }, []);
-
-  // Drive the bounce. We could use `playbackRate = -1` on browsers
-  // that support it, but Safari (and Chromium prior to a relatively
-  // recent fix) ignores negative rates. Frame-stepping via rAF +
-  // `currentTime` is the portable path: each animation frame we
-  // compute the target position as a triangle wave between
-  // `floor = duration - BOUNCE_WINDOW_SEC` and `ceil = duration`,
-  // pause the native playback so it can't fight us, and seek.
-  useEffect(() => {
-    if (stage !== "bouncing") return;
-    const v = videoRef.current;
-    if (!v) return;
-    try {
-      v.pause();
-    } catch {
-      /* already paused — ignore */
-    }
-    const duration = v.duration;
-    if (!Number.isFinite(duration) || duration <= 0) {
-      // Browser hasn't reported a duration yet (very rare — `ended`
-      // fired, so the media has played through), so we can't drive
-      // the bounce. Bail to a static hold on the final frame, which
-      // matches the prefers-reduced-motion path.
-      return;
-    }
-    if (prefersReducedMotion()) {
-      // Hold on the final frame. No rAF loop; the video is paused
-      // at `duration`, browsers paint that frame indefinitely.
-      try {
-        v.currentTime = duration;
-      } catch {
-        /* seek-after-ended is fine on every modern browser, but
-           guard anyway — the worst case is the player keeps showing
-           whatever frame it happened to land on. */
-      }
-      return;
-    }
-    const floor = Math.max(0, duration - BOUNCE_WINDOW_SEC);
-    const span = duration - floor;
-    // Triangle-wave period: span seconds forward + span seconds
-    // reverse = 2*span. So `phase` in [0, span) is the forward
-    // half; [span, 2*span) is the reverse half.
-    const period = span * 2;
-    const start = performance.now();
-    let raf = 0;
-    const tick = () => {
-      const t = (performance.now() - start) / 1000;
-      const phase = t % period;
-      const pos =
-        phase < span ? floor + phase : floor + span - (phase - span);
-      try {
-        v.currentTime = pos;
-      } catch {
-        /* If a seek throws (very rare — happens during teardown when
-           the element's src is mid-unload), bail. The cleanup below
-           cancels the next frame. */
-        return;
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [stage]);
+  }, [loopAvailable]);
 
   // Watchdog: dismiss after maxDisplayMs no matter what.
   useEffect(() => {
@@ -201,6 +151,24 @@ export default function SplashScreen({
     return () => window.clearTimeout(id);
   }, [stage, onDismissed]);
 
+  // Kick the loop video into playback when we swap to it. Browsers
+  // sometimes leave a preload="auto" video paused even after the
+  // src has buffered — calling play() explicitly avoids the rare
+  // black-frame stall after the intro ends.
+  useEffect(() => {
+    if (stage !== "looping") return;
+    const v = loopVideoRef.current;
+    if (!v) return;
+    void v.play().catch(() => {
+      /* autoplay-with-audio policies don't apply to a muted video,
+         but if a synchronous play call ever fails for some other
+         reason (e.g. detached element) we silently degrade — the
+         intro stays frozen on its last frame, which still reads
+         as a graceful hold. */
+      setLoopAvailable(false);
+    });
+  }, [stage]);
+
   if (stage === "gone") return null;
 
   return (
@@ -210,20 +178,35 @@ export default function SplashScreen({
       aria-live="polite"
       role="status"
     >
-      {/* Single video element drives both phases — native autoplay
-          runs the intro start-to-end, then the bouncing effect's
-          rAF loop takes over and seeks within the last BOUNCE_WINDOW
-          seconds. The element is never unmounted between phases so
-          the decoder keeps its warm state. */}
+      {/* Intro clip. Visible during the `intro` stage; hidden once
+          we swap to the looping clip. Stays in the DOM so the final
+          frame remains visible in the brief window between the two
+          videos cross-fading. */}
       <video
-        ref={videoRef}
-        className="fb-splash__video fb-splash__video--active"
+        ref={introVideoRef}
+        className={`fb-splash__video ${stage !== "looping" ? "fb-splash__video--active" : ""}`}
         src={introSrc}
         autoPlay
         muted
         playsInline
         preload="auto"
         aria-hidden
+      />
+      {/* Boomerang loop. Preloaded so the swap is seamless. `loop`
+          attribute makes the browser handle the seamless repeat
+          natively — no JS scheduling, no rAF, no decode-on-seek
+          stutter. `onError` (e.g. 404) flips loopAvailable so the
+          fallback path kicks in. */}
+      <video
+        ref={loopVideoRef}
+        className={`fb-splash__video ${stage === "looping" ? "fb-splash__video--active" : ""}`}
+        src={loopSrc}
+        muted
+        playsInline
+        loop
+        preload="auto"
+        aria-hidden
+        onError={() => setLoopAvailable(false)}
       />
       <span className="fb-splash__sr-label">Loading Libre…</span>
     </div>
