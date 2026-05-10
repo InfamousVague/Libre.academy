@@ -539,22 +539,6 @@ export default function CourseLibrary({
       className={`fishbones-library-panel ${isInline ? "fishbones-library-panel--inline" : ""}`}
       onClick={(e) => e.stopPropagation()}
     >
-        {/* Library hero card — wide LibreHeader artwork sits inside
-            a rounded surface card at the top of the library, so the
-            page opens with the brand statement before the catalogue
-            grid. Renders only when scope is "library" since Discover
-            views typically appear inside a modal where a hero would
-            compete with the modal chrome. */}
-        {scope === "library" && (
-          <div className="fishbones-library-hero" aria-hidden>
-            <img
-              src={`${import.meta.env.BASE_URL}libre_header.png`}
-              alt=""
-              className="fishbones-library-hero-img"
-              draggable={false}
-            />
-          </div>
-        )}
         <div className="fishbones-library-header">
           <div className="fishbones-library-titleblock">
             <span className="fishbones-library-title">
@@ -630,41 +614,6 @@ export default function CourseLibrary({
           </div>
         </div>
 
-        {courses.length > 0 && (
-          <LibraryControls
-            // ── filter state ──
-            categoryFilter={categoryFilter}
-            chainFilter={chainFilter}
-            langFilter={langFilter}
-            kindFilter={kindFilter}
-            // ── filter setters (each clears downstream as needed) ──
-            onSetCategory={(c) => {
-              setCategoryFilter(c);
-              setChainFilter("all");
-              setLangFilter("all");
-            }}
-            onSetChain={(c) => {
-              setChainFilter(c);
-              setLangFilter("all");
-            }}
-            onSetLang={setLangFilter}
-            onSetKind={setKindFilter}
-            // ── counts (drive both badges and visibility rules) ──
-            categoryCounts={categoryCounts}
-            chainCounts={chainCounts}
-            countByLang={countByLang}
-            kindCounts={kindCounts}
-            totalCourses={courses.length}
-            // ── tools ──
-            query={query}
-            onSetQuery={setQuery}
-            sortBy={sortBy}
-            onSetSort={setSortBy}
-            viewMode={viewMode}
-            onSetViewMode={setViewMode}
-          />
-        )}
-
         {/*
           "Update all" banner. Surfaces above the grid when one or more
           installed courses have a pending update (the same condition
@@ -677,6 +626,12 @@ export default function CourseLibrary({
           per-cover badges read, minus anything already in flight via
           `updatingIds`. This avoids re-firing in-flight syncs and
           gives the banner a real-time count as updates complete.
+
+          The body is also where the hero artwork and the
+          search/filter controls live now — the hero scrolls away
+          with the cards, the controls sticky-pin to the top of the
+          scroll viewport so search + filter stay reachable without
+          competing with the brand band for vertical space.
         */}
         <div
           className={
@@ -684,6 +639,46 @@ export default function CourseLibrary({
             (isCardListPending ? " is-deferred-pending" : "")
           }
         >
+          {/* Search + filter strip. Lives INSIDE the body so it can
+              `position: sticky; top: 0;` against the body's scroll
+              container — the hero above scrolls past it on the way
+              up, the cards below scroll under it on the way down,
+              and search + filter pills stay one tap away regardless
+              of scroll depth. */}
+          {courses.length > 0 && (
+            <LibraryControls
+              // ── filter state ──
+              categoryFilter={categoryFilter}
+              chainFilter={chainFilter}
+              langFilter={langFilter}
+              kindFilter={kindFilter}
+              // ── filter setters (each clears downstream as needed) ──
+              onSetCategory={(c) => {
+                setCategoryFilter(c);
+                setChainFilter("all");
+                setLangFilter("all");
+              }}
+              onSetChain={(c) => {
+                setChainFilter(c);
+                setLangFilter("all");
+              }}
+              onSetLang={setLangFilter}
+              onSetKind={setKindFilter}
+              // ── counts (drive both badges and visibility rules) ──
+              categoryCounts={categoryCounts}
+              chainCounts={chainCounts}
+              countByLang={countByLang}
+              kindCounts={kindCounts}
+              totalCourses={courses.length}
+              // ── tools ──
+              query={query}
+              onSetQuery={setQuery}
+              sortBy={sortBy}
+              onSetSort={setSortBy}
+              viewMode={viewMode}
+              onSetViewMode={setViewMode}
+            />
+          )}
           {/* Update-all banner. Rendered INSIDE the body (not as a
               sibling above) so its absolute positioning anchors to
               the scroll container — that lets the banner float

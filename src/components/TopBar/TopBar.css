@@ -45,11 +45,38 @@
   height: 100%;
 }
 
-/* Brand wordmark removed — see TopBar.tsx. The Library page
-   renders the same `libre_wide.png` lockup as its own hero band,
-   so carrying it here too doubled the brand presence and stole
-   horizontal space from the tab strip on narrow windows. The
-   rail's Library entry is the canonical "home" affordance now. */
+/* Brand wordmark — single `libreacademy.png` glyph (the
+   ribbon-snake "Libre" + ".academy" suffix together in one PNG).
+   Sits between the traffic-light spacer and the sidebar toggle.
+   Non-interactive — the rail's Library entry is the canonical
+   "home" affordance, so the topbar logo is identifying chrome
+   only, not a click target. */
+.fishbones__topbar-brand {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 100%;
+  padding: 0 12px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.fishbones__topbar-brand--static {
+  /* No hover state — the brand is decorative, not a button. */
+  cursor: default;
+  pointer-events: none;
+}
+.fishbones__topbar-brand-icon {
+  /* Single-glyph "Libre.academy" wordmark. Height pinned at 26px
+     so the ".academy" suffix inside the asset (smaller than the
+     "Libre" portion) stays legible inside the 44px-tall topbar
+     while leaving room for the traffic-light spacer above. */
+  height: 26px;
+  width: auto;
+  display: block;
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-user-drag: none;
+}
 
 .fishbones__topbar-tabs {
   display: flex;
