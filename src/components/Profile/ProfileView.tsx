@@ -5,6 +5,7 @@ import { trophy } from "@base/primitives/icon/icons/trophy";
 import { zap } from "@base/primitives/icon/icons/zap";
 import { bookOpenCheck } from "@base/primitives/icon/icons/book-open-check";
 import { rocket } from "@base/primitives/icon/icons/rocket";
+import { coins as coinsIcon } from "@base/primitives/icon/icons/coins";
 import { brain } from "@base/primitives/icon/icons/brain";
 import { graduationCap } from "@base/primitives/icon/icons/graduation-cap";
 import { star } from "@base/primitives/icon/icons/star";
@@ -47,6 +48,9 @@ const TONE = {
   xp: "#fcd34d",
   level: "#7cd97c",
   longest: "#c79bff",
+  // Saturated coin gold — distinct from XP's softer butter tone so the
+  // currency reads as its own thing in the stats row.
+  coins: "#f3a93a",
 } as const;
 
 /// 20 weeks of activity. Wider than mobile's 12-week strip because the
@@ -362,6 +366,13 @@ export default function ProfileView({
             <StatTile icon={bookOpenCheck} tone="lessons" value={stats.lessonsCompleted} label="Lessons" />
             <StatTile icon={zap} tone="xp" value={stats.xp} label="Total XP" />
             <StatTile icon={trophy} tone="longest" value={stats.longestStreakDays} label="Longest streak" />
+            {/* Coins are the soft-currency dropped alongside XP on every
+                completion. They don't spend on anything yet — the
+                upgrades / cosmetics / streak-freeze shop is queued for a
+                later release — but persisting them now means the
+                learner banks a balance the moment that shop ships,
+                rather than starting at 0. */}
+            <StatTile icon={coinsIcon} tone="coins" value={stats.coins} label="Coins" />
           </div>
 
           {/* Activity heatmap — 20 weeks, calendar-aligned. Rows are

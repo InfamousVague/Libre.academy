@@ -5,6 +5,7 @@ import { check } from "@base/primitives/icon/icons/check";
 import { sparkles } from "@base/primitives/icon/icons/sparkles";
 import { trophy } from "@base/primitives/icon/icons/trophy";
 import { snowflake } from "@base/primitives/icon/icons/snowflake";
+import { coins as coinsIcon } from "@base/primitives/icon/icons/coins";
 import "@base/primitives/icon/icon.css";
 import type { StreakAndXp } from "../../hooks/useStreakAndXp";
 import type { Completion } from "../../hooks/useProgress";
@@ -24,6 +25,7 @@ const STAT_COLORS = {
   xp: "#e8c46b",       // warm gold
   longest: "#c79bff",  // soft purple — personal-record accent
   freeze: "#7fc8ff",   // pale blue — ice / streak shield
+  coins: "#f3a93a",    // saturated coin gold — distinct from XP's softer tone
 } as const;
 
 /// Combined streak + level chip with a dropdown detail panel. Chip shows
@@ -350,6 +352,20 @@ export default function StatsChip({
               }`}
               hint="personal record"
             />
+            {/* Coins are a soft-currency that future shop UI will let the
+                learner spend on cosmetics, streak freezes, and other
+                upgrades. Spans the full grid width as a wallet footer so
+                it reads as its own thing rather than "another stat" — also
+                keeps the 5th block from leaving an awkward gap in the
+                2-column layout above. */}
+            <StatBlock
+              icon={coinsIcon}
+              color={STAT_COLORS.coins}
+              label="Coins"
+              value={String(stats.coins)}
+              hint="bank for upgrades, cosmetics, and freezes (coming soon)"
+              span
+            />
           </div>
 
           {/* 4-week mini heatmap. Calendar-aligned, same 5-level
@@ -599,6 +615,7 @@ function StatBlock({
   label,
   value,
   hint,
+  span,
 }: {
   icon: string;
   /// Hex color used for BOTH the icon and the uppercase label text so the
@@ -608,9 +625,17 @@ function StatBlock({
   label: string;
   value: string;
   hint: string;
+  /// When true, the block stretches across all columns of the parent
+  /// grid (used for the coins "wallet" footer so it doesn't strand a
+  /// lonely 5th item in the 2-col layout). The hint also gets to wrap
+  /// freely instead of being clipped to a single ellipsised line.
+  span?: boolean;
 }) {
   return (
-    <div className="fishbones__topbar-stats-block">
+    <div
+      className="fishbones__topbar-stats-block"
+      style={span ? { gridColumn: "1 / -1" } : undefined}
+    >
       <div className="fishbones__topbar-stats-block-label" style={{ color }}>
         <span className="fishbones__topbar-stats-block-icon" aria-hidden>
           <Icon icon={icon} size="xs" color="currentColor" weight="bold" />
@@ -618,7 +643,12 @@ function StatBlock({
         {label}
       </div>
       <div className="fishbones__topbar-stats-block-value">{value}</div>
-      <div className="fishbones__topbar-stats-block-hint">{hint}</div>
+      <div
+        className="fishbones__topbar-stats-block-hint"
+        style={span ? { whiteSpace: "normal" } : undefined}
+      >
+        {hint}
+      </div>
     </div>
   );
 }

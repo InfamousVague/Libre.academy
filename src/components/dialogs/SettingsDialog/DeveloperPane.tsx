@@ -19,32 +19,7 @@ const EFFECT_LABELS: Array<{
   {
     id: "coin-burst",
     label: "Coin burst",
-    hint: "Gold coins erupt from the centre and fall into a pile.",
-  },
-  {
-    id: "confetti-cascade",
-    label: "Confetti cascade",
-    hint: "Ribbon confetti rains down + spirals outward.",
-  },
-  {
-    id: "fireworks",
-    label: "Fireworks",
-    hint: "Chromatic firework bursts across the upper viewport.",
-  },
-  {
-    id: "glass-shatter",
-    label: "Glass shatter",
-    hint: "A glass medallion fractures with prismatic glints.",
-  },
-  {
-    id: "medallion-spin",
-    label: "Medallion spin",
-    hint: "A slow ribbon-medallion rotation, calm + ambient.",
-  },
-  {
-    id: "ribbon-vortex",
-    label: "Ribbon vortex",
-    hint: "Ribbon swirl inhales + blooms outward.",
+    hint: "Gold coins erupt from the centre and fall into a pile. Currently the only celebration effect — the magenta-keyed alternates were retired in favour of the cleaner green-keyed coin source.",
   },
 ];
 

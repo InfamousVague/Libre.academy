@@ -194,6 +194,9 @@
 .fishbones-profile-stat--xp      { --stat-tone: #fcd34d; }
 .fishbones-profile-stat--level   { --stat-tone: #7cd97c; }
 .fishbones-profile-stat--longest { --stat-tone: #c79bff; }
+/* Coin gold — saturated enough to feel like a currency badge without
+   colliding with XP's softer butter tone next to it. */
+.fishbones-profile-stat--coins   { --stat-tone: #f3a93a; }
 
 .fishbones-profile-stat-icon {
   width: 36px;

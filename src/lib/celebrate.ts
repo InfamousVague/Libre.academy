@@ -10,14 +10,19 @@
 /// 6-8 second loop, then removes itself + resolves the returned
 /// Promise so callers can sequence on "done".
 ///
-/// The pool of effects, per call:
+/// The pool currently has a single effect: `coin-burst` — gold coins
+/// erupt from centre and fall into a pile. Sourced from a green-screen
+/// MP4 keyed via `chromakey + despill=type=green` (clean key, no
+/// magenta-style halos).
 ///
-///   1. coin-burst        — gold coins erupt + fall
-///   2. confetti-cascade  — ribbon confetti rains + spirals
-///   3. fireworks         — chromatic firework bursts
-///   4. glass-shatter     — glass medallion fractures + glints
-///   5. medallion-spin    — slow ribbon-medallion rotation
-///   6. ribbon-vortex     — ribbon vortex inhales + blooms
+/// Earlier iterations included confetti-cascade / fireworks / glass-
+/// shatter / medallion-spin / ribbon-vortex, all keyed off magenta
+/// sources with messy edges. We retired them in favour of the single
+/// green-keyed coin-burst since (a) the visual quality is better and
+/// (b) coins as the unlock cue ties into the new coin-reward economy
+/// (every unlock awards XP AND coins; coins will eventually buy
+/// upgrades / cosmetics / streak freezes). Add new effects back here
+/// when their assets exist with clean keys.
 ///
 /// All effects share one fixed-position container, sized to cover
 /// the entire viewport, with `z-index: 90` so the video paints
@@ -30,27 +35,14 @@
 
 import { confettiBurst, type ConfettiPreset } from "./confetti";
 
-export type CelebrationEffect =
-  | "coin-burst"
-  | "confetti-cascade"
-  | "fireworks"
-  | "glass-shatter"
-  | "medallion-spin"
-  | "ribbon-vortex";
+export type CelebrationEffect = "coin-burst";
 
-/// Default weights — currently uniform. Each video is distinct
-/// enough that any of them can fire at any time without feeling
-/// repetitive, and collapsing weights to "all equal" matches the
-/// design spec for these unlock animations specifically. Tune
-/// per-call via `opts.weights` if a designer wants to bias toward
-/// one (e.g. coin-burst for the "first XP earned" toast).
+/// Weights kept as a Record so the random-pick API stays in place
+/// for when more effects come back. With one entry, pickEffect()
+/// always returns `coin-burst`; future additions just need a row
+/// here + an asset + a label entry in DeveloperPane.
 const DEFAULT_WEIGHTS: Record<CelebrationEffect, number> = {
   "coin-burst": 1,
-  "confetti-cascade": 1,
-  fireworks: 1,
-  "glass-shatter": 1,
-  "medallion-spin": 1,
-  "ribbon-vortex": 1,
 };
 
 export interface CelebrateOptions {
@@ -265,7 +257,7 @@ function playVideo(srcBase: string): Promise<void> {
 
 function pickEffect(weights: Record<CelebrationEffect, number>): CelebrationEffect {
   const entries = Object.entries(weights).filter(([, w]) => w > 0) as Array<[CelebrationEffect, number]>;
-  if (entries.length === 0) return "ribbon-vortex";
+  if (entries.length === 0) return "coin-burst";
   const total = entries.reduce((s, [, w]) => s + w, 0);
   let r = Math.random() * total;
   for (const [eff, w] of entries) {
