@@ -240,40 +240,40 @@ function resizeCover(srcPng, dstJpg) {
   try {
     if (impl === "magick" || impl === "convert") {
       // ImageMagick — same args for both the `magick` (v7) and
-      // `convert` (legacy) commands. `-resize 360x>` only shrinks
+      // `convert` (legacy) commands. `-resize 288x>` only shrinks
       // (the `>` qualifier means "resize only if larger");
       // `-strip` drops EXIF; `-sampling-factor 4:2:0` enables
       // chroma-subsampling for ~15% smaller files at no
       // perceptible quality loss for cover art.
       //
-      // Sizing rationale: the grid view renders cards at ~260px
-      // wide, the shelf at ~170px. 360px source = 1.4×–2.1× the
-      // display size, which covers retina at small sizes and
-      // hits the eye as crisp without paying for 2× the bytes.
-      // Quality dropped 78 → 72 because the JPEG block-noise
-      // floor at this size is well below what the viewer notices
-      // through the BookCover's gradient overlay; q72 trims
-      // ~20% more bytes for free. NOTE: dropped `-interlace
-      // Plane` — progressive JPEG decode is slower on the
-      // browser's image-decode path than baseline, and the
-      // progressive paint advantage doesn't apply when the file
-      // is <40KB and reaches the browser in one TCP window.
+      // Sizing rationale (2026-05-10 tighten): Discover grid cards
+      // render at ~150px wide (re-measured against the live shelf
+      // — earlier "260px" estimate was for the old wide layout
+      // before the 11-column dense grid landed). At 150px display,
+      // 288px source = 1.92× — perfect retina without paying for
+      // bytes the viewer can't perceive. Quality dropped 72 → 68
+      // because the new GPT-Image-2 masters are 1344x2016 (vs the
+      // earlier 720x1080 set), so the downscale has 4× the source
+      // detail to average from — q68 from a 1344x source looks
+      // visibly cleaner than q72 from a 720x source did.
+      // Net effect: ~40% smaller files at equal-or-better visual
+      // quality on the shelf.
       execFileSync(impl, [
         srcPng,
-        "-resize", "360x>",
+        "-resize", "288x>",
         "-strip",
         "-sampling-factor", "4:2:0",
-        "-quality", "72",
+        "-quality", "68",
         dstJpg,
       ], { stdio: "ignore" });
     } else if (impl === "sips") {
       // macOS sips: -Z is "resize-only-if-larger". sips doesn't
       // expose chroma-subsampling controls — accept the slightly
-      // larger output (still well under the old 480px size).
+      // larger output (still well under the old 360px size).
       execFileSync(impl, [
-        "-Z", "360",
+        "-Z", "288",
         "-s", "format", "jpeg",
-        "-s", "formatOptions", "72",
+        "-s", "formatOptions", "68",
         srcPng,
         "--out", dstJpg,
       ], { stdio: "ignore" });

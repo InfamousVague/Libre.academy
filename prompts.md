@@ -7,7 +7,7 @@ Coverage: **51 covers** spanning eight long-form sections plus the full challeng
 ## Generator settings
 
 - **Model**: `gpt-image-2` (or whatever the current high-fidelity image gen is)
-- **Aspect ratio**: 2:3 portrait, **1024 × 1536** is what these prompts target. Resize down to 360 × 540 for the bundle (`scripts/extract-starter-courses.mjs` does this with quality 72 baseline JPEG).
+- **Aspect ratio**: 2:3 portrait, **1344 × 2016** is the current GPT-Image-2 master size. The pipeline resizes down to **288 × 432 quality 68 baseline JPEG** for the web shelf (`scripts/extract-starter-courses.mjs`) and **384 × 576 quality 78** for the bundled `.academy` archives + locally-installed copies. Both sizes were tightened on 2026-05-10 — the larger 1344px masters compress visibly cleaner than the earlier 720px set, so the lower quality settings come out looking the same as the old defaults at ~40% the bytes.
 - **Output**: PNG with transparent / soft background OK; the extract pipeline composites over the dark library surface.
 - **Title text**: leave a **clear band in the lower third** of the cover for the typeset title we add at extract time. Don't render the course title inside the image — we composite it on top so we can tweak typography and localise without re-rolling artwork.
 
@@ -200,26 +200,68 @@ Each challenge pack is a tighter, more graphic single-symbol cover so the long r
 1. Save each image as `<course-id>.png` directly into the project's `cover-overrides/` directory. The filename must match exactly — `a-to-zig.png`, `the-rust-programming-language.png`, etc. — so `extract-starter-courses.mjs` picks them up via the `cover-overrides/<id>.png` lookup. The full filename for each cover is shown next to the heading above.
 2. Run `npm run starter:web` from the project root. The script copies each override into `public/starter-courses/<id>.jpg` after resizing to 360 px wide and quality-72 JPEG.
 3. Commit the new PNGs in `cover-overrides/` (git-tracked) — the JPEGs in `public/starter-courses/` regenerate from CI on every deploy, so they don't need committing.
-4. To refresh local desktop installs and the bundled `.academy` archives in one go, run the same flow as the previous batch:
+4. To refresh local desktop installs and the bundled `.academy` archives in one go, walk every cover-override file (`.png` OR `.jpg`) and resolve each archive's filename through the alias map below — many bundled archives ship under their long-form id (`challenges-typescript-mo9c9k2o`) while their cover-override lives under the short-form id (`typescript-challenge-pack`):
    ```bash
-   # Refresh ~/Library/Application Support/com.mattssoftware.kata/courses/<id>/cover.jpg
-   for png in cover-overrides/*.png; do
-     id=$(basename "$png" .png)
-     dir="$HOME/Library/Application Support/com.mattssoftware.kata/courses/$id"
-     [ -d "$dir" ] && magick "$png" -resize 480x\> -strip -sampling-factor 4:2:0 -quality 85 "$dir/cover.jpg"
+   # Naming-alias map: archive-filename → cover-override-stem. Used so
+   # the long-form bundled archives still pick up their short-form cover
+   # without us shipping duplicate PNGs. Keep in sync with the
+   # extract-starter-courses.mjs ALIAS_MAP and the table at the bottom
+   # of this doc.
+   cat > /tmp/cover-alias-map.txt <<'MAP'
+   rustonomicon                            the-rustonomicon
+   solana-programs                         solana-programs-rust-on-the-svm
+   challenges-assembly-handwritten         assembly-challenges-arm64-macos
+   challenges-c-handwritten                c-challenges
+   challenges-cpp-handwritten              cpp-challenges
+   challenges-csharp-handwritten           csharp-challenges
+   challenges-go-handwritten               go-challenges
+   challenges-go-mo9kijkd                  go-challenges
+   challenges-java-handwritten             java-challenges
+   challenges-javascript-handwritten       javascript-challenges
+   challenges-kotlin-handwritten           kotlin-challenges
+   challenges-python-handwritten           python-challenges
+   challenges-reactnative-handwritten      react-native-challenges
+   challenges-rust-handwritten             rust-challenges
+   challenges-rust-mo9bapm1                rust-challenges
+   challenges-swift-handwritten            swift-challenges
+   challenges-typescript-mo9c9k2o          typescript-challenge-pack
+   MAP
+
+   resolve_src() {  # archive-filename → cover-overrides path or empty
+     local fname="$1"
+     for ext in jpg png; do
+       local cand="cover-overrides/$fname.$ext"
+       [ -f "$cand" ] && { echo "$cand"; return; }
+     done
+     local alias=$(awk -v f="$fname" '$1==f {print $2; exit}' /tmp/cover-alias-map.txt)
+     [ -z "$alias" ] && return
+     for ext in jpg png; do
+       local cand="cover-overrides/$alias.$ext"
+       [ -f "$cand" ] && { echo "$cand"; return; }
+     done
+   }
+
+   # 1) Refresh ~/Library/Application Support/com.mattssoftware.kata/courses/<id>/cover.jpg
+   COURSES_DIR="$HOME/Library/Application Support/com.mattssoftware.kata/courses"
+   for dir in "$COURSES_DIR"/*; do
+     id=$(basename "$dir")
+     src=$(resolve_src "$id")
+     [ -n "$src" ] && magick "$src" -resize "384x>" -strip \
+       -sampling-factor 4:2:0 -quality 78 "$dir/cover.jpg"
    done
-   # Repack each .academy archive with the new cover.jpg embedded
-   TMP=$(mktemp -d) && cd "$TMP"
-   ROOT=$(git rev-parse --show-toplevel)
-   for png in "$ROOT/cover-overrides/"*.png; do
-     id=$(basename "$png" .png)
-     archive="$ROOT/src-tauri/resources/bundled-packs/$id.academy"
-     [ -f "$archive" ] || continue
-     magick "$png" -resize 480x\> -strip -sampling-factor 4:2:0 -quality 85 cover.jpg
-     zip -q -d "$archive" cover.jpg cover.png 2>/dev/null
-     zip -q "$archive" cover.jpg
-     rm -f cover.jpg
+
+   # 2) Repack each .academy archive with the new cover.jpg embedded
+   TMP=$(mktemp -d) && ROOT=$(git rev-parse --show-toplevel)
+   for archive in "$ROOT/src-tauri/resources/bundled-packs/"*.academy; do
+     fname=$(basename "$archive" .academy)
+     src=$(cd "$ROOT" && resolve_src "$fname")
+     [ -z "$src" ] && continue
+     magick "$ROOT/$src" -resize "384x>" -strip \
+       -sampling-factor 4:2:0 -quality 78 "$TMP/cover.jpg"
+     (cd "$TMP" && zip -q -d "$archive" cover.jpg cover.png 2>/dev/null
+                   zip -q "$archive" cover.jpg)
    done
+   rm -rf "$TMP"
    ```
 5. Push to `main`; the marketing-site deploy workflow picks up the new artwork on the next run.
 
