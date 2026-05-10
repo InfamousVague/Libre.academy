@@ -112,6 +112,7 @@ export default function AchievementsPage({
 
   return (
     <div className="fb-ach-page">
+      <div className="fb-ach-page__inner">
       <header className="fb-ach-page__head">
         <div className="fb-ach-page__head-row">
           <Icon icon={trophy} size="2xl" color="currentColor" />
@@ -230,6 +231,7 @@ export default function AchievementsPage({
             </section>
           );
         })}
+      </div>
       </div>
     </div>
   );

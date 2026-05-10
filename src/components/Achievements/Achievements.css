@@ -530,9 +530,19 @@
 /* ─── Achievements page ───────────────────────────────────────── */
 
 .fb-ach-page {
+  /* Direct child of `.fishbones__main` (flex column, overflow:hidden),
+     so this element owns the scroll. Without flex:1 + overflow-y the
+     content clips at the parent's edge instead of letting the user
+     scroll through the per-tier sections. */
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 32px 24px 64px;
+}
+
+.fb-ach-page__inner {
   max-width: 920px;
   margin: 0 auto;
-  padding: 32px 24px 64px;
 }
 
 .fb-ach-page__head {
