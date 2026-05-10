@@ -65,8 +65,20 @@
      (brand, title, actions) it would space them apart instead of
      keeping the first two grouped against the left edge. */
   gap: 16px;
-  padding: 18px 22px;
-  border-bottom: 1px solid var(--color-border-default);
+  /* Asymmetric padding — keep the 18px top so the wordmark has
+     breathing room from the panel's top edge, but trim the
+     bottom from 18 → 6 so the row doesn't push the controls
+     strip too far down. The wordmark's `margin-bottom: -12px`
+     visually extends past the content edge into this 6px region,
+     leaving a tight gap between its baseline and the controls
+     strip below — closer to the "two rows hugging" rhythm the
+     user asked for. */
+  padding: 18px 22px 6px;
+  /* No `border-bottom` here — the controls strip directly below
+     paints a bg-primary surface against the header's transparent
+     bg, and that colour transition is enough of a separator.
+     Adding a 1px line on top doubled up with the bg edge and read
+     as two stacked dividers. */
   flex-shrink: 0;
 }
 
@@ -81,68 +93,40 @@
    subtle inner / drop shadow combo so it lifts off the header
    without looking like a button (no hover treatment — this is
    identifying chrome, not a click target). */
-/* Brand column — vertical stack of the fish skeleton (top, no
-   card) and the libreacademy wordmark card (bottom). Lives on the
-   left side of the library header next to the title block. The
-   fish flows naked above the card so it reads as a free-standing
-   anchor rather than chrome inside another tile. */
-.fishbones-library-brand-column {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
-  flex-shrink: 0;
-}
-
-/* Fish-skeleton glyph — the original Fishbones-era logo, kept as
-   a free-standing anchor above the wordmark card. The shipped SVG
-   hardcodes `stroke="#000"` / `fill="#000"`, which is invisible
-   on the dark page surface; `filter: invert(1)` flips it to white.
-   No card chrome — sits naked against the page so it reads as
-   identity, not a tile. */
-.fishbones-library-brand-fish {
-  height: 40px;
-  width: 40px;
+/* Libreacademy wordmark — replaces the "Library / N courses"
+   title block in the library-scope header. Lives directly inside
+   `.fishbones-library-header`, sharing the row with the action
+   buttons (which still get pushed right via `margin-left: auto`
+   on `.fishbones-library-header-actions`). No card chrome —
+   the wordmark is the page identity, not a tile to be framed.
+   Negative vertical margins (-14px top + -14px bottom) shrink
+   the wordmark's contribution to the header's intrinsic height
+   without changing its rendered size: the image still draws at
+   56px tall but the surrounding flex container reserves only
+   28px for it, so the header's outer height drops from
+   ~92px (18 padding + 56 image + 18 padding) to ~64px. The
+   image visually overshoots the header's content edge by 14px
+   on each side, bleeding subtly into the panel chrome above
+   and the controls strip below — the desired "skinny row, big
+   wordmark" effect the user asked for. */
+.fishbones-library-brand-band__img {
   display: block;
-  flex-shrink: 0;
-  filter: invert(1);
-  user-select: none;
-  -webkit-user-drag: none;
-}
-
-/* Libreacademy wordmark card — surface chrome (bg-tertiary fill,
-   default border, large radius, gentle drop shadow + 1px inner
-   highlight) so the wordmark reads as a deliberate identity
-   tile. No hover treatment because this is identifying chrome,
-   not a click target. */
-.fishbones-library-brand-mark {
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-  /* 14px vertical / 22px horizontal padding lands the card at
-     ~84px tall (56px child + 14px × 2) — keeps the wordmark
-     hero-tile sized so the brand reads as page identity rather
-     than incidental chrome. */
-  padding: 14px 22px;
-  background: var(--color-bg-tertiary, var(--color-bg-secondary));
-  border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-lg, 12px);
-  box-shadow:
-    0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
-    0 4px 14px rgba(0, 0, 0, 0.18);
-  user-select: none;
-  -webkit-user-drag: none;
-}
-
-/* Libreacademy wordmark inside the brand-mark card. Height pinned
-   so the card stays at a consistent ~84px outer height; width
-   auto-flows so the wordmark's wide intrinsic aspect ratio is
-   preserved. */
-.fishbones-library-brand-mark__wordmark {
-  height: 56px;
+  /* Bumped 15% (56 → 64) to match the academy site's nav/footer
+     scale-up — keeps the libreacademy lockup at a consistent
+     visual weight across web + desktop surfaces. */
+  height: 64px;
   width: auto;
+  max-width: 100%;
   flex-shrink: 0;
-  display: block;
+  /* Top margin: 0 — wordmark sits naturally below the header's
+     full 18px top padding, giving it the breathing room the user
+     wants above. Bottom: -12px negative offset compresses the
+     row from the bottom side only, so the wordmark overshoots
+     the header's content edge below (bleeding subtly into the
+     controls strip) but stays cleanly anchored from the top. */
+  margin: 0 0 -12px;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 /* "Update all" banner. Floats absolutely over the library so it
@@ -254,6 +238,14 @@
      and titleblock clustered on the left. `margin-left: auto`
      produces the "left-cluster + right-actions" layout we want. */
   margin-left: auto;
+  /* The buttons inherit the header's `align-items: center` from the
+     parent flex container, so they vertically centre against the
+     wordmark. Earlier we tried `align-self: flex-end` to seat them
+     against the header's bottom edge — it made the row read like
+     every toolbar in the panel was bottom-aligning, even though the
+     rule was scoped to this one. Reverted to default centring;
+     the wordmark's negative bottom margin already provides the
+     "skinny row" effect on its own. */
 }
 
 /* Import group: one "Import" label on the left anchors the action, then
@@ -356,7 +348,13 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px 22px;
+  /* Top padding trimmed 14 → 8 so the strip sits closer to the
+     header above it. Combined with the header's bottom-padding
+     reduction (18 → 6), the inter-row gap drops from ~32px to
+     ~14px — the "less space" the user asked for. Bottom stays
+     at 14 so the strip's baseline against the cards isn't
+     affected. */
+  padding: 8px 22px 14px;
   border-bottom: 1px solid var(--color-border-default);
   flex-shrink: 0;
   flex-wrap: wrap;
@@ -364,12 +362,10 @@
   top: 0;
   z-index: 4;
   background: var(--color-bg-primary);
-  /* Tiny inward shadow so the pinned edge reads as a layer above
-     the scrolling content rather than blending into it. Only paints
-     once the strip has actually pinned — `box-shadow` is on by
-     default but visually flush against the hero above until the
-     hero scrolls past. */
-  box-shadow: 0 1px 0 var(--color-border-default);
+  /* No `box-shadow: 0 1px 0 ...` here — it would paint a 1px line
+     directly underneath the strip's `border-bottom` and read as a
+     doubled divider. The border-bottom alone is enough to separate
+     the strip from the cards below it. */
 }
 
 .fishbones-library-pills {
@@ -742,11 +738,16 @@
    (Alpha first, Pre-release second). Each `<section>` stacks a heading
    row on top of the existing shelf/grid container. Generous vertical
    gap between sections so the heading feels like a divider rather
-   than just another row. */
+   than just another row.
+   `padding-top: 18px` opens a comfortable gap between the sticky
+   filter strip above and the first section's "Books" / "Challenges"
+   heading. Without it the heading butted up against the strip's
+   bottom edge — visible the moment any scrolling pins the strip. */
 .fishbones-library-sections {
   display: flex;
   flex-direction: column;
   gap: 28px;
+  padding-top: 18px;
 }
 
 .fishbones-library-section {
@@ -766,6 +767,16 @@
   gap: 10px;
   padding: 0 2px 6px;
   border-bottom: 1px solid var(--color-border-default);
+  /* Pin every text child to the same line-box height so flex's
+     `align-items: center` produces a true visual centre. Without
+     this, the h2 inherits the browser's default ~1.2 line-height
+     while the blurb span uses its own 1.4, so the centred bounding
+     boxes have different heights and the title's text drifts
+     above the blurb's vertical centre. Setting `line-height: 1`
+     here propagates to all unset children, normalising their box
+     heights — the title now sits on the same vertical line as the
+     count pill and the blurb. */
+  line-height: 1;
 }
 
 .fishbones-library-section-title {
@@ -774,6 +785,10 @@
   font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--color-text-primary);
+  /* Inherit the section-head's `line-height: 1` so the h2's
+     bounding box matches the count pill's height; the centring
+     is then a clean visual middle. */
+  line-height: 1;
 }
 
 .fishbones-library-section-count {
@@ -796,7 +811,14 @@
   min-width: 0;
   font-size: 12.5px;
   color: var(--color-text-tertiary);
-  line-height: 1.4;
+  /* Tight line-height so the blurb's bounding box matches the
+     title + count pill's heights when the row's `align-items:
+     center` runs; 1.4 was producing a taller box that vertically
+     mis-centred against the smaller-line-height siblings. The
+     blurb is one short sentence and never wraps in practice on
+     desktop widths, so the looser leading wasn't earning its
+     keep. */
+  line-height: 1.2;
 }
 
 /* View-mode segmented control — sits to the right of the sort dropdown.

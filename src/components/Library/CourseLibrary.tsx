@@ -540,45 +540,21 @@ export default function CourseLibrary({
       onClick={(e) => e.stopPropagation()}
     >
         <div className="fishbones-library-header">
-          {/* Brand column — fish skeleton glyph stacked ABOVE the
-              libreacademy card. The fish flows naked (no card
-              chrome) on its own line; the wordmark gets the
-              identity-tile treatment underneath it. Renders only
-              in the Library scope so the Discover modal isn't
-              double-branded with the main app frame. */}
-          {scope === "library" && (
-            <div className="fishbones-library-brand-column">
-              <img
-                src={`${import.meta.env.BASE_URL}ai-fish-skeleton.svg`}
-                alt=""
-                className="fishbones-library-brand-fish"
-                draggable={false}
-                aria-hidden
-              />
-              <div
-                className="fishbones-library-brand-mark"
-                aria-label="Libre.academy"
-              >
-                <img
-                  src={`${import.meta.env.BASE_URL}libreacademy.png`}
-                  alt="Libre.academy"
-                  className="fishbones-library-brand-mark__wordmark"
-                  draggable={false}
-                  aria-hidden
-                />
-              </div>
-            </div>
-          )}
-          <div className="fishbones-library-titleblock">
-            <span className="fishbones-library-title">
-              {scope === "discover" ? "Discover" : "Library"}
-            </span>
-            <span className="fishbones-library-subtitle">
-              {scope === "discover"
-                ? `${placeholderCourses.length} book${placeholderCourses.length === 1 ? "" : "s"} available to install`
-                : `${courses.length} course${courses.length === 1 ? "" : "s"} on this machine`}
-            </span>
-          </div>
+          {/* Libreacademy wordmark in place of any title block —
+              the brand IS the page identity here, regardless of
+              scope. Library and Discover used to render their
+              own "Library / N courses" / "Discover / N books"
+              labels, but the wordmark anchors both surfaces
+              consistently and the count metadata isn't important
+              enough to keep the title block alive. Same lockup,
+              same row position, on either scope. */}
+          <img
+            src={`${import.meta.env.BASE_URL}libreacademy.png`}
+            alt="Libre.academy"
+            className="fishbones-library-brand-band__img"
+            draggable={false}
+            aria-hidden
+          />
           <div className="fishbones-library-header-actions">
             {/* Single "Import" label + a segmented cluster of destinations.
                 Beats repeating "Import from PDF…", "Import archive…",
