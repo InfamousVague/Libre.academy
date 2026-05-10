@@ -22,18 +22,23 @@
     <link rel="icon" type="image/png" href="/libre_app_icon.png" />
     <link rel="apple-touch-icon" href="/libre_app_icon.png" />
     <title>Libre</title>
-    <!-- Pre-React preloader. The main bundle + Monaco take ~1s to parse
-         on a cold launch and React's bootloader can't paint until the
-         module graph resolves — so without this inline block the user
-         stares at a black window.
+    <!-- Pre-React video preloader. The main bundle + Monaco take ~1 s
+         to parse on a cold launch and React's components can't paint
+         until the module graph resolves. Without an inline block the
+         user stares at a black window during that window — so we
+         render splash.mp4 directly via an HTML `<video autoplay
+         muted playsinline>`. The browser starts decoding + painting
+         the first frame as soon as the parser hits this element, no
+         JS needed, no React needed.
 
-         The markup + styling mirror the React FishbonesLoader and
-         pulsing) fish, and a halftone-dot purple/pink gradient
-         background. Without this mirroring there's a visible jump
-         between the inline preloader and the React loader on cold
-         start (the React one fades in over the inline preloader as
-         body.is-booted flips). App.tsx flips that class inside its
-         mount effect (see src/main.tsx). -->
+         When React mounts, it renders its own <SplashScreen> (which
+         plays the same splash.mp4 on top of this layer). Both
+         elements play the same cached file so the visual is
+         continuous; the brief overlap during the body.is-booted
+         fade is masked by the fact that both surfaces show the
+         same artwork. `main.tsx` flips `is-booted` once React has
+         taken over, which fades this layer out via the opacity
+         transition below. -->
     <style>
       html, body {
         margin: 0;
@@ -43,84 +48,30 @@
         color: #eaeaea;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
       }
-      /* Bone tone — matches FishbonesLoader's `--fb-bone-color`. */
       #preloader {
         position: fixed;
         inset: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
         z-index: 9999;
-        /* Solid dark base. The halftone wash + dot stencil layers below
-           paint on top of this; without an opaque base the WebView
-           sometimes flashes its default white before the wash mounts. */
+        /* Same dark base as before — covers the WebView's default
+           white-flash before the first video frame paints. */
         background: #050608;
-        color: #d4c5a1;
-        transition: opacity 0.25s ease, visibility 0s linear 0.25s;
         overflow: hidden;
-        isolation: isolate;
+        transition: opacity 0.25s ease, visibility 0s linear 0.25s;
       }
       body.is-booted #preloader {
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
       }
-      /* Subtle gray dot field beneath the colored wash so dots are
-         visible everywhere, not just inside the bloom. */
-      #preloader-dots {
+      #preloader-video {
         position: absolute;
         inset: 0;
-        z-index: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
         pointer-events: none;
-        background-image: radial-gradient(
-          circle at 1px 1px,
-          rgba(255, 255, 255, 0.05) 1px,
-          transparent 1.4px
-        );
-        background-size: 7px 7px;
-      }
-      #preloader-stack {
-        position: relative;
-        z-index: 1;
-        width: 88px;
-        height: 88px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      /* Ring removed — the new ribbon-snake `libre_loader.png` IS
-         the ring, so the spinner image rotates on its own without
-         a surrounding border circle. Kept the element in the DOM
-         so the React FishbonesLoader can lift it back in if a
-         future tweak wants chrome again. */
-      #preloader-ring {
-        display: none;
-      }
-      /* Ribbon-snake spinner — the asset is a near-Ouroboros and
-         spins continuously to sell the "endless loop" feel. The
-         drop-shadow halo gives it presence on the dark preloader
-         backdrop. */
-      #preloader-logo {
-        width: 88px;
-        height: 88px;
-        background: url("/libre_loader.png") no-repeat center / contain;
-        transform-origin: center;
-        animation: preloader-spin 1.6s linear infinite;
-        filter: drop-shadow(0 0 8px rgba(243, 114, 57, 0.32));
-      }
-      #preloader-label {
-        position: relative;
-        z-index: 1;
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.8px;
-        text-transform: uppercase;
-        color: rgba(234, 234, 234, 0.55);
-      }
-      @keyframes preloader-spin {
-        to { transform: rotate(360deg); }
+        user-select: none;
+        -webkit-user-drag: none;
       }
     </style>
     <!-- Floating dev console. Loads BEFORE the React module bundle
@@ -141,13 +92,20 @@
   </head>
   <body>
     <div id="preloader" role="status" aria-label="Loading Libre">
-      <div id="preloader-wash" aria-hidden="true"></div>
-      <div id="preloader-dots" aria-hidden="true"></div>
-      <div id="preloader-stack" aria-hidden="true">
-        <div id="preloader-ring"></div>
-        <div id="preloader-logo"></div>
-      </div>
-      <div id="preloader-label">loading Libre…</div>
+      <!-- Autoplay muted playsinline is the only video-playback combo
+           browsers (and WKWebView/Webview2) reliably allow without a
+           user gesture. preload="auto" tells the browser to download
+           and decode aggressively — we want the first frame painted
+           before main.tsx has even finished parsing. -->
+      <video
+        id="preloader-video"
+        src="/splash.mp4"
+        autoplay
+        muted
+        playsinline
+        preload="auto"
+        aria-hidden="true"
+      ></video>
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

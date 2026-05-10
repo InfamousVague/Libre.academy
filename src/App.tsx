@@ -43,7 +43,6 @@ import CourseLibrary from "./components/Library/CourseLibrary";
 import ArchiveDropOverlay from "./components/Library/ArchiveDropOverlay";
 import { useArchiveDrop } from "./hooks/useArchiveDrop";
 import { DeferredMount, LoadingPane } from "./components/Shared/DeferredMount";
-import FishbonesLoader from "./components/Shared/FishbonesLoader";
 import SplashScreen from "./components/Splash/SplashScreen";
 import { prefetchCovers } from "./hooks/useCourseCover";
 import { REMOTE_CATALOG_FALLBACK } from "./lib/remoteCatalogFallback";
@@ -1676,27 +1675,20 @@ export default function App() {
         sidebarCollapsed ? "fishbones--sidebar-collapsed" : ""
       }`}
     >
-      {/* Static bootloader stays in place as the under-layer beneath
-          the SplashScreen. The reason both exist: the splash mounts
-          a frame or two after React boots (the import-time path is
-          mainly DOM setup), and the static loader fills that gap so
-          the user sees brand chrome instead of a black flash. The
-          splash sits above it on z-index 1500 vs. 1000, so once
-          mounted it covers this entirely. */}
-      <div
-        className={`fishbones__bootloader ${
-          coursesLoaded ? "fishbones__bootloader--hidden" : ""
-        }`}
-        aria-hidden={coursesLoaded}
-      >
-        <FishbonesLoader label="loading Libre…" />
-      </div>
-
       {/* Boot-time video splash. Plays splash.mp4 start-to-end once,
           then ping-pongs the last 2 s of the same clip until the
           course list AND every cover JPG is cached locally, then
           fades out. `splashDismissed` flips on fade-end so we stop
-          rendering the video element entirely afterwards. */}
+          rendering the video element entirely afterwards.
+
+          No static FishbonesLoader fallback under this — the inline
+          `#preloader-video` in index.html plays the same splash.mp4
+          from the moment the HTML parses, so the gap between page
+          load and React mount is covered by a video that's
+          visually identical to (and the same file as) this React
+          one. They overlap during the ~250 ms `body.is-booted`
+          fade; both show splash.mp4 content so the user sees one
+          continuous video. */}
       {!splashDismissed ? (
         <SplashScreen
           ready={coursesLoaded && coversReady}
