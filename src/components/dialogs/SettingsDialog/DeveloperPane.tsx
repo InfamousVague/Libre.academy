@@ -17,34 +17,34 @@ const EFFECT_LABELS: Array<{
   hint: string;
 }> = [
   {
-    id: "pulse-rings",
-    label: "Pulse rings",
-    hint: "Calm — three concentric ribbon rings expanding from the centre.",
+    id: "coin-burst",
+    label: "Coin burst",
+    hint: "Gold coins erupt from the centre and fall into a pile.",
   },
   {
-    id: "petal-drift",
-    label: "Petal drift",
-    hint: "Gentlest — coral and cream petals fall slowly with rotation + sway.",
+    id: "confetti-cascade",
+    label: "Confetti cascade",
+    hint: "Ribbon confetti rains down + spirals outward.",
   },
   {
-    id: "ribbon-swoosh",
-    label: "Ribbon swoosh",
-    hint: "Mid — coral ribbon arcs flex outward like a bow opening.",
+    id: "fireworks",
+    label: "Fireworks",
+    hint: "Chromatic firework bursts across the upper viewport.",
   },
   {
-    id: "comet-streak",
-    label: "Comet streak",
-    hint: "Dramatic — one or two coral comets whip across with fading tails.",
+    id: "glass-shatter",
+    label: "Glass shatter",
+    hint: "A glass medallion fractures with prismatic glints.",
   },
   {
-    id: "coin-shower",
-    label: "Coin shower",
-    hint: "Treasure — gold coins cascade widely with tumble + bounce.",
+    id: "medallion-spin",
+    label: "Medallion spin",
+    hint: "A slow ribbon-medallion rotation, calm + ambient.",
   },
   {
-    id: "confetti",
-    label: "Confetti",
-    hint: "Loud — the legacy ribbon-rectangle storm.",
+    id: "ribbon-vortex",
+    label: "Ribbon vortex",
+    hint: "Ribbon swirl inhales + blooms outward.",
   },
 ];
 
