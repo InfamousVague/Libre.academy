@@ -122,12 +122,31 @@
   position: fixed;
   top: 64px;
   right: 16px;
-  z-index: 80;
+  /* z-index 10010 — same band as `.fb-ach-modal-backdrop` below.
+     The celebration video lives at z 9999 (see lib/celebrate.ts);
+     a bronze/silver toast hidden behind a coin shower would feel
+     like the unlock vanished. Sitting above the video means the
+     toast is the persistent confirmation while the coins rain
+     past. */
+  z-index: 10010;
   display: flex;
   flex-direction: column;
   gap: 10px;
   pointer-events: none;
   max-width: min(360px, calc(100vw - 32px));
+}
+
+/* Achievement-modal backdrop variant. The default ModalBackdrop blur
+   (4px) is enough to mute static page chrome but reads as nearly
+   transparent over a moving coin shower at full opacity — the eye
+   keeps tracking the gold particles instead of the badge. Bumping
+   to 10 px + a heavier dim turns the video into background ambience
+   and keeps the badge / title legible while the celebration plays
+   underneath. */
+.fb-ach-modal-backdrop {
+  background: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .fb-ach-toast {

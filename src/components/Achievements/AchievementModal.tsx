@@ -40,7 +40,17 @@ export default function AchievementModal({ achievement, onDismiss }: Props) {
   }, [achievement.tier]);
 
   return (
-    <ModalBackdrop onDismiss={onDismiss} zIndex={150}>
+    // z-index 10010 puts the achievement above the celebration video
+    // (z-index 9999 in `lib/celebrate.ts`). The video is intentionally
+    // the topmost page-chrome layer so the coin shower paints over
+    // existing modal backdrops, but the achievement modal IS the
+    // headline of the unlock — it has to sit on top of the coin shower
+    // with the backdrop blur masking the video like any other modal
+    // cast. The `fb-ach-modal-backdrop` class also bumps the backdrop
+    // blur from the default 4 px → 10 px because the coin shower
+    // underneath is a high-contrast moving target, and the standard
+    // blur wasn't enough to keep the badge legible against it.
+    <ModalBackdrop onDismiss={onDismiss} zIndex={10010} className="fb-ach-modal-backdrop">
       <div
         className={`fb-ach-modal fb-ach-modal--${achievement.tier}`}
         style={
