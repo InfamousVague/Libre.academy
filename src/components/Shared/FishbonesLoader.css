@@ -1,19 +1,25 @@
-/* Shared Fishbones spinner. The bone-textured fish logo sits stable
-   inside a rotating ring — earlier versions pulsed both opacity and
-   scale on the fish, which fought with the new 3D bone-textured
-   asset (the texture detail got blurred by the scale animation). The
-   ring now uses the bone tone (--bone-color, defined globally in
-   theme tokens) instead of plain white, matching the wordmark. */
+/* Shared Libre spinner. The ribbon-snake `libre_loader.png` is a
+   near-Ouroboros — the snake's tail almost meets its head — so
+   spinning the asset itself sells the "endless loop" feel without
+   any surrounding chrome. Replaces the previous `ring + logo` stack
+   (a rotating border circle around a static squircle); that worked
+   when the brand mark was a self-contained icon, but the new
+   ribbon-snake IS the ring, so layering one on top of the other
+   would be visual noise.
+
+   Sizing keeps the same `sm` / `md` presets the rest of the app
+   already targets. The image background is transparent, so the
+   spinner inherits whatever surface it sits on. */
+
 .fishbones-loader {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  /* The ring's lit segment uses currentColor; setting it to the bone
-     tone here makes the spinner read as "part of the brand," not a
-     stark white circle. Text labels inherit from the parent to keep
-     contrast intact. */
+  /* Held for backwards compatibility — components that read this
+     colour for the optional inline label still work, even though
+     the spinner itself no longer uses currentColor. */
   color: var(--fb-bone-color, #d4c5a1);
 }
 
@@ -34,37 +40,40 @@
   height: 40px;
 }
 
+/* Ring stays in the DOM (the React component still renders the
+   div) but is now invisible — kept as a no-op so the spinning
+   ribbon-snake can sit alone in the stack without a layout shift
+   if a future tweak wants to bring chrome back. */
 .fishbones-loader-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  /* Track is the bone tone at low opacity; lit segment is the bone
-     tone at full strength via currentColor (set on `.fishbones-loader`). */
-  border: 2px solid rgba(212, 197, 161, 0.18);
-  border-top-color: currentColor;
-  animation: fishbones-loader-spin 1.1s linear infinite;
+  display: none;
 }
 
-.fishbones-loader--sm .fishbones-loader-ring {
-  border-width: 2px;
-}
-
+/* The spinner itself — ribbon-snake PNG, transparent background,
+   continuously rotating. The `transform-origin: center` is the
+   default but spelled out so a future asset swap with off-centre
+   composition doesn't surprise anyone. */
 .fishbones-loader-logo {
-  background: url("/libre_app_icon.png") no-repeat center / contain;
-  border-radius: var(--fb-radius-sm);
-  /* No pulse animation. The new bone-textured fish has detail that
-     scaling and opacity-fading would lose; the rotating ring is the
-     only motion this loader needs. */
+  background: url("/libre_loader.png") no-repeat center / contain;
+  transform-origin: center;
+  animation: fishbones-loader-spin 1.6s linear infinite;
+  /* Tasteful warm halo so the ribbon-snake reads as an active
+     "loading" element, not a static decoration, even on dark
+     surfaces. The drop-shadow tracks the spin via the same
+     transform so the halo doesn't lag behind the asset. */
+  filter: drop-shadow(0 0 8px rgba(243, 114, 57, 0.28));
 }
 
 .fishbones-loader--md .fishbones-loader-logo {
-  width: 48px;
-  height: 48px;
+  width: 88px;
+  height: 88px;
 }
 
 .fishbones-loader--sm .fishbones-loader-logo {
-  width: 22px;
-  height: 22px;
+  width: 40px;
+  height: 40px;
+  /* Tighter halo at the small size so it doesn't bloom into
+     adjacent UI (book-cover overlays etc.). */
+  filter: drop-shadow(0 0 4px rgba(243, 114, 57, 0.32));
 }
 
 .fishbones-loader-label {
@@ -79,11 +88,9 @@
   to { transform: rotate(360deg); }
 }
 
-/* Light-theme ring adjustment — the bone-on-bone track gets washed
-   out on a light background, so swap to a darker neutral track. The
-   lit segment stays bone via currentColor. */
-[data-theme-name="ayu-light"] .fishbones-loader-ring,
-[data-theme-name="catppuccin-latte"] .fishbones-loader-ring {
-  border-color: rgba(0, 0, 0, 0.12);
-  border-top-color: currentColor;
+/* Light-theme tweak — the warm halo washes out against light
+   backgrounds; deepen the colour so the spinner still has presence. */
+[data-theme-name="ayu-light"] .fishbones-loader-logo,
+[data-theme-name="catppuccin-latte"] .fishbones-loader-logo {
+  filter: drop-shadow(0 0 6px rgba(232, 149, 74, 0.55));
 }

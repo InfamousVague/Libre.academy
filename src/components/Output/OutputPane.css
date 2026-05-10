@@ -270,21 +270,23 @@
   justify-content: center;
 }
 
+/* Ring kept in the DOM as a no-op for backwards compat; the
+   ribbon-snake `libre_loader.png` IS the ring now, so layering a
+   border circle around it would just be visual noise. */
 .fishbones-output-running-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.08);
-  border-top-color: currentColor;
-  animation: fishbones-output-spin 1.1s linear infinite;
+  display: none;
 }
 
 .fishbones-output-running-logo {
-  width: 48px;
-  height: 48px;
-  background: url("/libre_app_icon.png") no-repeat center / contain;
-  border-radius: var(--fb-radius-sm);
-  animation: fishbones-output-logo-pulse 1.8s ease-in-out infinite;
+  width: 88px;
+  height: 88px;
+  background: url("/libre_loader.png") no-repeat center / contain;
+  transform-origin: center;
+  /* Spin the ribbon-snake itself for the "running" feel. Slightly
+     brisker than the cold-boot loader so a fast-running test
+     doesn't feel like the spinner is sluggish. */
+  animation: fishbones-output-spin 1.4s linear infinite;
+  filter: drop-shadow(0 0 8px rgba(243, 114, 57, 0.28));
 }
 
 .fishbones-output-running-label {
@@ -299,6 +301,11 @@
   to { transform: rotate(360deg); }
 }
 
+/* Pulse keyframes retained but unreferenced — the running spinner
+   no longer stacks a static logo inside a rotating ring; the
+   ribbon-snake handles motion alone. Left here so a future surface
+   that wants the old pulse animation can opt in by name without
+   redefining it. */
 @keyframes fishbones-output-logo-pulse {
   0%, 100% { opacity: 0.9; transform: scale(1); }
   50%      { opacity: 0.5; transform: scale(0.94); }

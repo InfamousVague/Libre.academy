@@ -90,25 +90,25 @@
         align-items: center;
         justify-content: center;
       }
-      /* Bone-colored ring (border-top-color uses the bone tone via
-         currentColor inherited from #preloader). Track is the same
-         tone at low opacity. */
+      /* Ring removed — the new ribbon-snake `libre_loader.png` IS
+         the ring, so the spinner image rotates on its own without
+         a surrounding border circle. Kept the element in the DOM
+         so the React FishbonesLoader can lift it back in if a
+         future tweak wants chrome again. */
       #preloader-ring {
-        position: absolute;
-        inset: 0;
-        border-radius: 50%;
-        border: 2px solid rgba(212, 197, 161, 0.18);
-        border-top-color: currentColor;
-        animation: preloader-spin 1.1s linear infinite;
+        display: none;
       }
-      /* Steady fish — no pulse animation. The 3D bone-textured fish
-         loses detail under opacity/scale animation, so we leave it
-         static and let the rotating ring carry the motion. */
+      /* Ribbon-snake spinner — the asset is a near-Ouroboros and
+         spins continuously to sell the "endless loop" feel. The
+         drop-shadow halo gives it presence on the dark preloader
+         backdrop. */
       #preloader-logo {
-        width: 48px;
-        height: 48px;
-        background: url("/libre_app_icon.png") no-repeat center / contain;
-        border-radius: 6px;
+        width: 88px;
+        height: 88px;
+        background: url("/libre_loader.png") no-repeat center / contain;
+        transform-origin: center;
+        animation: preloader-spin 1.6s linear infinite;
+        filter: drop-shadow(0 0 8px rgba(243, 114, 57, 0.32));
       }
       #preloader-label {
         position: relative;
