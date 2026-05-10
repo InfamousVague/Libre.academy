@@ -58,10 +58,60 @@
 .fishbones-library-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* `gap` clusters the brand-mark + titleblock on the left side
+     of the row; `margin-left: auto` on `.fishbones-library-header-actions`
+     (below) pushes the action buttons to the right. We dropped
+     `justify-content: space-between` because with three children
+     (brand, title, actions) it would space them apart instead of
+     keeping the first two grouped against the left edge. */
+  gap: 16px;
   padding: 18px 22px;
   border-bottom: 1px solid var(--color-border-default);
   flex-shrink: 0;
+}
+
+/* Hero wordmark in the Library header — moved here from the
+   top bar, where the same lockup was repeating across every view
+   and stealing horizontal space from the tab strip.
+   Wrapped in a card surface so the lockup reads as a deliberate
+   identity tile rather than a free-floating PNG. The card uses
+   the panel's tertiary surface tone, a 1px border to delineate
+   the edge against the header chrome, generous padding so the
+   wordmark has visible breathing room on every side, and a
+   subtle inner / drop shadow combo so it lifts off the header
+   without looking like a button (no hover treatment — this is
+   identifying chrome, not a click target). */
+.fishbones-library-brand-mark {
+  /* The img element itself is the card — no wrapper div is
+     needed. Padding gives the lockup room to breathe; border +
+     radius produce the card outline; box-shadow adds a gentle
+     1px lift so the card reads as a layer above the header
+     surface. No hover treatment because this is identifying
+     chrome, not a click target. */
+  display: block;
+  flex-shrink: 0;
+  height: 56px;
+  width: auto;
+  /* `box-sizing: content-box` so `padding` extends the card
+     OUTWARD instead of eating the image's height. Without this,
+     the global `* { box-sizing: border-box }` reset (App.css)
+     would shrink the image to ~32px tall to make room for the
+     padding inside the 56px box, and the wordmark would look
+     scrunched. */
+  box-sizing: content-box;
+  /* 14px vertical / 22px horizontal padding sets the card height
+     to ~84px (56 + 14 + 14) and gives the wordmark the
+     hero-tile breathing room the rest of the design system
+     reserves for landscape glyphs. */
+  padding: 14px 22px;
+  background: var(--color-bg-tertiary, var(--color-bg-secondary));
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--fb-radius-lg, 12px);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
+    0 4px 14px rgba(0, 0, 0, 0.18);
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 /* "Update all" banner. Floats absolutely over the library so it
@@ -167,6 +217,12 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  /* Push to the right edge of the header. `.fishbones-library-header`
+     no longer uses `justify-content: space-between` — that mode would
+     splay three children evenly instead of keeping the brand-mark
+     and titleblock clustered on the left. `margin-left: auto`
+     produces the "left-cluster + right-actions" layout we want. */
+  margin-left: auto;
 }
 
 /* Import group: one "Import" label on the left anchors the action, then

@@ -280,24 +280,13 @@ export default function TopBar({
       {!isWeb && (
         <div className="fishbones__topbar-window-controls" data-tauri-drag-region />
       )}
-      {/* Brand wordmark — single `libreacademy.png` asset that
-          combines the ribbon-snake "Libre" with the ".academy"
-          suffix in one glyph, so the topbar carries the full
-          lockup without needing a paired text span. Non-interactive
-          on the topbar itself (the rail's Library entry is the
-          canonical "home" affordance); the image is purely
-          identifying chrome here. */}
-      <div
-        className="fishbones__topbar-brand fishbones__topbar-brand--static"
-        aria-hidden
-      >
-        <img
-          src={`${import.meta.env.BASE_URL}libreacademy.png`}
-          alt="Libre.academy"
-          className="fishbones__topbar-brand-icon"
-          draggable={false}
-        />
-      </div>
+      {/* Brand wordmark moved out of the top bar — it now lives in
+          the Library page's header next to the title, where it's
+          larger and reads as the page identity rather than chrome
+          repeated on every screen. The traffic-light spacer above
+          still anchors the left edge on desktop; on web the row
+          flows from the sidebar toggle. See
+          CourseLibrary.tsx → `.fishbones-library-brand-mark`. */}
 
       {onToggleSidebar && (
         <button
