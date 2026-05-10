@@ -6,7 +6,7 @@ Punch list for actually clicking through App Store Connect. Each item links to t
 
 - [ ] **Apple Developer Program** active (https://developer.apple.com/account, agreements current).
 - [ ] **App Store Connect "Apps" record** exists for `com.mattssoftware.kata` named "Libre".
-- [ ] **`PRODUCT_NAME = Libre`** in `src-tauri/gen/apple/project.yml` (still says `Fishbones`; update before first archive — see README).
+- [x] **`PRODUCT_NAME = Libre`** in `src-tauri/gen/apple/project.yml` ✅ done — `xcodegen generate` re-run, home-screen label now reads "Libre".
 - [ ] **`CFBundleShortVersionString`** in `Info.plist` matches the version you want shown in the App Store.
 - [ ] **`CFBundleVersion`** is strictly greater than the previous upload.
 - [ ] **`libre.academy/privacy`** and **`libre.academy/support`** have substantive content.

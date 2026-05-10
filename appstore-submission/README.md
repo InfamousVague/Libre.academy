@@ -43,7 +43,7 @@ appstore-submission/
 | **Age Rating** | 4+ |
 | **Price** | Free |
 
-> ⚠️ The Xcode `PRODUCT_NAME` is still `Fishbones` from the legacy branding. Before archiving, edit `src-tauri/gen/apple/project.yml` (`settingGroups.app.base.PRODUCT_NAME`) to `Libre`, run `xcodegen generate` from `src-tauri/gen/apple/`, and confirm the home-screen label reads "Libre".
+> ✅ `PRODUCT_NAME = Libre` is now set in `src-tauri/gen/apple/project.yml` and `xcodegen generate` has been re-run. The home-screen label and App Store binary name both read "Libre".
 
 ## The high-level submission flow
 
