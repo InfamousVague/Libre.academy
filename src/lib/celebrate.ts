@@ -89,7 +89,7 @@ function staticPuff(target?: { x: number; y: number } | HTMLElement): Promise<vo
   canvas.style.position = "fixed";
   canvas.style.inset = "0";
   canvas.style.pointerEvents = "none";
-  canvas.style.zIndex = "90";
+  canvas.style.zIndex = "9999";
   canvas.setAttribute("aria-hidden", "true");
   const dpr = window.devicePixelRatio || 1;
   canvas.width = Math.floor(window.innerWidth * dpr);
@@ -162,13 +162,16 @@ function playVideo(src: string): Promise<void> {
     video.setAttribute("aria-hidden", "true");
     video.style.position = "fixed";
     video.style.inset = "0";
-    video.style.width = "100%";
-    video.style.height = "100%";
+    video.style.width = "100vw";
+    video.style.height = "100vh";
     video.style.objectFit = "contain";
-    // Same z-band as the static puff: above page chrome (80) but
-    // below modal backdrops (200) so videos paint behind a popped
-    // achievement modal rather than over the badge artwork.
-    video.style.zIndex = "90";
+    video.style.background = "transparent";
+    // Foreground layer — sits ABOVE everything else (modal backdrops
+    // 200, page chrome 80, etc.) so the celebration is the visual
+    // hero of the moment. pointer-events: none lets clicks pass
+    // through to whatever's behind, so a user who flips back to a
+    // modal mid-celebration can still dismiss it.
+    video.style.zIndex = "9999";
     video.style.pointerEvents = "none";
 
     let resolved = false;
@@ -280,12 +283,12 @@ export function clearCelebrations(): void {
   // not snag unrelated elements; in practice only this module mounts
   // those exact attribute combos at the body root.
   for (const el of document.querySelectorAll(
-    'video[aria-hidden="true"][style*="z-index: 90"]',
+    'video[aria-hidden="true"][style*="z-index: 9999"]',
   )) {
     el.remove();
   }
   for (const el of document.querySelectorAll(
-    'canvas[aria-hidden="true"][style*="z-index: 90"]',
+    'canvas[aria-hidden="true"][style*="z-index: 9999"]',
   )) {
     el.remove();
   }
