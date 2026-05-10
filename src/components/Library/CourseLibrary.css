@@ -64,46 +64,27 @@
   flex-shrink: 0;
 }
 
-/* "Update all" banner. Floats absolutely over the library so it
-   doesn't push the grid down — the user wants the panel-style
-   backdrop gone and the callout to sit on top of whatever's
-   underneath. Anchored to the top-right of the library so it lines
-   up with the Shelf/Grid toggle on the same row visually but lives
-   in a layer above. The button keeps its tinted-pill treatment
-   since it's the clickable affordance; the text floats naked
-   alongside it (no surface, just text). */
+/* "Update all" callout. Slim inline row between the controls strip
+   and the cards grid. Was previously `position: absolute` floating
+   over the body's top-right, but with the controls strip pinned
+   sticky at the body's top, the float overlapped Search / Sort /
+   view-toggles and made the header read as a tangle of chips.
+   Inline placement gives it a clean home without competing with
+   anything else, and only renders when there's an actual update
+   to surface — so the cards only push down when the callout is
+   actually present. */
 .fishbones-library-update-banner {
-  position: absolute;
-  /* Anchored inside .fishbones-library-body (which already has
-     position: relative). 8px from the body's top so it sits
-     just inside the body padding edge but above the cards. */
-  top: 8px;
-  right: 22px;
-  z-index: 5;
+  position: relative;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 12px;
-  padding: 0;
+  padding: 8px 0 4px;
+  margin: 0;
   background: transparent;
   border: 0;
   border-radius: 0;
-  pointer-events: none; /* let clicks fall through to the cards underneath */
   flex-shrink: 0;
-}
-
-/* Re-enable pointer events on the button itself — the wrapper
-   ignores clicks so the cards beneath the banner stay reachable,
-   but Update all has to remain clickable. */
-.fishbones-library-update-banner-btn {
-  pointer-events: auto;
-}
-
-/* Inline mode body uses 12px horizontal padding instead of 22px —
-   match the right anchor so the banner sits in the same visual
-   gutter as the card grid below it. */
-.fishbones-library-panel--inline .fishbones-library-update-banner {
-  top: 8px;
-  right: 12px;
 }
 
 .fishbones-library-update-banner-text {
@@ -259,11 +240,11 @@
    top to change a filter or run a search.
    `top: 0` aligns the sticky edge to the body's scrolling viewport
    (the body has `overflow-y: auto` + `position: relative` already).
-   `z-index: 4` sits above the cards (no z-index) but BELOW the
-   `.fishbones-library-update-banner` (z-index: 5) so the banner
-   still floats over the strip when present.
-   Background is opaque so cards can't bleed through during the
-   sticky-overlap moment as content scrolls underneath. */
+   `z-index: 4` sits above the cards (no z-index) so the strip
+   doesn't get bled through by cards scrolling underneath.
+   The "Update all" callout used to float over this strip with
+   z-index 5; it now flows inline as a sibling row below the
+   controls instead, so no more stacking-order coordination here. */
 .fishbones-library-controls {
   display: flex;
   align-items: center;

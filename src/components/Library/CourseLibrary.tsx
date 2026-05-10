@@ -683,13 +683,16 @@ export default function CourseLibrary({
               onSetViewMode={setViewMode}
             />
           )}
-          {/* Update-all banner. Rendered INSIDE the body (not as a
-              sibling above) so its absolute positioning anchors to
-              the scroll container — that lets the banner float
-              over the first card row without pushing the grid down,
-              which the user wants ("floats on top of the library
-              without the background"). The body already has
-              position: relative for similar reasons. */}
+          {/* Update-all callout. Slim inline row that sits between
+              the controls strip and the cards grid — was previously
+              an `position: absolute` float anchored to the body's
+              top-right, but that put it on the same row as the
+              search + sort + view-toggle controls, which made the
+              header read as a tangle of overlapping chips. Now it
+              flows normally: the controls strip stays clean, the
+              callout owns its own row, and the cards push down by
+              the row's height (acceptable since the callout only
+              renders when there's an actual update to surface). */}
           {(() => {
             const pendingIds = Object.entries(updates)
               .filter(([id, hasUpdate]) => hasUpdate && !updatingIds.has(id))
