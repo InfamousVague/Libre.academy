@@ -73,6 +73,16 @@ type Stage = "intro" | "looping" | "fading" | "gone";
 
 const FADE_MS = 360;
 
+/// Slow both the intro and the boomerang loop to 75 % of native rate.
+/// On a fast desktop the intro was finishing before the lazy bundle
+/// resolved and then freezing on the loop — visually fine, but the
+/// "still loading" feel was lost because the video had clearly
+/// stopped advancing. Stretching to 1.33× duration keeps perceived
+/// motion alive across the whole boot window. Index.html sets the
+/// same rate on its inline preloader video so the handoff is
+/// continuous; if you change one, change both.
+const PLAYBACK_RATE = 0.75;
+
 function prefersReducedMotion(): boolean {
   if (typeof window === "undefined" || !window.matchMedia) return false;
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -98,6 +108,26 @@ export default function SplashScreen({
   const mountedAtRef = useRef<number>(performance.now());
   const introVideoRef = useRef<HTMLVideoElement>(null);
   const loopVideoRef = useRef<HTMLVideoElement>(null);
+
+  // Force the splash playback rate on both video elements as soon as
+  // they mount. `defaultPlaybackRate` covers any reload triggered by
+  // a src change; `playbackRate` covers the currently-playing instance.
+  // Done in its own effect so it fires once per ref attachment, before
+  // the `ended` listener wires up for the intro. Setting it during
+  // playback is cheap — the browser doesn't re-decode, just adjusts
+  // its presentation cadence.
+  useEffect(() => {
+    const v = introVideoRef.current;
+    if (v) {
+      v.playbackRate = PLAYBACK_RATE;
+      v.defaultPlaybackRate = PLAYBACK_RATE;
+    }
+    const lv = loopVideoRef.current;
+    if (lv) {
+      lv.playbackRate = PLAYBACK_RATE;
+      lv.defaultPlaybackRate = PLAYBACK_RATE;
+    }
+  }, []);
 
   // Stage 1 → 2 transition: when the intro fires `ended`, hand off
   // to the loop file (or freeze on the intro's last frame under
@@ -159,6 +189,10 @@ export default function SplashScreen({
     if (stage !== "looping") return;
     const v = loopVideoRef.current;
     if (!v) return;
+    // Re-assert the slowed rate. Some browsers reset playbackRate
+    // when the element transitions from preload to active playback,
+    // and a 1.0x loop chasing a 0.75x intro is a visible jump.
+    v.playbackRate = PLAYBACK_RATE;
     void v.play().catch(() => {
       /* autoplay-with-audio policies don't apply to a muted video,
          but if a synchronous play call ever fails for some other
