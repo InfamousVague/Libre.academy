@@ -1692,12 +1692,11 @@ export default function App() {
         <FishbonesLoader label="loading Libre…" />
       </div>
 
-      {/* Boot-time video splash. Plays splash.mp4 once, then loops
-          splash_idle.mp4 (optional — falls back to holding the
-          intro's last frame when the idle clip isn't shipped) until
-          the course list AND every cover JPG is cached locally,
-          THEN fades out. `splashDismissed` flips on fade-end so we
-          stop rendering the video element entirely afterwards. */}
+      {/* Boot-time video splash. Plays splash.mp4 start-to-end once,
+          then ping-pongs the last 2 s of the same clip until the
+          course list AND every cover JPG is cached locally, then
+          fades out. `splashDismissed` flips on fade-end so we stop
+          rendering the video element entirely afterwards. */}
       {!splashDismissed ? (
         <SplashScreen
           ready={coursesLoaded && coversReady}
