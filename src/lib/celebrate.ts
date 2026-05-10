@@ -208,7 +208,17 @@ function playVideo(srcBase: string): Promise<void> {
     video.style.inset = "0";
     video.style.width = "100vw";
     video.style.height = "100vh";
-    video.style.objectFit = "contain";
+    // `cover` scales the video so its SHORTER axis fills the viewport,
+    // letting the longer axis bleed out under the edges. The source is
+    // 1280×720 (landscape); on a typical app window where the viewport
+    // is taller than 16:9, `contain` would letterbox the top + bottom
+    // and the coin shower would only fill the middle band — visually
+    // weak. `cover` instead scales until the height fills the screen
+    // and crops the LEFT + RIGHT off the source. The shower is
+    // centred-composed so the cropped sides are mostly empty
+    // background, and the coin action stays centred and floor-to-ceiling
+    // tall. Aspect of the coin source is preserved either way.
+    video.style.objectFit = "cover";
     video.style.background = "transparent";
     // Foreground layer — above everything else (modal backdrops
     // 200, page chrome 80, etc.) so the celebration is the visual
