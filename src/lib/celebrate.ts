@@ -136,29 +136,46 @@ function staticPuff(target?: { x: number; y: number } | HTMLElement): Promise<vo
 
 // ─── Video player ───────────────────────────────────────────────
 
-/// Mount a transparent WebM overlay covering the viewport, play it
-/// once, remove it, resolve. Centred + cover-fit so the video's
+/// Mount a transparent video overlay covering the viewport, play it
+/// once, remove it, resolve. Centred + contain-fit so the video's
 /// composition fills the screen without distortion.
 ///
-/// Audio: the WebMs carry baked-in unlock sound effects (Opus 96 kb/s
-/// at 48 kHz). We try unmuted autoplay first since the achievement
-/// trigger always follows a user gesture (lesson submit, level
-/// transition, etc.) which satisfies the browser's autoplay-with-
-/// audio policy. If the play() promise rejects (rare — would mean
-/// the gesture token expired), we retry muted so the visual still
-/// fires; the user just loses the audio cue for that one unlock.
-function playVideo(src: string): Promise<void> {
+/// Format dispatch — the celebration assets exist in two flavours
+/// because no single transparent-video codec is universal:
+///
+///   .mov  (HEVC + alpha, hvc1 tag, AAC audio)
+///         Plays in Safari + WKWebView (Tauri desktop on macOS,
+///         iOS web). VP9/VP8 alpha decode is broken in WKWebView,
+///         so the desktop app needs HEVC.
+///
+///   .webm (VP8 + alpha, Opus audio)
+///         Plays in Chrome / Firefox / Edge. HEVC requires a
+///         license most browsers don't carry, so the academy web
+///         build needs WebM.
+///
+/// We render `<source>` elements for both inside one <video>; the
+/// browser picks the first one whose codec it can decode. Order
+/// matters — list the HEVC `.mov` first so Safari/WKWebView grabs
+/// it before falling back to WebM (it CAN decode WebM the rest of
+/// the way through but the alpha channel is dropped).
+///
+/// Audio: try unmuted autoplay first since the achievement trigger
+/// always follows a user gesture (lesson submit, level transition,
+/// etc.) which satisfies the browser's autoplay-with-audio policy.
+/// If the play() promise rejects, we retry muted so the visual
+/// still fires; the user just loses the audio cue for that one
+/// unlock.
+function playVideo(srcBase: string): Promise<void> {
   if (typeof document === "undefined") return Promise.resolve();
   return new Promise<void>((resolve) => {
     const video = document.createElement("video");
-    video.src = src;
-    // Default to unmuted — the video's audio IS the achievement
-    // sound now. The retry path below silently flips this if the
-    // browser blocks unmuted autoplay.
+    // Don't set video.src — we use child <source> elements below so
+    // the browser picks the first decodable codec.
     video.muted = false;
     video.playsInline = true;
     video.autoplay = true;
     video.controls = false;
+    video.preload = "auto";
     video.setAttribute("aria-hidden", "true");
     video.style.position = "fixed";
     video.style.inset = "0";
@@ -166,13 +183,24 @@ function playVideo(src: string): Promise<void> {
     video.style.height = "100vh";
     video.style.objectFit = "contain";
     video.style.background = "transparent";
-    // Foreground layer — sits ABOVE everything else (modal backdrops
+    // Foreground layer — above everything else (modal backdrops
     // 200, page chrome 80, etc.) so the celebration is the visual
     // hero of the moment. pointer-events: none lets clicks pass
-    // through to whatever's behind, so a user who flips back to a
-    // modal mid-celebration can still dismiss it.
+    // through to whatever's behind.
     video.style.zIndex = "9999";
     video.style.pointerEvents = "none";
+
+    // Source order: HEVC .mov first (Safari/WKWebView), WebM .webm
+    // second (Chrome/Firefox/Edge). Browser picks the first source
+    // whose `type` it can decode.
+    const movSrc = document.createElement("source");
+    movSrc.src = `${srcBase}.mov`;
+    movSrc.type = 'video/mp4; codecs="hvc1"';
+    video.appendChild(movSrc);
+    const webmSrc = document.createElement("source");
+    webmSrc.src = `${srcBase}.webm`;
+    webmSrc.type = "video/webm";
+    video.appendChild(webmSrc);
 
     let resolved = false;
     const finish = () => {
@@ -225,6 +253,9 @@ function targetToOrigin(target: { x: number; y: number } | HTMLElement | undefin
 }
 
 function srcFor(effect: CelebrationEffect): string {
+  // Returns a base URL WITHOUT the `.mov` / `.webm` extension. The
+  // playVideo function appends both extensions as <source> elements
+  // so the browser picks the first codec it can decode.
   // Vite's BASE_URL prefix handles the embedded /learn/ build path
   // (/learn/celebrations/...) without any conditional logic at the
   // call site.
@@ -233,7 +264,7 @@ function srcFor(effect: CelebrationEffect): string {
       ? import.meta.env.BASE_URL
       : "/";
   const trimmed = base.endsWith("/") ? base.slice(0, -1) : base;
-  return `${trimmed}/celebrations/${effect}.webm`;
+  return `${trimmed}/celebrations/${effect}`;
 }
 
 /// Fire a randomly-chosen unlock animation. Drop-in replacement for
