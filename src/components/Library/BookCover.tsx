@@ -75,6 +75,12 @@ interface Props {
   /// `syncBundledToInstalled` flow + course-list refresh. Click
   /// stops propagation so the card's `onOpen` doesn't also fire.
   onUpdate?: () => void;
+  /// Optional inline style — used by CourseLibrary to set the
+  /// `--fb-ripple-i` custom property per card so the mount-time
+  /// ripple animation staggers across the shelf in index order.
+  /// Spread onto the root button; the library's CSS reads the
+  /// custom property as `animation-delay`.
+  style?: React.CSSProperties;
 }
 
 /// Shelf-mode library card. Rendered at roughly 2:3 aspect ratio (the
@@ -103,6 +109,7 @@ function BookCoverImpl({
   installing = false,
   placeholderCoverUrl,
   onInstall,
+  style,
 }: Props) {
   // Covers are prefetched in bulk when the library mounts (see
   // `prefetchCovers` in CourseLibrary). This hook reads from the
@@ -224,6 +231,7 @@ function BookCoverImpl({
   return (
     <button
       type="button"
+      style={style}
       className={`fishbones-book ${
         hasCover ? "fishbones-book--has-cover" : "fishbones-book--no-cover"
       } fishbones-book--lang-${course.language} ${

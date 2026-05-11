@@ -815,9 +815,16 @@ export default function CourseLibrary({
                     </span>
                   </header>
                   <div className="fishbones-library-shelf">
-                    {sec.rows.map((e) => (
+                    {sec.rows.map((e, idx) => (
                       <BookCover
                         key={e.course.id}
+                        // --fb-ripple-i drives the staggered mount
+                        // animation in CourseLibrary.css. Linear by
+                        // index so cards animate in across the shelf
+                        // in document order, capped at MAX_RIPPLE_I
+                        // via the CSS `min()` so giant shelves don't
+                        // produce a multi-second tail.
+                        style={{ "--fb-ripple-i": idx } as React.CSSProperties}
                         course={e.course}
                         progress={e.pct}
                         loading={hydrating?.has(e.course.id)}
@@ -884,9 +891,13 @@ export default function CourseLibrary({
                     </span>
                   </header>
                   <div className="fishbones-library-grid">
-                    {sec.rows.map((e) => (
+                    {sec.rows.map((e, idx) => (
                       <CourseCard
                         key={e.course.id}
+                        // See the matching --fb-ripple-i comment on
+                        // the shelf-mode map above. Same staggered
+                        // mount animation, same custom property.
+                        style={{ "--fb-ripple-i": idx } as React.CSSProperties}
                         course={e.course}
                         total={e.total}
                         done={e.done}

@@ -49,6 +49,13 @@ interface Props {
   /// reinstall action now lives in the right-click context menu
   /// only, surfaced upstream via `onUpdateCourse`.
   hasUpdate?: boolean;
+  /// Optional inline style — used by CourseLibrary to set the
+  /// `--fb-ripple-i` custom property per card so the mount-time
+  /// ripple animation staggers across the grid in index order.
+  /// Spread onto the root div in BOTH the installed and
+  /// placeholder render paths; the library's CSS reads the
+  /// custom property as `animation-delay`.
+  style?: React.CSSProperties;
 }
 
 function CourseCardImpl({
@@ -62,6 +69,7 @@ function CourseCardImpl({
   installing,
   onInstall,
   hasUpdate,
+  style,
 }: Props) {
   const chapters = course.chapters.length;
   const isCompleted = pct === 1;
@@ -80,6 +88,7 @@ function CourseCardImpl({
       <div
         className="fishbones-library-card fishbones-library-card--placeholder"
         onContextMenu={onContextMenu}
+        style={style}
       >
         <div className="fishbones-library-card-main">
           <div className="fishbones-library-card-header">
@@ -115,7 +124,7 @@ function CourseCardImpl({
   }
 
   return (
-    <div className="fishbones-library-card" onContextMenu={onContextMenu}>
+    <div className="fishbones-library-card" onContextMenu={onContextMenu} style={style}>
       <button
         type="button"
         className="fishbones-library-card-main"
