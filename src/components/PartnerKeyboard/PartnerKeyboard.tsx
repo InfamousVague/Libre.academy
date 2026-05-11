@@ -313,11 +313,28 @@ export default function PartnerKeyboard({
     };
 
     // ─── Positioning ─────────────────────────────────────────
-    // Shim is focus-driven so it works under both viewport modes
-    // (`interactive-widget=resizes-content` makes the inset 0, so an
-    // inset-based shim trigger wouldn't fire even when the bar IS
-    // showing). VisualViewport math stays as a safety net for
-    // older Safari that ignores the directive.
+    // Shim is focus-driven so it works under both viewport modes:
+    //   - Modern Safari with `interactive-widget=resizes-content`
+    //     shrinks the layout viewport when the keyboard appears, so
+    //     `inset = window.innerHeight − visualViewport.height`
+    //     collapses to 0. `bottom: 0` then lands at the keyboard's
+    //     top edge. To get visually flush with the iOS form
+    //     accessory bar (the floating ↑↓✓ pill iOS draws above
+    //     every focused input — see the screenshot in this commit
+    //     message), the strip needs to dip DOWN into the bar's
+    //     region so the bar paints on TOP of the strip's bottom
+    //     edge. That requires a NEGATIVE bottom on the strip: −44 px
+    //     (= − IOS_ACCESSORY_BAR_PX). The matching `padding-bottom`
+    //     of 44 px on .fb-pk keeps the keys + tabs above the bar.
+    //   - Older Safari without the directive: inset reports the
+    //     keyboard's height (sometimes + the bar's 44 px). Same
+    //     formula `inset − shim` lands the strip on the bar's top
+    //     edge.
+    //
+    // The earlier `Math.max(0, ...)` clamp was the bug — it
+    // prevented the negative bottom in the modern-Safari case, so
+    // the strip stayed at `bottom: 0` above the accessory bar
+    // instead of merging with it.
     const sync = () => {
       const focused = document.activeElement === target;
       const shim = IS_IOS && focused ? IOS_ACCESSORY_BAR_PX : 0;
@@ -328,7 +345,13 @@ export default function PartnerKeyboard({
         return;
       }
       const inset = window.innerHeight - (vv.height + vv.offsetTop);
-      pk.style.bottom = Math.max(0, inset - shim) + "px";
+      // Negative bottom is intentional in the modern-Safari case so
+      // the strip's bottom region tucks behind the accessory bar.
+      // Clamped only against unreasonably-large negative values
+      // (e.g., a stale shim left in place after blur) so we can't
+      // accidentally yank the strip miles off-screen.
+      const next = inset - shim;
+      pk.style.bottom = `${Math.max(-IOS_ACCESSORY_BAR_PX, next)}px`;
     };
 
     const onFocus = () => {

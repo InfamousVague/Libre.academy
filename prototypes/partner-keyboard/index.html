@@ -2,9 +2,26 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <!-- `interactive-widget=resizes-content` is the load-bearing
+         directive here. Without it, iOS Safari's default
+         "resizes-visual" keeps the LAYOUT viewport at full screen
+         height when the keyboard appears — only the VISUAL viewport
+         shrinks. That mismatch is what made the strip drift out of
+         alignment when the user pan-scrolled (the compositor moves
+         the visual viewport in real time; our JS gets the `scroll`
+         event one frame late and the strip lags behind).
+
+         With `resizes-content`, the LAYOUT viewport itself shrinks
+         to fit the available area when the keyboard appears, so
+         `position: fixed; bottom: 0` naturally lands at the
+         keyboard's top edge with no JS positioning math required
+         AND no possibility of visual-viewport scroll lag (the
+         layout literally has nothing to scroll into). Supported in
+         Safari 16.4+; older Safari falls back to the JS
+         visualViewport math we kept below as a safety net. -->
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no, interactive-widget=resizes-content"
     />
     <title>Partner Keyboard prototype</title>
     <!--
@@ -178,7 +195,20 @@
         bottom: 0;
         background: var(--bg-2);
         border-top: 1px solid var(--border);
-        padding-bottom: var(--safe-bottom);
+        /* --pk-shim is set by JS to the iOS form-accessory-bar height
+           (~44pt) when the keyboard is up on iOS. The bar is a native
+           overlay above the system keyboard with up/down/Done buttons
+           that we can't hide from a web page — without compensating,
+           it sits BETWEEN the partner keyboard and the system keyboard
+           with a visible gap. The shim pushes the strip down so its
+           bottom edge meets the bar's top edge; this matching bottom
+           padding keeps the keys + tabs above the bar's draw region
+           (the bottom 44px of the strip is empty space that the bar
+           covers). When we port into Fishbones inside Tauri's
+           WKWebView we'll disable the bar in Swift via
+           `inputAssistantItem.leadingBarButtonGroups = []` +
+           `trailingBarButtonGroups = []` and the shim drops to 0. */
+        padding-bottom: calc(var(--safe-bottom) + var(--pk-shim, 0px));
         z-index: 100;
         /* Hide until the textarea is focused. Show via JS toggling the
            --active modifier. Animating the show would race the system
@@ -323,6 +353,16 @@
       </div>
 
       <div class="editor-wrap">
+        <!-- `enterkeyhint="enter"` + `autocomplete="off"` + `autocorrect`
+             / `spellcheck` / `autocapitalize` off are the documented
+             web-side hygiene knobs for code-style inputs on iOS.
+             They don't hide the accessory bar (no public API does
+             that), but they DO disable the bar's "Done" semantics
+             defaulting to form-submit, and stop iOS from showing
+             autocorrect suggestions inside the bar that we'd be
+             second-guessing. The real "hide the bar" lever lives in
+             native Swift — see the README for the Tauri / WKWebView
+             integration plan. -->
         <textarea
           id="editor"
           class="editor"
@@ -330,10 +370,12 @@
 // Try the tabs at the top of the strip — symbols / pairs / operators / js / cursor.
 // Tap () in the 'pairs' tab to insert both halves with cursor between.
 "
+          enterkeyhint="enter"
           spellcheck="false"
           autocapitalize="off"
           autocorrect="off"
           autocomplete="off"
+          inputmode="text"
         ></textarea>
       </div>
 
@@ -608,15 +650,64 @@
       // the page has scrolled and the input is below the fold — the
       // browser scrolls the visual viewport to bring the input into
       // view, and offsetTop reflects that scroll.
+      //
+      // iOS-specific shim: iOS Safari renders a form accessory bar
+      // (~44 pt) above the system keyboard with up/down arrows + Done.
+      // visualViewport.height excludes BOTH the keyboard AND the bar,
+      // so positioning at `inset` puts our strip ABOVE the bar with
+      // a visible 44 pt gap to the keyboard. There's no web API to
+      // hide the bar — it's a system overlay. So we subtract its
+      // height from the inset (push the strip DOWN so its bottom
+      // aligns with the keyboard's top) and add a matching bottom
+      // padding so the visible keys stay ABOVE the bar's draw
+      // region. The bar then covers the strip's bottom 44 pt of
+      // padding — no gap.
+      //
+      // Skip the shim on non-iOS: Android Chrome / Safari desktop
+      // don't have the bar, and applying it there would push the
+      // strip into the keyboard / off-screen.
       // ─────────────────────────────────────────────────────────────
+      const IS_IOS =
+        /iPad|iPhone|iPod/i.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      const IOS_ACCESSORY_BAR_PX = 44;
+
       function syncKeyboard() {
+        // Shim trigger is FOCUS, not inset — because with
+        // `interactive-widget=resizes-content` (modern Safari) the
+        // layout viewport shrinks to exclude the keyboard, so the
+        // visualViewport math we keep around as a fallback reports
+        // inset≈0 even while the keyboard + bar are clearly up.
+        // Focus-on-editor is the unambiguous "iOS will be drawing
+        // its accessory bar right now" signal that survives both
+        // viewport-handling modes.
+        const focused = document.activeElement === editor;
+        const shim = IS_IOS && focused ? IOS_ACCESSORY_BAR_PX : 0;
+        pk.style.setProperty("--pk-shim", `${shim}px`);
+
         const vv = window.visualViewport;
         if (!vv) {
           pk.style.bottom = "0px";
           return;
         }
+        // With `interactive-widget=resizes-content` (Safari 16.4+),
+        // the layout viewport shrinks when the keyboard appears, so
+        // inset = window.innerHeight − visualViewport.height collapses
+        // to 0 and `bottom: 0` correctly sits at the keyboard's top.
+        // On older Safari (and as a defence against the directive
+        // being silently ignored on some iOS minor versions), the
+        // computed `inset` is non-zero and we lift the strip by that
+        // amount manually.
         const inset = window.innerHeight - (vv.height + vv.offsetTop);
-        pk.style.bottom = Math.max(0, inset) + "px";
+        // Negative bottom is intentional with the
+        // interactive-widget directive in play — it tucks the
+        // strip's bottom into the iOS accessory bar's region so the
+        // bar visually merges with the strip instead of leaving the
+        // ↑↓✓ pill floating in a gap between strip + keyboard.
+        // The .fb-pk padding-bottom (= shim) keeps keys + tabs
+        // ABOVE the bar's draw region.
+        const next = inset - shim;
+        pk.style.bottom = `${Math.max(-IOS_ACCESSORY_BAR_PX, next)}px`;
       }
 
       if (window.visualViewport) {
@@ -639,6 +730,11 @@
       // ─────────────────────────────────────────────────────────────
       editor.addEventListener("focus", () => {
         pk.classList.add("pk--active");
+        // Sync the shim FIRST (driven by focus state) so the strip
+        // doesn't flash at the wrong height; then re-sync after a
+        // couple of frames so the visualViewport math catches up
+        // once the keyboard has actually started sliding in.
+        syncKeyboard();
         requestAnimationFrame(() =>
           requestAnimationFrame(syncKeyboard),
         );
@@ -651,6 +747,10 @@
         setTimeout(() => {
           if (document.activeElement !== editor) {
             pk.classList.remove("pk--active");
+            // Drop the shim too — without this, the dead 44 px of
+            // bottom padding would persist after blur on iOS even
+            // though the bar is gone.
+            syncKeyboard();
           }
         }, 120);
       });
