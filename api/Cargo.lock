@@ -359,37 +359,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5baebc0774151f905a1a2cc41989300b1e6fbb29aff0ceffa1064fdd3088d582"
 
 [[package]]
-name = "libre-api"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "argon2",
- "axum",
- "base64",
- "chrono",
- "dashmap",
- "dotenvy",
- "futures-util",
- "jsonwebtoken",
- "lettre",
- "once_cell",
- "rand 0.8.6",
- "reqwest",
- "rusqlite",
- "serde",
- "serde_json",
- "sha2",
- "thiserror 1.0.69",
- "tokio",
- "tower 0.4.13",
- "tower-http 0.5.2",
- "tracing",
- "tracing-subscriber",
- "url",
- "uuid",
-]
-
-[[package]]
 name = "foldhash"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -896,6 +865,37 @@ name = "libc"
 version = "0.2.186"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68ab91017fe16c622486840e4c83c9a37afeff978bd239b5293d61ece587de66"
+
+[[package]]
+name = "libre-api"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "argon2",
+ "axum",
+ "base64",
+ "chrono",
+ "dashmap",
+ "dotenvy",
+ "futures-util",
+ "jsonwebtoken",
+ "lettre",
+ "once_cell",
+ "rand 0.8.6",
+ "reqwest",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 1.0.69",
+ "tokio",
+ "tower 0.4.13",
+ "tower-http 0.5.2",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+ "uuid",
+]
 
 [[package]]
 name = "libsqlite3-sys"
