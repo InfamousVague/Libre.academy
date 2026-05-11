@@ -57,6 +57,12 @@ export interface FishbonesStorage {
     lessonIds: string[],
   ): Promise<void>;
   clearCourseCompletions(courseId: string): Promise<void>;
+  /// Wipe EVERY completion across every course. Used by the
+  /// "Reset account" affordance — sign-in, theme, etc. survive but
+  /// the learner's progress is reset to zero. The relay's
+  /// `resetProgress` clears the cloud copy in parallel so a
+  /// subsequent pull doesn't repopulate the just-cleared local DB.
+  clearAllCompletions(): Promise<void>;
 
   /// Course summaries — same shape as full courses but with the
   /// heavy per-lesson fields (starter / solution / tests / files /
@@ -112,6 +118,11 @@ const tauriStorage: FishbonesStorage = {
   },
   async clearCourseCompletions(courseId) {
     await invoke("clear_course_completions", { courseId });
+  },
+  async clearAllCompletions() {
+    // Backed by `progress_db::clear_completions` in src-tauri — single
+    // SQL `DELETE FROM completions`, returns Ok(()) on success.
+    await invoke("clear_completions");
   },
   async listCoursesSummary() {
     return invoke<Course[]>("list_courses_summary");
@@ -343,6 +354,17 @@ const webStorage: FishbonesStorage = {
       };
       cursorReq.onerror = () => reject(cursorReq.error);
     });
+    await txDone(tx);
+  },
+
+  async clearAllCompletions() {
+    // `clear()` on the object store wipes every row in one tx —
+    // faster + simpler than cursoring through, and avoids the
+    // "transaction-deactivates-on-await" trap because it's a single
+    // synchronous call against the store handle.
+    const db = await openDb();
+    const tx = db.transaction(STORE_COMPLETIONS, "readwrite");
+    tx.objectStore(STORE_COMPLETIONS).clear();
     await txDone(tx);
   },
 

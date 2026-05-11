@@ -418,7 +418,7 @@ export default function SettingsDialog({
 
             {section === "diagnostics" && <DiagnosticsPanel />}
 
-            {section === "developer" && <DeveloperPane />}
+            {section === "developer" && <DeveloperPane cloud={cloud} />}
 
             {section === "account" &&
               onRequestSignIn &&

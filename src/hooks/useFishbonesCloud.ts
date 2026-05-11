@@ -122,6 +122,14 @@ export interface UseFishbonesCloud {
   /// Push the local progress array as a bulk upsert. Server-side
   /// merge keeps the newer `completed_at` per (course, lesson).
   pushProgress: (rows: ProgressRow[]) => Promise<void>;
+  /// Wipe every progress row on the server for the signed-in user.
+  /// Used by the "Reset account" affordance so a clean slate on one
+  /// device propagates to every other signed-in device on the next
+  /// pull. Returns `true` when the relay confirmed the wipe; returns
+  /// `false` if the endpoint isn't implemented (older relay) or the
+  /// caller isn't signed in — the local-side reset still goes
+  /// through, the cross-device sync just falls back to manual.
+  resetProgress: () => Promise<boolean>;
 
   /// Pull every solution row (the learner's last-saved code per
   /// lesson) the server knows about for this user.
@@ -499,6 +507,26 @@ export function useFishbonesCloud(): UseFishbonesCloud {
     [authFetch],
   );
 
+  const resetProgress = useCallback(async (): Promise<boolean> => {
+    if (!token) return false;
+    try {
+      const res = await authFetch("/fishbones/progress", { method: "DELETE" });
+      // 200 / 204 — relay wiped the rows. 404 / 405 — older relay
+      // doesn't ship the route, fall back to "local-only reset". Any
+      // other non-OK is an actual error worth surfacing.
+      if (res.ok || res.status === 204) return true;
+      if (res.status === 404 || res.status === 405) return false;
+      throw new Error(`reset-progress failed (${res.status})`);
+    } catch (e) {
+      // Network failure / CORS / timeout. Don't block the local
+      // wipe — the caller can still finish on this device, and a
+      // future re-sync will eventually push the cleared state.
+      // eslint-disable-next-line no-console
+      console.warn("[cloud] resetProgress fell back to local-only:", e);
+      return false;
+    }
+  }, [token, authFetch]);
+
   const pullSolutions = useCallback(async (): Promise<SolutionRow[]> => {
     const res = await authFetch("/fishbones/solutions");
     if (!res.ok) throw new Error(`pull-solutions failed (${res.status})`);
@@ -759,6 +787,7 @@ export function useFishbonesCloud(): UseFishbonesCloud {
       deleteAccount,
       pullProgress,
       pushProgress,
+      resetProgress,
       pullSolutions,
       pushSolutions,
       pullSettings,
@@ -787,6 +816,7 @@ export function useFishbonesCloud(): UseFishbonesCloud {
       deleteAccount,
       pullProgress,
       pushProgress,
+      resetProgress,
       pullSolutions,
       pushSolutions,
       pullSettings,
