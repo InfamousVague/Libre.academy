@@ -106,7 +106,6 @@ export const SYSTEMS: SkillTree = {
       prereqs: ["rust-borrowing"],
       matches: [
         { courseId: "rustonomicon", lessonId: "ch03-reading" },
-        { courseId: "rust-by-example", lessonId: "ch06-scope-borrow-lifetime" },
       ],
     },
     {
@@ -117,7 +116,6 @@ export const SYSTEMS: SkillTree = {
       matches: [
         { courseId: "the-rust-programming-language", lessonId: "defining-traits" },
         { courseId: "the-rust-programming-language", lessonId: "trait-bounds-and-impl-trait" },
-        { courseId: "rust-by-example", lessonId: "ch05-generics-traits-reading" },
       ],
     },
     {
@@ -128,7 +126,6 @@ export const SYSTEMS: SkillTree = {
       matches: [
         { courseId: "the-rust-programming-language", lessonId: "result-enum-basics" },
         { courseId: "the-rust-programming-language", lessonId: "propagating-errors" },
-        { courseId: "rust-by-example", lessonId: "ch07-error-handling-reading" },
       ],
     },
     {

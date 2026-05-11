@@ -17,8 +17,6 @@ export const ALGORITHMS: SkillTree = {
       summary: "Asymptotic complexity, amortised cost.",
       prereqs: [],
       matches: [
-        { courseId: "open-data-structures", lessonId: "ch01-reading" },
-        { courseId: "algorithms-erickson", lessonId: "ch02-reading" },
       ],
     },
     {
@@ -27,7 +25,6 @@ export const ALGORITHMS: SkillTree = {
       summary: "Random access, doubling resize, amortisation.",
       prereqs: ["bigo"],
       matches: [
-        { courseId: "open-data-structures", lessonId: "ch01-reading" },
         { courseId: "the-rust-programming-language", lessonId: "creating-vectors" },
       ],
     },
@@ -37,8 +34,6 @@ export const ALGORITHMS: SkillTree = {
       summary: "Singly + doubly linked, pointer manipulation.",
       prereqs: ["arrays-algo"],
       matches: [
-        { courseId: "open-data-structures", lessonId: "ch02-reading" },
-        { courseId: "composing-programs", lessonId: "ch04-reading" },
       ],
     },
     {
@@ -47,9 +42,6 @@ export const ALGORITHMS: SkillTree = {
       summary: "ArrayStack, ArrayQueue, the circular-buffer trick.",
       prereqs: ["arrays-algo"],
       matches: [
-        { courseId: "open-data-structures", lessonId: "ch01-reading" },
-        { courseId: "open-data-structures", lessonId: "ch01-arraystack" },
-        { courseId: "open-data-structures", lessonId: "ch01-arrayqueue" },
       ],
     },
     {
@@ -58,9 +50,6 @@ export const ALGORITHMS: SkillTree = {
       summary: "Chaining vs linear probing, load factor.",
       prereqs: ["arrays-algo"],
       matches: [
-        { courseId: "open-data-structures", lessonId: "ch03-reading" },
-        { courseId: "open-data-structures", lessonId: "ch03-chained" },
-        { courseId: "open-data-structures", lessonId: "ch03-linear" },
       ],
     },
     {
@@ -69,8 +58,6 @@ export const ALGORITHMS: SkillTree = {
       summary: "Search, insert, delete; balanced variants.",
       prereqs: ["linked-lists-algo"],
       matches: [
-        { courseId: "open-data-structures", lessonId: "ch04-reading" },
-        { courseId: "open-data-structures", lessonId: "ch05-reading" },
       ],
     },
     {
@@ -79,8 +66,6 @@ export const ALGORITHMS: SkillTree = {
       summary: "Adjacency lists, traversal orderings.",
       prereqs: ["trees-bst", "hash-tables"],
       matches: [
-        { courseId: "algorithms-erickson", lessonId: "ch06-reading" },
-        { courseId: "open-data-structures", lessonId: "ch07-reading" },
       ],
     },
     {
@@ -89,8 +74,6 @@ export const ALGORITHMS: SkillTree = {
       summary: "Comparison-based sorts: bubble, insertion, selection.",
       prereqs: ["arrays-algo"],
       matches: [
-        { courseId: "open-data-structures", lessonId: "ch08-reading" },
-        { courseId: "algorithms-erickson", lessonId: "ch01-merge-sort" },
       ],
     },
     {
@@ -99,9 +82,6 @@ export const ALGORITHMS: SkillTree = {
       summary: "Mergesort, quicksort, the recurrence T(n)=2T(n/2)+n.",
       prereqs: ["sorting-basic"],
       matches: [
-        { courseId: "algorithms-erickson", lessonId: "ch01-reading" },
-        { courseId: "open-data-structures", lessonId: "ch08-mergesort" },
-        { courseId: "algorithms-erickson", lessonId: "ch02-reading" },
       ],
     },
     {
@@ -110,8 +90,6 @@ export const ALGORITHMS: SkillTree = {
       summary: "Halving the search space, the canonical lg n.",
       prereqs: ["arrays-algo"],
       matches: [
-        { courseId: "algorithms-erickson", lessonId: "ch02-reading" },
-        { courseId: "algorithms-erickson", lessonId: "ch02-binary-search" },
       ],
     },
     {
@@ -120,8 +98,6 @@ export const ALGORITHMS: SkillTree = {
       summary: "The recursion fairy, master theorem.",
       prereqs: ["bigo"],
       matches: [
-        { courseId: "algorithms-erickson", lessonId: "ch01-reading" },
-        { courseId: "algorithms-erickson", lessonId: "ch02-reading" },
       ],
     },
     {
@@ -130,8 +106,6 @@ export const ALGORITHMS: SkillTree = {
       summary: "Memoisation, tabulation, LCS.",
       prereqs: ["recursion-divide-conquer"],
       matches: [
-        { courseId: "algorithms-erickson", lessonId: "ch04-reading" },
-        { courseId: "algorithms-erickson", lessonId: "ch04-lcs" },
       ],
     },
     {
@@ -140,8 +114,6 @@ export const ALGORITHMS: SkillTree = {
       summary: "Edit distance, knapsack, multi-dimensional state.",
       prereqs: ["dp-basic"],
       matches: [
-        { courseId: "algorithms-erickson", lessonId: "ch04-edit-distance" },
-        { courseId: "algorithms-erickson", lessonId: "ch04-knapsack" },
       ],
     },
     {
@@ -150,8 +122,6 @@ export const ALGORITHMS: SkillTree = {
       summary: "Exchange arguments, interval scheduling.",
       prereqs: ["bigo"],
       matches: [
-        { courseId: "algorithms-erickson", lessonId: "ch05-reading" },
-        { courseId: "algorithms-erickson", lessonId: "ch05-interval-scheduling" },
       ],
     },
     {
@@ -168,9 +138,6 @@ export const ALGORITHMS: SkillTree = {
       summary: "Binary heap as implicit tree, priority queue ops.",
       prereqs: ["trees-bst"],
       matches: [
-        { courseId: "open-data-structures", lessonId: "ch06-reading" },
-        { courseId: "open-data-structures", lessonId: "ch06-heap" },
-        { courseId: "algorithms-erickson", lessonId: "ch07-reading" },
       ],
     },
   ],

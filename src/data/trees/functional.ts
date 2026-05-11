@@ -17,7 +17,6 @@ export const FUNCTIONAL: SkillTree = {
       summary: "Same input → same output, no hidden state.",
       prereqs: [],
       matches: [
-        { courseId: "composing-programs", lessonId: "ch02-reading" },
       ],
     },
     {
@@ -26,8 +25,6 @@ export const FUNCTIONAL: SkillTree = {
       summary: "Functions taking / returning functions.",
       prereqs: ["pure-functions"],
       matches: [
-        { courseId: "composing-programs", lessonId: "ch02-reading" },
-        { courseId: "rust-by-example", lessonId: "ch04-functions-closures-reading" },
       ],
     },
     {
@@ -36,9 +33,6 @@ export const FUNCTIONAL: SkillTree = {
       summary: "Tree-recursive functions, the recursion-fairy mindset.",
       prereqs: ["pure-functions"],
       matches: [
-        { courseId: "composing-programs", lessonId: "ch01-reading" },
-        { courseId: "composing-programs", lessonId: "ch04-reading" },
-        { courseId: "algorithms-erickson", lessonId: "ch01-reading" },
       ],
     },
     {
@@ -47,7 +41,6 @@ export const FUNCTIONAL: SkillTree = {
       summary: "The discipline of not mutating in place.",
       prereqs: ["pure-functions"],
       matches: [
-        { courseId: "composing-programs", lessonId: "ch05-reading" },
       ],
     },
     {
@@ -56,7 +49,6 @@ export const FUNCTIONAL: SkillTree = {
       summary: "Standard collection combinators.",
       prereqs: ["higher-order"],
       matches: [
-        { courseId: "composing-programs", lessonId: "ch02-reading" },
         { courseId: "javascript-info", lessonId: "ch04-reading" },
       ],
     },

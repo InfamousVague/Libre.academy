@@ -174,7 +174,6 @@ export const FOUNDATIONS: SkillTree = {
       summary: "Functions that call themselves on smaller inputs.",
       prereqs: ["functions"],
       matches: [
-        { courseId: "composing-programs", lessonId: "ch01-reading" },
       ],
     },
     {

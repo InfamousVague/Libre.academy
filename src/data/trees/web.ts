@@ -143,7 +143,6 @@ export const WEB: SkillTree = {
       summary: "Making HTTP requests from the browser.",
       prereqs: ["js-dom"],
       matches: [
-        { courseId: "learning-react-native", lessonId: "fetching-data-from-web" },
       ],
     },
     {
@@ -247,8 +246,6 @@ export const WEB: SkillTree = {
       summary: "JSX, props, function components.",
       prereqs: ["js-events"],
       matches: [
-        { courseId: "react-native", lessonId: "the-basics-reactnative-dev-docs-intro-react" },
-        { courseId: "learning-react-native", lessonId: "jsx-in-react-native" },
       ],
     },
     {
@@ -409,9 +406,6 @@ export const WEB: SkillTree = {
       summary: "HTML-first sites with hydrated islands.",
       prereqs: ["html-structure", "react-components"],
       matches: [
-        { courseId: "astro-fundamentals", lessonId: "r3" },
-        { courseId: "astro-fundamentals", lessonId: "r4" },
-        { courseId: "astro-fundamentals", lessonId: "r1" },
       ],
     },
     {
@@ -420,9 +414,6 @@ export const WEB: SkillTree = {
       summary: "Progressive enhancement via HTML attributes.",
       prereqs: ["html-structure"],
       matches: [
-        { courseId: "htmx-fundamentals", lessonId: "r1" },
-        { courseId: "htmx-fundamentals", lessonId: "r2" },
-        { courseId: "htmx-fundamentals", lessonId: "r3" },
       ],
     },
 

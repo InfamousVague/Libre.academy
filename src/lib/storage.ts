@@ -445,3 +445,19 @@ export async function metaSet<T = unknown>(
   tx.objectStore(STORE_META).put({ key, value });
   await txDone(tx);
 }
+
+/// Drop a meta row entirely. Used by the "Start fresh" reset path
+/// to clear the starter-seed flag so the next page load re-runs the
+/// seeder against a freshly-emptied IDB. Different from
+/// `metaSet(key, undefined)` because IDB happily stores `undefined`
+/// as a value, which would leave the row in place — `metaGet` would
+/// return `undefined` for both "missing key" and "set-to-undefined",
+/// but the seed-version gate explicitly checks `typeof seeded ===
+/// "number"`, so a real delete is the cleaner contract.
+export async function metaDelete(key: string): Promise<void> {
+  if (!isWeb) return;
+  const db = await openDb();
+  const tx = db.transaction(STORE_META, "readwrite");
+  tx.objectStore(STORE_META).delete(key);
+  await txDone(tx);
+}

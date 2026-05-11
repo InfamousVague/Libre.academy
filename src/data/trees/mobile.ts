@@ -25,9 +25,6 @@ export const MOBILE: SkillTree = {
       summary: "Native components vs HTML, View / Text / Image.",
       prereqs: ["ts-types"],
       matches: [
-        { courseId: "learning-react-native", lessonId: "native-components-vs-html" },
-        { courseId: "react-native", lessonId: "the-basics-reactnative-dev-docs-intro-react-native" },
-        { courseId: "learning-react-native", lessonId: "text-component-basics" },
       ],
     },
     {
@@ -36,9 +33,6 @@ export const MOBILE: SkillTree = {
       summary: "StyleSheet.create, Yoga flexbox.",
       prereqs: ["rn-components"],
       matches: [
-        { courseId: "learning-react-native", lessonId: "intro-to-react-native-styles" },
-        { courseId: "learning-react-native", lessonId: "stylesheet-create" },
-        { courseId: "learning-react-native", lessonId: "flexbox-basics" },
       ],
     },
     {
@@ -47,8 +41,6 @@ export const MOBILE: SkillTree = {
       summary: "Component state, props vs state.",
       prereqs: ["rn-components"],
       matches: [
-        { courseId: "react-native", lessonId: "the-basics-reactnative-dev-docs-intro-react" },
-        { courseId: "learning-react-native", lessonId: "handling-user-input" },
       ],
     },
     {
@@ -57,8 +49,6 @@ export const MOBILE: SkillTree = {
       summary: "Stack and tab navigators, route params.",
       prereqs: ["rn-state"],
       matches: [
-        { courseId: "learning-react-native", lessonId: "navigator-and-organizational-components" },
-        { courseId: "learning-react-native", lessonId: "navigator-scene-management" },
       ],
     },
     {
@@ -67,8 +57,6 @@ export const MOBILE: SkillTree = {
       summary: "TextInput, controlled state.",
       prereqs: ["rn-state"],
       matches: [
-        { courseId: "learning-react-native", lessonId: "handling-user-input" },
-        { courseId: "react-native", lessonId: "the-basics-reactnative-dev-docs-handling-text-inpu" },
       ],
     },
     {
@@ -77,8 +65,6 @@ export const MOBILE: SkillTree = {
       summary: "Persistent key-value store on the device.",
       prereqs: ["rn-state"],
       matches: [
-        { courseId: "learning-react-native", lessonId: "async-storage-basics" },
-        { courseId: "learning-react-native", lessonId: "async-storage-exercise" },
       ],
     },
     {
@@ -87,7 +73,6 @@ export const MOBILE: SkillTree = {
       summary: "HTTP requests from the device.",
       prereqs: ["rn-state"],
       matches: [
-        { courseId: "learning-react-native", lessonId: "fetching-data-from-web" },
       ],
     },
     {
@@ -96,9 +81,6 @@ export const MOBILE: SkillTree = {
       summary: "Virtualised scrolling lists, item rendering.",
       prereqs: ["rn-state"],
       matches: [
-        { courseId: "learning-react-native", lessonId: "listview-basics" },
-        { courseId: "react-native", lessonId: "the-basics-reactnative-dev-docs-using-a-listview" },
-        { courseId: "learning-react-native", lessonId: "build-api-driven-listview" },
       ],
     },
     {
