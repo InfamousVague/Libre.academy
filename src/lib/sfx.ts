@@ -233,54 +233,10 @@ function scheduleTone(
   return endAt;
 }
 
-interface NoiseSpec {
-  start: number;
-  duration: number;
-  peak: number;
-  /// Bandpass centre frequency (Hz). The noise gets shaped through
-  /// a biquad to give it character (e.g. crackle, breath, hiss).
-  bandpass: number;
-  bandpassQ?: number;
-  attack?: number;
-  release?: number;
-}
-
-function scheduleNoise(
-  c: AudioContext,
-  destination: AudioNode,
-  spec: NoiseSpec,
-  perCallScale: number,
-): number {
-  const startAt = c.currentTime + spec.start;
-  const endAt = startAt + spec.duration;
-  // Generate one shot of white noise into a buffer, play it through
-  // a bandpass to colour it. Cheaper than a noise oscillator and
-  // gives more control over duration.
-  const len = Math.max(1, Math.floor(spec.duration * c.sampleRate));
-  const buf = c.createBuffer(1, len, c.sampleRate);
-  const data = buf.getChannelData(0);
-  for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
-  const src = c.createBufferSource();
-  src.buffer = buf;
-  const filter = c.createBiquadFilter();
-  filter.type = "bandpass";
-  filter.frequency.setValueAtTime(spec.bandpass, startAt);
-  filter.Q.setValueAtTime(spec.bandpassQ ?? 1.5, startAt);
-  const gain = c.createGain();
-  const peak = spec.peak * perCallScale;
-  const attack = spec.attack ?? 0.005;
-  const release = spec.release ?? 0.06;
-  gain.gain.setValueAtTime(0, startAt);
-  gain.gain.linearRampToValueAtTime(peak, startAt + attack);
-  gain.gain.setValueAtTime(peak, Math.max(startAt + attack, endAt - release));
-  gain.gain.linearRampToValueAtTime(0, endAt);
-  src.connect(filter);
-  filter.connect(gain);
-  gain.connect(destination);
-  src.start(startAt);
-  src.stop(endAt + 0.01);
-  return endAt;
-}
+// Note: the previous pass had a `scheduleNoise` + `NoiseSpec` helper
+// for filtered-noise crackle (used by streak-flame). The redesigned
+// streak-flame is pentatonic tones now — no noise component — so
+// both helpers are removed. Re-add them if a future cue needs noise.
 
 // ─────────────────────────────────────────────────────────────────
 // Cue catalog. Each function takes the context + a destination gain
@@ -293,295 +249,436 @@ type CuePlayer = (
   perCallScale: number,
 ) => void;
 
+/// Design notes — second pass on the cue catalog.
+///
+/// The first version leaned on bright sine glissandos and a square-
+/// wave streak tick that read as "notification klaxon." The user
+/// asked for "a bit more childish and a bit more subtle and
+/// professional" — so this pass:
+///
+/// 1. Lowers every peak gain to ≤ 0.13 (was 0.15–0.20). Combined with
+///    the same master-volume slider, cues now sit at roughly half the
+///    perceived loudness of the first pass.
+/// 2. Uses pentatonic intervals (C–D–E–G–A) wherever the cue is more
+///    than one note. Pentatonic note pairs have no minor 2nds or
+///    tritones, so any two-note combination sounds "right" — that's
+///    why glockenspiel / xylophone / music-box toys default to it.
+///    Friendly, never clashy.
+/// 3. Layers a soft octave overtone on every melodic cue (at ~40 % of
+///    the fundamental's peak). The overtone gives a glockenspiel /
+///    music-box brightness without needing brass or square-wave
+///    timbres. Childish-but-tasteful.
+/// 4. Slow attacks (8–15 ms instead of 1–6 ms) so no cue starts with
+///    a transient "click." Releases extend 1.5–2× so notes ring out
+///    longer than they ramp in, which reads as "warm" rather than
+///    "blippy."
+/// 5. Drops square + sawtooth + filtered-noise entirely. Sine +
+///    triangle only — both natural-sounding waveforms with very low
+///    harmonic content above the fundamental, so layered cues don't
+///    fight each other in the high frequencies.
+///
+/// Every cue stays within the same SfxName union so the call sites
+/// don't change.
+
+/// Shared helper — adds a soft octave partial above a melodic
+/// fundamental. Centralises the glockenspiel sparkle so each cue can
+/// just call `glockTone(...)` instead of duplicating two scheduleTone
+/// calls. The partial gain is 40% of the fundamental's peak — bright
+/// enough to register, quiet enough not to compete.
+function glockTone(
+  c: AudioContext,
+  dest: AudioNode,
+  spec: ToneSpec,
+  perCallScale: number,
+): number {
+  const end = scheduleTone(c, dest, spec, perCallScale);
+  scheduleTone(
+    c,
+    dest,
+    {
+      ...spec,
+      freq: spec.freq * 2,
+      glideTo: spec.glideTo !== undefined ? spec.glideTo * 2 : undefined,
+      peak: spec.peak * 0.4,
+      type: spec.type ?? "sine",
+    },
+    perCallScale,
+  );
+  return end;
+}
+
 const CUES: Record<SfxName, CuePlayer> = {
+  /// UI tap — a single soft sine bell with an octave overtone. No
+  /// glide; the cue is a "blip" not a "swoop" so the user reads it
+  /// as a stable status indicator (clicked / dismissed / saved).
   ping(c, dest, s) {
-    scheduleTone(c, dest, {
-      freq: 880,
-      glideTo: 1320,
+    glockTone(c, dest, {
+      freq: 1175, // D6 — sits clear above any background ambience
       start: 0,
-      duration: 0.22,
-      peak: 0.18,
-      attack: 0.004,
+      duration: 0.16,
+      peak: 0.10,
+      attack: 0.010,
       release: 0.12,
       type: "sine",
     }, s);
   },
 
+  /// Bronze unlock — a two-note pentatonic descent (E6 → C6, a
+  /// minor third in pentatonic terms). The fall reads as "a thing
+  /// happened" without the "you did something incredible" intensity
+  /// of the higher tiers.
   chime(c, dest, s) {
-    // Two-note perfect-fourth bell: E5 → A5
-    scheduleTone(c, dest, {
-      freq: 659,
+    glockTone(c, dest, {
+      freq: 1319, // E6
       start: 0,
-      duration: 0.36,
-      peak: 0.20,
-      attack: 0.008,
-      release: 0.18,
+      duration: 0.28,
+      peak: 0.11,
+      attack: 0.012,
+      release: 0.20,
       type: "sine",
     }, s);
-    scheduleTone(c, dest, {
-      freq: 880,
-      start: 0.10,
-      duration: 0.42,
-      peak: 0.18,
-      attack: 0.008,
-      release: 0.22,
+    glockTone(c, dest, {
+      freq: 1047, // C6
+      start: 0.12,
+      duration: 0.36,
+      peak: 0.10,
+      attack: 0.012,
+      release: 0.26,
       type: "sine",
     }, s);
   },
 
+  /// Silver unlock — a three-note pentatonic ascent (C5 → D5 → G5).
+  /// Skips the major 3rd that would push it into "bright triumphant"
+  /// territory; the C-D-G shape is the same one music-box toys play.
   success(c, dest, s) {
-    // Three-note ascending major triad: C5 → E5 → G5.
-    [
-      [523, 0.0],
-      [659, 0.13],
-      [784, 0.26],
-    ].forEach(([f, t]) => {
-      scheduleTone(c, dest, {
+    const notes: Array<[number, number]> = [
+      [523, 0.00], // C5
+      [587, 0.12], // D5
+      [784, 0.24], // G5
+    ];
+    notes.forEach(([f, t]) => {
+      glockTone(c, dest, {
         freq: f,
         start: t,
-        duration: 0.30,
-        peak: 0.20,
-        attack: 0.006,
-        release: 0.14,
+        duration: 0.32,
+        peak: 0.11,
+        attack: 0.010,
+        release: 0.22,
         type: "sine",
       }, s);
     });
   },
 
+  /// Gold unlock — five-note pentatonic arpeggio (C–D–E–G–A) with a
+  /// gentle low-octave drone underneath for warmth. Triangle on the
+  /// arpeggio gives it a flute-ish edge without straying into brass.
   fanfare(c, dest, s) {
-    // Five-note ascending arpeggio + sustained drone behind it. The
-    // arpeggio is triangle-wave for a brassier timbre; the drone is
-    // a soft sine fifth below the tonic.
-    [
-      [523, 0.0],
-      [659, 0.12],
-      [784, 0.24],
-      [1047, 0.36],
-      [784, 0.52],
-    ].forEach(([f, t]) => {
-      scheduleTone(c, dest, {
+    const notes: Array<[number, number]> = [
+      [523, 0.00], // C5
+      [587, 0.12], // D5
+      [659, 0.24], // E5
+      [784, 0.36], // G5
+      [880, 0.50], // A5
+    ];
+    notes.forEach(([f, t]) => {
+      glockTone(c, dest, {
         freq: f,
         start: t,
         duration: 0.30,
-        peak: 0.18,
-        attack: 0.006,
-        release: 0.16,
-        type: "triangle",
-      }, s);
-    });
-    // Sustained C3 drone for warmth
-    scheduleTone(c, dest, {
-      freq: 261,
-      start: 0,
-      duration: 1.20,
-      peak: 0.10,
-      attack: 0.06,
-      release: 0.4,
-      type: "sine",
-    }, s);
-  },
-
-  arpeggio(c, dest, s) {
-    // Seven-note rising major scale (C5 → C6) with a soft reverb tail
-    // approximation: each note's release is long so they bloom into
-    // each other. Triangle for warmth.
-    const notes = [523, 587, 659, 698, 784, 880, 1047];
-    notes.forEach((f, i) => {
-      scheduleTone(c, dest, {
-        freq: f,
-        start: i * 0.10,
-        duration: 0.28,
-        peak: 0.15,
-        attack: 0.004,
+        peak: 0.10,
+        attack: 0.012,
         release: 0.22,
         type: "triangle",
       }, s);
     });
-    // Tonic+fifth+octave wash at the end to feel "completed"
+    // Pad — C3 + G3 perfect fifth. Sustained, very soft, fades in
+    // gently so the arpeggio enters on top of an already-warm bed
+    // rather than being chased by a drone.
+    scheduleTone(c, dest, {
+      freq: 131, // C3
+      start: 0,
+      duration: 1.20,
+      peak: 0.06,
+      attack: 0.18,
+      release: 0.40,
+      type: "sine",
+    }, s);
+    scheduleTone(c, dest, {
+      freq: 196, // G3
+      start: 0.05,
+      duration: 1.15,
+      peak: 0.05,
+      attack: 0.20,
+      release: 0.40,
+      type: "sine",
+    }, s);
+  },
+
+  /// Platinum unlock — extended pentatonic run (C–D–E–G–A–C–D, two
+  /// octaves) with a sparkle pad on the tonic+octave at the back
+  /// half. Reads as "you did the rare thing" without resorting to
+  /// fanfare-brass loudness.
+  arpeggio(c, dest, s) {
+    const notes = [523, 587, 659, 784, 880, 1047, 1175];
+    notes.forEach((f, i) => {
+      glockTone(c, dest, {
+        freq: f,
+        start: i * 0.09,
+        duration: 0.28,
+        peak: 0.10,
+        attack: 0.010,
+        release: 0.24,
+        type: "sine",
+      }, s);
+    });
+    // Tonic + octave sparkle, rings out as the arpeggio finishes.
     scheduleTone(c, dest, {
       freq: 523,
-      start: 0.7,
-      duration: 0.9,
-      peak: 0.10,
-      attack: 0.05,
-      release: 0.5,
+      start: 0.65,
+      duration: 1.10,
+      peak: 0.07,
+      attack: 0.20,
+      release: 0.50,
       type: "sine",
     }, s);
     scheduleTone(c, dest, {
       freq: 1047,
-      start: 0.7,
-      duration: 0.9,
-      peak: 0.06,
-      attack: 0.05,
-      release: 0.5,
+      start: 0.65,
+      duration: 1.10,
+      peak: 0.05,
+      attack: 0.20,
+      release: 0.50,
       type: "sine",
     }, s);
   },
 
+  /// Streak day flip — a soft single-tap "tock." Was a square wave
+  /// in the previous pass, which read as a notification click on a
+  /// cheap phone. Sine + octave partial keeps the tap character
+  /// (very short duration) but warms the timbre.
   "streak-tick"(c, dest, s) {
-    scheduleTone(c, dest, {
-      freq: 1100,
+    glockTone(c, dest, {
+      freq: 988, // B5
       start: 0,
-      duration: 0.09,
-      peak: 0.15,
-      attack: 0.001,
-      release: 0.04,
-      type: "square",
-    }, s);
-  },
-
-  "streak-flame"(c, dest, s) {
-    // Filtered noise crackle + low pulse — fire metaphor.
-    scheduleNoise(c, dest, {
-      start: 0,
-      duration: 0.50,
-      peak: 0.16,
-      bandpass: 500,
-      bandpassQ: 0.8,
-      attack: 0.02,
-      release: 0.20,
-    }, s);
-    scheduleTone(c, dest, {
-      freq: 110,
-      glideTo: 165,
-      start: 0,
-      duration: 0.60,
-      peak: 0.12,
-      attack: 0.05,
-      release: 0.30,
-      type: "sawtooth",
-    }, s);
-  },
-
-  "xp-pop"(c, dest, s) {
-    // Quick sine glissando — feels like a +N XP pop.
-    scheduleTone(c, dest, {
-      freq: 660,
-      glideTo: 990,
-      start: 0,
-      duration: 0.18,
-      peak: 0.16,
-      attack: 0.003,
-      release: 0.10,
+      duration: 0.10,
+      peak: 0.09,
+      attack: 0.005,
+      release: 0.06,
       type: "sine",
     }, s);
   },
 
+  /// Streak milestone — was a filtered-noise crackle + sawtooth
+  /// pulse "fire" metaphor that the user flagged as too loud. The
+  /// new shape: a two-note pentatonic chime (G5 → C6) underneath a
+  /// gentle low pad (C3+G3). Friendlier than the noise crackle, but
+  /// still distinct from a normal achievement chime — three layers
+  /// of warmth give it weight without volume.
+  "streak-flame"(c, dest, s) {
+    glockTone(c, dest, {
+      freq: 784, // G5
+      start: 0,
+      duration: 0.32,
+      peak: 0.11,
+      attack: 0.012,
+      release: 0.24,
+      type: "sine",
+    }, s);
+    glockTone(c, dest, {
+      freq: 1047, // C6
+      start: 0.14,
+      duration: 0.42,
+      peak: 0.10,
+      attack: 0.012,
+      release: 0.30,
+      type: "sine",
+    }, s);
+    scheduleTone(c, dest, {
+      freq: 131, // C3 pad
+      start: 0,
+      duration: 0.80,
+      peak: 0.06,
+      attack: 0.15,
+      release: 0.30,
+      type: "sine",
+    }, s);
+    scheduleTone(c, dest, {
+      freq: 196, // G3 pad
+      start: 0.05,
+      duration: 0.75,
+      peak: 0.04,
+      attack: 0.15,
+      release: 0.30,
+      type: "sine",
+    }, s);
+  },
+
+  /// XP per-lesson micro-cue — the most-fired sound in the app, so
+  /// kept deliberately tiny: one short bell tap. No glide (a glide
+  /// reads as motion / drama; a flat tap reads as confirmation).
+  "xp-pop"(c, dest, s) {
+    glockTone(c, dest, {
+      freq: 1175, // D6
+      start: 0,
+      duration: 0.12,
+      peak: 0.08,
+      attack: 0.006,
+      release: 0.08,
+      type: "sine",
+    }, s);
+  },
+
+  /// Level up — three-note pentatonic rise (C–G–C, fifth + octave)
+  /// over a slow swelling pad. The interval choice avoids the
+  /// brassy "trumpet flourish" of the previous fanfare-style
+  /// version; reads as "ascending" without being loud.
   "level-up"(c, dest, s) {
-    // Five-note rising arpeggio with a glissando sweep underneath.
-    [
-      [392, 0.0],
-      [523, 0.10],
-      [659, 0.20],
-      [784, 0.30],
-      [1047, 0.42],
-    ].forEach(([f, t]) => {
-      scheduleTone(c, dest, {
+    const notes: Array<[number, number]> = [
+      [523, 0.00], // C5
+      [784, 0.16], // G5
+      [1047, 0.32], // C6
+    ];
+    notes.forEach(([f, t]) => {
+      glockTone(c, dest, {
         freq: f,
         start: t,
-        duration: 0.30,
-        peak: 0.18,
-        attack: 0.005,
-        release: 0.18,
-        type: "triangle",
+        duration: 0.40,
+        peak: 0.11,
+        attack: 0.012,
+        release: 0.28,
+        type: "sine",
       }, s);
     });
-    // Glissando from a low fifth up to the tonic's octave
+    // Slow pad swell — C3 + G3 + C4 — fades in over the first 400ms
+    // so the trio lands on top of a warm bed instead of cold air.
+    scheduleTone(c, dest, {
+      freq: 131,
+      start: 0,
+      duration: 1.10,
+      peak: 0.06,
+      attack: 0.30,
+      release: 0.40,
+      type: "sine",
+    }, s);
     scheduleTone(c, dest, {
       freq: 196,
-      glideTo: 523,
-      start: 0,
-      duration: 0.95,
-      peak: 0.08,
-      attack: 0.04,
-      release: 0.4,
+      start: 0.05,
+      duration: 1.05,
+      peak: 0.05,
+      attack: 0.30,
+      release: 0.40,
+      type: "sine",
+    }, s);
+    scheduleTone(c, dest, {
+      freq: 262,
+      start: 0.10,
+      duration: 1.00,
+      peak: 0.04,
+      attack: 0.30,
+      release: 0.40,
       type: "sine",
     }, s);
   },
 
+  /// Chapter end — three-note pentatonic DESCENT (G5 → E5 → C5).
+  /// Descending shape = "settling / resolving" so the cue reads as
+  /// "section closed" rather than "next thing started."
   "complete-section"(c, dest, s) {
-    // Three-note descending chime, gentle.
-    [
-      [988, 0.0],
-      [784, 0.18],
-      [659, 0.36],
-    ].forEach(([f, t]) => {
-      scheduleTone(c, dest, {
+    const notes: Array<[number, number]> = [
+      [784, 0.00], // G5
+      [659, 0.16], // E5
+      [523, 0.32], // C5
+    ];
+    notes.forEach(([f, t]) => {
+      glockTone(c, dest, {
+        freq: f,
+        start: t,
+        duration: 0.40,
+        peak: 0.10,
+        attack: 0.012,
+        release: 0.28,
+        type: "sine",
+      }, s);
+    });
+  },
+
+  /// Book end — full pentatonic motif (C–D–E–G–A) into a sustained
+  /// C-major-9 pad (C–E–G–D) for the celebration tail. Subdued
+  /// loudness, but two extra phases of layered warmth so the moment
+  /// still feels like a wrap.
+  "complete-book"(c, dest, s) {
+    // Phase 1: rising pentatonic line.
+    const notes: Array<[number, number]> = [
+      [523, 0.00], // C5
+      [587, 0.12], // D5
+      [659, 0.24], // E5
+      [784, 0.36], // G5
+      [880, 0.50], // A5
+    ];
+    notes.forEach(([f, t]) => {
+      glockTone(c, dest, {
         freq: f,
         start: t,
         duration: 0.32,
-        peak: 0.18,
-        attack: 0.006,
-        release: 0.18,
+        peak: 0.10,
+        attack: 0.012,
+        release: 0.22,
         type: "sine",
       }, s);
     });
-  },
-
-  "complete-book"(c, dest, s) {
-    // Extended fanfare: tonic + fifth + octave layered, then a
-    // closing tonic chord.
-    // Phase 1: rising arpeggio
+    // Phase 2: sustained Cmaj9 pad (C3 + E3 + G3 + D4) — fades in
+    // softly during the arpeggio, rings out after.
     [
-      [392, 0.0],
-      [523, 0.12],
-      [659, 0.24],
-      [784, 0.36],
-    ].forEach(([f, t]) => {
+      [131, 0.07], // C3
+      [165, 0.07], // E3
+      [196, 0.06], // G3
+      [294, 0.05], // D4
+    ].forEach(([f, peak]) => {
       scheduleTone(c, dest, {
         freq: f,
-        start: t,
-        duration: 0.30,
-        peak: 0.18,
-        attack: 0.006,
-        release: 0.16,
-        type: "triangle",
-      }, s);
-    });
-    // Phase 2: sustained chord (C major triad, two octaves)
-    [261, 392, 523, 784, 1047].forEach((f, i) => {
-      scheduleTone(c, dest, {
-        freq: f,
-        start: 0.55,
-        duration: 1.4,
-        peak: 0.10 - i * 0.005,
-        attack: 0.05,
-        release: 0.6,
+        start: 0.20,
+        duration: 1.80,
+        peak,
+        attack: 0.40,
+        release: 0.60,
         type: "sine",
       }, s);
     });
-    // Phase 3: a final crisp accent on the tonic octave
-    scheduleTone(c, dest, {
+    // Phase 3: final tonic + octave sparkle.
+    glockTone(c, dest, {
       freq: 1047,
-      start: 1.4,
-      duration: 0.5,
-      peak: 0.14,
-      attack: 0.005,
-      release: 0.30,
-      type: "triangle",
+      start: 1.40,
+      duration: 0.60,
+      peak: 0.08,
+      attack: 0.020,
+      release: 0.40,
+      type: "sine",
     }, s);
   },
 
+  /// Streak freeze — a soft crystalline shimmer. Two high octave
+  /// partials over a slow upward glide; reads as "ice / shield"
+  /// without the previous version's brittle high partial peak.
   freeze(c, dest, s) {
-    // Sine sweep + crystalline shimmer. Sweep from A4 to A6 over the
-    // duration; layer in a brittle high partial at the top.
     scheduleTone(c, dest, {
-      freq: 440,
-      glideTo: 1760,
+      freq: 880, // A5
+      glideTo: 1760, // A6
       start: 0,
-      duration: 0.8,
-      peak: 0.15,
-      attack: 0.02,
+      duration: 0.70,
+      peak: 0.09,
+      attack: 0.040,
       release: 0.30,
       type: "sine",
     }, s);
     scheduleTone(c, dest, {
-      freq: 2637,
+      freq: 1760, // A6
+      glideTo: 2349, // D7
       start: 0.10,
-      duration: 0.30,
-      peak: 0.06,
-      attack: 0.005,
-      release: 0.20,
+      duration: 0.50,
+      peak: 0.05,
+      attack: 0.030,
+      release: 0.30,
       type: "sine",
     }, s);
   },
