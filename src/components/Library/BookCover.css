@@ -59,6 +59,21 @@
   }
 }
 
+/* Suppress the per-cover rise when the card sits inside a library
+   shelf/grid — the parent wrapper is already running the spring-
+   landing cascade (see `fb-library-spring-land` in CourseLibrary.css),
+   and stacking the two transforms layered the cover's small +10px
+   rise on top of the wrapper's -44px drop, producing a visible
+   "wobble inside a wobble" instead of a clean impact. The shelf-
+   level animation owns the entrance now. The standalone `fb-book-
+   rise` stays as the default for any context where the cover renders
+   outside a library container (recents strip, search-result row,
+   etc.) so those still get a soft fade-in. */
+.fishbones-library-shelf .fishbones-book,
+.fishbones-library-grid .fishbones-book {
+  animation: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .fishbones-book {
     animation: none;

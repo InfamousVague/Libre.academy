@@ -630,54 +630,92 @@
   gap: 22px 16px;
 }
 
-/* ─── Mount-time ripple ──────────────────────────────────────────
+/* ─── Mount-time spring landing ──────────────────────────────────
    When a shelf or grid first mounts (route change, filter swap that
-   remounts the section, or first launch), the cards animate in with
-   a staggered translateY + opacity + scale fade — index-ordered so
-   the visual effect reads as a wave sweeping across the shelf.
+   remounts the section, or first launch), the cards drop in from
+   above with a multi-stage spring landing — index-ordered so the
+   visual effect reads as a wave sweeping across the shelf.
+
+   Choreography (per card):
+     0%   — invisible, dropped 44px above + scaled to 78% (closer to
+            the camera, like a falling object), slightly tilted as
+            if it's about to land flat.
+     55%  — fully opaque, just past the resting position by 6px (the
+            squash impact), scaled to 1.04 wide × 0.94 tall to
+            simulate the brief flatten on contact.
+     78%  — bounced back UP 3px at 0.99 (the rebound), tilt almost
+            zeroed.
+     100% — settled flat at rest.
+
+   `transform-origin: 50% 90%` anchors the spring near the BOTTOM
+   edge of each card so the squash + tilt read as gravity acting on
+   a book sitting on a shelf. Without it the squash would compress
+   from the centre and look like a balloon pop instead of an impact.
 
    The per-card index lives in the `--fb-ripple-i` custom property
    set inline from CourseLibrary.tsx; `animation-delay` resolves it
    via `calc()` with a `min()` cap so giant shelves (200+ items)
-   don't produce a multi-second tail — beyond 28 the cards arrive
-   together at the cap delay.
+   don't produce a multi-second tail — beyond 32 the cards land
+   together at the cap delay. Stagger bumped from 28ms → 38ms per
+   index so the wave actually reads as a wave rather than a single
+   burst.
 
    `backwards` fill mode is load-bearing: it keeps the pre-animation
-   styles (opacity 0, translateY 18px) applied during the delay
-   phase so cards that haven't started yet are invisible — without
-   it they'd pop in at full opacity, wait their delay, then
+   styles (opacity 0, translated up + scaled down) applied during
+   the delay phase so cards that haven't started yet are invisible.
+   Without it they'd pop in at full opacity, wait their delay, then
    pointlessly animate from final-state to final-state.
 
    Animation runs once per mount. React's keyed list keeps existing
    nodes around when items reorder, so filters / search don't
-   re-trigger the cascade.
-   prefers-reduced-motion drops the cascade — the cards fade in
-   uniformly at 80ms with no translate / scale so motion-sensitive
-   users still get a soft entrance without the wave. */
+   re-trigger the cascade. */
 .fishbones-library-shelf > *,
 .fishbones-library-grid > * {
-  animation: fb-library-ripple-in 460ms cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
-  animation-delay: calc(min(var(--fb-ripple-i, 0), 28) * 28ms);
+  animation: fb-library-spring-land 720ms cubic-bezier(0.2, 0.65, 0.3, 1) backwards;
+  animation-delay: calc(min(var(--fb-ripple-i, 0), 32) * 38ms);
+  transform-origin: 50% 90%;
+  /* Hint the browser so the multi-stage transform stays on the GPU
+     compositor — keeps the cascade smooth on lower-end iPads where
+     repainting a dozen cards at once otherwise drops frames. */
+  will-change: transform, opacity;
 }
 
-@keyframes fb-library-ripple-in {
-  from {
+@keyframes fb-library-spring-land {
+  0% {
     opacity: 0;
-    transform: translateY(18px) scale(0.96);
+    transform: translateY(-44px) scale(0.78);
   }
-  to {
+  55% {
+    opacity: 1;
+    /* Squash on impact: wider than tall, pushed slightly below
+       resting line. The asymmetric scale (1.04 × 0.94) reads as a
+       book hitting the shelf and briefly flattening from the weight. */
+    transform: translateY(6px) scale(1.04, 0.94);
+  }
+  78% {
+    /* Rebound: bounce slightly back UP at near-resting scale. Sub-
+       1.0 vertical scale here keeps the bounce reading as a settling
+       wobble rather than an ascent. */
+    transform: translateY(-3px) scale(0.99, 1.01);
+  }
+  100% {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
 }
 
+/* Reduced-motion fallback — no drop, no squash, no cascade. Just a
+   short uniform fade so motion-sensitive users still get a soft
+   entrance signal without the wave. */
 @media (prefers-reduced-motion: reduce) {
   .fishbones-library-shelf > *,
   .fishbones-library-grid > * {
-    animation: fb-library-ripple-in-reduced 80ms ease-out backwards;
+    animation: fb-library-spring-land-reduced 120ms ease-out backwards;
     animation-delay: 0ms;
+    transform-origin: 50% 50%;
+    will-change: auto;
   }
-  @keyframes fb-library-ripple-in-reduced {
+  @keyframes fb-library-spring-land-reduced {
     from { opacity: 0; }
     to { opacity: 1; }
   }
