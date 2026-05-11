@@ -3,19 +3,23 @@ import ReactDOM from "react-dom/client";
 import { applyTheme, loadTheme } from "./theme/themes";
 import { prewarmCoursesSummary } from "./hooks/useCourses";
 import { isMobile } from "./lib/platform";
-// Base library's design tokens FIRST (light :root + [data-theme="dark"]
-// blocks), then our theme overrides. The order is load-bearing: the
-// base kit's `[data-theme="dark"]` rules and our `[data-theme-name=
-// "synthwave"]` / `claude-code-dark` / etc. rules both have specificity
-// (0,0,1,0) and define the same tokens (--color-bg-primary, --color-
-// text-primary, etc.). With same specificity, last-loaded wins —
-// loading base first means our themes.css per-theme overrides actually
-// apply instead of getting clobbered by `[data-theme="dark"]` setting
-// every dark theme to the same generic palette.
+// Base library's design tokens FIRST (light `:root` + `[data-theme=
+// "dark"]` blocks), then our theme overrides, then app shell styles.
+// The order is load-bearing: the base kit's `[data-theme="dark"]`
+// rule and our `[data-theme-name="synthwave"]` / `"claude-code-dark"`
+// / `"ayu-mirage"` / etc. rules both have specificity (0,0,1,0) and
+// define the same tokens (`--color-bg-primary`, `--color-text-primary`,
+// etc.). With same specificity, last-loaded wins — loading base
+// FIRST means our per-theme overrides actually apply instead of
+// getting clobbered by `[data-theme="dark"]` snapping every dark
+// theme back to the same generic palette.
 //
-// `App.css` also @imports tokens.css at its top, but that's a no-op
-// duplicate after this — kept there for surfaces that import App.css
-// directly during dev.
+// IMPORTANT: do NOT also `@import "...tokens.css"` from inside
+// `App.css` or any other downstream stylesheet. CSS @imports get
+// inlined at the position of the @import directive, which would
+// re-load tokens.css AFTER themes.css inside that file and clobber
+// our theme overrides again. Removed the App.css @import for
+// exactly this reason; keep it removed.
 import "@mattmattmattmatt/base/site/styles/tokens.css";
 import "./theme/themes.css";
 import "./App.css";

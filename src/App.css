@@ -1,5 +1,15 @@
-/* Pull in base kit design tokens (colors, radius, typography). */
-@import "@mattmattmattmatt/base/site/styles/tokens.css";
+/* Base kit design tokens are loaded from `main.tsx` (first import,
+   BEFORE `theme/themes.css`) so our per-theme overrides win the
+   cascade. The previous `@import` here was re-inlining tokens.css
+   AFTER themes.css inside this file, which clobbered every
+   `[data-theme-name="..."]` rule — same-specificity selectors, the
+   second-loaded copy of `[data-theme="dark"]` would re-apply the
+   generic base palette and wipe out synthwave / claude-code-dark /
+   ayu-mirage / etc. token overrides.
+
+   Don't add it back. If a future bundle drops the main.tsx
+   pre-import, add `@mattmattmattmatt/base/site/styles/tokens.css`
+   to the TOP of main.tsx before themes.css — not here. */
 
 /* Global icon-size bump. The `@base/primitives/icon` library sizes
    icons via CSS custom properties keyed off `--text-*-size`, which
