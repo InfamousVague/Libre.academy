@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-/// Optional cloud-sync hook for the Fishbones relay.
+/// Optional cloud-sync hook for the Libre relay.
 ///
 /// All sync is opt-in. When the user hasn't signed in we behave
 /// exactly like before — local SQLite + JSON only — so the app stays
@@ -13,16 +13,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 ///   - `pushProgress` / `pullProgress` are no-ops without a token
 ///
 /// The relay URL defaults to a sensible production endpoint but can
-/// be overridden via the `FISHBONES_RELAY_URL` Vite-time env var or
+/// be overridden via the `LIBRE_RELAY_URL` Vite-time env var or
 /// localStorage so test deploys can point at a staging host.
 
-const TOKEN_KEY = "fishbones:cloud:token-v1";
-const USER_KEY = "fishbones:cloud:user-v1";
-const URL_OVERRIDE_KEY = "fishbones:cloud:url-override-v1";
+const TOKEN_KEY = "libre:cloud:token-v1";
+const USER_KEY = "libre:cloud:user-v1";
+const URL_OVERRIDE_KEY = "libre:cloud:url-override-v1";
 
 const DEFAULT_RELAY_URL = "https://api.mattssoftware.com";
 
-export interface FishbonesCloudUser {
+export interface LibreCloudUser {
   id: string;
   email: string | null;
   display_name: string | null;
@@ -80,14 +80,14 @@ export interface CourseMeta {
   updated_at: string;
 }
 
-export interface UseFishbonesCloud {
+export interface UseLibreCloud {
   /// Effective relay base URL (env override → localStorage → default).
   relayUrl: string;
   /// Persistent overrides for tests + staging deploys.
   setRelayUrlOverride: (url: string | null) => void;
   /// `null` while booting, `false` when there's no stored token,
   /// the user object once the cached `me` fetch lands.
-  user: FishbonesCloudUser | null | false;
+  user: LibreCloudUser | null | false;
   signedIn: boolean;
   /// In-flight indicator for any of the auth/sync operations.
   busy: boolean;
@@ -109,7 +109,7 @@ export interface UseFishbonesCloud {
   confirmPasswordReset: (token: string, newPassword: string) => Promise<void>;
   /// Adopt a token issued by the browser-OAuth relay flow (Apple SIWA
   /// or Google) without re-running the auth POST. The desktop deep-
-  /// link handler calls this once it parses `fishbones://oauth/done`.
+  /// link handler calls this once it parses `libre://oauth/done`.
   /// Stores the token + clears the cached user so the existing
   /// `/me`-on-mount effect picks it up and populates the user object.
   applyOAuthToken: (token: string) => Promise<void>;
@@ -152,7 +152,7 @@ export interface UseFishbonesCloud {
   /// (returns a noop teardown) when the user isn't signed in yet.
   subscribeSync: (handler: (event: SyncEvent) => void) => () => void;
 
-  /// Upload a `.fishbones` archive (Uint8Array) tagged with metadata.
+  /// Upload a `.libre` archive (Uint8Array) tagged with metadata.
   uploadCourse: (input: {
     courseSlug: string;
     title: string;
@@ -163,7 +163,7 @@ export interface UseFishbonesCloud {
   }) => Promise<CourseMeta>;
   listMyCourses: () => Promise<CourseMeta[]>;
   listPublicCourses: () => Promise<CourseMeta[]>;
-  /// Returns the raw archive bytes for `.fishbones` import.
+  /// Returns the raw archive bytes for `.libre` import.
   downloadCourse: (courseId: string) => Promise<ArrayBuffer>;
   deleteCourse: (courseId: string) => Promise<void>;
 }
@@ -177,13 +177,13 @@ function writeToken(t: string | null): void {
     else localStorage.removeItem(TOKEN_KEY);
   } catch { /* private mode */ }
 }
-function readUser(): FishbonesCloudUser | null {
+function readUser(): LibreCloudUser | null {
   try {
     const raw = localStorage.getItem(USER_KEY);
-    return raw ? JSON.parse(raw) as FishbonesCloudUser : null;
+    return raw ? JSON.parse(raw) as LibreCloudUser : null;
   } catch { return null; }
 }
-function writeUser(u: FishbonesCloudUser | null): void {
+function writeUser(u: LibreCloudUser | null): void {
   try {
     if (u) localStorage.setItem(USER_KEY, JSON.stringify(u));
     else localStorage.removeItem(USER_KEY);
@@ -194,16 +194,16 @@ function readUrlOverride(): string | null {
 }
 
 function envRelayUrl(): string {
-  // Vite-time inline (build-time): VITE_FISHBONES_RELAY_URL. Vite
+  // Vite-time inline (build-time): VITE_LIBRE_RELAY_URL. Vite
   // augments `import.meta.env` via vite-env.d.ts, so the access is
   // typed without a cast — falls back to the default when the var
   // isn't declared at build time.
-  return import.meta.env.VITE_FISHBONES_RELAY_URL ?? DEFAULT_RELAY_URL;
+  return import.meta.env.VITE_LIBRE_RELAY_URL ?? DEFAULT_RELAY_URL;
 }
 
-export function useFishbonesCloud(): UseFishbonesCloud {
+export function useLibreCloud(): UseLibreCloud {
   const [token, setToken] = useState<string | null>(() => readToken());
-  const [user, setUser] = useState<FishbonesCloudUser | null | false>(() => {
+  const [user, setUser] = useState<LibreCloudUser | null | false>(() => {
     const cached = readUser();
     if (cached) return cached;
     return readToken() ? null : false;
@@ -222,11 +222,11 @@ export function useFishbonesCloud(): UseFishbonesCloud {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`${relayUrl}/fishbones/me`, {
+        const res = await fetch(`${relayUrl}/libre/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error(`me failed: ${res.status}`);
-        const me = (await res.json()) as FishbonesCloudUser;
+        const me = (await res.json()) as LibreCloudUser;
         if (cancelled) return;
         writeUser(me);
         setUser(me);
@@ -279,7 +279,7 @@ export function useFishbonesCloud(): UseFishbonesCloud {
                   : `Sign-in failed (${res.status}).`;
           throw new Error(msg);
         }
-        const json = (await res.json()) as { token: string; user: FishbonesCloudUser };
+        const json = (await res.json()) as { token: string; user: LibreCloudUser };
         writeToken(json.token);
         writeUser(json.user);
         setToken(json.token);
@@ -308,7 +308,7 @@ export function useFishbonesCloud(): UseFishbonesCloud {
 
   const signUpEmail = useCallback(
     async (email: string, password: string, displayName?: string) => {
-      await runAuth("/fishbones/auth/signup", {
+      await runAuth("/libre/auth/signup", {
         email,
         password,
         display_name: displayName,
@@ -319,7 +319,7 @@ export function useFishbonesCloud(): UseFishbonesCloud {
   );
   const signInEmail = useCallback(
     async (email: string, password: string) => {
-      await runAuth("/fishbones/auth/login", {
+      await runAuth("/libre/auth/login", {
         email,
         password,
         device_label: deviceLabel,
@@ -329,7 +329,7 @@ export function useFishbonesCloud(): UseFishbonesCloud {
   );
   const signInApple = useCallback(
     async (identityToken: string, displayName?: string) => {
-      await runAuth("/fishbones/auth/apple", {
+      await runAuth("/libre/auth/apple", {
         identity_token: identityToken,
         display_name: displayName,
         device_label: deviceLabel,
@@ -339,7 +339,7 @@ export function useFishbonesCloud(): UseFishbonesCloud {
   );
   const signInGoogle = useCallback(
     async (identityToken: string, displayName?: string) => {
-      await runAuth("/fishbones/auth/google", {
+      await runAuth("/libre/auth/google", {
         identity_token: identityToken,
         display_name: displayName,
         device_label: deviceLabel,
@@ -357,7 +357,7 @@ export function useFishbonesCloud(): UseFishbonesCloud {
       setBusy(true);
       setError(null);
       try {
-        const res = await fetch(`${relayUrl}/fishbones/auth/password-reset/request`, {
+        const res = await fetch(`${relayUrl}/libre/auth/password-reset/request`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email }),
@@ -391,7 +391,7 @@ export function useFishbonesCloud(): UseFishbonesCloud {
       setBusy(true);
       setError(null);
       try {
-        const res = await fetch(`${relayUrl}/fishbones/auth/password-reset/confirm`, {
+        const res = await fetch(`${relayUrl}/libre/auth/password-reset/confirm`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token, new_password: newPassword }),
@@ -434,7 +434,7 @@ export function useFishbonesCloud(): UseFishbonesCloud {
       // Best-effort revoke. Even if the request fails (offline,
       // expired token), we still clear local state — the user clicked
       // "sign out" and shouldn't be left stuck on the dashboard.
-      await fetch(`${relayUrl}/fishbones/auth/logout`, {
+      await fetch(`${relayUrl}/libre/auth/logout`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       }).catch(() => undefined);
@@ -450,7 +450,7 @@ export function useFishbonesCloud(): UseFishbonesCloud {
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch(`${relayUrl}/fishbones/auth/account`, {
+      const res = await fetch(`${relayUrl}/libre/auth/account`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -483,7 +483,7 @@ export function useFishbonesCloud(): UseFishbonesCloud {
   );
 
   const pullProgress = useCallback(async (): Promise<ProgressRow[]> => {
-    const res = await authFetch("/fishbones/progress");
+    const res = await authFetch("/libre/progress");
     if (!res.ok) throw new Error(`pull failed (${res.status})`);
     return (await res.json()) as ProgressRow[];
   }, [authFetch]);
@@ -495,7 +495,7 @@ export function useFishbonesCloud(): UseFishbonesCloud {
       // and smaller chunks make a partial-failure more recoverable.
       for (let i = 0; i < rows.length; i += 1000) {
         const slice = rows.slice(i, i + 1000);
-        const res = await authFetch("/fishbones/progress", {
+        const res = await authFetch("/libre/progress", {
           method: "PUT",
           body: JSON.stringify({ rows: slice }),
         });
@@ -510,7 +510,7 @@ export function useFishbonesCloud(): UseFishbonesCloud {
   const resetProgress = useCallback(async (): Promise<boolean> => {
     if (!token) return false;
     try {
-      const res = await authFetch("/fishbones/progress", { method: "DELETE" });
+      const res = await authFetch("/libre/progress", { method: "DELETE" });
       // 200 / 204 — relay wiped the rows. 404 / 405 — older relay
       // doesn't ship the route, fall back to "local-only reset". Any
       // other non-OK is an actual error worth surfacing.
@@ -528,7 +528,7 @@ export function useFishbonesCloud(): UseFishbonesCloud {
   }, [token, authFetch]);
 
   const pullSolutions = useCallback(async (): Promise<SolutionRow[]> => {
-    const res = await authFetch("/fishbones/solutions");
+    const res = await authFetch("/libre/solutions");
     if (!res.ok) throw new Error(`pull-solutions failed (${res.status})`);
     return (await res.json()) as SolutionRow[];
   }, [authFetch]);
@@ -538,7 +538,7 @@ export function useFishbonesCloud(): UseFishbonesCloud {
       if (rows.length === 0) return;
       for (let i = 0; i < rows.length; i += 200) {
         const slice = rows.slice(i, i + 200);
-        const res = await authFetch("/fishbones/solutions", {
+        const res = await authFetch("/libre/solutions", {
           method: "PUT",
           body: JSON.stringify({ rows: slice }),
         });
@@ -551,7 +551,7 @@ export function useFishbonesCloud(): UseFishbonesCloud {
   );
 
   const pullSettings = useCallback(async (): Promise<SettingRow[]> => {
-    const res = await authFetch("/fishbones/settings");
+    const res = await authFetch("/libre/settings");
     if (!res.ok) throw new Error(`pull-settings failed (${res.status})`);
     return (await res.json()) as SettingRow[];
   }, [authFetch]);
@@ -559,7 +559,7 @@ export function useFishbonesCloud(): UseFishbonesCloud {
   const pushSettings = useCallback(
     async (rows: SettingRow[]) => {
       if (rows.length === 0) return;
-      const res = await authFetch("/fishbones/settings", {
+      const res = await authFetch("/libre/settings", {
         method: "PUT",
         body: JSON.stringify({ rows }),
       });
@@ -602,7 +602,7 @@ export function useFishbonesCloud(): UseFishbonesCloud {
         // http(s) → ws(s); always preserve TLS so we don't downgrade.
         const base = relayUrlRef.current.replace(/^http/, "ws");
         const tok = encodeURIComponent(tokenRef.current ?? "");
-        return `${base}/fishbones/sync/ws?token=${tok}`;
+        return `${base}/libre/sync/ws?token=${tok}`;
       };
 
       const connect = (): void => {
@@ -610,7 +610,7 @@ export function useFishbonesCloud(): UseFishbonesCloud {
         try {
           socket = new WebSocket(wsUrl());
         } catch (e) {
-          console.warn("[fishbones-sync] WS construct failed:", e);
+          console.warn("[libre-sync] WS construct failed:", e);
           schedule();
           return;
         }
@@ -624,7 +624,7 @@ export function useFishbonesCloud(): UseFishbonesCloud {
             const data = JSON.parse(ev.data as string) as SyncEvent;
             handler(data);
           } catch (e) {
-            console.warn("[fishbones-sync] bad WS payload:", e);
+            console.warn("[libre-sync] bad WS payload:", e);
           }
         });
         socket.addEventListener("close", () => {
@@ -705,7 +705,7 @@ export function useFishbonesCloud(): UseFishbonesCloud {
         binary += String.fromCharCode(input.archive[i]);
       }
       const archive_b64 = btoa(binary);
-      const res = await authFetch("/fishbones/courses", {
+      const res = await authFetch("/libre/courses", {
         method: "POST",
         body: JSON.stringify({
           course_slug: input.courseSlug,
@@ -723,20 +723,20 @@ export function useFishbonesCloud(): UseFishbonesCloud {
   );
 
   const listMyCourses = useCallback(async (): Promise<CourseMeta[]> => {
-    const res = await authFetch("/fishbones/courses");
+    const res = await authFetch("/libre/courses");
     if (!res.ok) throw new Error(`list failed (${res.status})`);
     return (await res.json()) as CourseMeta[];
   }, [authFetch]);
 
   const listPublicCourses = useCallback(async (): Promise<CourseMeta[]> => {
-    const res = await fetch(`${relayUrl}/fishbones/courses/public`);
+    const res = await fetch(`${relayUrl}/libre/courses/public`);
     if (!res.ok) throw new Error(`list-public failed (${res.status})`);
     return (await res.json()) as CourseMeta[];
   }, [relayUrl]);
 
   const downloadCourse = useCallback(
     async (courseId: string): Promise<ArrayBuffer> => {
-      const res = await authFetch(`/fishbones/courses/${encodeURIComponent(courseId)}`);
+      const res = await authFetch(`/libre/courses/${encodeURIComponent(courseId)}`);
       if (!res.ok) throw new Error(`download failed (${res.status})`);
       return await res.arrayBuffer();
     },
@@ -745,7 +745,7 @@ export function useFishbonesCloud(): UseFishbonesCloud {
 
   const deleteCourse = useCallback(
     async (courseId: string) => {
-      const res = await authFetch(`/fishbones/courses/${encodeURIComponent(courseId)}`, {
+      const res = await authFetch(`/libre/courses/${encodeURIComponent(courseId)}`, {
         method: "DELETE",
       });
       if (!res.ok && res.status !== 204) {

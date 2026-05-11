@@ -43,11 +43,11 @@
          until the module graph resolves — so without this inline
          block the user stares at a black window.
 
-         The markup + styling mirror the React FishbonesLoader
+         The markup + styling mirror the React LibreLoader
          (spinning ribbon-snake on a dark backdrop, "loading…"
          caption). The two surfaces show the same artwork, so the
          handoff from the inline preloader to React's
-         `.fishbones__bootloader` is seamless when `body.is-booted`
+         `.libre__bootloader` is seamless when `body.is-booted`
          flips. `main.tsx` flips that class inside its mount
          effect. -->
     <style>
@@ -120,7 +120,7 @@
          flag and exposes a 5-tap-on-top-left magic gesture to toggle
          that flag from inside the iPad app — where Safari Web
          Inspector isn't reachable, which is the entire reason this
-         file exists ("Loading Fishbones…" stuck on iPad).
+         file exists ("Loading Libre…" stuck on iPad).
 
          Loaded as an external script (rather than inline) because the
          Tauri CSP is `script-src 'self' 'wasm-unsafe-eval'` — no

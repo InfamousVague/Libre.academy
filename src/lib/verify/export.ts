@@ -55,7 +55,7 @@ export function formatFixPrompt(
     "",
     "---",
     "",
-    "You're fixing lessons in a Fishbones course. Each FAILED lesson below failed when its solution was run against its tests through the live in-browser runtime. For each, propose the smallest change that makes the test pass — usually a fix to the solution OR a fix to the test code (sometimes the test itself is wrong). Don't change the starter unless it's syntactically broken.",
+    "You're fixing lessons in a Libre course. Each FAILED lesson below failed when its solution was run against its tests through the live in-browser runtime. For each, propose the smallest change that makes the test pass — usually a fix to the solution OR a fix to the test code (sometimes the test itself is wrong). Don't change the starter unless it's syntactically broken.",
     "",
     "**Apply the fixes directly to the course file.** If you have filesystem tools, edit the live installed copy in place — don't just emit JSON for a human to apply. The course file lives at:",
     "",

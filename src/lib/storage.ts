@@ -7,13 +7,13 @@
 /// useRecentCourses) move from raw `invoke(...)` calls to the methods
 /// here; recents stays in localStorage either way (no backend needed).
 ///
-/// Schema for the web variant (IndexedDB DB `fishbones-v1`):
+/// Schema for the web variant (IndexedDB DB `libre-v1`):
 ///   completions  — keyPath "courseId|lessonId", value Completion
 ///   courses      — keyPath "id", value Course (full body)
 ///   meta         — keyPath "key", value { key, value }
 ///
 /// Web storage stays purely local for now. Phase 4 layers cloud sync
-/// on top — the existing useFishbonesCloud hook already pushes a
+/// on top — the existing useLibreCloud hook already pushes a
 /// completions delta to api.mattssoftware.com over HTTP, so once we
 /// hook it up to webStorage's writes we get cross-device sync for
 /// free.
@@ -28,7 +28,7 @@ export interface Completion {
   completed_at: number;
 }
 
-export interface FishbonesStorage {
+export interface LibreStorage {
   /// All completions, used to seed the in-memory Set on app boot.
   listCompletions(): Promise<Completion[]>;
   /// Mark a lesson complete. `completedAt` is unix seconds; when
@@ -78,7 +78,7 @@ export interface FishbonesStorage {
 
 import { invoke } from "@tauri-apps/api/core";
 
-const tauriStorage: FishbonesStorage = {
+const tauriStorage: LibreStorage = {
   async listCompletions() {
     return invoke<Completion[]>("list_completions");
   },
@@ -140,7 +140,7 @@ const tauriStorage: FishbonesStorage = {
 
 // ─── IndexedDB (web) backend ───────────────────────────────────────────
 
-const DB_NAME = "fishbones-v1";
+const DB_NAME = "libre-v1";
 const DB_VERSION = 1;
 const STORE_COMPLETIONS = "completions";
 const STORE_COURSES = "courses";
@@ -230,7 +230,7 @@ function summarise(course: Course): Course {
   };
 }
 
-const webStorage: FishbonesStorage = {
+const webStorage: LibreStorage = {
   async listCompletions() {
     const db = await openDb();
     const tx = db.transaction(STORE_COMPLETIONS, "readonly");
@@ -417,7 +417,7 @@ const webStorage: FishbonesStorage = {
 
 /// The active backend for this build. Picked once at module load —
 /// callers don't have to plumb `isWeb` through every site.
-export const storage: FishbonesStorage = isWeb ? webStorage : tauriStorage;
+export const storage: LibreStorage = isWeb ? webStorage : tauriStorage;
 
 /// Web-only helper: read / write the meta store. Used for things like
 /// "have we seeded the starter courses yet?" so we don't reseed on

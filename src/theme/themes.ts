@@ -38,7 +38,7 @@ export interface ThemeMeta {
 export const THEMES: ThemeMeta[] = [
   {
     id: "default-dark",
-    label: "Fishbones Dark",
+    label: "Libre Dark",
     description: "The default monochrome dark theme.",
     monacoTheme: "vs-dark",
   },
@@ -144,7 +144,7 @@ export const THEMES: ThemeMeta[] = [
 const STORAGE_KEY = "kata:theme";
 
 /// Read the user's stored theme choice. Falls back to the system preference
-/// between dark (Fishbones Dark) and light (Ayu Light) so first-run still
+/// between dark (Libre Dark) and light (Ayu Light) so first-run still
 /// feels right.
 export function loadTheme(): ThemeName {
   try {

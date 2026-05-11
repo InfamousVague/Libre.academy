@@ -1,4 +1,4 @@
-//! Fishbones API — entry point.
+//! Libre API — entry point.
 //!
 //! Startup sequence:
 //!   1. Load .env (best-effort; production deploys that pass env vars
@@ -38,11 +38,11 @@ async fn main() -> anyhow::Result<()> {
 
     tracing_subscriber::fmt()
         .with_env_filter(
-            EnvFilter::from_default_env().add_directive("fishbones_api=info".parse()?),
+            EnvFilter::from_default_env().add_directive("libre_api=info".parse()?),
         )
         .init();
 
-    tracing::info!("Starting Fishbones API v{}", env!("CARGO_PKG_VERSION"));
+    tracing::info!("Starting Libre API v{}", env!("CARGO_PKG_VERSION"));
 
     // ── Provider config ─────────────────────────────────────────
     // Empty strings are treated as unset so an env file with a
@@ -79,7 +79,7 @@ async fn main() -> anyhow::Result<()> {
     // Both backends are optional and tried in order: SMTP first
     // (self-hosted Postfix or any third-party submission server),
     // then Resend, then a `tracing::warn!` fallback that prints the
-    // body so the URL is recoverable from `journalctl -u fishbones-api`.
+    // body so the URL is recoverable from `journalctl -u libre-api`.
     // See api/src/mailer.rs for the full backend-selection logic.
     let smtp_host = read_env("SMTP_HOST");
     let smtp_port = read_env("SMTP_PORT").and_then(|s| s.parse::<u16>().ok());
@@ -132,7 +132,7 @@ async fn main() -> anyhow::Result<()> {
     // ── Database ────────────────────────────────────────────────
     let database_path = read_env("DATABASE_PATH")
         .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from("/var/lib/fishbones-api/api.sqlite"));
+        .unwrap_or_else(|| PathBuf::from("/var/lib/libre-api/api.sqlite"));
     let db = Database::open(&database_path)?;
     db.run_migrations()?;
     tracing::info!("Database initialized at {}", database_path.display());
@@ -163,7 +163,7 @@ async fn main() -> anyhow::Result<()> {
         .unwrap_or(9443);
     let addr = format!("{host}:{port}");
     let listener = tokio::net::TcpListener::bind(&addr).await?;
-    tracing::info!("Fishbones API listening on {addr}");
+    tracing::info!("Libre API listening on {addr}");
 
     axum::serve(listener, app).await?;
 

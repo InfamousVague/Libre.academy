@@ -1,10 +1,10 @@
-# Fishbones — Cover Art Style Brief
+# Libre — Cover Art Style Brief
 
 _Visual identity for AI-generated book covers. Generated via Lovart using Nanobanana 2 (Gemini 2.5 Flash Image)._
 
 ## 1. Visual identity
 
-**Riso-printed specimen plates from a speculative field guide to software.** Each cover reads like a page torn from a 1960s scientific encyclopedia — the kind where flora, fauna, and machines are laid out as skeletal cross-sections, exploded diagrams, and pinned specimens. The "fishbones" name is taken literally: software concepts are rendered as _structure made visible_ — bones, vertebrae, cross-sections, anatomical plates. Executed with a warm Risograph printing texture (off-registration inks, paper tooth, mottled flats) so a shelf of these feels hand-pulled at a community print shop, not machine-generated. Ernst Haeckel meets Whole Earth Catalog.
+**Riso-printed specimen plates from a speculative field guide to software.** Each cover reads like a page torn from a 1960s scientific encyclopedia — the kind where flora, fauna, and machines are laid out as skeletal cross-sections, exploded diagrams, and pinned specimens. The "libre" name is taken literally: software concepts are rendered as _structure made visible_ — bones, vertebrae, cross-sections, anatomical plates. Executed with a warm Risograph printing texture (off-registration inks, paper tooth, mottled flats) so a shelf of these feels hand-pulled at a community print shop, not machine-generated. Ernst Haeckel meets Whole Earth Catalog.
 
 ## 2. Composition rules
 

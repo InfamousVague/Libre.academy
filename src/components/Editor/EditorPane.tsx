@@ -25,7 +25,7 @@ import "./EditorPane.css";
 //
 // We declare CommonJS globals (`module`, `exports`, `require`) as an
 // ambient type-lib so Monaco's TypeScript language service stops flagging
-// `module.exports = { ... }` in exercise starters. Fishbones' JS/TS
+// `module.exports = { ... }` in exercise starters. Libre' JS/TS
 // lessons use the CommonJS module pattern (the test harness does
 // `require('./user')` against the learner's exports), but Monaco's
 // default TS config has no Node globals — it was rendering every
@@ -35,7 +35,7 @@ import "./EditorPane.css";
 // of other globals the lessons shouldn't care about).
 
 const COMMONJS_AMBIENT = `
-// Fishbones ambient declarations — keeps the learner's CommonJS-style
+// Libre ambient declarations — keeps the learner's CommonJS-style
 // starter (module.exports = { ... }, const x = require('./user')) from
 // showing bogus "Cannot find name 'module'" squiggles in Monaco. The
 // runtime handles the actual module plumbing; the editor just needs to
@@ -54,11 +54,11 @@ function addCommonJsAmbientDecls(monaco: typeof import("monaco-editor")) {
     // independently, and some lessons may use the `.js` extension.
     monaco.languages.typescript.typescriptDefaults.addExtraLib(
       COMMONJS_AMBIENT,
-      "file:///fishbones-commonjs.d.ts",
+      "file:///libre-commonjs.d.ts",
     );
     monaco.languages.typescript.javascriptDefaults.addExtraLib(
       COMMONJS_AMBIENT,
-      "file:///fishbones-commonjs.d.ts",
+      "file:///libre-commonjs.d.ts",
     );
   } catch {
     // If Monaco's API shape ever changes or the typescript worker isn't
@@ -287,19 +287,19 @@ export default function EditorPane({
   const hasMenuItems = !!onReset || !!onRevealSolution;
 
   return (
-    <div className="fishbones-editor">
-      <div className="fishbones-editor-header">
+    <div className="libre-editor">
+      <div className="libre-editor-header">
         {/* Left side: Editor / Blocks mode toggle when the lesson
             ships authored blocks data. Replaces the previous static
             language label — the toggle is more useful in-context. */}
         {exerciseMode && onExerciseModeChange ? (
-          <div className="fishbones-editor-mode" role="group" aria-label="Exercise mode">
+          <div className="libre-editor-mode" role="group" aria-label="Exercise mode">
             <button
               type="button"
               className={
-                "fishbones-editor-mode-btn" +
+                "libre-editor-mode-btn" +
                 (exerciseMode === "editor"
-                  ? " fishbones-editor-mode-btn--active"
+                  ? " libre-editor-mode-btn--active"
                   : "")
               }
               onClick={() => onExerciseModeChange("editor")}
@@ -310,9 +310,9 @@ export default function EditorPane({
             <button
               type="button"
               className={
-                "fishbones-editor-mode-btn" +
+                "libre-editor-mode-btn" +
                 (exerciseMode === "blocks"
-                  ? " fishbones-editor-mode-btn--active"
+                  ? " libre-editor-mode-btn--active"
                   : "")
               }
               onClick={() => onExerciseModeChange("blocks")}
@@ -327,13 +327,13 @@ export default function EditorPane({
           // shows.
           <span aria-hidden />
         )}
-        <div className="fishbones-editor-actions">
+        <div className="libre-editor-actions">
           {showHelpCluster && (
-            <div className="fishbones-editor-help" ref={helpRef}>
-              <div className="fishbones-editor-help-split">
+            <div className="libre-editor-help" ref={helpRef}>
+              <div className="libre-editor-help-split">
                 <button
                   type="button"
-                  className="fishbones-editor-help-main"
+                  className="libre-editor-help-main"
                   onClick={hasHints ? onHintClick : undefined}
                   disabled={!hasHints}
                   title={
@@ -349,7 +349,7 @@ export default function EditorPane({
                 {hasMenuItems && (
                   <button
                     type="button"
-                    className="fishbones-editor-help-caret"
+                    className="libre-editor-help-caret"
                     onClick={() => setHelpMenuOpen((v) => !v)}
                     aria-expanded={helpMenuOpen}
                     aria-haspopup="menu"
@@ -362,7 +362,7 @@ export default function EditorPane({
               </div>
               {helpMenuOpen && hasMenuItems && (
                 <div
-                  className="fishbones-editor-help-menu"
+                  className="libre-editor-help-menu"
                   role="menu"
                   aria-label="Help options"
                 >
@@ -370,18 +370,18 @@ export default function EditorPane({
                     <button
                       type="button"
                       role="menuitem"
-                      className="fishbones-editor-help-item"
+                      className="libre-editor-help-item"
                       onClick={() => {
                         setHelpMenuOpen(false);
                         onReset();
                       }}
                     >
                       <Icon icon={rotateCcw} size="xs" color="currentColor" />
-                      <span className="fishbones-editor-help-item-body">
-                        <span className="fishbones-editor-help-item-title">
+                      <span className="libre-editor-help-item-body">
+                        <span className="libre-editor-help-item-title">
                           Reset
                         </span>
-                        <span className="fishbones-editor-help-item-hint">
+                        <span className="libre-editor-help-item-hint">
                           Restore the starter code
                         </span>
                       </span>
@@ -391,18 +391,18 @@ export default function EditorPane({
                     <button
                       type="button"
                       role="menuitem"
-                      className="fishbones-editor-help-item fishbones-editor-help-item--danger"
+                      className="libre-editor-help-item libre-editor-help-item--danger"
                       onClick={() => {
                         setHelpMenuOpen(false);
                         setConfirmingReveal(true);
                       }}
                     >
                       <Icon icon={eye} size="xs" color="currentColor" />
-                      <span className="fishbones-editor-help-item-body">
-                        <span className="fishbones-editor-help-item-title">
+                      <span className="libre-editor-help-item-body">
+                        <span className="libre-editor-help-item-title">
                           Reveal solution
                         </span>
-                        <span className="fishbones-editor-help-item-hint">
+                        <span className="libre-editor-help-item-hint">
                           Overwrite your code with the reference
                         </span>
                       </span>
@@ -415,7 +415,7 @@ export default function EditorPane({
           {onPopOut && (
             <button
               type="button"
-              className="fishbones-editor-button"
+              className="libre-editor-button"
               onClick={onPopOut}
               title="Open editor + console in a separate window"
             >
@@ -424,7 +424,7 @@ export default function EditorPane({
           )}
           <button
             type="button"
-            className="fishbones-editor-button fishbones-editor-run"
+            className="libre-editor-button libre-editor-run"
             onClick={onRun}
           >
             run
@@ -433,21 +433,21 @@ export default function EditorPane({
       </div>
 
       {multiFile && (
-        <div className="fishbones-editor-tabs" role="tablist" aria-label="Workbench files">
+        <div className="libre-editor-tabs" role="tablist" aria-label="Workbench files">
           {files.map((f, i) => (
             <button
               key={f.name}
               role="tab"
               aria-selected={i === safeIndex}
-              className={`fishbones-editor-tab ${
-                i === safeIndex ? "fishbones-editor-tab--active" : ""
-              } ${f.readOnly ? "fishbones-editor-tab--readonly" : ""}`}
+              className={`libre-editor-tab ${
+                i === safeIndex ? "libre-editor-tab--active" : ""
+              } ${f.readOnly ? "libre-editor-tab--readonly" : ""}`}
               onClick={() => onActiveIndexChange(i)}
               title={f.readOnly ? `${f.name} (read-only)` : f.name}
             >
-              <span className="fishbones-editor-tab-name">{f.name}</span>
+              <span className="libre-editor-tab-name">{f.name}</span>
               {f.readOnly && (
-                <span className="fishbones-editor-tab-badge" aria-hidden>
+                <span className="libre-editor-tab-badge" aria-hidden>
                   🔒
                 </span>
               )}
@@ -457,19 +457,19 @@ export default function EditorPane({
       )}
 
       {hasHints && open && revealed > 0 && (
-        <div className="fishbones-editor-hints">
-          <div className="fishbones-editor-hints-header">
-            <span className="fishbones-editor-hints-label">
+        <div className="libre-editor-hints">
+          <div className="libre-editor-hints-header">
+            <span className="libre-editor-hints-label">
               Hint {currentIdx + 1} of {hints!.length}
               {revealed < hints!.length && (
-                <span className="fishbones-editor-hints-locked">
+                <span className="libre-editor-hints-locked">
                   {" "}
                   · {hints!.length - revealed} locked
                 </span>
               )}
             </span>
             <button
-              className="fishbones-editor-hints-close"
+              className="libre-editor-hints-close"
               onClick={() => setOpen(false)}
               title="Close hints"
               aria-label="Close hints"
@@ -478,11 +478,11 @@ export default function EditorPane({
             </button>
           </div>
 
-          <div className="fishbones-editor-hints-body">{hints![currentIdx]}</div>
+          <div className="libre-editor-hints-body">{hints![currentIdx]}</div>
 
-          <div className="fishbones-editor-hints-nav">
+          <div className="libre-editor-hints-nav">
             <button
-              className="fishbones-editor-hints-nav-btn"
+              className="libre-editor-hints-nav-btn"
               onClick={prevHint}
               disabled={currentIdx === 0}
               aria-label="Previous hint"
@@ -490,20 +490,20 @@ export default function EditorPane({
               <Icon icon={arrowLeft} size="xs" color="currentColor" />
               prev
             </button>
-            <div className="fishbones-editor-hints-pips" aria-hidden>
+            <div className="libre-editor-hints-pips" aria-hidden>
               {hints!.map((_, i) => (
                 <span
                   key={i}
                   className={
-                    "fishbones-editor-hints-pip" +
-                    (i === currentIdx ? " fishbones-editor-hints-pip--current" : "") +
-                    (i >= revealed ? " fishbones-editor-hints-pip--locked" : "")
+                    "libre-editor-hints-pip" +
+                    (i === currentIdx ? " libre-editor-hints-pip--current" : "") +
+                    (i >= revealed ? " libre-editor-hints-pip--locked" : "")
                   }
                 />
               ))}
             </div>
             <button
-              className="fishbones-editor-hints-nav-btn"
+              className="libre-editor-hints-nav-btn"
               onClick={nextHint}
               disabled={
                 currentIdx === revealed - 1 && revealed === hints!.length
@@ -519,7 +519,7 @@ export default function EditorPane({
         </div>
       )}
 
-      <div className="fishbones-editor-host">
+      <div className="libre-editor-host">
         {active && (
           <Editor
             height="100%"
@@ -561,22 +561,22 @@ export default function EditorPane({
       </div>
 
       {confirmingReveal && (
-        <div className="fishbones-editor-modal-backdrop" onClick={() => setConfirmingReveal(false)}>
-          <div className="fishbones-editor-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="fishbones-editor-modal-title">Reveal reference solution?</div>
-            <p className="fishbones-editor-modal-body">
+        <div className="libre-editor-modal-backdrop" onClick={() => setConfirmingReveal(false)}>
+          <div className="libre-editor-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="libre-editor-modal-title">Reveal reference solution?</div>
+            <p className="libre-editor-modal-body">
               This will replace your current code with the hidden reference solution.
               Your in-progress work will be lost.
             </p>
-            <div className="fishbones-editor-modal-actions">
+            <div className="libre-editor-modal-actions">
               <button
-                className="fishbones-editor-button"
+                className="libre-editor-button"
                 onClick={() => setConfirmingReveal(false)}
               >
                 cancel
               </button>
               <button
-                className="fishbones-editor-button fishbones-editor-button--danger"
+                className="libre-editor-button libre-editor-button--danger"
                 onClick={confirmReveal}
               >
                 reveal solution

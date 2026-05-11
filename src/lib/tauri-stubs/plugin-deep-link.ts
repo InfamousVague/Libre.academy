@@ -1,6 +1,6 @@
 /// Web-build stub for `@tauri-apps/plugin-deep-link`.
 ///
-/// Deep links rely on the OS registering a custom scheme (`fishbones://`)
+/// Deep links rely on the OS registering a custom scheme (`libre://`)
 /// for the app — not a thing browsers do. The web build uses standard
 /// HTTPS redirect URIs for OAuth instead (Phase 5 wires that up at the
 /// `mattssoftware.com/play/oauth/done` route).

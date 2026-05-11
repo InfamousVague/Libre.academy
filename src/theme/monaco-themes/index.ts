@@ -8,7 +8,7 @@
 /// forwards).
 
 import type { editor } from "monaco-editor";
-import { FISHBONES_DARK } from "./fishbones-dark";
+import { LIBRE_DARK } from "./libre-dark";
 import { SYNTHWAVE } from "./synthwave";
 import { CLAUDE_CODE_DARK } from "./claude-code-dark";
 import { AYU_MIRAGE } from "./ayu-mirage";
@@ -29,18 +29,18 @@ export { MONACO_THEME_BY_APP_THEME } from "./_core";
 /// Register every custom theme on a Monaco instance. Safe to call
 /// multiple times — `defineTheme` replaces by name.
 export function registerMonacoThemes(monaco: typeof import("monaco-editor")) {
-  monaco.editor.defineTheme("fishbones-dark", FISHBONES_DARK as editor.IStandaloneThemeData);
-  monaco.editor.defineTheme("fishbones-synthwave", SYNTHWAVE as editor.IStandaloneThemeData);
-  monaco.editor.defineTheme("fishbones-claude-code-dark", CLAUDE_CODE_DARK as editor.IStandaloneThemeData);
-  monaco.editor.defineTheme("fishbones-ayu-mirage", AYU_MIRAGE as editor.IStandaloneThemeData);
-  monaco.editor.defineTheme("fishbones-catppuccin-mocha", CATPPUCCIN_MOCHA as editor.IStandaloneThemeData);
-  monaco.editor.defineTheme("fishbones-ayu-dark", AYU_DARK as editor.IStandaloneThemeData);
-  monaco.editor.defineTheme("fishbones-catppuccin-frappe", CATPPUCCIN_FRAPPE as editor.IStandaloneThemeData);
-  monaco.editor.defineTheme("fishbones-catppuccin-macchiato", CATPPUCCIN_MACCHIATO as editor.IStandaloneThemeData);
-  monaco.editor.defineTheme("fishbones-tokyo-night", TOKYO_NIGHT as editor.IStandaloneThemeData);
-  monaco.editor.defineTheme("fishbones-rose-pine", ROSE_PINE as editor.IStandaloneThemeData);
-  monaco.editor.defineTheme("fishbones-ubuntu-dark", UBUNTU_DARK as editor.IStandaloneThemeData);
-  monaco.editor.defineTheme("fishbones-absent-contrast", ABSENT_CONTRAST as editor.IStandaloneThemeData);
-  monaco.editor.defineTheme("fishbones-vesper", VESPER as editor.IStandaloneThemeData);
-  monaco.editor.defineTheme("fishbones-word", WORD as editor.IStandaloneThemeData);
+  monaco.editor.defineTheme("libre-dark", LIBRE_DARK as editor.IStandaloneThemeData);
+  monaco.editor.defineTheme("libre-synthwave", SYNTHWAVE as editor.IStandaloneThemeData);
+  monaco.editor.defineTheme("libre-claude-code-dark", CLAUDE_CODE_DARK as editor.IStandaloneThemeData);
+  monaco.editor.defineTheme("libre-ayu-mirage", AYU_MIRAGE as editor.IStandaloneThemeData);
+  monaco.editor.defineTheme("libre-catppuccin-mocha", CATPPUCCIN_MOCHA as editor.IStandaloneThemeData);
+  monaco.editor.defineTheme("libre-ayu-dark", AYU_DARK as editor.IStandaloneThemeData);
+  monaco.editor.defineTheme("libre-catppuccin-frappe", CATPPUCCIN_FRAPPE as editor.IStandaloneThemeData);
+  monaco.editor.defineTheme("libre-catppuccin-macchiato", CATPPUCCIN_MACCHIATO as editor.IStandaloneThemeData);
+  monaco.editor.defineTheme("libre-tokyo-night", TOKYO_NIGHT as editor.IStandaloneThemeData);
+  monaco.editor.defineTheme("libre-rose-pine", ROSE_PINE as editor.IStandaloneThemeData);
+  monaco.editor.defineTheme("libre-ubuntu-dark", UBUNTU_DARK as editor.IStandaloneThemeData);
+  monaco.editor.defineTheme("libre-absent-contrast", ABSENT_CONTRAST as editor.IStandaloneThemeData);
+  monaco.editor.defineTheme("libre-vesper", VESPER as editor.IStandaloneThemeData);
+  monaco.editor.defineTheme("libre-word", WORD as editor.IStandaloneThemeData);
 }

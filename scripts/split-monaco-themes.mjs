@@ -24,20 +24,20 @@ mkdirSync(OUT_DIR, { recursive: true });
 const lines = SRC.split("\n");
 
 const THEMES = [
-  { variable: "FISHBONES_DARK", file: "fishbones-dark.ts", id: "fishbones-dark" },
-  { variable: "SYNTHWAVE", file: "synthwave.ts", id: "fishbones-synthwave" },
-  { variable: "CLAUDE_CODE_DARK", file: "claude-code-dark.ts", id: "fishbones-claude-code-dark" },
-  { variable: "AYU_MIRAGE", file: "ayu-mirage.ts", id: "fishbones-ayu-mirage" },
-  { variable: "CATPPUCCIN_MOCHA", file: "catppuccin-mocha.ts", id: "fishbones-catppuccin-mocha" },
-  { variable: "AYU_DARK", file: "ayu-dark.ts", id: "fishbones-ayu-dark" },
-  { variable: "CATPPUCCIN_FRAPPE", file: "catppuccin-frappe.ts", id: "fishbones-catppuccin-frappe" },
-  { variable: "CATPPUCCIN_MACCHIATO", file: "catppuccin-macchiato.ts", id: "fishbones-catppuccin-macchiato" },
-  { variable: "TOKYO_NIGHT", file: "tokyo-night.ts", id: "fishbones-tokyo-night" },
-  { variable: "ROSE_PINE", file: "rose-pine.ts", id: "fishbones-rose-pine" },
-  { variable: "UBUNTU_DARK", file: "ubuntu-dark.ts", id: "fishbones-ubuntu-dark" },
-  { variable: "ABSENT_CONTRAST", file: "absent-contrast.ts", id: "fishbones-absent-contrast" },
-  { variable: "VESPER", file: "vesper.ts", id: "fishbones-vesper" },
-  { variable: "WORD", file: "word.ts", id: "fishbones-word" },
+  { variable: "LIBRE_DARK", file: "libre-dark.ts", id: "libre-dark" },
+  { variable: "SYNTHWAVE", file: "synthwave.ts", id: "libre-synthwave" },
+  { variable: "CLAUDE_CODE_DARK", file: "claude-code-dark.ts", id: "libre-claude-code-dark" },
+  { variable: "AYU_MIRAGE", file: "ayu-mirage.ts", id: "libre-ayu-mirage" },
+  { variable: "CATPPUCCIN_MOCHA", file: "catppuccin-mocha.ts", id: "libre-catppuccin-mocha" },
+  { variable: "AYU_DARK", file: "ayu-dark.ts", id: "libre-ayu-dark" },
+  { variable: "CATPPUCCIN_FRAPPE", file: "catppuccin-frappe.ts", id: "libre-catppuccin-frappe" },
+  { variable: "CATPPUCCIN_MACCHIATO", file: "catppuccin-macchiato.ts", id: "libre-catppuccin-macchiato" },
+  { variable: "TOKYO_NIGHT", file: "tokyo-night.ts", id: "libre-tokyo-night" },
+  { variable: "ROSE_PINE", file: "rose-pine.ts", id: "libre-rose-pine" },
+  { variable: "UBUNTU_DARK", file: "ubuntu-dark.ts", id: "libre-ubuntu-dark" },
+  { variable: "ABSENT_CONTRAST", file: "absent-contrast.ts", id: "libre-absent-contrast" },
+  { variable: "VESPER", file: "vesper.ts", id: "libre-vesper" },
+  { variable: "WORD", file: "word.ts", id: "libre-word" },
 ];
 
 /// Find the [start, end] line range of a `const NAME: editor.IStandaloneThemeData = {` block.

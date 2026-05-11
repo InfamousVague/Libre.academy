@@ -42,9 +42,9 @@ function splitForMiddleEllipsis(text: string): { head: string; tail: string } {
 function MiddleTitle({ text }: { text: string }) {
   const { head, tail } = splitForMiddleEllipsis(text);
   return (
-    <span className="fishbones-lesson-nav-title" title={text}>
-      <span className="fishbones-lesson-nav-title-head">{head}</span>
-      {tail && <span className="fishbones-lesson-nav-title-tail">{tail}</span>}
+    <span className="libre-lesson-nav-title" title={text}>
+      <span className="libre-lesson-nav-title-head">{head}</span>
+      {tail && <span className="libre-lesson-nav-title-tail">{tail}</span>}
     </span>
   );
 }
@@ -55,35 +55,35 @@ function MiddleTitle({ text }: { text: string }) {
 /// complete as part of pressing Next (see `nextLabel`).
 export default function LessonNav({ prev, next, onPrev, onNext, nextLabel }: Props) {
   return (
-    <nav className="fishbones-lesson-nav" aria-label="Lesson navigation">
+    <nav className="libre-lesson-nav" aria-label="Lesson navigation">
       <button
         type="button"
-        className="fishbones-lesson-nav-btn fishbones-lesson-nav-btn--prev"
+        className="libre-lesson-nav-btn libre-lesson-nav-btn--prev"
         onClick={onPrev}
         disabled={!prev}
         title={prev?.title}
       >
-        <span className="fishbones-lesson-nav-arrow" aria-hidden>
+        <span className="libre-lesson-nav-arrow" aria-hidden>
           <Icon icon={arrowLeft} size="sm" color="currentColor" />
         </span>
-        <span className="fishbones-lesson-nav-text">
-          <span className="fishbones-lesson-nav-label">previous</span>
+        <span className="libre-lesson-nav-text">
+          <span className="libre-lesson-nav-label">previous</span>
           {prev && <MiddleTitle text={prev.title} />}
         </span>
       </button>
 
       <button
         type="button"
-        className="fishbones-lesson-nav-btn fishbones-lesson-nav-btn--next"
+        className="libre-lesson-nav-btn libre-lesson-nav-btn--next"
         onClick={onNext}
         disabled={!next}
         title={next?.title}
       >
-        <span className="fishbones-lesson-nav-text fishbones-lesson-nav-text--right">
-          <span className="fishbones-lesson-nav-label">{nextLabel ?? "next"}</span>
+        <span className="libre-lesson-nav-text libre-lesson-nav-text--right">
+          <span className="libre-lesson-nav-label">{nextLabel ?? "next"}</span>
           {next && <MiddleTitle text={next.title} />}
         </span>
-        <span className="fishbones-lesson-nav-arrow" aria-hidden>
+        <span className="libre-lesson-nav-arrow" aria-hidden>
           <Icon icon={arrowRight} size="sm" color="currentColor" />
         </span>
       </button>

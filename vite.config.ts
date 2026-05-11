@@ -7,9 +7,9 @@ import { nodePolyfills } from "vite-plugin-node-polyfills";
 const host = process.env.TAURI_DEV_HOST;
 
 // Build-target switch — desktop (Tauri shell, default) vs web
-// (static-hosted at mattssoftware.com/play). Set via FISHBONES_TARGET
+// (static-hosted at mattssoftware.com/play). Set via LIBRE_TARGET
 // env var; threaded into the bundle through `define` so
-// `import.meta.env.FISHBONES_TARGET` resolves at compile time and
+// `import.meta.env.LIBRE_TARGET` resolves at compile time and
 // Rollup can dead-code-eliminate the wrong branch from each variant.
 //
 // See `src/lib/platform.ts` for the consumer side, and
@@ -17,20 +17,20 @@ const host = process.env.TAURI_DEV_HOST;
 // the web build needs.
 //
 const target: "desktop" | "web" =
-  process.env.FISHBONES_TARGET === "web" ? "web" : "desktop";
+  process.env.LIBRE_TARGET === "web" ? "web" : "desktop";
 const isWebBuild = target === "web";
 
 // Public base path for the web build — where the bundle's assets
 // expect to be served from. Different consumers want different
 // values:
-//   /fishbones/learn/  ← mattssoftware.com (legacy embed at that path)
+//   /libre/learn/  ← mattssoftware.com (legacy embed at that path)
 //   /learn/            ← libre.academy (the new product domain)
 //   /                  ← any other host that mounts the app at root
 //
-// Override at build time with FISHBONES_BASE; falls back to the
+// Override at build time with LIBRE_BASE; falls back to the
 // mattssoftware path for backward compatibility (existing
 // build:web invocations don't need to change).
-const webBase = (process.env.FISHBONES_BASE || "/fishbones/learn/").replace(
+const webBase = (process.env.LIBRE_BASE || "/libre/learn/").replace(
   /\/?$/,
   "/",
 );
@@ -91,7 +91,7 @@ export default defineConfig(async () => ({
       protocolImports: false,
     }),
   ],
-  // Web build deploys under `mattssoftware.com/fishbones/learn/`, so
+  // Web build deploys under `mattssoftware.com/libre/learn/`, so
   // every emitted asset URL needs that prefix. Desktop ships at the
   // webview's root (`tauri://...`) so an empty base is correct
   // there. Vite's `import.meta.env.BASE_URL` reflects this and is
@@ -99,7 +99,7 @@ export default defineConfig(async () => ({
   base: isWebBuild ? webBase : "/",
   define: {
     // Compile-time platform marker. Read by src/lib/platform.ts.
-    "import.meta.env.FISHBONES_TARGET": JSON.stringify(target),
+    "import.meta.env.LIBRE_TARGET": JSON.stringify(target),
   },
   resolve: {
     alias: {

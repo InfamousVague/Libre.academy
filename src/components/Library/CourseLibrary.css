@@ -1,6 +1,6 @@
 /* Full-pane library modal. Covers the whole viewport (minus the backdrop
    blur) so browsing feels like a dedicated screen rather than a popup. */
-.fishbones-library-backdrop {
+.libre-library-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.6);
@@ -10,7 +10,7 @@
   z-index: 100;
 }
 
-.fishbones-library-panel {
+.libre-library-panel {
   width: min(1080px, 94vw);
   max-height: 90vh;
   background: var(--color-bg-secondary);
@@ -29,7 +29,7 @@
    border, radius, or outer margin) so the header and book shelf align
    with the app's edges the way the lesson reader does. The modal
    variant above still gets the card treatment for its dialog role. */
-.fishbones-library-panel--inline {
+.libre-library-panel--inline {
   width: auto;
   max-height: none;
   height: 100%;
@@ -50,12 +50,12 @@
    `padding-left/right: 12px` here stacked on top of the body's 12px,
    inset the controls 24px from the panel edge while the cards
    underneath only inset 12px — the strip read as visually indented. */
-.fishbones-library-panel--inline .fishbones-library-header {
+.libre-library-panel--inline .libre-library-header {
   padding-left: 12px;
   padding-right: 12px;
 }
 
-.fishbones-library-panel--inline .fishbones-library-controls {
+.libre-library-panel--inline .libre-library-controls {
   /* Negative-margin out of the body's 12 px gutter so the strip's
      border-bottom spans edge-to-edge instead of stopping short of
      the panel's left + right edges. Compensating padding keeps the
@@ -67,11 +67,11 @@
   padding-right: 12px;
 }
 
-.fishbones-library-panel--inline .fishbones-library-body {
+.libre-library-panel--inline .libre-library-body {
   padding: 12px 12px 24px;
 }
 
-.fishbones-library-header {
+.libre-library-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -89,7 +89,7 @@
    anything else, and only renders when there's an actual update
    to surface — so the cards only push down when the callout is
    actually present. */
-.fishbones-library-update-banner {
+.libre-library-update-banner {
   position: relative;
   display: flex;
   align-items: center;
@@ -103,13 +103,13 @@
   flex-shrink: 0;
 }
 
-.fishbones-library-update-banner-text {
+.libre-library-update-banner-text {
   font-size: 13px;
   color: var(--color-text-primary);
   letter-spacing: -0.005em;
 }
 
-.fishbones-library-update-banner-btn {
+.libre-library-update-banner-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -131,36 +131,36 @@
     box-shadow 120ms ease;
 }
 
-.fishbones-library-update-banner-btn:hover:not(:disabled) {
+.libre-library-update-banner-btn:hover:not(:disabled) {
   background: rgba(108, 140, 255, 0.28);
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(108, 140, 255, 0.25);
 }
 
-.fishbones-library-update-banner-btn:disabled {
+.libre-library-update-banner-btn:disabled {
   opacity: 0.6;
   cursor: progress;
 }
 
-.fishbones-library-titleblock {
+.libre-library-titleblock {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.fishbones-library-title {
+.libre-library-title {
   font-size: 18px;
   font-weight: 700;
   color: var(--color-text-primary);
   letter-spacing: -0.01em;
 }
 
-.fishbones-library-subtitle {
+.libre-library-subtitle {
   font-size: 12px;
   color: var(--color-text-tertiary);
 }
 
-.fishbones-library-header-actions {
+.libre-library-header-actions {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -172,7 +172,7 @@
    label explains the action once and each segment says only WHAT is being
    imported. The first segment (PDF) is the default / filled treatment
    because AI-ingesting a book is the 95% path. */
-.fishbones-library-import-seg {
+.libre-library-import-seg {
   padding: 7px 12px;
   background: transparent;
   color: var(--color-text-primary);
@@ -187,11 +187,11 @@
 
 /* First segment has no left border — the outer group border already owns
    the edge. Same trick keeps segments visually butted together. */
-.fishbones-library-import-seg:first-child {
+.libre-library-import-seg:first-child {
   border-left: 0;
 }
 
-.fishbones-library-import-seg:hover {
+.libre-library-import-seg:hover {
   background: var(--color-bg-tertiary);
 }
 
@@ -199,7 +199,7 @@
    treatment so the learner's eye lands on it first; hovering still
    dips opacity so the interaction feels the same as the other
    segments. */
-.fishbones-library-import-seg--primary {
+.libre-library-import-seg--primary {
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
 }
@@ -208,7 +208,7 @@
    its segmented-button weight but with a secondary (outline) treatment
    so the primary action in the row stays "Import → Book". Disabled
    when the library is empty. */
-.fishbones-library-bulk-export {
+.libre-library-bulk-export {
   padding: 7px 14px;
   background: transparent;
   color: var(--color-text-primary);
@@ -221,21 +221,21 @@
   transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy);
 }
 
-.fishbones-library-bulk-export:hover:not(:disabled) {
+.libre-library-bulk-export:hover:not(:disabled) {
   background: var(--color-bg-tertiary);
 }
 
-.fishbones-library-bulk-export:disabled {
+.libre-library-bulk-export:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
-.fishbones-library-import-seg--primary:hover {
+.libre-library-import-seg--primary:hover {
   background: var(--color-text-primary);
   opacity: 0.9;
 }
 
-.fishbones-library-close {
+.libre-library-close {
   background: none;
   border: 0;
   color: var(--color-text-tertiary);
@@ -245,7 +245,7 @@
   padding: 4px 8px;
 }
 
-.fishbones-library-close:hover {
+.libre-library-close:hover {
   color: var(--color-text-primary);
 }
 
@@ -261,7 +261,7 @@
    The "Update all" callout used to float over this strip with
    z-index 5; it now flows inline as a sibling row below the
    controls instead, so no more stacking-order coordination here. */
-.fishbones-library-controls {
+.libre-library-controls {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -280,13 +280,13 @@
      the strip from the cards below it. */
 }
 
-.fishbones-library-pills {
+.libre-library-pills {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
 }
 
-.fishbones-library-pill {
+.libre-library-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -301,24 +301,24 @@
   transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy), border-color var(--fb-motion-snappy);
 }
 
-.fishbones-library-pill:hover {
+.libre-library-pill:hover {
   color: var(--color-text-primary);
   background: rgba(255, 255, 255, 0.04);
 }
 
-.fishbones-library-pill--active {
+.libre-library-pill--active {
   color: var(--color-bg-primary);
   background: var(--color-text-primary);
   border-color: var(--color-text-primary);
 }
 
-.fishbones-library-tools {
+.libre-library-tools {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.fishbones-library-search {
+.libre-library-search {
   padding: 6px 10px;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
@@ -329,12 +329,12 @@
   min-width: 200px;
 }
 
-.fishbones-library-search:focus {
+.libre-library-search:focus {
   outline: none;
   border-color: rgba(255, 255, 255, 0.25);
 }
 
-.fishbones-library-sort {
+.libre-library-sort {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -342,7 +342,7 @@
   font-size: 11px;
 }
 
-.fishbones-library-sort-select {
+.libre-library-sort-select {
   padding: 5px 8px;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
@@ -356,11 +356,11 @@
    Compact controls bar (Option A — single-row chips + popover).
    Replaces the earlier 4-row stack of pill bars. Same filter
    functionality, all collapsed into a Filter popover. The
-   `--compact` modifier on `.fishbones-library-controls` switches
+   `--compact` modifier on `.libre-library-controls` switches
    the container to a single non-wrapping flex row.
    ────────────────────────────────────────────────────────────── */
 
-.fishbones-library-controls--compact {
+.libre-library-controls--compact {
   flex-wrap: nowrap;
   padding: 10px 22px;
   gap: 12px;
@@ -371,7 +371,7 @@
   position: relative;
 }
 
-.fishbones-library-filter-cluster {
+.libre-library-filter-cluster {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -384,7 +384,7 @@
 /* Active-filter chip. Removable via the inline × button. Slightly
    tighter padding than the old language pills since it's a status
    readout, not a switch. */
-.fishbones-library-filter-chip {
+.libre-library-filter-chip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -398,7 +398,7 @@
   white-space: nowrap;
 }
 
-.fishbones-library-filter-chip-x {
+.libre-library-filter-chip-x {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -413,14 +413,14 @@
   transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy);
 }
 
-.fishbones-library-filter-chip-x:hover {
+.libre-library-filter-chip-x:hover {
   background: rgba(255, 255, 255, 0.08);
   color: var(--color-text-primary);
 }
 
 /* The Filter trigger pill. Looks like a chip but with a primary-ish
    accent so it reads as the *action* alongside the status chips. */
-.fishbones-library-filter-trigger {
+.libre-library-filter-trigger {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -437,8 +437,8 @@
   transition: background var(--fb-motion-snappy), border-color var(--fb-motion-snappy), color var(--fb-motion-snappy);
 }
 
-.fishbones-library-filter-trigger:hover,
-.fishbones-library-filter-trigger--open {
+.libre-library-filter-trigger:hover,
+.libre-library-filter-trigger--open {
   color: var(--color-text-primary);
   border-color: rgba(255, 255, 255, 0.22);
   border-style: solid;
@@ -448,7 +448,7 @@
 /* Filter popover panel. Anchored under the trigger via the cluster's
    relative-positioning. Wide enough to fit the longest section
    (Language) without wrapping into a wall of pills. */
-.fishbones-library-filter-pop {
+.libre-library-filter-pop {
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
@@ -465,13 +465,13 @@
   gap: 12px;
 }
 
-.fishbones-library-filter-section {
+.libre-library-filter-section {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.fishbones-library-filter-section-title {
+.libre-library-filter-section-title {
   font-size: 9.5px;
   font-weight: 700;
   text-transform: uppercase;
@@ -480,13 +480,13 @@
   padding: 0 4px;
 }
 
-.fishbones-library-filter-section-options {
+.libre-library-filter-section-options {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
 }
 
-.fishbones-library-filter-opt {
+.libre-library-filter-opt {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -501,26 +501,26 @@
   transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy), border-color var(--fb-motion-snappy);
 }
 
-.fishbones-library-filter-opt:hover {
+.libre-library-filter-opt:hover {
   color: var(--color-text-primary);
   background: rgba(255, 255, 255, 0.04);
 }
 
-.fishbones-library-filter-opt--active,
-.fishbones-library-filter-opt--active:hover {
+.libre-library-filter-opt--active,
+.libre-library-filter-opt--active:hover {
   background: var(--color-text-primary);
   border-color: var(--color-text-primary);
   color: var(--color-bg-primary);
 }
 
-.fishbones-library-filter-opt-count {
+.libre-library-filter-opt-count {
   font-size: 10px;
   font-weight: 600;
   opacity: 0.7;
   font-variant-numeric: tabular-nums;
 }
 
-.fishbones-library-filter-opt--active .fishbones-library-filter-opt-count {
+.libre-library-filter-opt--active .libre-library-filter-opt-count {
   opacity: 1;
 }
 
@@ -528,11 +528,11 @@
    loses its "sort:" label (the icon takes its job). View mode
    buttons go icon-only. All three live on a single line on the
    right edge of the row. */
-.fishbones-library-controls--compact .fishbones-library-tools {
+.libre-library-controls--compact .libre-library-tools {
   flex-shrink: 0;
 }
 
-.fishbones-library-search-wrap {
+.libre-library-search-wrap {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -544,16 +544,16 @@
   transition: border-color var(--fb-motion-snappy), color var(--fb-motion-snappy);
 }
 
-.fishbones-library-search-wrap:focus-within {
+.libre-library-search-wrap:focus-within {
   border-color: rgba(255, 255, 255, 0.25);
   color: var(--color-text-primary);
 }
 
-.fishbones-library-search-icon {
+.libre-library-search-icon {
   flex-shrink: 0;
 }
 
-.fishbones-library-controls--compact .fishbones-library-search {
+.libre-library-controls--compact .libre-library-search {
   /* Override the boxed style from the legacy rule — the wrap
      already provides the chrome. */
   padding: 0;
@@ -563,14 +563,14 @@
   color: var(--color-text-primary);
 }
 
-.fishbones-library-controls--compact .fishbones-library-search:focus {
+.libre-library-controls--compact .libre-library-search:focus {
   outline: none;
   border: 0;
 }
 
 /* Sort, compact: leading icon + bare select. Hides the legacy
    "sort" label since the up-down arrows are unambiguous. */
-.fishbones-library-sort--compact {
+.libre-library-sort--compact {
   gap: 4px;
   padding: 4px 8px;
   background: var(--color-bg-primary);
@@ -579,7 +579,7 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones-library-sort--compact .fishbones-library-sort-select {
+.libre-library-sort--compact .libre-library-sort-select {
   padding: 0 4px;
   background: transparent;
   border: 0;
@@ -587,7 +587,7 @@
 }
 
 /* Icon-only viewmode buttons: square, just the lucide glyph. */
-.fishbones-library-viewmode-btn--icon {
+.libre-library-viewmode-btn--icon {
   width: 28px;
   height: 28px;
   padding: 0;
@@ -597,7 +597,7 @@
 }
 
 /* Body + grid. Scrollable independently of the header/controls. */
-.fishbones-library-body {
+.libre-library-body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -614,7 +614,7 @@
    usually finishes faster than the eye registers; we only want the
    dim to be visible when the work genuinely takes a beat (large
    catalogs, slow CPU). */
-.fishbones-library-body.is-deferred-pending {
+.libre-library-body.is-deferred-pending {
   opacity: 0.55;
   transition: opacity 200ms ease;
   /* Block interactions on stale cards — clicking a Library card
@@ -630,7 +630,7 @@
    the overlay on then off. BookCover's per-card loading affordance
    covers the rare un-prefetched first paint. */
 
-.fishbones-library-grid {
+.libre-library-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 14px;
@@ -640,7 +640,7 @@
    than the grid so more books fit per row (we're showing less per-book
    info than the info-dense card). Gap includes a little vertical
    breathing room so the shelf reads as ROWS not a continuous wall. */
-.fishbones-library-shelf {
+.libre-library-shelf {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
   gap: 22px 16px;
@@ -685,8 +685,8 @@
    Animation runs once per mount. React's keyed list keeps existing
    nodes around when items reorder, so filters / search don't
    re-trigger the cascade. */
-.fishbones-library-shelf > *,
-.fishbones-library-grid > * {
+.libre-library-shelf > *,
+.libre-library-grid > * {
   animation: fb-library-spring-land 720ms cubic-bezier(0.2, 0.65, 0.3, 1) backwards;
   animation-delay: calc(min(var(--fb-ripple-i, 0), 32) * 38ms);
   transform-origin: 50% 90%;
@@ -724,8 +724,8 @@
    short uniform fade so motion-sensitive users still get a soft
    entrance signal without the wave. */
 @media (prefers-reduced-motion: reduce) {
-  .fishbones-library-shelf > *,
-  .fishbones-library-grid > * {
+  .libre-library-shelf > *,
+  .libre-library-grid > * {
     animation: fb-library-spring-land-reduced 120ms ease-out backwards;
     animation-delay: 0ms;
     transform-origin: 50% 50%;
@@ -746,14 +746,14 @@
    filter strip above and the first section's "Books" / "Challenges"
    heading. Without it the heading butted up against the strip's
    bottom edge — visible the moment any scrolling pins the strip. */
-.fishbones-library-sections {
+.libre-library-sections {
   display: flex;
   flex-direction: column;
   gap: 28px;
   padding-top: 18px;
 }
 
-.fishbones-library-section {
+.libre-library-section {
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -780,7 +780,7 @@
    anchor (12 body + 2 heading = 14, matching the cards below
    that get padded only via the body's 12 px).
 */
-.fishbones-library-section-head {
+.libre-library-section-head {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -800,7 +800,7 @@
   line-height: 1;
 }
 
-.fishbones-library-section-title {
+.libre-library-section-title {
   margin: 0;
   font-size: 16px;
   font-weight: 700;
@@ -812,7 +812,7 @@
   line-height: 1;
 }
 
-.fishbones-library-section-count {
+.libre-library-section-count {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -834,7 +834,7 @@
    it flush right inside the flex row regardless of how much room
    the blurb takes; `flex-shrink: 0` keeps the button's pill shape
    stable when the row narrows. */
-.fishbones-library-section-update-btn {
+.libre-library-section-update-btn {
   margin-left: auto;
   flex-shrink: 0;
   display: inline-flex;
@@ -856,18 +856,18 @@
     box-shadow 120ms ease;
 }
 
-.fishbones-library-section-update-btn:hover:not(:disabled) {
+.libre-library-section-update-btn:hover:not(:disabled) {
   background: color-mix(in srgb, var(--color-accent, #6c8cff) 28%, transparent);
   transform: translateY(-1px);
   box-shadow: 0 2px 8px color-mix(in srgb, var(--color-accent, #6c8cff) 30%, transparent);
 }
 
-.fishbones-library-section-update-btn:disabled {
+.libre-library-section-update-btn:disabled {
   opacity: 0.6;
   cursor: progress;
 }
 
-.fishbones-library-section-blurb {
+.libre-library-section-blurb {
   flex: 1 1 240px;
   min-width: 0;
   font-size: 12.5px;
@@ -885,7 +885,7 @@
 /* View-mode segmented control — sits to the right of the sort dropdown.
    Two pills, active state inverted. Mirrors the existing pill patterns
    elsewhere in the app so it reads as standard chrome. */
-.fishbones-library-viewmode {
+.libre-library-viewmode {
   display: inline-flex;
   align-items: stretch;
   border: 1px solid var(--color-border-default);
@@ -894,7 +894,7 @@
   background: var(--color-bg-primary);
 }
 
-.fishbones-library-viewmode-btn {
+.libre-library-viewmode-btn {
   padding: 5px 10px;
   background: transparent;
   border: 0;
@@ -907,16 +907,16 @@
   transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy);
 }
 
-.fishbones-library-viewmode-btn + .fishbones-library-viewmode-btn {
+.libre-library-viewmode-btn + .libre-library-viewmode-btn {
   border-left: 1px solid var(--color-border-default);
 }
 
-.fishbones-library-viewmode-btn:hover:not(.fishbones-library-viewmode-btn--active) {
+.libre-library-viewmode-btn:hover:not(.libre-library-viewmode-btn--active) {
   background: var(--color-bg-tertiary);
   color: var(--color-text-primary);
 }
 
-.fishbones-library-viewmode-btn--active {
+.libre-library-viewmode-btn--active {
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
 }
@@ -924,7 +924,7 @@
 /* Course cards. The main clickable area (button) holds metadata; a small
    actions row underneath handles Export / Delete so they don't compete
    with the default Open action. */
-.fishbones-library-card {
+.libre-library-card {
   display: flex;
   flex-direction: column;
   background: var(--color-bg-primary);
@@ -942,7 +942,7 @@
   animation: fb-library-card-rise 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.fishbones-library-card:hover {
+.libre-library-card:hover {
   border-color: var(--color-border-strong);
   /* Subtle lift on hover — communicates clickability without the
      loud Material-style elevation jump. */
@@ -950,7 +950,7 @@
   box-shadow: 0 4px 14px -8px rgba(0, 0, 0, 0.35);
 }
 
-.fishbones-library-card:active {
+.libre-library-card:active {
   /* Snap back to baseline on press — gives the click a tactile
      bottoming-out feel before the navigation kicks in. */
   transform: translateY(0);
@@ -969,16 +969,16 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fishbones-library-card {
+  .libre-library-card {
     animation: none;
   }
-  .fishbones-library-card:hover,
-  .fishbones-library-card:active {
+  .libre-library-card:hover,
+  .libre-library-card:active {
     transform: none;
   }
 }
 
-.fishbones-library-card-main {
+.libre-library-card-main {
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -992,7 +992,7 @@
   font-family: inherit;
 }
 
-.fishbones-library-card-header {
+.libre-library-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1000,7 +1000,7 @@
   margin-bottom: 4px;
 }
 
-.fishbones-library-card-status {
+.libre-library-card-status {
   font-size: 10.5px;
   font-weight: 600;
   text-transform: uppercase;
@@ -1017,11 +1017,11 @@
  * dark library background while staying within the otherwise
  * monochrome palette. The crown SVG inherits `currentColor` so the
  * icon matches the text without a separate fill rule. */
-.fishbones-library-card-status--completed {
+.libre-library-card-status--completed {
   color: #d4a64a;
 }
 
-.fishbones-library-card-status-icon {
+.libre-library-card-status-icon {
   flex-shrink: 0;
   margin-top: -1px;
 }
@@ -1033,7 +1033,7 @@
    reinstall action via right-click → Reinstall in the context menu.
    Subtle pulse so the eye catches it on freshly-loaded library
    views; turns off under reduced-motion. */
-.fishbones-library-card-update-dot {
+.libre-library-card-update-dot {
   display: inline-block;
   width: 7px;
   height: 7px;
@@ -1059,13 +1059,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fishbones-library-card-update-dot {
+  .libre-library-card-update-dot {
     animation: none;
     box-shadow: none;
   }
 }
 
-.fishbones-library-card-title {
+.libre-library-card-title {
   font-size: 14.5px;
   font-weight: 600;
   line-height: 1.3;
@@ -1076,13 +1076,13 @@
   overflow: hidden;
 }
 
-.fishbones-library-card-author {
+.libre-library-card-author {
   font-size: 11.5px;
   color: var(--color-text-tertiary);
   margin-top: -2px;
 }
 
-.fishbones-library-card-progress {
+.libre-library-card-progress {
   height: 4px;
   background: var(--color-bg-tertiary);
   border-radius: 2px;
@@ -1090,20 +1090,20 @@
   margin-top: 4px;
 }
 
-.fishbones-library-card-progress-fill {
+.libre-library-card-progress-fill {
   height: 100%;
   background: var(--color-text-primary);
   opacity: 0.85;
   transition: width 0.25s ease;
 }
 
-.fishbones-library-card-meta {
+.libre-library-card-meta {
   font-size: 11px;
   color: var(--color-text-tertiary);
   font-variant-numeric: tabular-nums;
 }
 
-.fishbones-library-card-actions {
+.libre-library-card-actions {
   display: flex;
   gap: 4px;
   padding: 0 10px 10px;
@@ -1111,11 +1111,11 @@
   transition: opacity var(--fb-motion-snappy);
 }
 
-.fishbones-library-card:hover .fishbones-library-card-actions {
+.libre-library-card:hover .libre-library-card-actions {
   opacity: 1;
 }
 
-.fishbones-library-card-action {
+.libre-library-card-action {
   padding: 4px 8px;
   background: transparent;
   border: 1px solid var(--color-border-default);
@@ -1126,13 +1126,13 @@
   cursor: pointer;
 }
 
-.fishbones-library-card-action:hover {
+.libre-library-card-action:hover {
   color: var(--color-text-primary);
   background: var(--color-bg-tertiary);
   border-color: var(--color-border-strong);
 }
 
-.fishbones-library-card-action--danger:hover {
+.libre-library-card-action--danger:hover {
   color: #ef6f6f;
   background: rgba(239, 111, 111, 0.08);
   border-color: rgba(239, 111, 111, 0.3);
@@ -1141,7 +1141,7 @@
 /* Discover-mode install button. Styled as the primary action on a
  * placeholder card — solid fill instead of the outline treatment
  * the secondary actions (Export / Delete) get. */
-.fishbones-library-card-action--install {
+.libre-library-card-action--install {
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
   border-color: var(--color-text-primary);
@@ -1149,12 +1149,12 @@
   padding: 5px 12px;
 }
 
-.fishbones-library-card-action--install:hover:not(:disabled) {
+.libre-library-card-action--install:hover:not(:disabled) {
   background: var(--color-text-secondary);
   border-color: var(--color-text-secondary);
 }
 
-.fishbones-library-card-action--install:disabled {
+.libre-library-card-action--install:disabled {
   opacity: 0.6;
   cursor: default;
 }
@@ -1162,7 +1162,7 @@
 /* Placeholder card distinct from installed cards — slightly muted
  * so a Discover grid reads as "not yet yours" without losing
  * legibility. */
-.fishbones-library-card--placeholder {
+.libre-library-card--placeholder {
   background: var(--color-bg-secondary);
   border-style: dashed;
 }
@@ -1173,7 +1173,7 @@
  * the sidebar nav, not inline.) */
 
 /* Empty / no-matches state. */
-.fishbones-library-empty {
+.libre-library-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1182,7 +1182,7 @@
   gap: 10px;
 }
 
-.fishbones-library-empty-glyph {
+.libre-library-empty-glyph {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1190,26 +1190,26 @@
   margin-bottom: 4px;
 }
 
-.fishbones-library-empty-title {
+.libre-library-empty-title {
   font-size: 18px;
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
-.fishbones-library-empty-blurb {
+.libre-library-empty-blurb {
   font-size: 13px;
   color: var(--color-text-secondary);
   max-width: 360px;
   line-height: 1.55;
 }
 
-.fishbones-library-empty-actions {
+.libre-library-empty-actions {
   display: flex;
   gap: 10px;
   margin-top: 10px;
 }
 
-.fishbones-library-empty-primary {
+.libre-library-empty-primary {
   padding: 9px 16px;
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
@@ -1221,11 +1221,11 @@
   cursor: pointer;
 }
 
-.fishbones-library-empty-primary:hover {
+.libre-library-empty-primary:hover {
   opacity: 0.9;
 }
 
-.fishbones-library-empty-secondary {
+.libre-library-empty-secondary {
   padding: 9px 16px;
   background: transparent;
   color: var(--color-text-primary);
@@ -1237,7 +1237,7 @@
   cursor: pointer;
 }
 
-.fishbones-library-empty-secondary:hover {
+.libre-library-empty-secondary:hover {
   background: var(--color-bg-tertiary);
   border-color: rgba(255, 255, 255, 0.2);
 }

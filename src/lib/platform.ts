@@ -21,10 +21,10 @@ import type { LanguageId } from "../data/types";
 
 /// Build target — either "desktop" (the Tauri shell) or "web" (the
 /// static-hosted build on mattssoftware.com/play). Threaded through
-/// Vite's `define` from the `FISHBONES_TARGET` env var, so dev /
+/// Vite's `define` from the `LIBRE_TARGET` env var, so dev /
 /// preview / prod all resolve the same way.
 export const TARGET: "desktop" | "web" =
-  ((import.meta.env.FISHBONES_TARGET as "desktop" | "web" | undefined) ??
+  ((import.meta.env.LIBRE_TARGET as "desktop" | "web" | undefined) ??
     "desktop");
 
 export const isWeb = TARGET === "web";
@@ -180,7 +180,7 @@ export interface DownloadTarget {
   label: string;
 }
 
-const RELEASES_LATEST = "https://github.com/InfamousVague/Fishbones/releases/latest";
+const RELEASES_LATEST = "https://github.com/InfamousVague/Libre/releases/latest";
 
 export function downloadUrl(): {
   primary: DownloadTarget;

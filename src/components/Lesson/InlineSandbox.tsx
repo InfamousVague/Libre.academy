@@ -78,21 +78,21 @@ export default function InlineSandbox({ language, initialCode }: Props) {
   const editorHeight = `${lineCount * 18 + 24}px`;
 
   return (
-    <div className="fishbones-inline-sandbox-root">
-      <div className="fishbones-inline-sandbox-header">
-        <span className="fishbones-inline-sandbox-lang">{safeLang}</span>
-        <span className="fishbones-inline-sandbox-label">Try it</span>
-        <div className="fishbones-inline-sandbox-actions">
+    <div className="libre-inline-sandbox-root">
+      <div className="libre-inline-sandbox-header">
+        <span className="libre-inline-sandbox-lang">{safeLang}</span>
+        <span className="libre-inline-sandbox-label">Try it</span>
+        <div className="libre-inline-sandbox-actions">
           <button
             type="button"
-            className="fishbones-inline-sandbox-btn"
+            className="libre-inline-sandbox-btn"
             onClick={handleReset}
           >
             reset
           </button>
           <button
             type="button"
-            className="fishbones-inline-sandbox-btn fishbones-inline-sandbox-btn--run"
+            className="libre-inline-sandbox-btn libre-inline-sandbox-btn--run"
             onClick={handleRun}
             disabled={running}
           >
@@ -101,7 +101,7 @@ export default function InlineSandbox({ language, initialCode }: Props) {
         </div>
       </div>
       <div
-        className="fishbones-inline-sandbox-editor"
+        className="libre-inline-sandbox-editor"
         style={{ height: editorHeight }}
       >
         <Editor
@@ -134,19 +134,19 @@ export default function InlineSandbox({ language, initialCode }: Props) {
         />
       </div>
       {(result || running) && (
-        <div className="fishbones-inline-sandbox-output">
-          {running && <div className="fishbones-inline-sandbox-out-hint">running…</div>}
+        <div className="libre-inline-sandbox-output">
+          {running && <div className="libre-inline-sandbox-out-hint">running…</div>}
           {result && (
             <>
               {result.error && (
-                <div className="fishbones-inline-sandbox-out-error">
+                <div className="libre-inline-sandbox-out-error">
                   {result.error}
                 </div>
               )}
               {result.logs.map((line, i) => (
                 <div
                   key={i}
-                  className={`fishbones-inline-sandbox-out-line fishbones-inline-sandbox-out-line--${line.level}`}
+                  className={`libre-inline-sandbox-out-line libre-inline-sandbox-out-line--${line.level}`}
                 >
                   {line.text}
                 </div>

@@ -1,6 +1,6 @@
 /// Lesson-audio playback hook. Pairs with the pre-generated MP3s
 /// produced by `scripts/generate-lesson-audio.mjs` and uploaded to
-/// the Fishbones CDN.
+/// the Libre CDN.
 ///
 /// Lifecycle on app boot:
 ///   1. The first call to `useLessonAudioManifest()` fires a single

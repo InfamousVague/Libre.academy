@@ -24,18 +24,18 @@
 ///      no IO. Lives here because the daily-counter math
 ///      depends on the shape both sides agree on.
 ///
-/// All keys are namespaced under `fishbones:practice:` so a
+/// All keys are namespaced under `libre:practice:` so a
 /// future reset / migration can wipe the whole namespace cleanly.
 
 import type { PracticeItem, PracticeRecord, PracticeStats } from "./types";
 import { difficultyBoost, gradeAttempt as runScheduler } from "./practiceSchedule";
 
-const STORAGE_KEY = "fishbones:practice:records:v1";
+const STORAGE_KEY = "libre:practice:records:v1";
 
 /// Today's attempts log. Stored separately from records so we
 /// don't have to walk every record to count today's attempts.
 /// Shape: { dayKey: "YYYY-MM-DD", attempts: n, correct: n }.
-const TODAY_KEY = "fishbones:practice:today:v1";
+const TODAY_KEY = "libre:practice:today:v1";
 
 interface TodayCounter {
   dayKey: string;
@@ -163,7 +163,7 @@ export function gradeAttempt(
   // that don't share React context.
   try {
     window.dispatchEvent(
-      new CustomEvent("fishbones:practice-graded", {
+      new CustomEvent("libre:practice-graded", {
         detail: { id: item.id, correct },
       }),
     );
@@ -181,7 +181,7 @@ export function resetPracticeState(): void {
   try {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(TODAY_KEY);
-    window.dispatchEvent(new CustomEvent("fishbones:practice-graded"));
+    window.dispatchEvent(new CustomEvent("libre:practice-graded"));
   } catch {
     /* drop */
   }

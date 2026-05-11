@@ -34,7 +34,7 @@ if (targets.length === 0) {
   process.exit(2);
 }
 
-const tmp = mkdtempSync(join(tmpdir(), "fishbones-zig-"));
+const tmp = mkdtempSync(join(tmpdir(), "libre-zig-"));
 let totalPass = 0;
 let totalFail = 0;
 const failures = [];

@@ -1,6 +1,6 @@
 # Open-Source Book Ingest Tracker
 
-_Living doc tracking which freely-published books are flowing into the Fishbones catalog, and where each one is in the pipeline._
+_Living doc tracking which freely-published books are flowing into the Libre catalog, and where each one is in the pipeline._
 
 Last updated: 2026-04-28
 Maintainer: matt + Claude agent runs
@@ -51,7 +51,7 @@ Highest signal-per-page, cleanest fit with the existing pipeline. These four go 
 
 ## 4. Wave 3 — adds new language coverage
 
-These need runtime work (new compilers / interpreters wired into Fishbones). Defer until Wave 1+2 land and we have a clearer picture of authoring throughput.
+These need runtime work (new compilers / interpreters wired into Libre). Defer until Wave 1+2 land and we have a clearer picture of authoring throughput.
 
 | # | Title | License | Language | Source | Notes |
 |---|---|---|---|---|---|
@@ -68,7 +68,7 @@ License-friendly and high quality, but each requires a meaningful runtime additi
 
 | Title | Why deferred |
 |---|---|
-| **Learn You a Haskell** | No Haskell runtime in Fishbones. |
+| **Learn You a Haskell** | No Haskell runtime in Libre. |
 | **Real World Haskell** | Same. |
 | **Real World OCaml (with OCaml)** | No OCaml runtime; could go via js_of_ocaml. |
 | **Operating Systems: Three Easy Pieces (with C)** | OS concepts; C runs but most exercises rely on a Linux syscall surface we don't have. |
@@ -83,22 +83,22 @@ Status legend: 🟢 not started → 🟡 drafting → 🔵 ingesting → 🟠 ed
 
 | # | Title | Status | Cover | Drills | Quizzes | Bundled? | Notes |
 |---|---|---|---|---|---|---|---|
-| 1 | Eloquent JavaScript | 🟠 | Pending Lovart | auto-derive next | drafted (3) | ✓ `.fishbones` packed | 31 lessons (11 reading + 17 exercise + 3 quiz) across 11 chapters; all 17 exercise solutions pass their own Jest tests. Source ch00–12 covered; ch13–21 (DOM/Node) deferred. |
-| 2 | Crafting Interpreters (with JavaScript) | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.fishbones` packed | 30 lessons (10 reading + 18 exercise + 2 quiz) across 10 chapters; all 18 solutions pass on first verification (122 individual test cases). Lox tree-walker fully ported Java→JS through ch10 (classes + inheritance). |
-| 3 | Programming Bitcoin (with Python) | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.fishbones` packed | 23 lessons (9 reading + 12 exercise + 2 quiz) across 9 chapters; all 12 exercise solutions pass pytest first try. Source ch01-09 covered (finite fields → blocks). Sighash verified against book's own test vector. |
-| 4 | Pro Git | 🟠 | Pending Lovart | n/a (no exercises in most lessons) | drafted (3) | ✓ `.fishbones` packed | 12 lessons (6 reading + 3 conceptual JS exercises + 3 quiz) across 6 chapters; all 3 exercise solutions pass (19/19 tests across the 3). Conceptual exercises: merge-base BFS, 3-way merge, content-addressed store. |
-| 5 | Mastering Bitcoin (with bitcoinjs-lib) | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.fishbones` packed | 16 lessons (6 reading + 8 exercise + 2 quiz) across 6 chapters; all 8 exercise solutions pass their own Jest tests. Source ch01-02, 04-08, 10, 12-14 covered. P2PKH derivation matches BIP32 test vectors. |
-| 6 | Mastering Ethereum (with Viem) | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.fishbones` packed | 17 lessons (7 reading + 8 exercise + 2 quiz) across 7 chapters; all 8 exercise solutions pass their own Jest tests. Source ch1, 2, 4-7, 10, 12, 14-15 covered. |
-| 7 | Mastering Lightning Network (with TypeScript) | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.fishbones` packed | 18 lessons (7 reading + 9 exercise + 2 quiz) across 7 chapters; all 9 exercise solutions pass their own Jest tests. Source ch01, 03, 06-08, 10-12, 15-17 covered; uses Node `crypto` + DI pattern (no library mocks needed). |
-| 8 | The Modern JavaScript Tutorial | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.fishbones` packed | 31 lessons (9 reading + 20 exercise + 2 quiz) across 9 chapters; 20/20 exercises pass Jest. Book 1 (Fundamentals) only — books 2 (Browser) and 3 (Frameworks) deferred. 8 exercises lifted from source `task/`+`solution/` pairs with attribution; 12 synthesized. |
-| 9 | You Don't Know JS Yet | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.fishbones` packed | 25 lessons (6 reading + 17 exercise + 2 quiz) across 6 chapters; 17/17 exercises pass Jest. Note: sync-async + es-next-beyond books are TODO in the 2nd-ed source repo — those chapters authored from canonical patterns. |
-| 10 | Rust by Example | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.fishbones` packed | 26 lessons (8 reading + 16 exercise + 2 quiz) across 8 chapters; 16/16 exercises pass `cargo test` (90 tests). Tests use bare `#[test]` to match `the-rust-programming-language` runner pattern. |
-| 11 | Async Book (Rust) | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.fishbones` packed | 22 lessons (7 reading + 13 exercise + 2 quiz) across 7 chapters; 13/13 exercises pass `cargo test` (56 tests). Futures, pinning, streams, join!/select!. |
-| 12 | Rustonomicon | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.fishbones` packed | 20 lessons (8 reading + 10 exercise + 2 quiz) across 8 chapters; 10/10 exercises pass `cargo test` (54 tests). Every `unsafe` block carries a `// SAFETY:` soundness argument. |
-| 13 | Composing Programs (with Python) | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.fishbones` packed | 23 lessons (8 reading + 13 exercise + 2 quiz) across 8 chapters; 13/13 exercises pass pytest. CS61A canonical: larger/count_partitions/compose1/accumulate/rational ADT/Account+CheckingAccount/Church numerals/calc_eval. |
-| 14 | Open Data Structures (with Python) | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.fishbones` packed | 22 lessons (8 reading + 12 exercise + 2 quiz) across 8 chapters; 12/12 exercises pass pytest (96 tests). Solutions lifted from Morin's `python/ods/*.py` with attribution. |
-| 15 | Algorithms — Erickson (with Python) | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.fishbones` packed | 23 lessons (7 reading + 14 exercise + 2 quiz) across 7 chapters; 14/14 exercises pass pytest (103 tests). Recursion → divide-and-conquer → backtracking → DP → greedy → graphs → Dijkstra. Channels Erickson's voice (recursion fairy, exchange-argument proofs). |
-| 16 | Functional-Light JavaScript | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.fishbones` packed | 23 lessons (9 reading + 12 exercise + 2 quiz) across 9 chapters; 12/12 exercises pass Jest (69 tests). compose/pipe/curry/partial/deepFreeze/setIn/factorial/flatten/reduce/filterMapReducer/allOf — Simpson's FP-light primitives, hand-built. |
+| 1 | Eloquent JavaScript | 🟠 | Pending Lovart | auto-derive next | drafted (3) | ✓ `.libre` packed | 31 lessons (11 reading + 17 exercise + 3 quiz) across 11 chapters; all 17 exercise solutions pass their own Jest tests. Source ch00–12 covered; ch13–21 (DOM/Node) deferred. |
+| 2 | Crafting Interpreters (with JavaScript) | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.libre` packed | 30 lessons (10 reading + 18 exercise + 2 quiz) across 10 chapters; all 18 solutions pass on first verification (122 individual test cases). Lox tree-walker fully ported Java→JS through ch10 (classes + inheritance). |
+| 3 | Programming Bitcoin (with Python) | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.libre` packed | 23 lessons (9 reading + 12 exercise + 2 quiz) across 9 chapters; all 12 exercise solutions pass pytest first try. Source ch01-09 covered (finite fields → blocks). Sighash verified against book's own test vector. |
+| 4 | Pro Git | 🟠 | Pending Lovart | n/a (no exercises in most lessons) | drafted (3) | ✓ `.libre` packed | 12 lessons (6 reading + 3 conceptual JS exercises + 3 quiz) across 6 chapters; all 3 exercise solutions pass (19/19 tests across the 3). Conceptual exercises: merge-base BFS, 3-way merge, content-addressed store. |
+| 5 | Mastering Bitcoin (with bitcoinjs-lib) | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.libre` packed | 16 lessons (6 reading + 8 exercise + 2 quiz) across 6 chapters; all 8 exercise solutions pass their own Jest tests. Source ch01-02, 04-08, 10, 12-14 covered. P2PKH derivation matches BIP32 test vectors. |
+| 6 | Mastering Ethereum (with Viem) | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.libre` packed | 17 lessons (7 reading + 8 exercise + 2 quiz) across 7 chapters; all 8 exercise solutions pass their own Jest tests. Source ch1, 2, 4-7, 10, 12, 14-15 covered. |
+| 7 | Mastering Lightning Network (with TypeScript) | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.libre` packed | 18 lessons (7 reading + 9 exercise + 2 quiz) across 7 chapters; all 9 exercise solutions pass their own Jest tests. Source ch01, 03, 06-08, 10-12, 15-17 covered; uses Node `crypto` + DI pattern (no library mocks needed). |
+| 8 | The Modern JavaScript Tutorial | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.libre` packed | 31 lessons (9 reading + 20 exercise + 2 quiz) across 9 chapters; 20/20 exercises pass Jest. Book 1 (Fundamentals) only — books 2 (Browser) and 3 (Frameworks) deferred. 8 exercises lifted from source `task/`+`solution/` pairs with attribution; 12 synthesized. |
+| 9 | You Don't Know JS Yet | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.libre` packed | 25 lessons (6 reading + 17 exercise + 2 quiz) across 6 chapters; 17/17 exercises pass Jest. Note: sync-async + es-next-beyond books are TODO in the 2nd-ed source repo — those chapters authored from canonical patterns. |
+| 10 | Rust by Example | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.libre` packed | 26 lessons (8 reading + 16 exercise + 2 quiz) across 8 chapters; 16/16 exercises pass `cargo test` (90 tests). Tests use bare `#[test]` to match `the-rust-programming-language` runner pattern. |
+| 11 | Async Book (Rust) | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.libre` packed | 22 lessons (7 reading + 13 exercise + 2 quiz) across 7 chapters; 13/13 exercises pass `cargo test` (56 tests). Futures, pinning, streams, join!/select!. |
+| 12 | Rustonomicon | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.libre` packed | 20 lessons (8 reading + 10 exercise + 2 quiz) across 8 chapters; 10/10 exercises pass `cargo test` (54 tests). Every `unsafe` block carries a `// SAFETY:` soundness argument. |
+| 13 | Composing Programs (with Python) | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.libre` packed | 23 lessons (8 reading + 13 exercise + 2 quiz) across 8 chapters; 13/13 exercises pass pytest. CS61A canonical: larger/count_partitions/compose1/accumulate/rational ADT/Account+CheckingAccount/Church numerals/calc_eval. |
+| 14 | Open Data Structures (with Python) | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.libre` packed | 22 lessons (8 reading + 12 exercise + 2 quiz) across 8 chapters; 12/12 exercises pass pytest (96 tests). Solutions lifted from Morin's `python/ods/*.py` with attribution. |
+| 15 | Algorithms — Erickson (with Python) | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.libre` packed | 23 lessons (7 reading + 14 exercise + 2 quiz) across 7 chapters; 14/14 exercises pass pytest (103 tests). Recursion → divide-and-conquer → backtracking → DP → greedy → graphs → Dijkstra. Channels Erickson's voice (recursion fairy, exchange-argument proofs). |
+| 16 | Functional-Light JavaScript | 🟠 | Pending Lovart | auto-derive next | drafted (2) | ✓ `.libre` packed | 23 lessons (9 reading + 12 exercise + 2 quiz) across 9 chapters; 12/12 exercises pass Jest (69 tests). compose/pipe/curry/partial/deepFreeze/setIn/factorial/flatten/reduce/filterMapReducer/allOf — Simpson's FP-light primitives, hand-built. |
 
 ---
 
@@ -125,7 +125,7 @@ The pipeline used for the seed catalog (TRPL, Svelte 5, Crypto, etc.) — codifi
 8. **Cleanup pass** — same agent flow.
 9. **Ship**:
    - Add to `scripts/extract-starter-courses.mjs` PACK_IDS.
-   - Add `.fishbones` archive to `src-tauri/resources/bundled-packs/`.
+   - Add `.libre` archive to `src-tauri/resources/bundled-packs/`.
    - Run `node scripts/extract-starter-courses.mjs && node scripts/sync-drills-to-local.mjs`.
    - Rebuild iOS sim + push.
 

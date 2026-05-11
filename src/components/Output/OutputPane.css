@@ -1,4 +1,4 @@
-.fishbones-output {
+.libre-output {
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -10,7 +10,7 @@
    tiny_http preview server in the Tauri backend). Card styling matches
    the workbench chrome so it reads as "the output, just somewhere
    else" rather than a notification. */
-.fishbones-output-preview {
+.libre-output-preview {
   margin: 0 0 12px;
   padding: 12px 14px;
   background: var(--color-bg-tertiary);
@@ -18,14 +18,14 @@
   border-radius: var(--fb-radius-md);
 }
 
-.fishbones-output-preview-head {
+.libre-output-preview-head {
   display: flex;
   flex-direction: column;
   gap: 4px;
   margin-bottom: 10px;
 }
 
-.fishbones-output-preview-label {
+.libre-output-preview-label {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.6px;
@@ -33,7 +33,7 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones-output-preview-link {
+.libre-output-preview-link {
   display: inline-block;
   font-family: "SF Mono", ui-monospace, Menlo, monospace;
   font-size: 12px;
@@ -43,17 +43,17 @@
   cursor: pointer;
 }
 
-.fishbones-output-preview-link:hover {
+.libre-output-preview-link:hover {
   text-decoration: underline;
 }
 
-.fishbones-output-preview-actions {
+.libre-output-preview-actions {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
 }
 
-.fishbones-output-preview-btn {
+.libre-output-preview-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -69,13 +69,13 @@
   transition: background var(--fb-motion-quick), border-color var(--fb-motion-quick);
 }
 
-.fishbones-output-preview-btn:hover {
+.libre-output-preview-btn:hover {
   background: var(--color-bg-secondary);
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-.fishbones-output-preview-btn--primary,
-.fishbones-output-preview-btn--primary:hover {
+.libre-output-preview-btn--primary,
+.libre-output-preview-btn--primary:hover {
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
   border-color: var(--color-text-primary);
@@ -89,7 +89,7 @@
    1-px `--color-border-default` rim read as "weird white border"
    floating around the preview against the dark workbench. The
    border-radius alone clips the iframe cleanly. */
-.fishbones-output-preview-frame {
+.libre-output-preview-frame {
   margin: 0 0 12px;
   height: 360px;
   background: #ffffff;
@@ -97,7 +97,7 @@
   overflow: hidden;
 }
 
-.fishbones-output-preview-iframe {
+.libre-output-preview-iframe {
   display: block;
   width: 100%;
   height: 100%;
@@ -111,16 +111,16 @@
    border against the RN theme — swap both to match the dark preview
    so the frame blends into the card. Border goes transparent so the
    card's own border is the only visible edge. */
-.fishbones-output-preview-frame--rn {
+.libre-output-preview-frame--rn {
   background: #0b0b10;
   border-color: transparent;
 }
 
-.fishbones-output-preview-iframe--rn {
+.libre-output-preview-iframe--rn {
   background: #0b0b10;
 }
 
-.fishbones-output-header {
+.libre-output-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -129,7 +129,7 @@
   border-bottom: 1px solid var(--color-border-default);
 }
 
-.fishbones-output-label {
+.libre-output-label {
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
@@ -137,19 +137,19 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones-output-header-right {
+.libre-output-header-right {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.fishbones-output-duration {
+.libre-output-duration {
   font-size: 10.5px;
   font-variant-numeric: tabular-nums;
   color: var(--color-text-tertiary);
 }
 
-.fishbones-output-tests {
+.libre-output-tests {
   /* No border-top / margin-top — when this section was a sibling of
    * Console under one shared header, the rule visually separated
    * "logs above, tests below". With the new tab split each pane is
@@ -160,7 +160,7 @@
   gap: 4px;
 }
 
-.fishbones-output-test {
+.libre-output-test {
   display: grid;
   grid-template-columns: 16px 1fr;
   align-items: start;
@@ -168,26 +168,26 @@
   font-size: 12px;
 }
 
-.fishbones-output-test-glyph {
+.libre-output-test-glyph {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   height: 17px;
 }
 
-.fishbones-output-test--pass .fishbones-output-test-glyph {
+.libre-output-test--pass .libre-output-test-glyph {
   color: #7cd97c;
 }
 
-.fishbones-output-test--fail .fishbones-output-test-glyph {
+.libre-output-test--fail .libre-output-test-glyph {
   color: #ef6f6f;
 }
 
-.fishbones-output-test-name {
+.libre-output-test-name {
   color: var(--color-text-primary);
 }
 
-.fishbones-output-test-error {
+.libre-output-test-error {
   grid-column: 2 / -1;
   margin: 4px 0 6px;
   padding: 6px 8px;
@@ -199,7 +199,7 @@
   white-space: pre-wrap;
 }
 
-.fishbones-output-body {
+.libre-output-body {
   flex: 1;
   padding: 10px 14px;
   color: var(--color-text-primary);
@@ -210,7 +210,7 @@
   background: var(--color-bg-primary);
 }
 
-.fishbones-output-empty {
+.libre-output-empty {
   color: var(--color-text-tertiary);
   font-style: italic;
 }
@@ -218,7 +218,7 @@
 /* Inline "running" pill in the header. Complements the big overlay — this
    one stays visible even when the console scrolls long output so the user
    can always see the run is still in flight at the top. */
-.fishbones-output-running-pill {
+.libre-output-running-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -233,15 +233,15 @@
   font-variant-numeric: tabular-nums;
 }
 
-.fishbones-output-running-pill-dot {
+.libre-output-running-pill-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: var(--color-text-primary);
-  animation: fishbones-output-pulse 1.2s ease-in-out infinite;
+  animation: libre-output-pulse 1.2s ease-in-out infinite;
 }
 
-@keyframes fishbones-output-pulse {
+@keyframes libre-output-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50%      { opacity: 0.4; transform: scale(0.85); }
 }
@@ -251,7 +251,7 @@
    before any stdout arrives. The fish-bone is tinted via
    `mask-image` + `background-color: currentColor`, so switching to a
    light theme flips it to black without needing a second asset. */
-.fishbones-output-running {
+.libre-output-running {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -261,7 +261,7 @@
   color: var(--color-text-primary);
 }
 
-.fishbones-output-running-stack {
+.libre-output-running-stack {
   position: relative;
   width: 88px;
   height: 88px;
@@ -273,11 +273,11 @@
 /* Ring kept in the DOM as a no-op for backwards compat; the
    ribbon-snake `libre_loader.png` IS the ring now, so layering a
    border circle around it would just be visual noise. */
-.fishbones-output-running-ring {
+.libre-output-running-ring {
   display: none;
 }
 
-.fishbones-output-running-logo {
+.libre-output-running-logo {
   width: 88px;
   height: 88px;
   background: url("/libre_loader.png") no-repeat center / contain;
@@ -285,11 +285,11 @@
   /* Spin the ribbon-snake itself for the "running" feel. Slightly
      brisker than the cold-boot loader so a fast-running test
      doesn't feel like the spinner is sluggish. */
-  animation: fishbones-output-spin 1.4s linear infinite;
+  animation: libre-output-spin 1.4s linear infinite;
   filter: drop-shadow(0 0 8px rgba(243, 114, 57, 0.28));
 }
 
-.fishbones-output-running-label {
+.libre-output-running-label {
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.8px;
@@ -297,7 +297,7 @@
   color: var(--color-text-tertiary);
 }
 
-@keyframes fishbones-output-spin {
+@keyframes libre-output-spin {
   to { transform: rotate(360deg); }
 }
 
@@ -306,7 +306,7 @@
    ribbon-snake handles motion alone. Left here so a future surface
    that wants the old pulse animation can opt in by name without
    redefining it. */
-@keyframes fishbones-output-logo-pulse {
+@keyframes libre-output-logo-pulse {
   0%, 100% { opacity: 0.9; transform: scale(1); }
   50%      { opacity: 0.5; transform: scale(0.94); }
 }
@@ -314,16 +314,16 @@
 /* Light themes: ring track switches to a darker alpha so the stroke
    reads against the lighter background. The fish itself is already
    driven by `currentColor`, so it goes black automatically. */
-[data-theme-name="ayu-light"] .fishbones-output-running-ring,
-[data-theme-name="ayu-light"] .fishbones-output-running-ring,
-[data-theme-name="catppuccin-latte"] .fishbones-output-running-ring {
+[data-theme-name="ayu-light"] .libre-output-running-ring,
+[data-theme-name="ayu-light"] .libre-output-running-ring,
+[data-theme-name="catppuccin-latte"] .libre-output-running-ring {
   border-color: rgba(0, 0, 0, 0.08);
   border-top-color: currentColor;
 }
 
-[data-theme-name="ayu-light"] .fishbones-output-running-pill,
-[data-theme-name="ayu-light"] .fishbones-output-running-pill,
-[data-theme-name="catppuccin-latte"] .fishbones-output-running-pill {
+[data-theme-name="ayu-light"] .libre-output-running-pill,
+[data-theme-name="ayu-light"] .libre-output-running-pill,
+[data-theme-name="catppuccin-latte"] .libre-output-running-pill {
   background: rgba(0, 0, 0, 0.04);
 }
 
@@ -332,7 +332,7 @@
  * subview is the dominant chrome element — same treatment editors
  * and browser devtools use for switching between subordinate
  * panels. */
-.fishbones-output-tabs {
+.libre-output-tabs {
   display: inline-flex;
   align-items: center;
   gap: 2px;
@@ -341,7 +341,7 @@
    * underline; doubling up would create a double rule. */
 }
 
-.fishbones-output-tab {
+.libre-output-tab {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -359,17 +359,17 @@
   transition: color 100ms ease, background 100ms ease;
 }
 
-.fishbones-output-tab:hover {
+.libre-output-tab:hover {
   color: var(--color-text-primary);
   background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.04));
 }
 
-.fishbones-output-tab--active {
+.libre-output-tab--active {
   color: var(--color-text-primary);
   background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.06));
 }
 
-.fishbones-output-tab-badge {
+.libre-output-tab-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -383,28 +383,28 @@
   letter-spacing: 0.02em;
 }
 
-.fishbones-output-tab-badge--pass {
+.libre-output-tab-badge--pass {
   background: rgba(80, 200, 120, 0.18);
   color: #87dca0;
 }
 
-.fishbones-output-tab-badge--fail {
+.libre-output-tab-badge--fail {
   background: rgba(239, 111, 111, 0.2);
   color: #f29c9c;
 }
 
-.fishbones-output-tab--has-failures {
+.libre-output-tab--has-failures {
   /* Subtle pulse on the test tab when something failed — draws the
    * eye so a learner who's looking at Console sees a hint to switch. */
-  animation: fishbones-output-tab-attn 2.4s ease-in-out;
+  animation: libre-output-tab-attn 2.4s ease-in-out;
 }
 
-@keyframes fishbones-output-tab-attn {
+@keyframes libre-output-tab-attn {
   0%, 100% { color: var(--color-text-secondary); }
   20%, 80% { color: #f29c9c; }
 }
 
-.fishbones-output-console {
+.libre-output-console {
   display: flex;
   flex-direction: column;
 }
@@ -413,14 +413,14 @@
  * has no content (e.g. Console after a successful test run with no
  * debug prints). The previous behaviour hid the tab entirely, which
  * was confusing — "wait, did Console disappear, or is it just empty?". */
-.fishbones-output-pane-empty {
+.libre-output-pane-empty {
   padding: 16px 8px;
   font-size: 12px;
   line-height: 1.5;
   color: var(--color-text-tertiary);
 }
 
-.fishbones-output-pane-empty code {
+.libre-output-pane-empty code {
   background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.06));
   color: var(--color-text-secondary);
   padding: 1px 6px;
@@ -429,30 +429,30 @@
   font-family: "SF Mono", ui-monospace, Menlo, monospace;
 }
 
-.fishbones-output-pane-empty-hint {
+.libre-output-pane-empty-hint {
   display: inline;
 }
 
-.fishbones-output-line {
+.libre-output-line {
   white-space: pre-wrap;
   word-break: break-word;
   padding: 2px 0;
   border-bottom: 1px dashed transparent;
 }
 
-.fishbones-output-line--info {
+.libre-output-line--info {
   color: var(--color-text-secondary);
 }
 
-.fishbones-output-line--warn {
+.libre-output-line--warn {
   color: #d9a800;
 }
 
-.fishbones-output-line--error {
+.libre-output-line--error {
   color: #ef6f6f;
 }
 
-.fishbones-output-error {
+.libre-output-error {
   margin-top: 8px;
   padding: 10px 12px;
   border: 1px solid rgba(239, 111, 111, 0.35);
@@ -460,7 +460,7 @@
   border-radius: var(--fb-radius-sm);
 }
 
-.fishbones-output-error-title {
+.libre-output-error-title {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.6px;
@@ -469,7 +469,7 @@
   margin-bottom: 4px;
 }
 
-.fishbones-output-error pre {
+.libre-output-error pre {
   margin: 0;
   color: #f1b5b5;
   white-space: pre-wrap;

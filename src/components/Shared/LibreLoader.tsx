@@ -1,4 +1,4 @@
-import "./FishbonesLoader.css";
+import "./LibreLoader.css";
 
 interface Props {
   /// Visible text under the spinner. Pass an empty string (or omit) to
@@ -10,18 +10,18 @@ interface Props {
   size?: "sm" | "md";
 }
 
-/// The shared Fishbones spinner — a theme-tinted fish-bone logo pulsing
+/// The shared Libre spinner — a theme-tinted fish-bone logo pulsing
 /// inside a rotating ring. Used by the app bootloader, the OutputPane
 /// "running…" state, and the per-book library hydration overlay so all
 /// three speak the same visual vocabulary.
-export default function FishbonesLoader({ label, size = "md" }: Props) {
+export default function LibreLoader({ label, size = "md" }: Props) {
   return (
-    <div className={`fishbones-loader fishbones-loader--${size}`} role="status">
-      <div className="fishbones-loader-stack" aria-hidden>
-        <div className="fishbones-loader-ring" />
-        <div className="fishbones-loader-logo" />
+    <div className={`libre-loader libre-loader--${size}`} role="status">
+      <div className="libre-loader-stack" aria-hidden>
+        <div className="libre-loader-ring" />
+        <div className="libre-loader-logo" />
       </div>
-      {label && <div className="fishbones-loader-label">{label}</div>}
+      {label && <div className="libre-loader-label">{label}</div>}
     </div>
   );
 }

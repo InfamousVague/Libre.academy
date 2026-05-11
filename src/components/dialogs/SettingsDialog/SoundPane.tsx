@@ -85,26 +85,26 @@ export default function SoundPane() {
   };
 
   return (
-    <div className="fishbones-settings-pane">
-      <h3 className="fishbones-settings-pane-title">Sounds</h3>
-      <p className="fishbones-settings-pane-blurb">
+    <div className="libre-settings-pane">
+      <h3 className="libre-settings-pane-title">Sounds</h3>
+      <p className="libre-settings-pane-blurb">
         Sound effects fire on lesson complete, achievement unlocks, streak
         milestones, and section/book wraps. Synthesised at runtime — no
         bundled audio, latency-free.
       </p>
 
-      <div className="fishbones-settings-row">
-        <div className="fishbones-settings-row__label">
-          <span className="fishbones-settings-row__title">
+      <div className="libre-settings-row">
+        <div className="libre-settings-row__label">
+          <span className="libre-settings-row__title">
             Sound effects
           </span>
-          <span className="fishbones-settings-row__hint">
+          <span className="libre-settings-row__hint">
             Master toggle for every cue.
           </span>
         </div>
         <button
           type="button"
-          className={`fishbones-settings-toggle ${enabled ? "fishbones-settings-toggle--on" : ""}`}
+          className={`libre-settings-toggle ${enabled ? "libre-settings-toggle--on" : ""}`}
           aria-pressed={enabled}
           onClick={onToggleEnabled}
         >
@@ -117,10 +117,10 @@ export default function SoundPane() {
         </button>
       </div>
 
-      <div className="fishbones-settings-row">
-        <div className="fishbones-settings-row__label">
-          <span className="fishbones-settings-row__title">Volume</span>
-          <span className="fishbones-settings-row__hint">
+      <div className="libre-settings-row">
+        <div className="libre-settings-row__label">
+          <span className="libre-settings-row__title">Volume</span>
+          <span className="libre-settings-row__hint">
             {Math.round(volume * 100)}%
           </span>
         </div>
@@ -137,10 +137,10 @@ export default function SoundPane() {
         />
       </div>
 
-      <div className="fishbones-settings-row fishbones-settings-row--column">
-        <div className="fishbones-settings-row__label">
-          <span className="fishbones-settings-row__title">Test cues</span>
-          <span className="fishbones-settings-row__hint">
+      <div className="libre-settings-row libre-settings-row--column">
+        <div className="libre-settings-row__label">
+          <span className="libre-settings-row__title">Test cues</span>
+          <span className="libre-settings-row__hint">
             Preview each effect.
           </span>
         </div>

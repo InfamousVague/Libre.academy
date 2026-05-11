@@ -30,7 +30,7 @@ const CONSOLE_SHIM = `
   const post = (level, args) => {
     try {
       parentWin.postMessage({
-        __fishbones: true,
+        __libre: true,
         level,
         text: args.map(a => {
           if (a == null) return String(a);
@@ -82,11 +82,11 @@ export async function runWeb(
   const jsFiles = workingFiles.filter((f) => f.language === "javascript");
 
   const styleBlock = cssFiles
-    .map((f) => `<style data-fishbones-src="${escapeAttr(f.name)}">\n${f.content}\n</style>`)
+    .map((f) => `<style data-libre-src="${escapeAttr(f.name)}">\n${f.content}\n</style>`)
     .join("\n");
 
   const scriptBlock = jsFiles
-    .map((f) => `<script data-fishbones-src="${escapeAttr(f.name)}">\n${f.content}\n</script>`)
+    .map((f) => `<script data-libre-src="${escapeAttr(f.name)}">\n${f.content}\n</script>`)
     .join("\n");
 
   let doc: string;
@@ -152,28 +152,28 @@ ${scriptBlock}
 }
 
 /// Jest-compatible harness injected into the test iframe. Captures test
-/// results into `__fishbones_test_results` and posts them via postMessage once
+/// results into `__libre_test_results` and posts them via postMessage once
 /// the test script has executed.
 const TEST_HARNESS = `
 <script>
 (function(){
-  window.__fishbones_test_results = [];
+  window.__libre_test_results = [];
   window.test = function(name, fn) {
     try {
       var r = fn();
       if (r && typeof r.then === "function") {
         // Async tests: punt for V1 — users who need async can await inline.
-        window.__fishbones_test_results.push({
+        window.__libre_test_results.push({
           name: name,
           passed: false,
           error: "Async test bodies are not supported in the web runtime yet. await your promise inside the test.",
         });
         return;
       }
-      window.__fishbones_test_results.push({ name: name, passed: true });
+      window.__libre_test_results.push({ name: name, passed: true });
     } catch (e) {
       var stack = (e && e.stack) ? e.stack.split("\\n").slice(0, 4).join("\\n") : "";
-      window.__fishbones_test_results.push({
+      window.__libre_test_results.push({
         name: name,
         passed: false,
         error: (e && e.message ? e.message : String(e)) + (stack ? "\\n" + stack : ""),
@@ -244,11 +244,11 @@ function runTestsInHiddenIframe(
       wovenDoc = TEST_HARNESS + "\n" + wovenDoc;
     }
     const testScriptTag = `
-<script data-fishbones-src="tests.js">
+<script data-libre-src="tests.js">
 try {
 ${testCode}
 } catch (e) {
-  window.__fishbones_test_results.push({
+  window.__libre_test_results.push({
     name: "<test file>",
     passed: false,
     error: (e && e.message) ? e.message : String(e),
@@ -256,7 +256,7 @@ ${testCode}
 }
 // Defer the post so any microtasks inside tests settle first.
 setTimeout(function(){
-  window.parent.postMessage({ __fishbones_tests: true, results: window.__fishbones_test_results || [] }, "*");
+  window.parent.postMessage({ __libre_tests: true, results: window.__libre_test_results || [] }, "*");
 }, 0);
 </script>
 `;
@@ -278,21 +278,21 @@ setTimeout(function(){
     const logs: LogLine[] = [];
     const onMessage = (ev: MessageEvent) => {
       const d = ev.data as {
-        __fishbones?: boolean;
-        __fishbones_tests?: boolean;
+        __libre?: boolean;
+        __libre_tests?: boolean;
         level?: string;
         text?: string;
         results?: TestResult[];
       };
       if (!d) return;
-      if (d.__fishbones) {
+      if (d.__libre) {
         const level = (["log", "info", "warn", "error"].includes(d.level ?? "")
           ? d.level
           : "log") as LogLine["level"];
         logs.push({ level, text: d.text ?? "" });
         return;
       }
-      if (d.__fishbones_tests) {
+      if (d.__libre_tests) {
         cleanup();
         resolve({ logs, tests: d.results ?? [] });
       }

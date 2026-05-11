@@ -62,13 +62,13 @@ export default function DownloadButton({ className, primaryLabel }: Props) {
 
   return (
     <div
-      className={`fishbones-download${className ? ` ${className}` : ""}`}
+      className={`libre-download${className ? ` ${className}` : ""}`}
       ref={wrapperRef}
     >
-      <div className="fishbones-download-split">
+      <div className="libre-download-split">
         <a
           href={primary.url}
-          className="fishbones-download-main"
+          className="libre-download-main"
           target="_blank"
           rel="noopener noreferrer"
           title="Open the latest desktop release on GitHub"
@@ -78,7 +78,7 @@ export default function DownloadButton({ className, primaryLabel }: Props) {
         </a>
         <button
           type="button"
-          className="fishbones-download-caret"
+          className="libre-download-caret"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-haspopup="menu"
@@ -91,7 +91,7 @@ export default function DownloadButton({ className, primaryLabel }: Props) {
 
       {open && (
         <div
-          className="fishbones-download-menu"
+          className="libre-download-menu"
           role="menu"
           aria-label="Pick a platform"
         >
@@ -104,17 +104,17 @@ export default function DownloadButton({ className, primaryLabel }: Props) {
                 href={target.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`fishbones-download-item${
-                  isPrimary ? " fishbones-download-item--primary" : ""
+                className={`libre-download-item${
+                  isPrimary ? " libre-download-item--primary" : ""
                 }`}
                 onClick={() => setOpen(false)}
               >
                 <Icon icon={downloadIcon} size="xs" color="currentColor" />
-                <span className="fishbones-download-item-body">
-                  <span className="fishbones-download-item-title">
+                <span className="libre-download-item-body">
+                  <span className="libre-download-item-title">
                     {labelFor(target.os)}
                   </span>
-                  <span className="fishbones-download-item-hint">
+                  <span className="libre-download-item-hint">
                     {target.os === "macos"
                       ? ".dmg · Apple Silicon + Intel"
                       : target.os === "windows"
@@ -123,7 +123,7 @@ export default function DownloadButton({ className, primaryLabel }: Props) {
                   </span>
                 </span>
                 {isPrimary && (
-                  <span className="fishbones-download-item-badge">
+                  <span className="libre-download-item-badge">
                     Detected
                   </span>
                 )}

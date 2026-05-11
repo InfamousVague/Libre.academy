@@ -11,7 +11,7 @@
 /// Triggered from the bottom-tab bar's "Settings" button.
 
 import { useState } from "react";
-import type { UseFishbonesCloud } from "../hooks/useFishbonesCloud";
+import type { UseLibreCloud } from "../hooks/useLibreCloud";
 import type { RealtimeSyncHandle } from "../hooks/useRealtimeSync";
 import type { Completion } from "../hooks/useProgress";
 import type { Course } from "../data/types";
@@ -21,7 +21,7 @@ import LanguageDropdown from "../components/LanguageDropdown/LanguageDropdown";
 import "./MobileSettings.css";
 
 interface Props {
-  cloud: UseFishbonesCloud;
+  cloud: UseLibreCloud;
   /// Realtime sync hook handle. Drives the Sync diagnostics card —
   /// status badge, pending push counter, manual pull/push buttons,
   /// diff view. Optional for embeddings that don't run sync.

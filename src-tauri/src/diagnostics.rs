@@ -77,7 +77,7 @@ pub async fn run_diagnostics(app: tauri::AppHandle) -> Vec<CheckResult> {
     // Blockchain SDKs — Solana CLI is needed for native-program
     // exercises in Solana Programs (cargo-build-sbf).
     out.push(check_solana_cli());
-    // Native toolchains — every desktop-only language Fishbones
+    // Native toolchains — every desktop-only language Libre
     // supports needs a real compiler/runtime on PATH. These are
     // category "Native toolchains" and sit at the bottom of the
     // panel.
@@ -143,7 +143,7 @@ fn check_resource_dir(app: &tauri::AppHandle) -> CheckResult {
 }
 
 /// Check the bundled course archives (`.academy`, plus legacy
-/// `.fishbones` / `.kata`) — catches the Windows "Discover empty"
+/// `.libre` / `.kata`) — catches the Windows "Discover empty"
 /// regression from v0.1.7/v0.1.8. Walks the same candidate paths
 /// `list_bundled_catalog_entries` does so the diagnostic + the
 /// running code stay aligned.
@@ -197,7 +197,7 @@ fn check_bundled_packs(app: &tauri::AppHandle) -> CheckResult {
         label: "Course archives present".into(),
         status: CheckStatus::Fail,
         detail: format!(
-            "no .academy/.fishbones archives found under any of: {:?}",
+            "no .academy/.libre archives found under any of: {:?}",
             candidates
         ),
         remedy: Some(
@@ -587,7 +587,7 @@ fn check_native(
 
 /// Solana CLI lives outside the toolchain.rs recipe table because
 /// it's needed for the SVM lessons (`cargo build-sbf` to compile
-/// Solana programs to BPF) but isn't a "language" Fishbones runs
+/// Solana programs to BPF) but isn't a "language" Libre runs
 /// directly. find_working_binary already searches the standard
 /// `~/.local/share/solana/...` install dir thanks to the candidate
 /// list extension in toolchain.rs.

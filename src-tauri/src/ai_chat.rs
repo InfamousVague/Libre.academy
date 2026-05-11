@@ -356,7 +356,7 @@ pub async fn ai_chat_install_ollama() -> Result<InstallResult, String> {
 /// `brew services start ollama`. Backgrounds the daemon under
 /// launchd so it survives reboots and shell-window-close. We prefer
 /// this over `ollama serve` because a foreground `ollama serve`
-/// would die the moment Fishbones quits.
+/// would die the moment Libre quits.
 #[tauri::command]
 pub async fn ai_chat_start_ollama() -> Result<InstallResult, String> {
     if which_binary("brew").is_some() {

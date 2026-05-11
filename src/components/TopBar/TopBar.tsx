@@ -264,12 +264,12 @@ export default function TopBar({
   const groupable = !!onSetTabGroup && !!onCreateGroup;
 
   return (
-    <div className="fishbones__topbar" data-tauri-drag-region>
+    <div className="libre__topbar" data-tauri-drag-region>
       {/* On desktop: reserved gutter so the macOS traffic lights
           (which `titleBarStyle: "Overlay"` floats over the bar at
           x≈18) don't collide with the sidebar toggle. On web:
           there are no traffic lights, so we use the same width
-          for a brand element — Fishbones logo + wordmark — that
+          for a brand element — Libre logo + wordmark — that
           links back to the marketing site one path-segment up. */}
       {/* macOS traffic-light spacer — the OS draws close / minimise
           / maximise buttons in this region on Tauri; we leave it
@@ -278,7 +278,7 @@ export default function TopBar({
           left-edge spacer keeping the brand wordmark from sitting
           flush against the window edge. */}
       {!isWeb && (
-        <div className="fishbones__topbar-window-controls" data-tauri-drag-region />
+        <div className="libre__topbar-window-controls" data-tauri-drag-region />
       )}
       {/* Brand wordmark moved out of the top bar — it now lives in
           the Library page's header next to the title, where it's
@@ -286,12 +286,12 @@ export default function TopBar({
           repeated on every screen. The traffic-light spacer above
           still anchors the left edge on desktop; on web the row
           flows from the sidebar toggle. See
-          CourseLibrary.tsx → `.fishbones-library-brand-mark`. */}
+          CourseLibrary.tsx → `.libre-library-brand-mark`. */}
 
       {onToggleSidebar && (
         <button
           type="button"
-          className="fishbones__topbar-sidebar-toggle"
+          className="libre__topbar-sidebar-toggle"
           onClick={onToggleSidebar}
           title={
             sidebarCollapsed
@@ -309,7 +309,7 @@ export default function TopBar({
         </button>
       )}
 
-      <div className="fishbones__topbar-tabs" data-tauri-drag-region>
+      <div className="libre__topbar-tabs" data-tauri-drag-region>
         {tabs.map((tab, i) => {
           const isActive = i === activeIndex;
           const isDragging = draggingIdx === i;
@@ -329,7 +329,7 @@ export default function TopBar({
           // Inline custom property for the group's accent colour —
           // resolved by CSS into the active theme's hue. When the
           // tab isn't grouped, leaving the property unset lets the
-          // base `.fishbones__tab` rule render its default chrome.
+          // base `.libre__tab` rule render its default chrome.
           const styleVars = tab.groupColorToken
             ? ({
                 "--fb-tab-group-color": `var(--fb-tab-group-color-${tab.groupColorToken})`,
@@ -339,12 +339,12 @@ export default function TopBar({
             <button
               key={tab.id}
               className={[
-                "fishbones__tab",
-                isActive && "fishbones__tab--active",
-                isDragging && "fishbones__tab--dragging",
-                isDragOver && "fishbones__tab--drag-over",
-                dropAfter && "fishbones__tab--drop-after",
-                tab.groupId && "fishbones__tab--grouped",
+                "libre__tab",
+                isActive && "libre__tab--active",
+                isDragging && "libre__tab--dragging",
+                isDragOver && "libre__tab--drag-over",
+                dropAfter && "libre__tab--drop-after",
+                tab.groupId && "libre__tab--grouped",
               ]
                 .filter(Boolean)
                 .join(" ")}
@@ -360,7 +360,7 @@ export default function TopBar({
             >
               {isFirstOfGroup && (
                 <span
-                  className="fishbones__tab-group-badge"
+                  className="libre__tab-group-badge"
                   title={`Group: ${tab.groupName}`}
                 >
                   {tab.groupName}
@@ -370,11 +370,11 @@ export default function TopBar({
                 language={tab.language}
                 size="xs"
                 iconOnly
-                className="fishbones__tab-lang"
+                className="libre__tab-lang"
               />
-              <span className="fishbones__tab-label">{tab.label}</span>
+              <span className="libre__tab-label">{tab.label}</span>
               <span
-                className="fishbones__tab-close"
+                className="libre__tab-close"
                 role="button"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -397,17 +397,17 @@ export default function TopBar({
         const otherGroups = groups.filter((g) => g.id !== tab.groupId);
         return createPortal(
           <div
-            className="fishbones__tab-menu"
+            className="libre__tab-menu"
             style={{ left: tabMenu.x, top: tabMenu.y }}
             onClick={(e) => e.stopPropagation()}
             role="menu"
             aria-label="Tab actions"
           >
-            <div className="fishbones__tab-menu-label">{tab.label}</div>
+            <div className="libre__tab-menu-label">{tab.label}</div>
             <button
               type="button"
               role="menuitem"
-              className="fishbones__tab-menu-item"
+              className="libre__tab-menu-item"
               onClick={() => {
                 setTabMenu(null);
                 onClose(tabMenu.tabIndex);
@@ -415,12 +415,12 @@ export default function TopBar({
             >
               Close tab
             </button>
-            <div className="fishbones__tab-menu-sep" aria-hidden />
+            <div className="libre__tab-menu-sep" aria-hidden />
             {!tab.groupId && (
               <button
                 type="button"
                 role="menuitem"
-                className="fishbones__tab-menu-item"
+                className="libre__tab-menu-item"
                 onClick={() => {
                   setTabMenu(null);
                   // Default group name = the tab's label, capped at
@@ -435,7 +435,7 @@ export default function TopBar({
             )}
             {!tab.groupId && otherGroups.length > 0 && (
               <>
-                <div className="fishbones__tab-menu-section">
+                <div className="libre__tab-menu-section">
                   Add to group
                 </div>
                 {otherGroups.map((g) => (
@@ -443,14 +443,14 @@ export default function TopBar({
                     key={g.id}
                     type="button"
                     role="menuitem"
-                    className="fishbones__tab-menu-item fishbones__tab-menu-item--with-swatch"
+                    className="libre__tab-menu-item libre__tab-menu-item--with-swatch"
                     onClick={() => {
                       setTabMenu(null);
                       onSetTabGroup?.(tabMenu.tabIndex, g.id);
                     }}
                   >
                     <span
-                      className="fishbones__tab-menu-swatch"
+                      className="libre__tab-menu-swatch"
                       style={{
                         background: `var(--fb-tab-group-color-${g.colorToken})`,
                       }}
@@ -466,7 +466,7 @@ export default function TopBar({
                 <button
                   type="button"
                   role="menuitem"
-                  className="fishbones__tab-menu-item"
+                  className="libre__tab-menu-item"
                   onClick={() => {
                     setTabMenu(null);
                     onSetTabGroup?.(tabMenu.tabIndex, null);
@@ -478,7 +478,7 @@ export default function TopBar({
                   <button
                     type="button"
                     role="menuitem"
-                    className="fishbones__tab-menu-item"
+                    className="libre__tab-menu-item"
                     onClick={() => {
                       setTabMenu(null);
                       const next = window.prompt(
@@ -495,7 +495,7 @@ export default function TopBar({
                 )}
                 {otherGroups.length > 0 && (
                   <>
-                    <div className="fishbones__tab-menu-section">
+                    <div className="libre__tab-menu-section">
                       Move to group
                     </div>
                     {otherGroups.map((g) => (
@@ -503,14 +503,14 @@ export default function TopBar({
                         key={g.id}
                         type="button"
                         role="menuitem"
-                        className="fishbones__tab-menu-item fishbones__tab-menu-item--with-swatch"
+                        className="libre__tab-menu-item libre__tab-menu-item--with-swatch"
                         onClick={() => {
                           setTabMenu(null);
                           onSetTabGroup?.(tabMenu.tabIndex, g.id);
                         }}
                       >
                         <span
-                          className="fishbones__tab-menu-swatch"
+                          className="libre__tab-menu-swatch"
                           style={{
                             background: `var(--fb-tab-group-color-${g.colorToken})`,
                           }}
@@ -528,7 +528,7 @@ export default function TopBar({
         );
       })()}
 
-      <div className="fishbones__topbar-actions">
+      <div className="libre__topbar-actions">
         {/* Tip jar — inline dropdown with the dev's crypto wallets so
             learners on the desktop can chip in without leaving the
             app. The button intentionally sits left of the

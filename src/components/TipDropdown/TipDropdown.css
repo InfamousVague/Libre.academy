@@ -3,7 +3,7 @@
    experience matches what visitors see on libre.academy/support;
    when changing one, change both. */
 
-.fishbones__tip-wrap {
+.libre__tip-wrap {
   position: relative;
   flex-shrink: 0;
 }
@@ -11,7 +11,7 @@
 /* Trigger sized to match the search button next to it (26px height,
    chip metrics). Same active-state treatment as the topbar-search:
    subtle fill + brighter border on hover / open. */
-.fishbones__tip-trigger {
+.libre__tip-trigger {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -29,16 +29,16 @@
   transition: background var(--fb-motion-snappy), border-color var(--fb-motion-snappy), color var(--fb-motion-snappy);
 }
 
-.fishbones__tip-trigger:hover,
-.fishbones__tip-trigger:focus-visible,
-.fishbones__tip-trigger--open {
+.libre__tip-trigger:hover,
+.libre__tip-trigger:focus-visible,
+.libre__tip-trigger--open {
   color: var(--color-text-primary);
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.18);
   outline: none;
 }
 
-.fishbones__tip-trigger-label {
+.libre__tip-trigger-label {
   white-space: nowrap;
 }
 
@@ -46,7 +46,7 @@
 /* The panel itself has no background, border, or shadow — only the
    cards float, anchored beneath the trigger. */
 
-.fishbones__tip-panel {
+.libre__tip-panel {
   /* Pinned to the viewport, not the trigger. The earlier `position:
      absolute; right: 0` anchored the panel's right edge to the Tip
      button — fine in isolation, but the Tip button's own position
@@ -70,17 +70,17 @@
   border: none;
   box-shadow: none;
   z-index: 200;
-  animation: fishbones-tip-panel-in 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: libre-tip-panel-in 180ms cubic-bezier(0.22, 1, 0.36, 1);
   transform-origin: top right;
 }
 
-@keyframes fishbones-tip-panel-in {
+@keyframes libre-tip-panel-in {
   from { opacity: 0; transform: translateY(-6px) scale(0.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fishbones__tip-panel { animation: none; }
+  .libre__tip-panel { animation: none; }
 }
 
 /* ──────────────── Stack (deck) ──────────────── */
@@ -88,7 +88,7 @@
    Wheel / touch / arrow keys rotate activeIdx, the data-depth attr
    re-renders, and CSS transitions handle the smooth shuffle. */
 
-.fishbones__tip-stack {
+.libre__tip-stack {
   position: relative;
   height: calc(220px + (var(--deck-size, 4) - 1) * 46px);
   margin: 0 6px;
@@ -96,7 +96,7 @@
   touch-action: none;
 }
 
-.fishbones__tip-stack > .fishbones__tip-card {
+.libre__tip-stack > .libre__tip-card {
   position: absolute;
   left: 0;
   right: 0;
@@ -106,52 +106,52 @@
     filter 240ms ease;
 }
 
-.fishbones__tip-stack > .fishbones__tip-card[data-depth="0"] {
+.libre__tip-stack > .libre__tip-card[data-depth="0"] {
   transform: translateY(calc((var(--deck-size, 4) - 1) * 46px));
   z-index: 100;
 }
-.fishbones__tip-stack > .fishbones__tip-card[data-depth="1"] {
+.libre__tip-stack > .libre__tip-card[data-depth="1"] {
   transform: translateY(calc((var(--deck-size, 4) - 2) * 46px));
   z-index: 99;
   filter: brightness(0.92);
 }
-.fishbones__tip-stack > .fishbones__tip-card[data-depth="2"] {
+.libre__tip-stack > .libre__tip-card[data-depth="2"] {
   transform: translateY(calc((var(--deck-size, 4) - 3) * 46px));
   z-index: 98;
   filter: brightness(0.86);
 }
-.fishbones__tip-stack > .fishbones__tip-card[data-depth="3"] {
+.libre__tip-stack > .libre__tip-card[data-depth="3"] {
   transform: translateY(calc((var(--deck-size, 4) - 4) * 46px));
   z-index: 97;
   filter: brightness(0.80);
 }
-.fishbones__tip-stack > .fishbones__tip-card[data-depth="4"] {
+.libre__tip-stack > .libre__tip-card[data-depth="4"] {
   transform: translateY(calc((var(--deck-size, 4) - 5) * 46px));
   z-index: 96;
   filter: brightness(0.74);
 }
-.fishbones__tip-stack > .fishbones__tip-card[data-depth="5"] {
+.libre__tip-stack > .libre__tip-card[data-depth="5"] {
   transform: translateY(calc((var(--deck-size, 4) - 6) * 46px));
   z-index: 95;
   filter: brightness(0.68);
 }
 
-.fishbones__tip-stack > .fishbones__tip-card:not([data-active]) {
+.libre__tip-stack > .libre__tip-card:not([data-active]) {
   cursor: pointer;
 }
-.fishbones__tip-stack > .fishbones__tip-card:not([data-active]):hover {
+.libre__tip-stack > .libre__tip-card:not([data-active]):hover {
   filter: brightness(1);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fishbones__tip-stack > .fishbones__tip-card { transition: none; }
+  .libre__tip-stack > .libre__tip-card { transition: none; }
 }
 
 /* ──────────────── Card shell ──────────────── */
 /* Glass surface + 70/30 split with a hairline-divided right strip
    (QR + Copy). Identical proportions to the /support card. */
 
-.fishbones__tip-card {
+.libre__tip-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 30%;
   border-radius: 18px;
@@ -167,7 +167,7 @@
   min-height: 140px;
 } 
 
-.fishbones__tip-card::before {
+.libre__tip-card::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -180,14 +180,14 @@
   z-index: 0;
 }
 
-.fishbones__tip-card > * {
+.libre__tip-card > * {
   position: relative;
   z-index: 1;
 }
 
 /* ──────────────── Main (left) zone ──────────────── */
 
-.fishbones__tip-card-main {
+.libre__tip-card-main {
   padding: 22px 22px 20px;
   display: flex;
   flex-direction: column;
@@ -196,13 +196,13 @@
   gap: 18px;
 }
 
-.fishbones__tip-card-head {
+.libre__tip-card-head {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.fishbones__tip-card-title {
+.libre__tip-card-title {
   font-size: 19px;
   font-weight: 700;
   letter-spacing: -0.015em;
@@ -212,18 +212,18 @@
   margin: 0;
 }
 
-.fishbones__tip-card-title-dot {
+.libre__tip-card-title-dot {
   color: inherit;
 }
 
-.fishbones__tip-card-bottom {
+.libre__tip-card-bottom {
   display: flex;
   flex-direction: column;
   gap: 10px;
   min-width: 0;
 }
 
-.fishbones__tip-card-meta {
+.libre__tip-card-meta {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -233,17 +233,17 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones__tip-card-meta-label {
+.libre__tip-card-meta-label {
   font-weight: 700;
   color: var(--color-text-secondary);
   letter-spacing: 0.14em;
 }
 
-.fishbones__tip-card-meta-sep {
+.libre__tip-card-meta-sep {
   opacity: 0.5;
 }
 
-.fishbones__tip-card-meta-value {
+.libre__tip-card-meta-value {
   font-family: var(--font-mono, "JetBrains Mono", "SF Mono", monospace);
   font-weight: 500;
   letter-spacing: 0.04em;
@@ -251,7 +251,7 @@
   font-size: 11.5px;
 }
 
-.fishbones__tip-card-addr {
+.libre__tip-card-addr {
   display: block;
   font-family: var(--font-mono, "JetBrains Mono", "SF Mono", monospace);
   font-size: 13.5px;
@@ -267,7 +267,7 @@
 
 /* ──────────────── Brand badge (inline with title) ──────────────── */
 
-.fishbones__tip-card-badge {
+.libre__tip-card-badge {
   flex: 0 0 auto;
   width: 32px;
   height: 32px;
@@ -280,7 +280,7 @@
     0 2px 6px rgba(0, 0, 0, 0.35);
 }
 
-.fishbones__tip-card-badge svg {
+.libre__tip-card-badge svg {
   width: 18px;
   height: 18px;
   display: block;
@@ -289,7 +289,7 @@
 
 /* ──────────────── Right strip (QR + Copy) ──────────────── */
 
-.fishbones__tip-card-strip {
+.libre__tip-card-strip {
   border-left: 1px solid rgba(255, 255, 255, 0.06);
   background: rgba(0, 0, 0, 0.18);
   padding: 16px 14px;
@@ -301,7 +301,7 @@
   min-width: 0;
 }
 
-.fishbones__tip-card-qr {
+.libre__tip-card-qr {
   background: #FFFFFF;
   padding: 5px;
   border-radius: var(--fb-radius-md);
@@ -311,14 +311,14 @@
   align-self: center;
 }
 
-.fishbones__tip-card-qr-svg {
+.libre__tip-card-qr-svg {
   display: block;
   width: 100%;
   height: auto;
   max-width: 116px;
 }
 
-.fishbones__tip-card-copy {
+.libre__tip-card-copy {
   width: 100%;
   padding: 7px 10px;
   display: inline-flex;
@@ -336,13 +336,13 @@
   transition: background var(--fb-motion-snappy), border-color var(--fb-motion-snappy), color var(--fb-motion-snappy);
 }
 
-.fishbones__tip-card-copy:hover {
+.libre__tip-card-copy:hover {
   background: rgba(255, 255, 255, 0.09);
   border-color: rgba(255, 255, 255, 0.20);
   color: var(--color-text-primary);
 }
 
-.fishbones__tip-card-copy[data-copied] {
+.libre__tip-card-copy[data-copied] {
   background: rgba(74, 222, 128, 0.14);
   border-color: rgba(74, 222, 128, 0.35);
   color: #86EFAC;

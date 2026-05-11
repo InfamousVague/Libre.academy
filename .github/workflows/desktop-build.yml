@@ -228,13 +228,13 @@ jobs:
           # and DOESN'T emit a `latest.json` manifest, breaking the
           # OTA flow entirely. See README / docs for the one-time
           # secret-setup steps; the keypair lives in the maintainer's
-          # `~/.tauri/fishbones-updater.key` and was generated via
+          # `~/.tauri/libre-updater.key` and was generated via
           # `tauri signer generate`.
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
-          releaseName: ${{ github.ref_type == 'tag' && format('Fishbones {0}', github.ref_name) || '' }}
+          releaseName: ${{ github.ref_type == 'tag' && format('Libre {0}', github.ref_name) || '' }}
           releaseBody: ${{ github.ref_type == 'tag' && format('Signed and notarized macOS release. Linux + Windows builds attached automatically by CI.', github.ref_name) || '' }}
           releaseDraft: false
           prerelease: false
@@ -253,7 +253,7 @@ jobs:
         if: ${{ !(matrix.os == 'macos-latest' && github.ref_type == 'tag') }}
         uses: actions/upload-artifact@v4
         with:
-          name: fishbones-${{ matrix.os }}
+          name: libre-${{ matrix.os }}
           path: |
             src-tauri/target/release/bundle/**/*.dmg
             src-tauri/target/release/bundle/**/*.msi

@@ -8,7 +8,7 @@
 #   pick-device.sh watch --reuse
 #
 # Writes / updates IPHONE_* or WATCH_* shell-assignment lines in
-# .fishbones-devices.cache (relative to the Makefile's working dir, i.e.
+# .libre-devices.cache (relative to the Makefile's working dir, i.e.
 # the repo root when invoked from `make`):
 #
 #     IPHONE_KIND=sim|real
@@ -27,7 +27,7 @@ set -euo pipefail
 
 KIND="${1:-}"
 MODE="${2:-}"
-CACHE=".fishbones-devices.cache"
+CACHE=".libre-devices.cache"
 
 if [[ "$KIND" != "phone" && "$KIND" != "watch" ]]; then
   echo "usage: $0 phone|watch [--reuse]" >&2

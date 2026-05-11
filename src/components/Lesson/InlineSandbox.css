@@ -2,7 +2,7 @@
    but with a small header strip + Run button so it's obviously
    interactive. Sized conservatively so it doesn't dominate the prose. */
 
-.fishbones-inline-sandbox-root {
+.libre-inline-sandbox-root {
   margin: 16px 0;
   border: 1px solid var(--color-border-default);
   border-radius: var(--fb-radius-md);
@@ -10,7 +10,7 @@
   background: var(--color-bg-primary);
 }
 
-.fishbones-inline-sandbox-header {
+.libre-inline-sandbox-header {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -19,7 +19,7 @@
   border-bottom: 1px solid var(--color-border-default);
 }
 
-.fishbones-inline-sandbox-lang {
+.libre-inline-sandbox-lang {
   display: inline-flex;
   align-items: center;
   padding: 1px 6px;
@@ -33,7 +33,7 @@
   text-transform: uppercase;
 }
 
-.fishbones-inline-sandbox-label {
+.libre-inline-sandbox-label {
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
@@ -41,13 +41,13 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones-inline-sandbox-actions {
+.libre-inline-sandbox-actions {
   margin-left: auto;
   display: flex;
   gap: 6px;
 }
 
-.fishbones-inline-sandbox-btn {
+.libre-inline-sandbox-btn {
   padding: 3px 10px;
   background: transparent;
   border: 1px solid var(--color-border-default);
@@ -59,24 +59,24 @@
   transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy), border-color var(--fb-motion-snappy);
 }
 
-.fishbones-inline-sandbox-btn:hover:not(:disabled) {
+.libre-inline-sandbox-btn:hover:not(:disabled) {
   background: var(--color-bg-tertiary);
   color: var(--color-text-primary);
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-.fishbones-inline-sandbox-btn--run {
+.libre-inline-sandbox-btn--run {
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
   border-color: var(--color-text-primary);
   font-weight: 600;
 }
 
-.fishbones-inline-sandbox-btn--run:hover:not(:disabled) {
+.libre-inline-sandbox-btn--run:hover:not(:disabled) {
   opacity: 0.9;
 }
 
-.fishbones-inline-sandbox-btn:disabled {
+.libre-inline-sandbox-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
@@ -90,14 +90,14 @@
    wrapper. The inset background mirrors the dark theme's canvas so
    the wrapper isn't visible as a different color stripe at the
    edges. */
-.fishbones-inline-sandbox-editor {
+.libre-inline-sandbox-editor {
   background: var(--color-bg-primary);
   padding: 0 12px;
 }
 
 /* Output strip — mono font, dim backdrop, tight padding. Renders below
    the editor the first time the learner clicks Run. */
-.fishbones-inline-sandbox-output {
+.libre-inline-sandbox-output {
   padding: 8px 12px;
   background: var(--color-bg-primary);
   border-top: 1px solid var(--color-border-default);
@@ -109,20 +109,20 @@
   overflow-y: auto;
 }
 
-.fishbones-inline-sandbox-out-hint {
+.libre-inline-sandbox-out-hint {
   color: var(--color-text-tertiary);
   font-style: italic;
 }
 
-.fishbones-inline-sandbox-out-line {
+.libre-inline-sandbox-out-line {
   white-space: pre-wrap;
   word-break: break-word;
 }
 
-.fishbones-inline-sandbox-out-line--warn { color: #d9a800; }
-.fishbones-inline-sandbox-out-line--error { color: #ef6f6f; }
+.libre-inline-sandbox-out-line--warn { color: #d9a800; }
+.libre-inline-sandbox-out-line--error { color: #ef6f6f; }
 
-.fishbones-inline-sandbox-out-error {
+.libre-inline-sandbox-out-error {
   margin: 4px 0;
   padding: 6px 8px;
   background: rgba(239, 111, 111, 0.08);

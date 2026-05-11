@@ -3,19 +3,19 @@
 /// course adapted from Karl Seguin's free "Learning Zig" book
 /// (https://www.openmymind.net/learning_zig/) with substantial
 /// expansion: extra exercises, quizzes, and lesson scaffolding tuned
-/// for the Fishbones lesson kinds.
+/// for the Libre lesson kinds.
 ///
 /// We adapt and rewrite Karl's structure rather than copy verbatim:
 ///   - All prose is rephrased / reorganised. Where a Karl example is
 ///     particularly clear, the snippet is kept and clearly attributed.
-///   - Exercise harnesses use Fishbones' KATA_TEST stdout protocol so
+///   - Exercise harnesses use Libre' KATA_TEST stdout protocol so
 ///     they run via `zig run` on the host (no separate `zig test`
 ///     pass needed). See src/runtimes/nativeRunners.ts::parseKataTests.
 ///
 /// Run:  node scripts/build-learning-zig.mjs
 ///
 /// Output: public/starter-courses/learning-zig.json (course.json shape).
-/// Pack into a .fishbones archive separately (zip course.json + cover.png).
+/// Pack into a .libre archive separately (zip course.json + cover.png).
 
 import { writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -389,10 +389,10 @@ zig version
 You should see something like \`0.16.0\`. **This course targets Zig 0.16+** — that's the line carrying the I/O overhaul (\`std.fs.File.stdout()\` instead of \`std.io.getStdOut()\`) and the unmanaged \`ArrayList\` defaults that the lessons rely on. If \`zig\` isn't found, your \`PATH\` change probably hasn't reached the current shell; open a new terminal.
 
 > [!WARNING]
-> Older Zig versions (0.13 and earlier) used a noticeably different stdio API and a managed \`ArrayList\` that stored its allocator. The Fishbones runtime ships test harnesses written for the 0.16 form. Upgrade if you're stuck on an older toolchain — \`brew upgrade zig\` or grab the latest tarball.
+> Older Zig versions (0.13 and earlier) used a noticeably different stdio API and a managed \`ArrayList\` that stored its allocator. The Libre runtime ships test harnesses written for the 0.16 form. Upgrade if you're stuck on an older toolchain — \`brew upgrade zig\` or grab the latest tarball.
 
 > [!TIP]
-> The Fishbones desktop app shells out to the \`zig\` on your \`PATH\` every time you press *Run*. If \`zig version\` works in your terminal, the editor will find it too.
+> The Libre desktop app shells out to the \`zig\` on your \`PATH\` every time you press *Run*. If \`zig version\` works in your terminal, the editor will find it too.
 
 ## What you got
 
@@ -5063,7 +5063,7 @@ That's enough to ship real Zig code. Where to go next:
 
 ## Practice
 
-The Fishbones library includes the **Zig Challenges** pack — eleven hand-written kata that exercise the basics in tighter form. Same KATA_TEST harness as this course.
+The Libre library includes the **Zig Challenges** pack — eleven hand-written kata that exercise the basics in tighter form. Same KATA_TEST harness as this course.
 
 ## Read
 
@@ -5095,7 +5095,7 @@ Welcome to Zig. Now go write something.`,
 const course = {
   id: "learning-zig",
   title: "Learning Zig",
-  author: "Karl Seguin (adapted by Fishbones)",
+  author: "Karl Seguin (adapted by Libre)",
   language: "zig",
   packType: "course",
   releaseStatus: "ALPHA",

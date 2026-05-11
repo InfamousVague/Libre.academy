@@ -5,7 +5,7 @@
 /// The desktop App.tsx short-circuits to <MobileApp /> when the
 /// `isMobile` predicate fires, so we don't pay for any of the
 /// desktop chrome on phone-sized devices. Reuses the same hooks
-/// (`useCourses`, `useProgress`, `useFishbonesCloud`, `useStreakAndXp`)
+/// (`useCourses`, `useProgress`, `useLibreCloud`, `useStreakAndXp`)
 /// so progress, streak/XP, and account state flow through the existing
 /// storage and relay backends without per-platform branches.
 
@@ -19,7 +19,7 @@ import {
 } from "react";
 import { useCourses } from "../hooks/useCourses";
 import { useProgress } from "../hooks/useProgress";
-import { useFishbonesCloud } from "../hooks/useFishbonesCloud";
+import { useLibreCloud } from "../hooks/useLibreCloud";
 import { useRealtimeSync } from "../hooks/useRealtimeSync";
 import { useStreakAndXp } from "../hooks/useStreakAndXp";
 import { useWidgetSnapshot } from "./useWidgetSnapshot";
@@ -44,7 +44,7 @@ import MobileSearchPalette from "./MobileSearchPalette";
 import SignInDialog from "../components/dialogs/SignInDialog/SignInDialog";
 import MobileTabBar, { type MobileTab } from "../components/MobileTabBar/MobileTabBar";
 import AiAssistant from "../components/AiAssistant/AiAssistant";
-import FishbonesLoader from "../components/Shared/FishbonesLoader";
+import LibreLoader from "../components/Shared/LibreLoader";
 import "./MobileApp.css";
 
 type View =
@@ -65,7 +65,7 @@ export default function MobileApp() {
   const { courses: coursesAll, loaded, hydrateCourse } = useCourses();
   const { completed, history, markCompleted, markCompletedBatch, resetProgress } =
     useProgress();
-  const cloud = useFishbonesCloud();
+  const cloud = useLibreCloud();
 
   /// Cross-device library allowlist. Hydrated from localStorage on
   /// mount (so a cold-start before the cloud round-trips still shows
@@ -86,11 +86,11 @@ export default function MobileApp() {
   /// Library-marker-derived allowlist. Updated by the progress
   /// apply path whenever a marker row arrives from the relay. Lets
   /// desktop's installed-library list propagate even when the
-  /// `/fishbones/settings` endpoint isn't deployed (the marker
-  /// rows ride the always-available `/fishbones/progress` endpoint
+  /// `/libre/settings` endpoint isn't deployed (the marker
+  /// rows ride the always-available `/libre/progress` endpoint
   /// instead). Persisted to localStorage so a cold-start before
   /// the next pull settles still shows the right library.
-  const SYNCED_LIBRARY_KEY = "fishbones.library.markers.v1";
+  const SYNCED_LIBRARY_KEY = "libre.library.markers.v1";
   const [syncedLibraryIds, setSyncedLibraryIds] = useState<Set<string> | null>(
     () => {
       try {
@@ -109,7 +109,7 @@ export default function MobileApp() {
   /// Visible course list. Three signals, in priority order:
   ///
   ///   1. **Library markers** — sentinel rows desktop pushes to
-  ///      `/fishbones/progress` carrying its installed-course-id
+  ///      `/libre/progress` carrying its installed-course-id
   ///      list. AUTHORITATIVE when present: desktop owns the
   ///      library (mobile has no Discover catalog), so seeing
   ///      markers means "show exactly these courses, hide the
@@ -117,7 +117,7 @@ export default function MobileApp() {
   ///      bundled books but desktop has only installed 11 of them.
   ///
   ///   2. **Settings allowlist** — the legacy path, populated by
-  ///      `applySettings` when the relay's `/fishbones/settings`
+  ///      `applySettings` when the relay's `/libre/settings`
   ///      endpoint is deployed. Several relay deployments 404 on
   ///      this; markers (above) cover that gap.
   ///
@@ -376,7 +376,7 @@ export default function MobileApp() {
 
   // Hand off from index.html's inline preloader to our React loader.
   // Runs in a layout-effect (post-DOM-mutate, pre-paint) so the inline
-  // preloader fades exactly when `<FishbonesLoader>` is on screen —
+  // preloader fades exactly when `<LibreLoader>` is on screen —
   // no black gap on cold-start. Safe to run once; the safety timeout
   // in main.tsx is a no-op if we got here first.
   useLayoutEffect(() => {
@@ -499,7 +499,7 @@ export default function MobileApp() {
     <div className="m-app">
       {!loaded && (
         <div className="m-app__boot">
-          <FishbonesLoader label="loading" />
+          <LibreLoader label="loading" />
         </div>
       )}
 

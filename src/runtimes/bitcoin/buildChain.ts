@@ -106,12 +106,12 @@ function fromHex(hex: string): Uint8Array {
 function deriveAccounts(): BitcoinAccount[] {
   const accounts: BitcoinAccount[] = [];
   for (let i = 0; i < ACCOUNT_COUNT; i++) {
-    // 32-byte deterministic key: sha256("fishbones-btc-account-<i>").
+    // 32-byte deterministic key: sha256("libre-btc-account-<i>").
     // Not BIP32 — we don't need hierarchical derivation for the
     // pre-funded learner set, and going through HD would force
     // every test to pin a specific path. Plain SHA256(label) gives
     // us 10 stable keys with zero conceptual baggage.
-    const label = new TextEncoder().encode(`fishbones-btc-account-${i}`);
+    const label = new TextEncoder().encode(`libre-btc-account-${i}`);
     const privateKey = sha256(label);
     const publicKey = secp256k1.getPublicKey(privateKey, true);
     const pubkeyHash = hash160(publicKey);
@@ -294,7 +294,7 @@ function fundGenesis(state: ChainState): void {
     state.utxos.set(utxoKey(txid, 0), utxo);
   }
   state.height = 0;
-  state.tipHash = sha256(new TextEncoder().encode("fishbones-btc-genesis"));
+  state.tipHash = sha256(new TextEncoder().encode("libre-btc-genesis"));
   state.revision = 1;
 }
 

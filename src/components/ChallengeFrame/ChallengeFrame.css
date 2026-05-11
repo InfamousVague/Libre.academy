@@ -4,7 +4,7 @@
  * use the existing card surface tokens so it nests with the
  * sidebar / lesson chrome without inventing a new colour. */
 
-.fishbones-challenge-frame {
+.libre-challenge-frame {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -31,7 +31,7 @@
     0 2px 8px rgba(160, 130, 220, 0.08);
 }
 
-.fishbones-challenge-frame__lead {
+.libre-challenge-frame__lead {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -42,7 +42,7 @@
  * BookCover uses for the "Challenges" tag, so a learner who recognises
  * the badge in the Library sees the same icon at the top of every
  * challenge lesson. */
-.fishbones-challenge-frame__icon {
+.libre-challenge-frame__icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -54,7 +54,7 @@
   color: rgba(190, 165, 240, 0.9);
 }
 
-.fishbones-challenge-frame__title {
+.libre-challenge-frame__title {
   color: var(--color-text-primary);
   font-weight: 600;
   letter-spacing: -0.005em;
@@ -63,14 +63,14 @@
   text-overflow: ellipsis;
 }
 
-.fishbones-challenge-frame__meta {
+.libre-challenge-frame__meta {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
 }
 
-.fishbones-challenge-frame__topic {
+.libre-challenge-frame__topic {
   padding: 2px 8px;
   border-radius: var(--fb-radius-pill);
   background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.04));
@@ -80,7 +80,7 @@
   letter-spacing: -0.005em;
 }
 
-.fishbones-challenge-frame__pill {
+.libre-challenge-frame__pill {
   padding: 2px 10px;
   border-radius: var(--fb-radius-pill);
   font-size: 10.5px;
@@ -92,20 +92,20 @@
 /* Difficulty palette — same hues the Library uses for its
  * difficulty dots, so the Library badge and the in-lesson pill
  * read as the same vocabulary. */
-.fishbones-challenge-frame__pill--easy {
+.libre-challenge-frame__pill--easy {
   background: rgba(120, 200, 130, 0.16);
   color: rgb(150, 220, 160);
 }
-.fishbones-challenge-frame__pill--medium {
+.libre-challenge-frame__pill--medium {
   background: rgba(230, 190, 110, 0.16);
   color: rgb(240, 200, 130);
 }
-.fishbones-challenge-frame__pill--hard {
+.libre-challenge-frame__pill--hard {
   background: rgba(230, 110, 110, 0.16);
   color: rgb(240, 130, 130);
 }
 
-.fishbones-challenge-frame__position {
+.libre-challenge-frame__position {
   font-variant-numeric: tabular-nums;
   font-size: 11px;
   color: var(--color-text-tertiary);

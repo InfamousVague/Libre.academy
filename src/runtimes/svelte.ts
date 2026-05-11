@@ -57,7 +57,7 @@ function buildPreviewHtml(svelteSource: string): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-  <title>Fishbones — Svelte 5 preview</title>
+  <title>Libre — Svelte 5 preview</title>
   <style>
     html, body, #app { margin: 0; padding: 0; height: 100%; width: 100%; }
     body {
@@ -66,7 +66,7 @@ function buildPreviewHtml(svelteSource: string): string {
       color: #f5f5f7;
       -webkit-font-smoothing: antialiased;
     }
-    #__fishbones_error {
+    #__libre_error {
       position: fixed; inset: 0;
       padding: 24px;
       background: #1a0b0f;
@@ -76,7 +76,7 @@ function buildPreviewHtml(svelteSource: string): string {
       overflow: auto;
       z-index: 999;
     }
-    #__fishbones_boot {
+    #__libre_boot {
       position: fixed; inset: 0;
       display: flex; align-items: center; justify-content: center;
       padding: 24px;
@@ -89,23 +89,23 @@ function buildPreviewHtml(svelteSource: string): string {
   </style>
 </head>
 <body>
-  <div id="__fishbones_boot">booting svelte preview…</div>
+  <div id="__libre_boot">booting svelte preview…</div>
   <div id="app"></div>
   <script type="module">
     function showError(label, err) {
       var name = err && err.name ? err.name : "Error";
       var msg = err && err.message ? err.message : String(err);
       var stack = err && err.stack ? err.stack : "(no stack)";
-      var pre = document.getElementById("__fishbones_error");
+      var pre = document.getElementById("__libre_error");
       if (!pre) {
         pre = document.createElement("pre");
-        pre.id = "__fishbones_error";
+        pre.id = "__libre_error";
         document.body.appendChild(pre);
       }
       pre.textContent = "[" + label + "] " + name + ": " + msg + "\\n\\n" + stack;
     }
     function bootStage(text) {
-      var el = document.getElementById("__fishbones_boot");
+      var el = document.getElementById("__libre_boot");
       if (el) el.textContent = text;
     }
     window.addEventListener("error", (e) => {
@@ -242,7 +242,7 @@ function buildPreviewHtml(svelteSource: string): string {
 
       try {
         mount(App, { target: document.getElementById("app") });
-        const boot = document.getElementById("__fishbones_boot");
+        const boot = document.getElementById("__libre_boot");
         if (boot) boot.remove();
       } catch (err) {
         showError("mount", err);

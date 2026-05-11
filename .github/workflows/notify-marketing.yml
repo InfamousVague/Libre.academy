@@ -3,17 +3,17 @@ name: Notify mattssoftware to rebuild
 # Cross-repo trigger: when this repo's main branch changes, fire a
 # `repository_dispatch` at InfamousVague/mattssoftware so its deploy
 # workflow re-runs and picks up the new web build. Without this,
-# Fishbones updates wouldn't show up at mattssoftware.com/fishbones/learn/
+# Libre updates wouldn't show up at mattssoftware.com/libre/learn/
 # until either someone pushed to the marketing repo or the nightly
 # schedule fired.
 #
 # ─── One-time setup required ───────────────────────────────────────
 # Create a Personal Access Token (fine-grained, scoped to the
 # `mattssoftware` repo with `Actions: write` permission) and add it
-# to THIS repo (Fishbones) as a secret named MARKETING_DISPATCH_TOKEN.
+# to THIS repo (Libre) as a secret named MARKETING_DISPATCH_TOKEN.
 #
 #   gh secret set MARKETING_DISPATCH_TOKEN \
-#     --repo InfamousVague/Fishbones \
+#     --repo InfamousVague/Libre \
 #     --body "<your-PAT>"
 #
 # The default GITHUB_TOKEN can't dispatch into other repos, so the
@@ -54,14 +54,14 @@ jobs:
             exit 0
           fi
           # The event_type is matched by the marketing repo's
-          # `repository_dispatch:` listener (`fishbones-updated`).
+          # `repository_dispatch:` listener (`libre-updated`).
           # Payload carries the head SHA so the marketing logs
           # show which commit triggered the rebuild.
           gh api \
             --method POST \
             -H "Accept: application/vnd.github+json" \
             /repos/InfamousVague/mattssoftware/dispatches \
-            -f event_type=fishbones-updated \
-            -f 'client_payload[fishbones_sha]=${{ github.sha }}' \
-            -f 'client_payload[fishbones_ref]=${{ github.ref_name }}'
-          echo "Dispatched fishbones-updated to InfamousVague/mattssoftware (sha=${{ github.sha }})"
+            -f event_type=libre-updated \
+            -f 'client_payload[libre_sha]=${{ github.sha }}' \
+            -f 'client_payload[libre_ref]=${{ github.ref_name }}'
+          echo "Dispatched libre-updated to InfamousVague/mattssoftware (sha=${{ github.sha }})"

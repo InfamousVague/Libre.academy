@@ -1,4 +1,4 @@
-// Tip-jar trigger + floating deck panel for the Fishbones desktop /
+// Tip-jar trigger + floating deck panel for the Libre desktop /
 // web app. Mirrors the CryptoTipDock that lives on
 // libre.academy/support: trigger pill in the TopBar opens a
 // chrome-less floating panel anchored top-right of the trigger,
@@ -7,7 +7,7 @@
 // all rotate the deck around an `activeIdx` with wrap-around. Click
 // anywhere outside (or press Escape) closes the panel.
 //
-// Sister implementation: see Web/fishbones-academy/src/components/
+// Sister implementation: see Web/libre-academy/src/components/
 // CryptoSupport.tsx — keep the visual / behavioural contract aligned
 // when changing one. Addresses are placeholders (REPLACE_WITH_*) for
 // Matt to swap before any real release.
@@ -189,7 +189,7 @@ function QrCode({ value, size = 116 }: { value: string; size?: number }) {
 
   return (
     <svg
-      className="fishbones__tip-card-qr-svg"
+      className="libre__tip-card-qr-svg"
       viewBox={`0 0 ${total} ${total}`}
       width={size}
       height={size}
@@ -256,7 +256,7 @@ function TipCard({ method, depth, isActive, onSelect }: TipCardProps) {
 
   return (
     <article
-      className="fishbones__tip-card"
+      className="libre__tip-card"
       data-id={method.id}
       data-depth={depth}
       data-active={isActive ? "" : undefined}
@@ -276,10 +276,10 @@ function TipCard({ method, depth, isActive, onSelect }: TipCardProps) {
           : undefined
       }
     >
-      <div className="fishbones__tip-card-main">
-        <header className="fishbones__tip-card-head">
+      <div className="libre__tip-card-main">
+        <header className="libre__tip-card-head">
           <div
-            className="fishbones__tip-card-badge"
+            className="libre__tip-card-badge"
             style={{
               background: method.background,
               color: method.foreground ?? "#FFFFFF",
@@ -288,20 +288,20 @@ function TipCard({ method, depth, isActive, onSelect }: TipCardProps) {
           >
             {method.icon}
           </div>
-          <h3 className="fishbones__tip-card-title">
+          <h3 className="libre__tip-card-title">
             {method.name}
-            <span className="fishbones__tip-card-title-dot">.</span>
+            <span className="libre__tip-card-title-dot">.</span>
           </h3>
         </header>
 
-        <div className="fishbones__tip-card-bottom">
-          <div className="fishbones__tip-card-meta">
-            <span className="fishbones__tip-card-meta-label">{method.ticker}</span>
-            <span className="fishbones__tip-card-meta-sep" aria-hidden>·</span>
-            <span className="fishbones__tip-card-meta-value">{method.network}</span>
+        <div className="libre__tip-card-bottom">
+          <div className="libre__tip-card-meta">
+            <span className="libre__tip-card-meta-label">{method.ticker}</span>
+            <span className="libre__tip-card-meta-sep" aria-hidden>·</span>
+            <span className="libre__tip-card-meta-value">{method.network}</span>
           </div>
           <span
-            className="fishbones__tip-card-addr"
+            className="libre__tip-card-addr"
             aria-label={`${method.name} address on ${method.network}`}
           >
             {method.address}
@@ -309,13 +309,13 @@ function TipCard({ method, depth, isActive, onSelect }: TipCardProps) {
         </div>
       </div>
 
-      <div className="fishbones__tip-card-strip">
-        <div className="fishbones__tip-card-qr">
+      <div className="libre__tip-card-strip">
+        <div className="libre__tip-card-qr">
           <QrCode value={method.address} />
         </div>
         <button
           type="button"
-          className="fishbones__tip-card-copy"
+          className="libre__tip-card-copy"
           onClick={(e) => {
             // The article has its own click handler for inactive cards
             // (bring-to-front). When the active card's Copy button is
@@ -442,44 +442,44 @@ export default function TipDropdown({
 
   return (
     <div
-      className="fishbones__tip-wrap"
+      className="libre__tip-wrap"
       ref={wrapRef}
       data-tauri-drag-region={false}
     >
       <button
         ref={triggerRef}
         type="button"
-        className={`fishbones__tip-trigger ${
-          open ? "fishbones__tip-trigger--open" : ""
+        className={`libre__tip-trigger ${
+          open ? "libre__tip-trigger--open" : ""
         }`}
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="dialog"
-        title="Support fishbones"
+        title="Support libre"
       >
         {/* The Icon component only accepts the semantic IconColor enum,
             so we paint the heart red by setting `color` on a wrapping
             span — the icon's `currentColor` fill picks it up without
             affecting the adjacent label. */}
         <span
-          className="fishbones__tip-trigger-heart"
+          className="libre__tip-trigger-heart"
           style={{ color: "#ef4444", display: "inline-flex" }}
           aria-hidden
         >
           <Icon icon={heart} size="xs" color="currentColor" />
         </span>
-        <span className="fishbones__tip-trigger-label">Support</span>
+        <span className="libre__tip-trigger-label">Support</span>
       </button>
 
       {open && (
         <div
-          className="fishbones__tip-panel"
+          className="libre__tip-panel"
           role="dialog"
           aria-label="Send a tip"
         >
           <div
             ref={stackRef}
-            className="fishbones__tip-stack"
+            className="libre__tip-stack"
             style={{ "--deck-size": methods.length } as CSSProperties}
             aria-roledescription="card stack"
           >

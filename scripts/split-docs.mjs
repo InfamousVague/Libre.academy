@@ -5,7 +5,7 @@
 /// `SECTION` constant that the new `index.ts` assembles.
 ///
 /// Layout after split:
-///   src/docs/pages/index.ts              — assembles sections, exports FISHBONES_DOCS + FISHBONES_DOCS_INDEX
+///   src/docs/pages/index.ts              — assembles sections, exports LIBRE_DOCS + LIBRE_DOCS_INDEX
 ///   src/docs/pages/getting-started.ts    — welcome / installing / firstCourse
 ///   src/docs/pages/architecture.ts       — archOverview / tauriBackend / reactFrontend
 ///   src/docs/pages/courses.ts            — courseFormat / bundledPacks
@@ -36,7 +36,7 @@ const SECTIONS = [
     title: "Getting started",
     file: "getting-started.ts",
     pages: [
-      { c: "welcome", id: "welcome", title: "Welcome to Fishbones", tagline: "What this app is and what to expect" },
+      { c: "welcome", id: "welcome", title: "Welcome to Libre", tagline: "What this app is and what to expect" },
       { c: "installing", id: "installing", title: "Installing", tagline: "Dev setup, building a release" },
       { c: "firstCourse", id: "first-course", title: "Your first course", tagline: "The 5-minute tour" },
     ],
@@ -56,7 +56,7 @@ const SECTIONS = [
     title: "Course system",
     file: "courses.ts",
     pages: [
-      { c: "courseFormat", id: "course-format", title: "The course format", tagline: ".fishbones, course.json, lesson kinds" },
+      { c: "courseFormat", id: "course-format", title: "The course format", tagline: ".libre, course.json, lesson kinds" },
       { c: "bundledPacks", id: "bundled-packs", title: "Bundled packs", tagline: "First-launch seeding + the marker file" },
     ],
   },
@@ -153,22 +153,22 @@ const indexOut = `/// Public surface for documentation pages.
 ///
 /// The original monolithic \`src/docs/pages.ts\` was split into one
 /// file per section (\`getting-started.ts\`, \`architecture.ts\`, ...).
-/// The shape of \`FISHBONES_DOCS\` and \`FISHBONES_DOCS_INDEX\` is
+/// The shape of \`LIBRE_DOCS\` and \`LIBRE_DOCS_INDEX\` is
 /// unchanged from the pre-split monolith — downstream code can keep
 /// importing from \`../docs/pages\` (the shim in pages.ts forwards).
 
 import type { DocsSection } from "../types";
 ${SECTIONS.map((s) => `import { ${s.id.replace(/-/g, "_").toUpperCase()}_SECTION } from "./${s.file.replace(".ts", "")}";`).join("\n")}
 
-export const FISHBONES_DOCS: DocsSection[] = [
+export const LIBRE_DOCS: DocsSection[] = [
 ${SECTIONS.map((s) => `  ${s.id.replace(/-/g, "_").toUpperCase()}_SECTION,`).join("\n")}
 ];
 
 /// Flat lookup index keyed by page id for routing.
-export const FISHBONES_DOCS_INDEX: ReadonlyMap<string, { section: DocsSection; pageIndex: number }> =
+export const LIBRE_DOCS_INDEX: ReadonlyMap<string, { section: DocsSection; pageIndex: number }> =
   (() => {
     const m = new Map<string, { section: DocsSection; pageIndex: number }>();
-    for (const section of FISHBONES_DOCS) {
+    for (const section of LIBRE_DOCS) {
       section.pages.forEach((p, i) => m.set(p.id, { section, pageIndex: i }));
     }
     return m;

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /// Ingest the official Svelte tutorial (https://svelte.dev/tutorial)
-/// into a Fishbones course.
+/// into a Libre course.
 ///
 /// Source-of-truth: the markdown + asset directories under
 /// `apps/svelte.dev/content/tutorial/` in the public `sveltejs/svelte.dev`
@@ -21,11 +21,11 @@
 ///     no exercise to do, just prose to read (intros, "next steps",
 ///     etc.).
 ///
-/// Fishbones-side conventions:
+/// Libre-side conventions:
 ///   - 4 sections (Basic Svelte / Advanced Svelte / Basic SvelteKit /
 ///     Advanced SvelteKit) become 4 separate courses under one course
 ///     id each.
-///   - Each tutorial chapter (numbered subfolder) becomes a Fishbones
+///   - Each tutorial chapter (numbered subfolder) becomes a Libre
 ///     chapter; lessons under it are flat.
 ///   - SvelteKit sections are kept but every lesson is forced to
 ///     `kind: "reading"` — the in-browser Svelte runtime ships
@@ -54,7 +54,7 @@ const APP_SUPPORT = join(
   "Library/Application Support/com.mattssoftware.kata/courses",
 );
 
-/// One Fishbones course covering the entire upstream tutorial. The 4
+/// One Libre course covering the entire upstream tutorial. The 4
 /// upstream "books" (Basic / Advanced Svelte, Basic / Advanced
 /// SvelteKit) become 4 SECTIONS within this single course; each
 /// section's tutorial chapters get prefixed with the section label
@@ -64,7 +64,7 @@ const COURSE = {
   id: "svelte-tutorial",
   title: "Svelte Tutorial",
   description:
-    "The complete official Svelte tutorial — Basic Svelte, Advanced Svelte, Basic SvelteKit, and Advanced SvelteKit — collected into one course. Svelte sections are runnable exercises; SvelteKit sections are reading-only because Fishbones' Svelte runtime is CSR-only and can't host server endpoints.",
+    "The complete official Svelte tutorial — Basic Svelte, Advanced Svelte, Basic SvelteKit, and Advanced SvelteKit — collected into one course. Svelte sections are runnable exercises; SvelteKit sections are reading-only because Libre' Svelte runtime is CSR-only and can't host server endpoints.",
   author: "Svelte tutorial (svelte.dev)",
   language: "svelte",
 };
@@ -83,7 +83,7 @@ const SECTIONS = [
     runnable: true,
   },
   {
-    // SvelteKit sections are now runnable too — Fishbones ships a
+    // SvelteKit sections are now runnable too — Libre ships a
     // Node-backed runner that scaffolds a real SvelteKit project on
     // disk and runs `vite dev` in the background per lesson. See
     // src-tauri/src/sveltekit_runner.rs for the lifecycle.
@@ -128,7 +128,7 @@ function stripDiffMarkers(md) {
 }
 
 /// Walk the `+assets/<which>/` tree and gather files into a flat list
-/// of `{ name, language, content }` entries the Fishbones workbench
+/// of `{ name, language, content }` entries the Libre workbench
 /// expects. Names are flattened to the tail (e.g. `App.svelte` not
 /// `src/lib/App.svelte`) since the runtime picks the first .svelte
 /// file by name. Multi-component lessons keep their relative paths

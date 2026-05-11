@@ -71,7 +71,7 @@ export function useToolchainStatus(language: string, cacheBust: number = 0) {
       })
       .catch((e) => {
         if (!cancelled) {
-          console.warn("[fishbones] probe_language_toolchain failed:", e);
+          console.warn("[libre] probe_language_toolchain failed:", e);
           setStatus(null);
           setLoading(false);
         }

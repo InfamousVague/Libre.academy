@@ -134,7 +134,7 @@ export function QrScanner({ onResult, onCancel, title, hint }: Props) {
         // useful than the raw class name for the inline UI.
         const friendly =
           e instanceof DOMException && e.name === "NotAllowedError"
-            ? "Camera permission denied. Allow camera access in iOS Settings → Fishbones → Camera, then re-open the scanner."
+            ? "Camera permission denied. Allow camera access in iOS Settings → Libre → Camera, then re-open the scanner."
             : msg;
         setError(friendly);
       }

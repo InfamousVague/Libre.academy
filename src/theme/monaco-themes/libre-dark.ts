@@ -4,13 +4,13 @@
 
 import type { editor } from "monaco-editor";
 
-// ---- Fishbones Dark ------------------------------------------------------------
-// The default Fishbones theme rendered in Monaco. Stays true to the "monochrome
+// ---- Libre Dark ------------------------------------------------------------
+// The default Libre theme rendered in Monaco. Stays true to the "monochrome
 // glass" brief — 95% grayscale with one subtle warm amber accent reserved
 // for literals (strings / numbers / regex) so code is still scannable. Base
 // colors map 1:1 to tokens.css so the editor background is literally the
 // same hex as the app's `--color-bg-primary`.
-export const FISHBONES_DARK: editor.IStandaloneThemeData = {
+export const LIBRE_DARK: editor.IStandaloneThemeData = {
   base: "vs-dark",
   inherit: true,
   rules: [

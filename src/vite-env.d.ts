@@ -4,12 +4,12 @@
 /// `src/lib/platform.ts` to expose `isWeb` / `isDesktop` everywhere.
 /// Values: "desktop" (Tauri shell, default) | "web" (mattssoftware.com/play).
 interface ImportMetaEnv {
-  readonly FISHBONES_TARGET?: "desktop" | "web";
+  readonly LIBRE_TARGET?: "desktop" | "web";
   /// Cloud-relay base URL. Hosted dev override that bypasses the
   /// production VPS (`api.mattssoftware.com`). Read by
-  /// `useFishbonesCloud`'s `envRelayUrl()`. Optional — if unset,
+  /// `useLibreCloud`'s `envRelayUrl()`. Optional — if unset,
   /// the hook falls back to the production default.
-  readonly VITE_FISHBONES_RELAY_URL?: string;
+  readonly VITE_LIBRE_RELAY_URL?: string;
   /// CDN base for pre-generated lesson narration MP3s. Read by
   /// `useLessonAudio`. Optional — defaults to `https://libre.academy/audio`.
   readonly VITE_FB_TTS_CDN_BASE?: string;

@@ -19,7 +19,7 @@
 //!
 //!   3. **Tracing log fallback** — when neither is configured (or a
 //!      send fails) we emit a `tracing::warn!` with the rendered body
-//!      so the URL still shows up in `journalctl -u fishbones-api`.
+//!      so the URL still shows up in `journalctl -u libre-api`.
 //!      The user / admin can copy it manually for testing or recovery.
 //!
 //! The handler shouldn't care which backend ran. Every branch returns

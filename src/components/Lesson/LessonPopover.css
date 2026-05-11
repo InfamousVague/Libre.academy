@@ -4,7 +4,7 @@
    for symbols and "example" purple for glossary terms so the two kinds
    are visually distinct at a glance. */
 
-.fishbones-popover {
+.libre-popover {
   position: fixed;
   z-index: 140;
   min-width: 220px;
@@ -24,22 +24,22 @@
   transition: opacity var(--fb-motion-quick)-out;
 }
 
-.fishbones-popover--symbol {
+.libre-popover--symbol {
   border-top: 2px solid #7cc1d9; /* cyan: info / reference */
 }
 
-.fishbones-popover--term {
+.libre-popover--term {
   border-top: 2px solid #c79bff; /* purple: glossary */
 }
 
-.fishbones-popover-heading {
+.libre-popover-heading {
   font-size: 13px;
   font-weight: 700;
   color: var(--color-text-primary);
   letter-spacing: -0.005em;
 }
 
-.fishbones-popover-signature {
+.libre-popover-signature {
   font-family: "SF Mono", ui-monospace, Menlo, monospace;
   font-size: 11.5px;
   color: var(--color-text-secondary);
@@ -51,13 +51,13 @@
   margin: 2px 0;
 }
 
-.fishbones-popover-body {
+.libre-popover-body {
   font-size: 12px;
   line-height: 1.5;
   color: var(--color-text-secondary);
 }
 
-.fishbones-popover-doclink {
+.libre-popover-doclink {
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
@@ -74,14 +74,14 @@
   text-align: left;
 }
 
-.fishbones-popover-doclink-icon {
+.libre-popover-doclink-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   line-height: 0;
 }
 
-.fishbones-popover-doclink:hover {
+.libre-popover-doclink:hover {
   color: var(--color-text-primary);
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -90,39 +90,39 @@
 /* Inline triggers — the bits the popover anchors to. Keep them close
    to plain text by default and only add flair on hover so prose stays
    readable when the learner is just scanning. */
-.fishbones-inline-symbol {
+.libre-inline-symbol {
   /* Inherits the monospace + tertiary-bg treatment from the generic
-     `.fishbones-reader-body code` rule. We only add a hover affordance
+     `.libre-reader-body code` rule. We only add a hover affordance
      and a subtle bottom border so it reads as a popover trigger. */
   cursor: help;
   border-bottom: 1px dotted rgba(124, 193, 217, 0.5);
 }
 
-.fishbones-inline-symbol:hover {
+.libre-inline-symbol:hover {
   background: rgba(124, 193, 217, 0.12) !important;
   border-bottom-color: #7cc1d9;
   color: var(--color-text-primary);
 }
 
-.fishbones-inline-term {
+.libre-inline-term {
   cursor: help;
   border-bottom: 1px dotted rgba(199, 155, 255, 0.5);
   transition: border-color var(--fb-motion-snappy), color var(--fb-motion-snappy);
 }
 
-.fishbones-inline-term:hover {
+.libre-inline-term:hover {
   border-bottom-color: #c79bff;
   color: var(--color-text-primary);
 }
 
 /* Light-theme overrides — the semi-transparent darks become more opaque. */
-[data-theme-name="ayu-light"] .fishbones-inline-symbol,
-[data-theme-name="ayu-light"] .fishbones-inline-symbol,
-[data-theme-name="catppuccin-latte"] .fishbones-inline-symbol {
+[data-theme-name="ayu-light"] .libre-inline-symbol,
+[data-theme-name="ayu-light"] .libre-inline-symbol,
+[data-theme-name="catppuccin-latte"] .libre-inline-symbol {
   border-bottom-color: rgba(2, 122, 159, 0.5);
 }
-[data-theme-name="ayu-light"] .fishbones-inline-term,
-[data-theme-name="ayu-light"] .fishbones-inline-term,
-[data-theme-name="catppuccin-latte"] .fishbones-inline-term {
+[data-theme-name="ayu-light"] .libre-inline-term,
+[data-theme-name="ayu-light"] .libre-inline-term,
+[data-theme-name="catppuccin-latte"] .libre-inline-term {
   border-bottom-color: rgba(136, 83, 194, 0.5);
 }

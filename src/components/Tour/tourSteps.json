@@ -1,20 +1,20 @@
 {
-  "tour_id": "fishbones-onboarding-v1",
+  "tour_id": "libre-onboarding-v1",
   "steps": [
     {
       "id": "welcome",
       "page": "library",
-      "target": ".fishbones-nav-rail",
+      "target": ".libre-nav-rail",
       "placement": "right",
       "icon": "sparkles",
       "iconColor": "#a78bfa",
-      "title": "Welcome to Fishbones",
-      "body": "Fishbones turns programming books into runnable lessons. The rail on the left is home base — Library, Discover, Trees, and Playground. Let's walk through the parts of the app that aren't obvious."
+      "title": "Welcome to Libre",
+      "body": "Libre turns programming books into runnable lessons. The rail on the left is home base — Library, Discover, Trees, and Playground. Let's walk through the parts of the app that aren't obvious."
     },
     {
       "id": "library",
       "page": "library",
-      "target": ".fishbones-library-grid",
+      "target": ".libre-library-grid",
       "placement": "top",
       "icon": "library-big",
       "iconColor": "#d4c5a1",
@@ -24,7 +24,7 @@
     {
       "id": "sidebar",
       "page": "courses",
-      "target": ".fishbones__sidebar",
+      "target": ".libre__sidebar",
       "placement": "right",
       "icon": "list-tree",
       "iconColor": "#7fc8ff",
@@ -44,7 +44,7 @@
     {
       "id": "editor",
       "page": "courses",
-      "target": ".fishbones-editor",
+      "target": ".libre-editor",
       "placement": "left",
       "icon": "terminal",
       "iconColor": "#22c55e",
@@ -54,7 +54,7 @@
     {
       "id": "blocks",
       "page": "courses",
-      "target": ".fishbones-editor-mode",
+      "target": ".libre-editor-mode",
       "placement": "bottom",
       "icon": "blocks",
       "iconColor": "#f59e0b",
@@ -64,7 +64,7 @@
     {
       "id": "trees",
       "page": "tracks",
-      "target": ".fishbones-trees__section--tracks",
+      "target": ".libre-trees__section--tracks",
       "placement": "bottom",
       "icon": "trees",
       "iconColor": "#22c55e",
@@ -74,7 +74,7 @@
     {
       "id": "discover",
       "page": "discover",
-      "target": ".fishbones-library-grid",
+      "target": ".libre-library-grid",
       "placement": "top",
       "icon": "compass",
       "iconColor": "#3b82f6",
@@ -84,7 +84,7 @@
     {
       "id": "streak",
       "page": "library",
-      "target": ".fishbones__topbar-stats-wrap",
+      "target": ".libre__topbar-stats-wrap",
       "placement": "bottom",
       "icon": "flame",
       "iconColor": "#f59e0b",

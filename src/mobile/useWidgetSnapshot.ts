@@ -57,7 +57,7 @@ interface ContinueLesson {
   estimatedReadMinutes: number | null;
   /// Deep link the widget triggers via `widgetURL(...)`. The main
   /// app's Tauri deep-link handler routes
-  /// `fishbones://lesson/<courseId>/<lessonId>` to the lesson view.
+  /// `libre://lesson/<courseId>/<lessonId>` to the lesson view.
   deepLinkPath: string;
 }
 
@@ -184,7 +184,7 @@ function formatContinue(
     chapterTitle,
     courseProgressPct: Number(pct.toFixed(3)),
     estimatedReadMinutes: minutes,
-    deepLinkPath: `fishbones://lesson/${course.id}/${lesson.id}`,
+    deepLinkPath: `libre://lesson/${course.id}/${lesson.id}`,
   };
 }
 
@@ -234,7 +234,7 @@ function pickQuickChallenge(
       lessonTitle: top.lessonTitle,
       kind: top.kind,
       promptShort,
-      deepLinkPath: "fishbones://practice",
+      deepLinkPath: "libre://practice",
     };
   } catch {
     return null;

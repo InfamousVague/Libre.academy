@@ -173,7 +173,7 @@ export default function LessonView({
   // so the next session opens with the same preference. The current
   // value isn't read anywhere; the setter triggers the write-through.
   const [, setFloatingPhoneOpen] = useLocalStorageState<boolean>(
-    "fishbones:floating-phone-open",
+    "libre:floating-phone-open",
     true,
   );
   // Bus the LessonView pushes preview URLs through. Memoised
@@ -451,7 +451,7 @@ export default function LessonView({
       await openPoppedWorkbench(courseId, lesson.id, lesson.title, files);
       setPopped(true);
     } catch (e) {
-      console.error("[fishbones] pop-out failed:", e);
+      console.error("[libre] pop-out failed:", e);
     }
   }
 
@@ -551,11 +551,11 @@ export default function LessonView({
   // so reader and quiz stack vertically inside a single scroll container.
   if (isQuiz(lesson)) {
     return (
-      <div className="fishbones__lesson fishbones__lesson--column">
-        <div className="fishbones__lesson-scroll">
+      <div className="libre__lesson libre__lesson--column">
+        <div className="libre__lesson-scroll">
           <LessonReader lesson={lesson} requiresDevice={courseRequiresDevice} />
           <QuizView lesson={lesson} onComplete={onComplete} />
-          <div className="fishbones__lesson-nav-wrap">{nav}</div>
+          <div className="libre__lesson-nav-wrap">{nav}</div>
         </div>
       </div>
     );
@@ -563,8 +563,8 @@ export default function LessonView({
 
   return (
     <div
-      className={`fishbones__lesson ${
-        isChallenge ? "fishbones__lesson--challenge" : ""
+      className={`libre__lesson ${
+        isChallenge ? "libre__lesson--challenge" : ""
       }`}
     >
       <LessonReader
@@ -574,7 +574,7 @@ export default function LessonView({
         requiresDevice={courseRequiresDevice}
       />
       {hasExercise && !popped && !hasTradeHarness && (
-        <div className="fishbones__lesson-workbench-wrap">
+        <div className="libre__lesson-workbench-wrap">
           {showLessonToolchainBanner && lessonToolchainStatus && (
             // Proactive missing-toolchain nudge. Sits above the
             // workbench so the learner doesn't click Run, wait for
@@ -621,7 +621,7 @@ export default function LessonView({
             // wrapper that matches the Workbench's card chrome so the
             // visual weight stays consistent with the JS / Python
             // lesson surfaces.
-            <div className="fishbones__lesson-workbench-solo">
+            <div className="libre__lesson-workbench-solo">
               <EditorPane
                 language={lesson.language}
                 files={files}
@@ -679,11 +679,11 @@ export default function LessonView({
       )}
       {hasExercise && popped && (
         <button
-          className="fishbones__workbench-popped-pill"
+          className="libre__workbench-popped-pill"
           onClick={handleReopenInline}
           title="Close the popped window and dock the workbench back into this pane"
         >
-          <span className="fishbones__workbench-popped-pill-icon" aria-hidden>
+          <span className="libre__workbench-popped-pill-icon" aria-hidden>
             <Icon icon={panelLeftOpen} size="xs" color="currentColor" />
           </span>
           <span>pop back in</span>

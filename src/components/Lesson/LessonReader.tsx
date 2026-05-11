@@ -140,7 +140,7 @@ export default function LessonReader({
   // and class re-application off the `html` string identity rather
   // than a MutationObserver — the v1 design used MOs and froze the
   // app on lesson entry due to interaction with React-mounted
-  // descendants (InlineSandbox, popover wiring, "Ask Fishbones"
+  // descendants (InlineSandbox, popover wiring, "Ask Libre"
   // badges) that mutate the article's subtree.
   // Drive the cursor off the ElevenLabs CDN narration's progress.
   // No on-device TTS fallback — lessons without a manifest entry
@@ -281,8 +281,8 @@ export default function LessonReader({
   // --- Hydration pass --------------------------------------------------
   // After dangerouslySetInnerHTML has rendered the markdown, walk the
   // produced DOM for our markers and attach behaviour:
-  //   - `.fishbones-inline-sandbox` → mount an <InlineSandbox/> React tree
-  //   - `.fishbones-inline-symbol` + `.fishbones-inline-term` → wire
+  //   - `.libre-inline-sandbox` → mount an <InlineSandbox/> React tree
+  //   - `.libre-inline-symbol` + `.libre-inline-term` → wire
   //     mouseenter/leave to drive popover state
 
   const rootsRef = useRef<Root[]>([]);
@@ -295,14 +295,14 @@ export default function LessonReader({
     //    React subtree using createRoot. We keep handles so we can
     //    unmount them cleanly on lesson change.
     const sandboxes = Array.from(
-      container.querySelectorAll<HTMLDivElement>(".fishbones-inline-sandbox"),
+      container.querySelectorAll<HTMLDivElement>(".libre-inline-sandbox"),
     );
     const localRoots: Root[] = [];
     for (const el of sandboxes) {
-      const lang = (el.dataset.fishbonesLang || primaryLang) as
+      const lang = (el.dataset.libreLang || primaryLang) as
         | typeof primaryLang
         | string;
-      const b64 = el.dataset.fishbonesSrc ?? "";
+      const b64 = el.dataset.libreSrc ?? "";
       const src = decodeB64(b64);
       // Clear the container so we don't double-mount on fast re-renders.
       el.innerHTML = "";
@@ -325,10 +325,10 @@ export default function LessonReader({
     //      mounts a small <DeviceAction> button that talks to the
     //      singleton Ledger transport.
     const deviceActions = Array.from(
-      container.querySelectorAll<HTMLDivElement>(".fishbones-device-action"),
+      container.querySelectorAll<HTMLDivElement>(".libre-device-action"),
     );
     for (const el of deviceActions) {
-      const b64 = el.dataset.fishbonesConfig ?? "";
+      const b64 = el.dataset.libreConfig ?? "";
       let config: import("../Ledger/DeviceAction").DeviceActionConfig | null = null;
       try {
         const raw = decodeB64(b64);
@@ -366,7 +366,7 @@ export default function LessonReader({
       // of movement looks like a flash.
       if (currentTriggerRef.current === el) return;
       currentTriggerRef.current = el;
-      if (el.classList.contains("fishbones-inline-symbol")) {
+      if (el.classList.contains("libre-inline-symbol")) {
         const pattern = el.getAttribute("data-pattern") ?? "";
         const sym = symbolMap.get(pattern);
         if (!sym) return;
@@ -378,7 +378,7 @@ export default function LessonReader({
           body: sym.description ?? "",
           docUrl: sym.docUrl,
         });
-      } else if (el.classList.contains("fishbones-inline-term")) {
+      } else if (el.classList.contains("libre-inline-term")) {
         const term = el.getAttribute("data-term") ?? "";
         const gloss = termMap.get(term);
         if (!gloss) return;
@@ -393,7 +393,7 @@ export default function LessonReader({
 
     const onOver = (e: MouseEvent) => {
       const target = (e.target as HTMLElement | null)?.closest?.(
-        ".fishbones-inline-symbol, .fishbones-inline-term",
+        ".libre-inline-symbol, .libre-inline-term",
       ) as HTMLElement | null;
       if (target) show(target, e.clientX, e.clientY);
     };
@@ -401,31 +401,31 @@ export default function LessonReader({
       // `relatedTarget` is the element the cursor entered. If it's
       // another trigger OR the popover itself, don't schedule a hide.
       const related = (e.relatedTarget as HTMLElement | null)?.closest?.(
-        ".fishbones-inline-symbol, .fishbones-inline-term, .fishbones-popover",
+        ".libre-inline-symbol, .libre-inline-term, .libre-popover",
       );
       const target = (e.target as HTMLElement | null)?.closest?.(
-        ".fishbones-inline-symbol, .fishbones-inline-term",
+        ".libre-inline-symbol, .libre-inline-term",
       );
       if (target && !related) scheduleHide();
     };
 
-    // 3) "Ask Fishbones" badges on code blocks. Click → fire a
-    //    `fishbones:ask-ai` custom event up to the AiAssistant root
+    // 3) "Ask Libre" badges on code blocks. Click → fire a
+    //    `libre:ask-ai` custom event up to the AiAssistant root
     //    listener. We use event delegation on the container so the
     //    handler count stays at 1 regardless of how many code blocks
     //    are in the prose. The badge carries the snippet as a
     //    base64-encoded data attribute (set by the markdown pipeline).
     const onAskClick = (e: MouseEvent) => {
       const target = (e.target as HTMLElement | null)?.closest?.(
-        ".fishbones-code-block-ask",
+        ".libre-code-block-ask",
       ) as HTMLElement | null;
       if (!target) return;
       e.preventDefault();
       e.stopPropagation();
-      const code = decodeB64(target.dataset.fishbonesAskCode ?? "");
-      const lang = target.dataset.fishbonesAskLang ?? "";
+      const code = decodeB64(target.dataset.libreAskCode ?? "");
+      const lang = target.dataset.libreAskLang ?? "";
       window.dispatchEvent(
-        new CustomEvent("fishbones:ask-ai", {
+        new CustomEvent("libre:ask-ai", {
           detail: {
             kind: "code",
             language: lang,
@@ -501,10 +501,10 @@ export default function LessonReader({
       if (!t) return;
       // Click inside the popover itself (e.g. on "View full docs →")
       // should NOT dismiss — that would cancel the navigation intent.
-      if (t.closest(".fishbones-popover")) return;
+      if (t.closest(".libre-popover")) return;
       // Click on a trigger is handled by the hover flow — don't
       // interfere.
-      if (t.closest(".fishbones-inline-symbol, .fishbones-inline-term")) {
+      if (t.closest(".libre-inline-symbol, .libre-inline-term")) {
         return;
       }
       dismiss();
@@ -524,18 +524,18 @@ export default function LessonReader({
   const [glossaryOpen, setGlossaryOpen] = useState(false);
 
   return (
-    <section className="fishbones-reader">
+    <section className="libre-reader">
       {/* Progress rail pinned to the top of the reader. Stays visible
           while the prose scrolls underneath. */}
-      <div className="fishbones-reader-progress" aria-hidden>
+      <div className="libre-reader-progress" aria-hidden>
         <div
-          className="fishbones-reader-progress-fill"
+          className="libre-reader-progress-fill"
           style={{ width: `${progress * 100}%` }}
         />
       </div>
 
       <div
-        className="fishbones-reader-scroll"
+        className="libre-reader-scroll"
         ref={(el) => {
           // Dual ref: imperative access for the legacy scroll-
           // progress effect AND a state-backed reference for the
@@ -545,17 +545,17 @@ export default function LessonReader({
           setScrollEl(el);
         }}
       >
-        <div className="fishbones-reader-inner">
+        <div className="libre-reader-inner">
           {/* Lesson title rendered above everything else so the learner
               always knows where they are — markdown bodies often repeat
               it as an h1 too, which we strip during render to avoid
               duplication. */}
-          <h1 className="fishbones-reader-title">{lesson.title}</h1>
+          <h1 className="libre-reader-title">{lesson.title}</h1>
 
           {/* Top chip row: time-to-read + optional glossary toggle. Both
               live in the same row so the eye catches the meta info
               without eating much vertical space. */}
-          <div className="fishbones-reader-meta">
+          <div className="libre-reader-meta">
             {/* Combined narration + reading-time pill. When pre-
                 generated audio exists for this lesson it shows
                 play/pause + a circular progress ring + remaining
@@ -585,16 +585,16 @@ export default function LessonReader({
             {hasGlossary && (
               <button
                 type="button"
-                className={`fishbones-reader-meta-glossary ${
-                  glossaryOpen ? "fishbones-reader-meta-glossary--open" : ""
+                className={`libre-reader-meta-glossary ${
+                  glossaryOpen ? "libre-reader-meta-glossary--open" : ""
                 }`}
                 onClick={() => setGlossaryOpen((v) => !v)}
               >
-                <span className="fishbones-reader-meta-glossary-icon" aria-hidden>
+                <span className="libre-reader-meta-glossary-icon" aria-hidden>
                   <Icon icon={bookOpen} size="xs" color="currentColor" />
                 </span>
                 Glossary
-                <span className="fishbones-reader-meta-glossary-count">
+                <span className="libre-reader-meta-glossary-count">
                   {enrichment!.glossary!.length}
                 </span>
               </button>
@@ -608,23 +608,23 @@ export default function LessonReader({
               the italic demotion note that used to live in the body —
               we strip that out during render to avoid duplication. */}
           {demotedReason && onRetryLesson && (
-            <div className="fishbones-reader-retry" role="note">
-              <div className="fishbones-reader-retry-head">
-                <span className="fishbones-reader-retry-label">
+            <div className="libre-reader-retry" role="note">
+              <div className="libre-reader-retry-head">
+                <span className="libre-reader-retry-label">
                   Exercise needs another pass
                 </span>
               </div>
-              <div className="fishbones-reader-retry-body">
+              <div className="libre-reader-retry-body">
                 The generator couldn't build a working exercise for this
                 lesson on the first run — it failed validation 3 times
                 and demoted the lesson to a reading. Hit retry to run
                 just this one lesson again with the latest prompt.
               </div>
-              <div className="fishbones-reader-retry-reason" title={demotedReason}>
-                <span className="fishbones-reader-retry-reason-label">
+              <div className="libre-reader-retry-reason" title={demotedReason}>
+                <span className="libre-reader-retry-reason-label">
                   First failure
                 </span>
-                <span className="fishbones-reader-retry-reason-text">
+                <span className="libre-reader-retry-reason-text">
                   {demotedReason.length > 160
                     ? demotedReason.slice(0, 160) + "…"
                     : demotedReason}
@@ -632,7 +632,7 @@ export default function LessonReader({
               </div>
               <button
                 type="button"
-                className="fishbones-reader-retry-btn"
+                className="libre-reader-retry-btn"
                 onClick={() => onRetryLesson(lesson.id)}
               >
                 Retry this exercise
@@ -642,9 +642,9 @@ export default function LessonReader({
 
           {/* Objectives — shown only when the generator supplied them. */}
           {objectives && objectives.length > 0 && (
-            <div className="fishbones-reader-objectives" role="note">
-              <div className="fishbones-reader-objectives-label">You'll learn</div>
-              <ul className="fishbones-reader-objectives-list">
+            <div className="libre-reader-objectives" role="note">
+              <div className="libre-reader-objectives-label">You'll learn</div>
+              <ul className="libre-reader-objectives-list">
                 {objectives.map((o, i) => (
                   <li key={i}>{o}</li>
                 ))}
@@ -654,7 +654,7 @@ export default function LessonReader({
 
           <div
             ref={setArticleEl}
-            className="fishbones-reader-body"
+            className="libre-reader-body"
             // innerHTML is set imperatively below in a `[articleEl, html]`
             // useEffect — using `dangerouslySetInnerHTML` here would
             // pass a fresh object literal on every render, and React
@@ -672,23 +672,23 @@ export default function LessonReader({
       {/* Glossary side sheet. Conditionally rendered so it doesn't eat
           DOM weight when the feature isn't in play. */}
       {hasGlossary && glossaryOpen && (
-        <aside className="fishbones-reader-glossary" role="dialog" aria-label="Glossary">
-          <div className="fishbones-reader-glossary-head">
+        <aside className="libre-reader-glossary" role="dialog" aria-label="Glossary">
+          <div className="libre-reader-glossary-head">
             <span>Glossary</span>
             <button
               type="button"
-              className="fishbones-reader-glossary-close"
+              className="libre-reader-glossary-close"
               onClick={() => setGlossaryOpen(false)}
               aria-label="Close glossary"
             >
               <Icon icon={xIcon} size="xs" color="currentColor" />
             </button>
           </div>
-          <div className="fishbones-reader-glossary-body">
+          <div className="libre-reader-glossary-body">
             {enrichment!.glossary!.map((g, i) => (
-              <div key={i} className="fishbones-reader-glossary-entry">
-                <div className="fishbones-reader-glossary-term">{g.term}</div>
-                <div className="fishbones-reader-glossary-def">{g.definition}</div>
+              <div key={i} className="libre-reader-glossary-entry">
+                <div className="libre-reader-glossary-term">{g.term}</div>
+                <div className="libre-reader-glossary-def">{g.definition}</div>
               </div>
             ))}
           </div>

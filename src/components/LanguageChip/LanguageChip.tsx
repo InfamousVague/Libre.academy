@@ -55,8 +55,8 @@ export default function LanguageChip({
 
   return (
     <span
-      className={`fishbones-langchip fishbones-langchip--${size} ${
-        labelHidden ? "fishbones-langchip--icon-only" : ""
+      className={`libre-langchip libre-langchip--${size} ${
+        labelHidden ? "libre-langchip--icon-only" : ""
       } ${className ?? ""}`}
       // Chip background reads the brand colour at 12% opacity so the
       // surrounding card colour shows through. Text + icon use the
@@ -70,11 +70,11 @@ export default function LanguageChip({
       title={title ?? meta.label}
       aria-label={meta.label}
     >
-      <span className="fishbones-langchip-icon" aria-hidden>
+      <span className="libre-langchip-icon" aria-hidden>
         <Icon />
       </span>
       {!labelHidden && (
-        <span className="fishbones-langchip-label">{meta.label}</span>
+        <span className="libre-langchip-label">{meta.label}</span>
       )}
     </span>
   );

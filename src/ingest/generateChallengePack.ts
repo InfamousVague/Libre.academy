@@ -1,4 +1,4 @@
-/// Generate a challenge-pack `.fishbones` course on disk from scratch. Unlike
+/// Generate a challenge-pack `.libre` course on disk from scratch. Unlike
 /// `runPipeline` (book ingest) and `regenerateExercises` (per-lesson
 /// refresh of an existing course), this builds a brand-new Course whose
 /// chapters are difficulty tiers and whose lessons are stand-alone kata
@@ -388,7 +388,7 @@ export async function generateChallengePack(
   const course: Course = {
     id: packId,
     title: packTitle,
-    author: "Fishbones (challenge pack)",
+    author: "Libre (challenge pack)",
     description: `Generated kata-style challenges for ${titleCase(language)}. Split across three difficulty tiers and topic buckets.`,
     language,
     chapters: [chapters.easy, chapters.medium, chapters.hard],

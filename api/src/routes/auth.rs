@@ -15,7 +15,7 @@ use super::oauth;
 use crate::auth::{hash_password, hash_token, verify_password};
 use crate::state::AppState;
 
-/// Generate a Fishbones-prefixed Bearer token. Distinct prefix from
+/// Generate a Libre-prefixed Bearer token. Distinct prefix from
 /// other internal services so logs make it obvious which subsystem a
 /// leaked token belongs to. Same `fb_*` shape the desktop already
 /// recognises — clients written against the old relay don't need
@@ -247,7 +247,7 @@ pub async fn delete_account(
 //
 // Two endpoints, deliberately decoupled:
 //
-//   1. POST /fishbones/auth/password-reset/request
+//   1. POST /libre/auth/password-reset/request
 //      Body: { email }. Always returns 204 regardless of whether the
 //      email exists — leaking that fact would let an attacker
 //      enumerate registered addresses by timing or status code. When
@@ -255,7 +255,7 @@ pub async fn delete_account(
 //      store its Argon2 hash in `password_resets` with a 1-hour TTL,
 //      and email the user a link to /reset-password?token=…
 //
-//   2. POST /fishbones/auth/password-reset/confirm
+//   2. POST /libre/auth/password-reset/confirm
 //      Body: { token, new_password }. Hashes the supplied token and
 //      consumes the matching row (single DELETE…RETURNING), validates
 //      the new password's length, updates `users.password_hash`, and

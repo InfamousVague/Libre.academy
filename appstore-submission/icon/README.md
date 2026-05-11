@@ -51,7 +51,7 @@ magick AppIcon-1024.png -background "#000000" -alpha remove -alpha off AppIcon-1
 If you redesign the icon, the source-of-truth is `cover-overrides/` — drop a 1024 × 1024 master there as `app-icon.png`, then regenerate every per-size asset Tauri's iOS bundle needs:
 
 ```bash
-cd /Users/matt/Development/Apps/Fishbones
+cd /Users/matt/Development/Apps/Libre
 npx tauri icon path/to/source-1024.png
 ```
 

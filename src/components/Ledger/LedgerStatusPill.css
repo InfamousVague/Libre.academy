@@ -61,7 +61,7 @@
 
 /* Connecting — spinner instead of icon, dimmed colour to read as
  * "in flight". Spinner uses the same keyframes as elsewhere in the
- * app (`fishbones-book-update-spin`). */
+ * app (`libre-book-update-spin`). */
 .fb-ledger-pill--connecting {
   cursor: progress;
   opacity: 0.85;

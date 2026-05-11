@@ -36,7 +36,7 @@
 ///   1. Re-launch the desktop app — `useCourses.refresh()` picks up
 ///      the new pack on next mount.
 ///   2. (Optional) Run `npm run library:promote` to roll the user's
-///      installed pack into a `.fishbones` archive in
+///      installed pack into a `.libre` archive in
 ///      `src-tauri/resources/bundled-packs/`. That makes the pack
 ///      part of the next release for everyone, not just this dev.
 
@@ -1878,7 +1878,7 @@ function buildCourseJson(pack) {
     id: pack.id,
     title: pack.title,
     description: pack.description,
-    author: "Fishbones",
+    author: "Libre",
     language: pack.language,
     packType: "challenges",
     releaseStatus: "UNREVIEWED",
@@ -1916,7 +1916,7 @@ async function main() {
   // Resolve the user's app-data dir. macOS default; XDG_DATA_HOME
   // honored if set so this script works on Linux installs too.
   const appData =
-    process.env.FISHBONES_COURSES_DIR ??
+    process.env.LIBRE_COURSES_DIR ??
     (process.platform === "darwin"
       ? join(homedir(), "Library", "Application Support", "com.mattssoftware.kata")
       : join(

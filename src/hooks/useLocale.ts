@@ -5,7 +5,7 @@
 ///
 /// First-launch heuristic: read `navigator.language` and pick the
 /// closest supported locale (Russian browser → ru, Korean → kr, etc).
-/// Falls back to English when the browser language has no Fishbones
+/// Falls back to English when the browser language has no Libre
 /// translation. The user can override at any time via the dropdown.
 ///
 /// Usage:
@@ -42,7 +42,7 @@ export function useLocale(): readonly [Locale, (next: Locale) => void] {
     LOCALE_STORAGE_KEY,
     defaultLocale(),
   );
-  // Defensive: if a previously-installed Fishbones once persisted a
+  // Defensive: if a previously-installed Libre once persisted a
   // locale code we no longer support (or if a corrupt cloud-sync
   // payload landed it), fall back rather than render garbage.
   const locale: Locale = isLocale(raw) ? raw : defaultLocale();
@@ -63,12 +63,12 @@ export function useLocale(): readonly [Locale, (next: Locale) => void] {
       // Best-effort cloud sync — if the user is signed in, push the
       // new locale through the same `settings` channel that theme
       // uses. Implemented as a CustomEvent so this hook doesn't have
-      // to import `useFishbonesCloud` (avoiding a layered dep cycle:
+      // to import `useLibreCloud` (avoiding a layered dep cycle:
       // useLocale lives below the cloud hook in the dep graph). The
       // App-level cloud bootstrap subscribes and forwards.
       if (typeof window !== "undefined") {
         window.dispatchEvent(
-          new CustomEvent("fishbones:setting-changed", {
+          new CustomEvent("libre:setting-changed", {
             detail: { key: "locale", value: next },
           }),
         );

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { UseFishbonesCloud } from "../../../hooks/useFishbonesCloud";
+import type { UseLibreCloud } from "../../../hooks/useLibreCloud";
 import { isWeb } from "../../../lib/platform";
 import PasswordField, { PASSWORD_MIN_LENGTH, scorePassword } from "./PasswordField";
 import ModalBackdrop from "../../Shared/ModalBackdrop";
@@ -9,20 +9,20 @@ import "./SignInDialog.css";
 /// Three-tab sign-in modal: email, Apple, Google. Used both by the
 /// first-launch prompt and the Settings → Account section.
 ///
-/// All three flows are optional — Fishbones works without an account
+/// All three flows are optional — Libre works without an account
 /// (local SQLite + JSON only). Signing in is purely additive: it
 /// enables progress sync, course sharing, and cross-device pickup.
 ///
 /// Apple + Google use the relay's browser-OAuth flow: clicking the
 /// provider button opens the system browser via the `start_oauth`
 /// Tauri command, the user signs in there, and the relay redirects
-/// back to `fishbones://oauth/done?...`. App.tsx's deep-link
+/// back to `libre://oauth/done?...`. App.tsx's deep-link
 /// listener parses the callback and feeds the token to the cloud
 /// hook, which materialises the signed-in user. We just need to
 /// kick off the redirect and wait for `cloud.signedIn` to flip.
 
 interface Props {
-  cloud: UseFishbonesCloud;
+  cloud: UseLibreCloud;
   onClose: () => void;
   /// Optional copy variant. The first-launch prompt uses a softer
   /// "no account" CTA; the Settings entry hides it (the user is
@@ -238,12 +238,12 @@ export default function SignInDialog({
   const oauthPopupRef = useRef<Window | null>(null);
   const oauthSessionRef = useRef<string | null>(null);
 
-  /// Web OAuth flow — we can't use `fishbones://` deep-links from a
+  /// Web OAuth flow — we can't use `libre://` deep-links from a
   /// browser, so the relay redirects to a `/oauth/done` page on this
   /// origin instead, and that page postMessages the token back to
   /// the opener. The relay's `build_return_url` allow-lists this
   /// origin; passing any other URL falls through to the default
-  /// `fishbones://oauth/done`, which a browser can't follow.
+  /// `libre://oauth/done`, which a browser can't follow.
   ///
   /// Returns `true` when the popup was opened so the caller knows
   /// to flip into "awaiting" state. Returns `false` (and surfaces an
@@ -252,14 +252,14 @@ export default function SignInDialog({
   const startWebOAuth = (provider: "apple" | "google", sessionId: string): boolean => {
     const returnTo = `${window.location.origin}/oauth/done`;
     const url =
-      `${cloud.relayUrl}/fishbones/auth/${provider}/start` +
+      `${cloud.relayUrl}/libre/auth/${provider}/start` +
       `?session=${encodeURIComponent(sessionId)}` +
       `&return_to=${encodeURIComponent(returnTo)}`;
     // Width/height roughly match Google's recommended OAuth popup
     // dimensions — small enough to feel modal, big enough that the
     // provider's own form doesn't horizontally scroll.
     const features = "popup=yes,width=520,height=640";
-    const win = window.open(url, "fishbones-oauth", features);
+    const win = window.open(url, "libre-oauth", features);
     if (!win) {
       setOauthError(
         "Couldn't open the sign-in popup — check your browser's pop-up blocker, then try again.",
@@ -302,7 +302,7 @@ export default function SignInDialog({
       // ignore or an attempted token exfiltration.
       if (e.origin !== window.location.origin) return;
       const data = e.data as { type?: string; token?: string; session?: string; error?: string } | null;
-      if (!data || data.type !== "fishbones-oauth") return;
+      if (!data || data.type !== "libre-oauth") return;
       // Session id check — defends against a stale popup whose token
       // arrives after the user opened a new attempt with a fresh id.
       if (oauthSessionRef.current && data.session !== oauthSessionRef.current) return;
@@ -350,28 +350,28 @@ export default function SignInDialog({
     <ModalBackdrop
       onDismiss={onClose}
       zIndex={200}
-      className="fishbones-signin-backdrop-mobile"
+      className="libre-signin-backdrop-mobile"
     >
       <div
-        className="fishbones-signin-panel"
+        className="libre-signin-panel"
         role="dialog"
         aria-modal="true"
       >
         <button
           type="button"
-          className="fishbones-signin-close"
+          className="libre-signin-close"
           onClick={onClose}
           aria-label="Close"
         >
           ×
         </button>
 
-        <h2 className="fishbones-signin-title">
-          {headline ?? "Sign in to Fishbones"}
+        <h2 className="libre-signin-title">
+          {headline ?? "Sign in to Libre"}
         </h2>
-        <p className="fishbones-signin-blurb">
+        <p className="libre-signin-blurb">
           {blurb ??
-            "Optional — sync progress between devices, upload courses, and share them with friends. You can also keep using Fishbones without an account; everything else still runs locally."}
+            "Optional — sync progress between devices, upload courses, and share them with friends. You can also keep using Libre without an account; everything else still runs locally."}
         </p>
 
         {/* Email is the primary form — always shown above the
@@ -387,19 +387,19 @@ export default function SignInDialog({
                 ? onSignUpSubmit
                 : onForgotSubmit
           }
-          className="fishbones-signin-form"
+          className="libre-signin-form"
         >
           {/* Mode toggle — segmented Sign in / Create account.
               Hidden in `forgot` mode (the form there is a single
               email field, no Sign in vs Create account distinction
               to make). */}
           {emailMode !== "forgot" && (
-            <div className="fishbones-signin-mode-toggle" role="tablist" aria-label="Email account mode">
+            <div className="libre-signin-mode-toggle" role="tablist" aria-label="Email account mode">
               <button
                 type="button"
                 role="tab"
                 aria-selected={emailMode === "signIn"}
-                className={`fishbones-signin-mode-btn ${emailMode === "signIn" ? "fishbones-signin-mode-btn--active" : ""}`}
+                className={`libre-signin-mode-btn ${emailMode === "signIn" ? "libre-signin-mode-btn--active" : ""}`}
                 onClick={() => switchEmailMode("signIn")}
               >
                 Sign in
@@ -408,7 +408,7 @@ export default function SignInDialog({
                 type="button"
                 role="tab"
                 aria-selected={emailMode === "signUp"}
-                className={`fishbones-signin-mode-btn ${emailMode === "signUp" ? "fishbones-signin-mode-btn--active" : ""}`}
+                className={`libre-signin-mode-btn ${emailMode === "signUp" ? "libre-signin-mode-btn--active" : ""}`}
                 onClick={() => switchEmailMode("signUp")}
               >
                 Create account
@@ -422,13 +422,13 @@ export default function SignInDialog({
               the visible affordance always matches the current
               step in the flow. */}
           {emailMode === "forgot" && !forgotSent && (
-            <p className="fishbones-signin-helper">
+            <p className="libre-signin-helper">
               Enter your account email and we'll send a link to reset
               your password. The link expires in 1 hour.
             </p>
           )}
 
-          <label className="fishbones-signin-field">
+          <label className="libre-signin-field">
             <span>Email</span>
             <input
               type="email"
@@ -487,15 +487,15 @@ export default function SignInDialog({
           )}
 
           {emailError && (
-            <p className="fishbones-signin-error">{emailError}</p>
+            <p className="libre-signin-error">{emailError}</p>
           )}
           {createdNotice && !emailError && emailMode === "signUp" && (
-            <p className="fishbones-signin-helper fishbones-signin-helper--success">
+            <p className="libre-signin-helper libre-signin-helper--success">
               Welcome! Account created — signing you in…
             </p>
           )}
           {forgotSent && !emailError && (
-            <p className="fishbones-signin-helper fishbones-signin-helper--success">
+            <p className="libre-signin-helper libre-signin-helper--success">
               If that email is on file, a reset link is on its way. Check
               your inbox (and spam folder) — the link expires in 1 hour.
             </p>
@@ -507,7 +507,7 @@ export default function SignInDialog({
           {!(emailMode === "forgot" && forgotSent) && (
             <button
               type="submit"
-              className="fishbones-signin-primary"
+              className="libre-signin-primary"
               disabled={
                 cloud.busy ||
                 email.length === 0 ||
@@ -536,12 +536,12 @@ export default function SignInDialog({
               when they realise they're on the wrong mode. Sign in
               gets two: "Forgot password?" + "Don't have an account?".
               Buttons instead of <a> tags so we stay inside the dialog. */}
-          <p className="fishbones-signin-switch">
+          <p className="libre-signin-switch">
             {emailMode === "signIn" && (
               <>
                 <button
                   type="button"
-                  className="fishbones-signin-switch__link"
+                  className="libre-signin-switch__link"
                   onClick={() => switchEmailMode("forgot")}
                 >
                   Forgot password?
@@ -550,7 +550,7 @@ export default function SignInDialog({
                 Don't have an account?{" "}
                 <button
                   type="button"
-                  className="fishbones-signin-switch__link"
+                  className="libre-signin-switch__link"
                   onClick={() => switchEmailMode("signUp")}
                 >
                   Create one
@@ -562,7 +562,7 @@ export default function SignInDialog({
                 Already have an account?{" "}
                 <button
                   type="button"
-                  className="fishbones-signin-switch__link"
+                  className="libre-signin-switch__link"
                   onClick={() => switchEmailMode("signIn")}
                 >
                   Sign in
@@ -574,7 +574,7 @@ export default function SignInDialog({
                 Remembered it?{" "}
                 <button
                   type="button"
-                  className="fishbones-signin-switch__link"
+                  className="libre-signin-switch__link"
                   onClick={() => switchEmailMode("signIn")}
                 >
                   Back to sign in
@@ -588,21 +588,21 @@ export default function SignInDialog({
             alternatives. Pure CSS line-with-text so the dialog
             stays visually balanced even on narrow viewports. */}
         <div
-          className="fishbones-signin-or"
+          className="libre-signin-or"
           role="separator"
           aria-label="or"
         >
           <span>or</span>
         </div>
 
-        <div className="fishbones-signin-oauth">
+        <div className="libre-signin-oauth">
           <button
             type="button"
-            className="fishbones-signin-oauth-btn fishbones-signin-oauth-btn--apple"
+            className="libre-signin-oauth-btn libre-signin-oauth-btn--apple"
             onClick={() => void startOAuth("apple")}
             disabled={awaitingOAuth}
           >
-            <span className="fishbones-signin-oauth-glyph" aria-hidden>
+            <span className="libre-signin-oauth-glyph" aria-hidden>
               {/* Inline Apple silhouette — see earlier note about
                   the U+F8FF codepoint not rendering under our
                   cascaded font. SVG is what Apple's Sign-In
@@ -622,11 +622,11 @@ export default function SignInDialog({
           </button>
           <button
             type="button"
-            className="fishbones-signin-oauth-btn fishbones-signin-oauth-btn--google"
+            className="libre-signin-oauth-btn libre-signin-oauth-btn--google"
             onClick={() => void startOAuth("google")}
             disabled={awaitingOAuth}
           >
-            <span className="fishbones-signin-oauth-glyph" aria-hidden>
+            <span className="libre-signin-oauth-glyph" aria-hidden>
               <svg viewBox="0 0 18 18" width="18" height="18">
                 <path
                   fill="#4285F4"
@@ -649,23 +649,23 @@ export default function SignInDialog({
             <span>Sign in with Google</span>
           </button>
           {awaitingOAuth && (
-            <p className="fishbones-signin-oauth-waiting">
+            <p className="libre-signin-oauth-waiting">
               Waiting for sign-in… finish in your browser, then we'll bring
               you back automatically.
             </p>
           )}
           {oauthError && (
-            <p className="fishbones-signin-error">{oauthError}</p>
+            <p className="libre-signin-error">{oauthError}</p>
           )}
           {cloud.error && !oauthError && (
-            <p className="fishbones-signin-error">{cloud.error}</p>
+            <p className="libre-signin-error">{cloud.error}</p>
           )}
         </div>
 
         {showSkipButton && (
           <button
             type="button"
-            className="fishbones-signin-skip"
+            className="libre-signin-skip"
             onClick={() => {
               onSkip?.();
               onClose();

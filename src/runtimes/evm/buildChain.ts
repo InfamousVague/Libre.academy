@@ -636,10 +636,10 @@ export async function buildChain(
       case "net_version":
         return common.chainId().toString();
       case "web3_clientVersion":
-        return "fishbones-evm/1.0.0";
+        return "libre-evm/1.0.0";
       default:
         throw new Error(
-          `JSON-RPC method "${method}" is not implemented by the in-process Fishbones EVM. Use chain.* directly or open an issue if you need this method.`,
+          `JSON-RPC method "${method}" is not implemented by the in-process Libre EVM. Use chain.* directly or open an issue if you need this method.`,
         );
     }
   };

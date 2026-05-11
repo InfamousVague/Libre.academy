@@ -32,7 +32,7 @@ export const HIDDEN_COURSE_IDS: ReadonlySet<string> = new Set<string>([
 /// Predicate for filtering a Course / CatalogEntry / id-bearing
 /// shape. Returns true when the course should NOT appear in
 /// public-facing browse surfaces (Library, Discover, mobile grid,
-/// search palette). Direct-link install + `.fishbones` import paths
+/// search palette). Direct-link install + `.libre` import paths
 /// don't go through this filter — they continue to work for the
 /// hidden ids.
 export function isHiddenCourse(id: string): boolean {

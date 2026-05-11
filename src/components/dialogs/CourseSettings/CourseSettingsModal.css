@@ -1,6 +1,6 @@
 /* Backdrop chrome lives in `Shared/ModalBackdrop.css`. */
 
-.fishbones-coursesettings-panel {
+.libre-coursesettings-panel {
   width: min(540px, 92vw);
   max-height: 85vh;
   background: var(--color-bg-secondary);
@@ -11,7 +11,7 @@
   overflow: hidden;
 }
 
-.fishbones-coursesettings-header {
+.libre-coursesettings-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -20,14 +20,14 @@
   border-bottom: 1px solid var(--color-border-default);
 }
 
-.fishbones-coursesettings-titleblock {
+.libre-coursesettings-titleblock {
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
 }
 
-.fishbones-coursesettings-title {
+.libre-coursesettings-title {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -35,7 +35,7 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones-coursesettings-course {
+.libre-coursesettings-course {
   font-size: 15px;
   font-weight: 600;
   color: var(--color-text-primary);
@@ -44,12 +44,12 @@
   text-overflow: ellipsis;
 }
 
-.fishbones-coursesettings-author {
+.libre-coursesettings-author {
   font-size: 11.5px;
   color: var(--color-text-tertiary);
 }
 
-.fishbones-coursesettings-close {
+.libre-coursesettings-close {
   background: none;
   border: 0;
   color: var(--color-text-tertiary);
@@ -59,11 +59,11 @@
   padding: 2px 8px;
 }
 
-.fishbones-coursesettings-close:hover {
+.libre-coursesettings-close:hover {
   color: var(--color-text-primary);
 }
 
-.fishbones-coursesettings-body {
+.libre-coursesettings-body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -73,16 +73,16 @@
   gap: 4px;
 }
 
-.fishbones-coursesettings-body section {
+.libre-coursesettings-body section {
   padding: 12px 0;
   border-bottom: 1px solid var(--color-border-default);
 }
 
-.fishbones-coursesettings-body section:last-child {
+.libre-coursesettings-body section:last-child {
   border-bottom: 0;
 }
 
-.fishbones-coursesettings-section {
+.libre-coursesettings-section {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.6px;
@@ -91,17 +91,17 @@
   margin-bottom: 10px;
 }
 
-.fishbones-coursesettings-section--danger {
+.libre-coursesettings-section--danger {
   color: #f1b5b5;
 }
 
-.fishbones-coursesettings-stats {
+.libre-coursesettings-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
 }
 
-.fishbones-coursesettings-stats > div {
+.libre-coursesettings-stats > div {
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
   border-radius: var(--fb-radius-md);
@@ -109,14 +109,14 @@
   text-align: center;
 }
 
-.fishbones-coursesettings-stat-value {
+.libre-coursesettings-stat-value {
   font-size: 17px;
   font-weight: 700;
   color: var(--color-text-primary);
   font-variant-numeric: tabular-nums;
 }
 
-.fishbones-coursesettings-stat-label {
+.libre-coursesettings-stat-label {
   font-size: 10px;
   color: var(--color-text-tertiary);
   text-transform: uppercase;
@@ -124,26 +124,26 @@
   margin-top: 2px;
 }
 
-.fishbones-coursesettings-row {
+.libre-coursesettings-row {
   display: flex;
   align-items: flex-start;
   gap: 12px;
   justify-content: space-between;
 }
 
-.fishbones-coursesettings-row-text {
+.libre-coursesettings-row-text {
   flex: 1;
   min-width: 0;
 }
 
-.fishbones-coursesettings-row-label {
+.libre-coursesettings-row-label {
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text-primary);
   margin-bottom: 2px;
 }
 
-.fishbones-coursesettings-row-hint {
+.libre-coursesettings-row-hint {
   font-size: 11.5px;
   line-height: 1.5;
   color: var(--color-text-secondary);
@@ -154,7 +154,7 @@
    flow to surface pdftoppm install or decode failures without leaving
    the modal. Amber-outline rather than red so it reads as "heads up"
    not "critical failure". */
-.fishbones-coursesettings-row-error {
+.libre-coursesettings-row-error {
   margin-top: 6px;
   padding: 6px 8px;
   background: rgba(217, 168, 0, 0.08);
@@ -166,7 +166,7 @@
   max-width: 360px;
 }
 
-.fishbones-coursesettings-btn {
+.libre-coursesettings-btn {
   flex-shrink: 0;
   padding: 7px 14px;
   background: transparent;
@@ -184,7 +184,7 @@
 /* Language picker row — a compact select paired with the Save button.
    Stacked so the Save button sits directly under the dropdown at narrow
    widths, side-by-side at the full modal width. */
-.fishbones-coursesettings-lang-controls {
+.libre-coursesettings-lang-controls {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -193,7 +193,7 @@
   min-width: 160px;
 }
 
-.fishbones-coursesettings-lang-select {
+.libre-coursesettings-lang-select {
   padding: 7px 10px;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
@@ -205,51 +205,51 @@
   transition: border-color var(--fb-motion-snappy);
 }
 
-.fishbones-coursesettings-lang-select:hover:not(:disabled) {
+.libre-coursesettings-lang-select:hover:not(:disabled) {
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* Single-ring focus — same idiom as `.fishbones-coursesettings-meta-input`
+/* Single-ring focus — same idiom as `.libre-coursesettings-meta-input`
    above. Without this rule, the browser layered a default outline on
    top of the 1px border for the same double-ring effect. */
-.fishbones-coursesettings-lang-select:focus {
+.libre-coursesettings-lang-select:focus {
   outline: none;
   border-color: var(--color-text-primary);
 }
 
-.fishbones-coursesettings-lang-select:disabled {
+.libre-coursesettings-lang-select:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.fishbones-coursesettings-btn:hover:not(:disabled) {
+.libre-coursesettings-btn:hover:not(:disabled) {
   background: var(--color-bg-tertiary);
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-.fishbones-coursesettings-btn:disabled {
+.libre-coursesettings-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.fishbones-coursesettings-btn--primary {
+.libre-coursesettings-btn--primary {
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
   border-color: var(--color-text-primary);
   font-weight: 600;
 }
 
-.fishbones-coursesettings-btn--primary:hover:not(:disabled) {
+.libre-coursesettings-btn--primary:hover:not(:disabled) {
   opacity: 0.9;
   background: var(--color-text-primary);
 }
 
-.fishbones-coursesettings-btn--danger {
+.libre-coursesettings-btn--danger {
   color: #ef6f6f;
   border-color: rgba(239, 111, 111, 0.4);
 }
 
-.fishbones-coursesettings-btn--danger:hover:not(:disabled) {
+.libre-coursesettings-btn--danger:hover:not(:disabled) {
   background: rgba(239, 111, 111, 0.12);
   color: #ef6f6f;
   border-color: rgba(239, 111, 111, 0.7);
@@ -261,20 +261,20 @@
    element re-orients the row from default side-by-side to a
    top-down column so the inputs get their own line. */
 
-.fishbones-coursesettings-row--column {
+.libre-coursesettings-row--column {
   flex-direction: column;
   align-items: stretch;
   gap: 12px;
 }
 
-.fishbones-coursesettings-meta-fields {
+.libre-coursesettings-meta-fields {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
 
 @media (max-width: 540px) {
-  .fishbones-coursesettings-meta-fields {
+  .libre-coursesettings-meta-fields {
     grid-template-columns: 1fr;
   }
 }
@@ -282,18 +282,18 @@
 /* Release-status select needs the full row width on its own line so
    the long descriptive labels ("ALPHA — next up in the queue") don't
    truncate. Span both columns with grid-column. */
-.fishbones-coursesettings-meta-fields > label:nth-child(3) {
+.libre-coursesettings-meta-fields > label:nth-child(3) {
   grid-column: 1 / -1;
 }
 
-.fishbones-coursesettings-meta-field {
+.libre-coursesettings-meta-field {
   display: flex;
   flex-direction: column;
   gap: 4px;
   min-width: 0;
 }
 
-.fishbones-coursesettings-meta-field-label {
+.libre-coursesettings-meta-field-label {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -301,7 +301,7 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones-coursesettings-meta-input {
+.libre-coursesettings-meta-input {
   width: 100%;
   padding: 8px 10px;
   background: var(--color-bg-secondary);
@@ -315,7 +315,7 @@
   -webkit-appearance: none;
   appearance: none;
   background-image:
-    /* Caret only on the select — `select.fishbones-...` would be
+    /* Caret only on the select — `select.libre-...` would be
        cleaner but we render via <select className="..."> sharing the
        class with <input>. Add the caret unconditionally; on plain
        inputs the bg-image still applies but is hidden behind the
@@ -323,7 +323,7 @@
     none;
 }
 
-select.fishbones-coursesettings-meta-input {
+select.libre-coursesettings-meta-input {
   background-image: linear-gradient(
     45deg,
     transparent 50%,
@@ -343,7 +343,7 @@ select.fishbones-coursesettings-meta-input {
   cursor: pointer;
 }
 
-.fishbones-coursesettings-meta-input:focus {
+.libre-coursesettings-meta-input:focus {
   /* Single-ring focus state — matches the SignInDialog field
      treatment (border-color flip, no outline) so the inputs across
      the app share one visual idiom. The previous version stacked a
@@ -354,27 +354,27 @@ select.fishbones-coursesettings-meta-input {
   border-color: var(--color-text-primary);
 }
 
-.fishbones-coursesettings-meta-input:disabled {
+.libre-coursesettings-meta-input:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-.fishbones-coursesettings-meta-actions {
+.libre-coursesettings-meta-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
 }
 
-.fishbones-coursesettings-meta-saved {
+.libre-coursesettings-meta-saved {
   font-size: 12px;
   font-weight: 600;
   color: #4dd699;
   /* Quiet fade-in so the indicator doesn't jump. */
-  animation: fishbones-meta-saved-in 0.2s ease-out both;
+  animation: libre-meta-saved-in 0.2s ease-out both;
 }
 
-@keyframes fishbones-meta-saved-in {
+@keyframes libre-meta-saved-in {
   from { opacity: 0; transform: translateY(2px); }
   to { opacity: 1; transform: translateY(0); }
 }

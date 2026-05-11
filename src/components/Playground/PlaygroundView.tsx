@@ -25,11 +25,11 @@ import Workbench from "../Workbench/Workbench";
 import MissingToolchainBanner from "../banners/MissingToolchain/MissingToolchainBanner";
 import "./PlaygroundView.css";
 
-/// Fire a `fishbones:ask-ai` event the way LessonReader / QuizView do.
+/// Fire a `libre:ask-ai` event the way LessonReader / QuizView do.
 /// AiAssistant is mounted at the app root and listens window-wide, so a
 /// plain CustomEvent is enough plumbing — no prop drilling required.
 function askAi(detail: Record<string, unknown>): void {
-  window.dispatchEvent(new CustomEvent("fishbones:ask-ai", { detail }));
+  window.dispatchEvent(new CustomEvent("libre:ask-ai", { detail }));
 }
 
 /// Cheap heuristic: does this JavaScript snippet touch the DOM? The
@@ -200,7 +200,7 @@ export default function PlaygroundView() {
   // here, so the current value goes unread (the hook handles the
   // write-through on every set).
   const [, setFloatingPhoneOpen] = useLocalStorageState<boolean>(
-    "fishbones:floating-phone-open",
+    "libre:floating-phone-open",
     true,
   );
 
@@ -320,7 +320,7 @@ export default function PlaygroundView() {
     setGenOpen(false);
   }
 
-  // Listen for the AI's `fishbones:apply-code` event — fired by
+  // Listen for the AI's `libre:apply-code` event — fired by
   // AiAssistant once a generate-code request finishes streaming.
   // Replace the active editor file's contents with the generated
   // source (the model is prompted to emit a single self-contained
@@ -366,8 +366,8 @@ export default function PlaygroundView() {
       });
       setResult(null);
     };
-    window.addEventListener("fishbones:apply-code", handler);
-    return () => window.removeEventListener("fishbones:apply-code", handler);
+    window.addEventListener("libre:apply-code", handler);
+    return () => window.removeEventListener("libre:apply-code", handler);
   }, [language, activeFileIdx, setFiles, setLanguage]);
 
   async function handleRun() {
@@ -486,7 +486,7 @@ export default function PlaygroundView() {
   // emits stdout/stderr. Anything else (the language picker is gated
   // upstream so this is defensive) shows a placeholder.
   return (
-    <div className="fishbones-playground">
+    <div className="libre-playground">
       {/* Chain docks (EVM + Bitcoin). Each gates on its own
           activity flag — they stay hidden on a fresh playground and
           slide in above the header once the learner runs code that
@@ -494,11 +494,11 @@ export default function PlaygroundView() {
       {chainActivity.evm && <EvmDockBanner />}
       {chainActivity.bitcoin && <BitcoinDockBanner />}
       {/* Header: language picker on the left, view toggle on the right. */}
-      <div className="fishbones-playground-header">
-        <label className="fishbones-playground-lang-picker">
-          <span className="fishbones-playground-lang-label">Language</span>
+      <div className="libre-playground-header">
+        <label className="libre-playground-lang-picker">
+          <span className="libre-playground-lang-label">Language</span>
           <select
-            className="fishbones-playground-lang-select"
+            className="libre-playground-lang-select"
             value={language}
             onChange={(e) => handleLanguageChange(e.target.value as LanguageId)}
           >
@@ -510,18 +510,18 @@ export default function PlaygroundView() {
           </select>
         </label>
 
-        <div className="fishbones-playground-spacer" />
+        <div className="libre-playground-spacer" />
 
         {/* AI helpers — Explain (walks through current editor source
             step-by-step) and Generate (opens an inline prompt where
             the learner describes what they want and the assistant
             emits code in the active language). Both round-trip
-            through the existing `fishbones:ask-ai` event bus that
+            through the existing `libre:ask-ai` event bus that
             LessonReader / QuizView already use. */}
-        <div className="fishbones-playground-ai" role="group" aria-label="AI helpers">
+        <div className="libre-playground-ai" role="group" aria-label="AI helpers">
           <button
             type="button"
-            className="fishbones-playground-ai-btn"
+            className="libre-playground-ai-btn"
             onClick={handleExplain}
             disabled={currentSource().trim().length === 0}
             title="Walk through the editor's code step by step"
@@ -530,8 +530,8 @@ export default function PlaygroundView() {
           </button>
           <button
             type="button"
-            className={`fishbones-playground-ai-btn ${
-              genOpen ? "fishbones-playground-ai-btn--active" : ""
+            className={`libre-playground-ai-btn ${
+              genOpen ? "libre-playground-ai-btn--active" : ""
             }`}
             onClick={() => setGenOpen((v) => !v)}
             aria-expanded={genOpen}
@@ -542,7 +542,7 @@ export default function PlaygroundView() {
         </div>
 
         <div
-          className="fishbones-playground-seg"
+          className="libre-playground-seg"
           role="group"
           aria-label="View mode"
         >
@@ -552,15 +552,15 @@ export default function PlaygroundView() {
               <button
                 key={opt.id}
                 type="button"
-                className={`fishbones-playground-seg-btn ${
-                  active ? "fishbones-playground-seg-btn--active" : ""
+                className={`libre-playground-seg-btn ${
+                  active ? "libre-playground-seg-btn--active" : ""
                 }`}
                 onClick={() => setViewMode(opt.id)}
                 title={opt.label}
                 aria-pressed={active}
               >
                 <Icon icon={opt.icon} size="xs" color="currentColor" />
-                <span className="fishbones-playground-seg-label">
+                <span className="libre-playground-seg-label">
                   {opt.label}
                 </span>
               </button>
@@ -572,17 +572,17 @@ export default function PlaygroundView() {
       {/* Generate-from-prompt strip. Slides in under the header when
           the learner toggles the "Generate" button — input on the
           left, send on the right, Esc dismisses. Submit dispatches a
-          `fishbones:ask-ai` event with `kind: "generate-code"` and
+          `libre:ask-ai` event with `kind: "generate-code"` and
           the AiAssistant takes it from there. */}
       {genOpen && (
         <form
-          className="fishbones-playground-generate"
+          className="libre-playground-generate"
           onSubmit={handleGenerateSubmit}
         >
           <input
             type="text"
             autoFocus
-            className="fishbones-playground-generate-input"
+            className="libre-playground-generate-input"
             placeholder={`Describe what you want in ${language}…`}
             value={genText}
             onChange={(e) => setGenText(e.target.value)}
@@ -595,14 +595,14 @@ export default function PlaygroundView() {
           />
           <button
             type="submit"
-            className="fishbones-playground-generate-submit"
+            className="libre-playground-generate-submit"
             disabled={genText.trim().length === 0}
           >
             Generate
           </button>
           <button
             type="button"
-            className="fishbones-playground-generate-cancel"
+            className="libre-playground-generate-cancel"
             onClick={() => {
               setGenText("");
               setGenOpen(false);
@@ -629,7 +629,7 @@ export default function PlaygroundView() {
           />
         )}
 
-      <div className="fishbones-playground-workbench">
+      <div className="libre-playground-workbench">
         {useFloatingPhone ? (
           // Floating-phone path: the editor takes the full pane width
           // and the phone simulator overlays as a draggable modal
@@ -639,7 +639,7 @@ export default function PlaygroundView() {
           // the floating phone IS the output surface — the user can
           // still flip viewMode to `preview` to get the textual
           // logs/error pane.
-          <div className="fishbones-playground-solo">{editorNode}</div>
+          <div className="libre-playground-solo">{editorNode}</div>
         ) : showEditor && showOutput ? (
           // Classic split — the Workbench card gives us the resize handle
           // and matches what courses use so switching between the two
@@ -653,9 +653,9 @@ export default function PlaygroundView() {
         ) : showEditor ? (
           // Editor-only: same card chrome as the workbench but without
           // the second column.
-          <div className="fishbones-playground-solo">{editorNode}</div>
+          <div className="libre-playground-solo">{editorNode}</div>
         ) : (
-          <div className="fishbones-playground-solo">{outputNode}</div>
+          <div className="libre-playground-solo">{outputNode}</div>
         )}
       </div>
 

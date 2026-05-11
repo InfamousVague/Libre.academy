@@ -1,4 +1,4 @@
-.fishbones-stats {
+.libre-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
   gap: 8px;
@@ -9,7 +9,7 @@
   margin: 10px 0;
 }
 
-.fishbones-stats-cell {
+.libre-stats-cell {
   display: flex;
   flex-direction: column;
   gap: 1px;
@@ -17,7 +17,7 @@
   padding: 2px 4px;
 }
 
-.fishbones-stats-label {
+.libre-stats-label {
   font-size: 9.5px;
   font-weight: 600;
   text-transform: uppercase;
@@ -28,7 +28,7 @@
   text-overflow: ellipsis;
 }
 
-.fishbones-stats-value {
+.libre-stats-value {
   font-size: 16px;
   font-weight: 600;
   color: var(--color-text-primary);
@@ -38,7 +38,7 @@
   text-overflow: ellipsis;
 }
 
-.fishbones-stats-hint {
+.libre-stats-hint {
   font-size: 10px;
   color: var(--color-text-tertiary);
   white-space: nowrap;
@@ -46,6 +46,6 @@
   text-overflow: ellipsis;
 }
 
-.fishbones-stats-cell--warn .fishbones-stats-value {
+.libre-stats-cell--warn .libre-stats-value {
   color: #d9a800;
 }

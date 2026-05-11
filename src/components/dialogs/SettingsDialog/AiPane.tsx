@@ -73,18 +73,18 @@ export default function AiPane({
 
   return (
     <section>
-      <h3 className="fishbones-settings-section">AI-assisted ingest</h3>
-      <p className="fishbones-settings-blurb">
+      <h3 className="libre-settings-section">AI-assisted ingest</h3>
+      <p className="libre-settings-blurb">
         Paste an Anthropic API key to enable Claude-powered structuring
         when you import a book. Without a key, the import falls back to
         the deterministic splitter (chapter/section breaks only).
       </p>
-      <label className="fishbones-settings-field">
-        <span className="fishbones-settings-label">Anthropic API key</span>
-        <div className="fishbones-settings-input-row">
+      <label className="libre-settings-field">
+        <span className="libre-settings-label">Anthropic API key</span>
+        <div className="libre-settings-input-row">
           <input
             type="password"
-            className="fishbones-settings-input"
+            className="libre-settings-input"
             value={apiKey}
             onChange={(e) => onApiKeyChange(e.target.value)}
             placeholder="sk-ant-..."
@@ -93,7 +93,7 @@ export default function AiPane({
           />
           <button
             type="button"
-            className="fishbones-settings-input-copy"
+            className="libre-settings-input-copy"
             onClick={() => void copy("anthropic", apiKey)}
             disabled={!apiKey}
             aria-label={
@@ -117,18 +117,18 @@ export default function AiPane({
           </button>
         </div>
       </label>
-      <p className="fishbones-settings-note">
+      <p className="libre-settings-note">
         Stored at <code>&lt;app_data_dir&gt;/settings.json</code>. Never
         leaves your machine except in requests to api.anthropic.com.
       </p>
 
-      <label className="fishbones-settings-field">
-        <span className="fishbones-settings-label">Model</span>
-        <div className="fishbones-settings-model-group">
+      <label className="libre-settings-field">
+        <span className="libre-settings-label">Model</span>
+        <div className="libre-settings-model-group">
           {MODEL_OPTIONS.map((opt) => (
             <label
               key={opt.id}
-              className={`fishbones-settings-model ${model === opt.id ? "is-active" : ""}`}
+              className={`libre-settings-model ${model === opt.id ? "is-active" : ""}`}
             >
               <input
                 type="radio"
@@ -138,8 +138,8 @@ export default function AiPane({
                 onChange={() => onModelChange(opt.id)}
               />
               <div>
-                <div className="fishbones-settings-model-label">{opt.label}</div>
-                <div className="fishbones-settings-model-hint">{opt.hint}</div>
+                <div className="libre-settings-model-label">{opt.label}</div>
+                <div className="libre-settings-model-hint">{opt.hint}</div>
               </div>
             </label>
           ))}
@@ -151,22 +151,22 @@ export default function AiPane({
           OpenAI's gpt-image-1. Optional — without a key the
           cover-art button in Course Settings surfaces a
           friendly "add a key" message instead of crashing. */}
-      <h3 className="fishbones-settings-section fishbones-settings-section--sub">
+      <h3 className="libre-settings-section libre-settings-section--sub">
         AI cover art
       </h3>
-      <p className="fishbones-settings-blurb">
+      <p className="libre-settings-blurb">
         Optional. When set, a <strong>Generate artwork with AI</strong>{" "}
         button appears in Course Settings → Appearance. Uses OpenAI's{" "}
         <code>gpt-image-1</code> model (~$0.04 per cover) with a fixed
         editorial style so every book in your library shares the same
         visual language.
       </p>
-      <label className="fishbones-settings-field">
-        <span className="fishbones-settings-label">OpenAI API key</span>
-        <div className="fishbones-settings-input-row">
+      <label className="libre-settings-field">
+        <span className="libre-settings-label">OpenAI API key</span>
+        <div className="libre-settings-input-row">
           <input
             type="password"
-            className="fishbones-settings-input"
+            className="libre-settings-input"
             value={openaiKey}
             onChange={(e) => onOpenaiKeyChange(e.target.value)}
             placeholder="sk-..."
@@ -175,7 +175,7 @@ export default function AiPane({
           />
           <button
             type="button"
-            className="fishbones-settings-input-copy"
+            className="libre-settings-input-copy"
             onClick={() => void copy("openai", openaiKey)}
             disabled={!openaiKey}
             aria-label={
@@ -199,7 +199,7 @@ export default function AiPane({
           </button>
         </div>
       </label>
-      <p className="fishbones-settings-note">
+      <p className="libre-settings-note">
         Stored next to the Anthropic key in{" "}
         <code>&lt;app_data_dir&gt;/settings.json</code>. Only used for
         image requests to api.openai.com.
@@ -261,14 +261,14 @@ function AssistantHostField() {
     writeAiHost(val);
     // Custom event so the remote chat hook re-probes immediately
     // (storage events don't fire same-tab).
-    window.dispatchEvent(new CustomEvent("fishbones:ai-host-changed"));
+    window.dispatchEvent(new CustomEvent("libre:ai-host-changed"));
     setSavedFlash(true);
   };
 
   // Re-render the QR every time the user opens the modal OR edits
   // the host with the modal open. Encoded as the bare host string
   // (matching exactly what the phone's Settings field expects);
-  // simpler than wrapping it in a `fishbones://` URL scheme since
+  // simpler than wrapping it in a `libre://` URL scheme since
   // we don't need ANY context beyond the hostname.
   useEffect(() => {
     if (!qrOpen) {
@@ -329,23 +329,23 @@ function AssistantHostField() {
 
   return (
     <>
-      <h3 className="fishbones-settings-section fishbones-settings-section--sub">
+      <h3 className="libre-settings-section libre-settings-section--sub">
         AI assistant
       </h3>
-      <p className="fishbones-settings-blurb">
+      <p className="libre-settings-blurb">
         The in-app chat tutor — a floating orb in the bottom-right
         that opens a side panel with conversational help. Off by
         default. Flip the toggle below to enable it; once on, the
         orb appears and the rest of the configuration applies.
       </p>
-      <label className="fishbones-settings-toggle">
+      <label className="libre-settings-toggle">
         <input
           type="checkbox"
           checked={enabled}
           onChange={(e) => toggleEnabled(e.target.checked)}
         />
-        <span className="fishbones-settings-toggle-slider" aria-hidden />
-        <span className="fishbones-settings-toggle-label">
+        <span className="libre-settings-toggle-slider" aria-hidden />
+        <span className="libre-settings-toggle-label">
           {enabled ? "Enabled" : "Disabled"}
         </span>
       </label>
@@ -357,10 +357,10 @@ function AssistantHostField() {
           the user. */}
       {enabled && (
         <>
-      <h3 className="fishbones-settings-section fishbones-settings-section--sub">
+      <h3 className="libre-settings-section libre-settings-section--sub">
         Assistant host (mobile / web)
       </h3>
-      <p className="fishbones-settings-blurb">
+      <p className="libre-settings-blurb">
         Hostname or IP of the machine running Ollama. The phone +
         web build talk straight to it over HTTP on port 11434. A
         Tailscale tailnet hostname is the recommended setup —
@@ -368,12 +368,12 @@ function AssistantHostField() {
         Desktop ignores this field and uses its own localhost
         daemon via Tauri IPC.
       </p>
-      <label className="fishbones-settings-field">
-        <span className="fishbones-settings-label">Hostname or IP</span>
-        <div className="fishbones-settings-input-row">
+      <label className="libre-settings-field">
+        <span className="libre-settings-label">Hostname or IP</span>
+        <div className="libre-settings-input-row">
           <input
             type="text"
-            className="fishbones-settings-input"
+            className="libre-settings-input"
             value={host}
             onChange={(e) => setHost(e.target.value)}
             onBlur={() => commit()}
@@ -382,13 +382,13 @@ function AssistantHostField() {
                 e.currentTarget.blur();
               }
             }}
-            placeholder="fishbones-mac.tailnet-abc.ts.net  or  192.168.1.42"
+            placeholder="libre-mac.tailnet-abc.ts.net  or  192.168.1.42"
             spellCheck={false}
             autoCapitalize="none"
             autoComplete="off"
           />
           <span
-            className="fishbones-settings-input-copy"
+            className="libre-settings-input-copy"
             aria-hidden
             style={{
               opacity: savedFlash ? 1 : 0,
@@ -412,10 +412,10 @@ function AssistantHostField() {
           We render BOTH on every platform so a desktop test build
           can verify the round-trip without device-juggling, but
           weight the labels for the most useful platform. */}
-      <div className="fishbones-settings-pair">
+      <div className="libre-settings-pair">
         <button
           type="button"
-          className="fishbones-settings-pair-btn"
+          className="libre-settings-pair-btn"
           onClick={() => setQrOpen(true)}
           disabled={!host.trim()}
           title={
@@ -429,7 +429,7 @@ function AssistantHostField() {
         </button>
         <button
           type="button"
-          className="fishbones-settings-pair-btn"
+          className="libre-settings-pair-btn"
           onClick={() => setScanOpen(true)}
           title={
             isMobile
@@ -442,7 +442,7 @@ function AssistantHostField() {
         </button>
       </div>
 
-      <p className="fishbones-settings-note">
+      <p className="libre-settings-note">
         On the host: run{" "}
         <code>OLLAMA_HOST=0.0.0.0:11434 ollama serve</code> so the
         daemon listens on the tailnet interface, not just localhost.
@@ -452,19 +452,19 @@ function AssistantHostField() {
 
       {qrOpen && (
         <div
-          className="fishbones-settings-qr-modal"
+          className="libre-settings-qr-modal"
           role="dialog"
           aria-label="Assistant host QR code"
           onClick={() => setQrOpen(false)}
         >
           <div
-            className="fishbones-settings-qr-card"
+            className="libre-settings-qr-card"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="fishbones-settings-qr-title">
+            <div className="libre-settings-qr-title">
               Pair your phone
             </div>
-            <p className="fishbones-settings-qr-blurb">
+            <p className="libre-settings-qr-blurb">
               On the phone: open <strong>Settings → AI &amp; API →
               Assistant host</strong>, tap <strong>Scan QR from
               Mac</strong>, then point the camera at this code.
@@ -473,17 +473,17 @@ function AssistantHostField() {
               <img
                 src={qrDataUrl}
                 alt={`QR code for ${host}`}
-                className="fishbones-settings-qr-img"
+                className="libre-settings-qr-img"
               />
             ) : (
-              <div className="fishbones-settings-qr-placeholder">
+              <div className="libre-settings-qr-placeholder">
                 Generating…
               </div>
             )}
-            <div className="fishbones-settings-qr-host">{host}</div>
+            <div className="libre-settings-qr-host">{host}</div>
             <button
               type="button"
-              className="fishbones-settings-pair-btn"
+              className="libre-settings-pair-btn"
               onClick={() => setQrOpen(false)}
             >
               Done

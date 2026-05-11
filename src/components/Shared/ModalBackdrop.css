@@ -1,5 +1,5 @@
 /* Standard backdrop for app dialogs / modals. Replaces the
-   ~9 hand-rolled `.fishbones-X-backdrop` declarations that all said
+   ~9 hand-rolled `.libre-X-backdrop` declarations that all said
    the same thing in slightly-different ways.
 
    Components that need a non-centered layout (mobile bottom-sheet,

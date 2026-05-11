@@ -1,6 +1,6 @@
 # Bundled course packs
 
-`.academy` archives (legacy `.fishbones` and `.kata` also accepted)
+`.academy` archives (legacy `.libre` and `.kata` also accepted)
 dropped in this directory ship inside the Tauri binary and are
 auto-imported on first launch for new installs. Existing installs
 pick them up the next time the app starts, unless the user has
@@ -40,7 +40,7 @@ filenames are for humans only.
 
 ## File extensions
 
-`.academy` is the canonical extension after the Fishbones → Libre
-rebrand. `.fishbones` (the previous name) and `.kata` (the original
+`.academy` is the canonical extension after the Libre → Libre
+rebrand. `.libre` (the previous name) and `.kata` (the original
 pre-rebrand name) are still accepted on import for backwards compat
 so older shipped archives + user exports keep working.

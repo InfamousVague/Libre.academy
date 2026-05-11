@@ -133,7 +133,7 @@ export class DesktopLedgerTransport implements LedgerTransport {
 
   /// Subscribe to connect/disconnect events. Returns an unsubscribe
   /// function. Mirrors the React-friendly observer pattern other
-  /// Fishbones hooks use.
+  /// Libre hooks use.
   onStatusChange(listener: LedgerStatusListener): () => void {
     this.listeners.add(listener);
     return () => {

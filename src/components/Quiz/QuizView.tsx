@@ -67,16 +67,16 @@ export default function QuizView({ lesson, onComplete }: Props) {
   }, [lesson.id, lesson.questions.length, allCorrect]);
 
   return (
-    <div className="fishbones-quiz">
-      <div className="fishbones-quiz-progress">
+    <div className="libre-quiz">
+      <div className="libre-quiz-progress">
         {lesson.questions.map((_, i) => (
           <span
             key={i}
-            className={`fishbones-quiz-pip fishbones-quiz-pip--${state[i].status}`}
+            className={`libre-quiz-pip libre-quiz-pip--${state[i].status}`}
             aria-hidden
           />
         ))}
-        <span className="fishbones-quiz-progress-label">
+        <span className="libre-quiz-progress-label">
           {state.filter((s) => s.status === "correct").length} / {lesson.questions.length}
         </span>
       </div>
@@ -92,7 +92,7 @@ export default function QuizView({ lesson, onComplete }: Props) {
       ))}
 
       {allCorrect && (
-        <div className="fishbones-quiz-done">nice — checkpoint cleared</div>
+        <div className="libre-quiz-done">nice — checkpoint cleared</div>
       )}
     </div>
   );
@@ -109,26 +109,26 @@ function QuestionCard({
   state: QuestionState;
   onResult: (status: "correct" | "wrong") => void;
 }) {
-  // "Ask Fishbones" badge — fires the same `fishbones:ask-ai` event
+  // "Ask Libre" badge — fires the same `libre:ask-ai` event
   // the lesson reader's code-block badges use, with `kind: "quiz"`
   // so the AiAssistant builds a hint-not-answer prompt for the
   // local LLM.
   function askAi() {
     window.dispatchEvent(
-      new CustomEvent("fishbones:ask-ai", {
+      new CustomEvent("libre:ask-ai", {
         detail: { kind: "quiz", prompt: question.prompt },
       }),
     );
   }
   return (
-    <div className={`fishbones-quiz-card fishbones-quiz-card--${state.status}`}>
-      <div className="fishbones-quiz-num">{index + 1}</div>
-      <div className="fishbones-quiz-q-body">
-        <div className="fishbones-quiz-prompt-row">
-          <div className="fishbones-quiz-prompt">{question.prompt}</div>
+    <div className={`libre-quiz-card libre-quiz-card--${state.status}`}>
+      <div className="libre-quiz-num">{index + 1}</div>
+      <div className="libre-quiz-q-body">
+        <div className="libre-quiz-prompt-row">
+          <div className="libre-quiz-prompt">{question.prompt}</div>
           <button
             type="button"
-            className="fishbones-quiz-ask"
+            className="libre-quiz-ask"
             onClick={askAi}
             title="Discuss this question with the local assistant"
             aria-label="Ask Libre for a hint"
@@ -142,7 +142,7 @@ function QuestionCard({
           <ShortAnswer question={question} state={state} onResult={onResult} />
         )}
         {state.status !== "unanswered" && question.explanation && (
-          <div className="fishbones-quiz-explanation">{question.explanation}</div>
+          <div className="libre-quiz-explanation">{question.explanation}</div>
         )}
       </div>
     </div>
@@ -168,14 +168,14 @@ function McqAnswer({
   }
 
   return (
-    <div className="fishbones-quiz-options">
+    <div className="libre-quiz-options">
       {question.options.map((opt, i) => {
         const isPicked = i === picked;
         const isCorrect = i === question.correctIndex;
         const classes = [
-          "fishbones-quiz-option",
-          committed && isCorrect ? "fishbones-quiz-option--correct" : "",
-          committed && isPicked && !isCorrect ? "fishbones-quiz-option--wrong" : "",
+          "libre-quiz-option",
+          committed && isCorrect ? "libre-quiz-option--correct" : "",
+          committed && isPicked && !isCorrect ? "libre-quiz-option--wrong" : "",
         ].join(" ");
         return (
           <button
@@ -184,7 +184,7 @@ function McqAnswer({
             onClick={() => submit(i)}
             disabled={committed && state.status === "correct"}
           >
-            <span className="fishbones-quiz-option-letter">{String.fromCharCode(65 + i)}</span>
+            <span className="libre-quiz-option-letter">{String.fromCharCode(65 + i)}</span>
             <span>{opt}</span>
           </button>
         );
@@ -213,9 +213,9 @@ function ShortAnswer({
   }
 
   return (
-    <div className="fishbones-quiz-short">
+    <div className="libre-quiz-short">
       <input
-        className="fishbones-quiz-short-input"
+        className="libre-quiz-short-input"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => {
@@ -225,7 +225,7 @@ function ShortAnswer({
         disabled={committed}
       />
       <button
-        className="fishbones-quiz-short-submit"
+        className="libre-quiz-short-submit"
         onClick={submit}
         disabled={committed || !value.trim()}
       >

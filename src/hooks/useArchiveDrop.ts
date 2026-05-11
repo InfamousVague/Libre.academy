@@ -1,4 +1,4 @@
-/// Drag-and-drop a `.academy` (or legacy `.fishbones` / `.kata`)
+/// Drag-and-drop a `.academy` (or legacy `.libre` / `.kata`)
 /// archive onto the app window to import it. Wraps Tauri 2's
 /// `onDragDropEvent` API and gives the caller two pieces of state
 /// plus a sequential import runner:
@@ -22,18 +22,18 @@
 /// hook returns idle state forever and the import callback is never
 /// fired. Drag-and-drop on the web uses the HTML5 DataTransfer API,
 /// which is a different surface entirely; that path lives behind a
-/// future TODO since the web Fishbones build doesn't have an
+/// future TODO since the web Libre build doesn't have an
 /// `import_course` backend equivalent yet.
 
 import { useEffect, useRef, useState } from "react";
 import { isWeb } from "../lib/platform";
 
 /// Course-archive extensions, in priority order. `.academy` is the
-/// canonical extension after the Fishbones → Libre rebrand;
-/// `.fishbones` and `.kata` are the previous names and remain
+/// canonical extension after the Libre → Libre rebrand;
+/// `.libre` and `.kata` are the previous names and remain
 /// accepted on import for backwards compat with archives shipped /
 /// exported by older builds. Mirrors `ARCHIVE_EXTS` in `courses.rs`.
-const ARCHIVE_EXTENSIONS = [".academy", ".fishbones", ".kata"];
+const ARCHIVE_EXTENSIONS = [".academy", ".libre", ".kata"];
 
 function isArchivePath(path: string): boolean {
   const lower = path.toLowerCase();
@@ -127,7 +127,7 @@ export function useArchiveDrop({ onImport }: UseArchiveDropOptions): UseArchiveD
         // (web build with strict alias mismatch, embedded iframe).
         // Log + carry on — the file picker still works.
         // eslint-disable-next-line no-console
-        console.warn("[fishbones] drag-drop listener install failed:", e);
+        console.warn("[libre] drag-drop listener install failed:", e);
       }
     })();
 
@@ -140,7 +140,7 @@ export function useArchiveDrop({ onImport }: UseArchiveDropOptions): UseArchiveD
           await onImportRef.current(paths[i]);
         } catch (e) {
           // eslint-disable-next-line no-console
-          console.error("[fishbones] drop-import failed for", paths[i], e);
+          console.error("[libre] drop-import failed for", paths[i], e);
           // Keep going — partial success beats halt-on-first-failure.
         }
       }

@@ -211,7 +211,7 @@ pub async fn generate_lesson(
     stub: String,                    // JSON string: { id, kind, title, intent }
     prior_solution: Option<String>,  // if section-progressive and this is a continuation
 ) -> Result<LlmResponse, String> {
-    let system = r#"You author one Codecademy-style lesson at a time for the Fishbones app. Given the chapter's cleaned Markdown as reference, the target language, and a lesson stub (id, kind, title, intent), return a single JSON object matching one of these shapes depending on kind.
+    let system = r#"You author one Codecademy-style lesson at a time for the Libre app. Given the chapter's cleaned Markdown as reference, the target language, and a lesson stub (id, kind, title, intent), return a single JSON object matching one of these shapes depending on kind.
 
 EVERY non-quiz lesson (reading / exercise / mixed) MUST additionally include two top-level enrichment fields:
 
@@ -354,7 +354,7 @@ TEST HARNESS — pick per `language`:
     The Swift runtime is run-only (no automated grading in V1). Leave `tests` as an empty string "".
 
 Writing guidelines:
-  - Rewrite tight in Fishbones voice — friendly, terse, no filler. Do not quote long passages from the source verbatim.
+  - Rewrite tight in Libre voice — friendly, terse, no filler. Do not quote long passages from the source verbatim.
   - Use `backticks` for identifiers and ```lang fences for code in lesson bodies.
   - Exercise starters MUST be runnable (no TODO syntax that errors on load) — use comments for TODOs. For Rust exercises, `fn main() { ... }` should compile even with the user's function stubbed to `todo!()`.
   - Quizzes: 3–5 questions, mix of mcq (4 options, one correct) and short-answer. `accept` is a list of equally-valid answers (case/punctuation-insensitive match).
@@ -398,7 +398,7 @@ pub async fn retry_exercise(
     //   4. A per-shape reminder about the JSON-only contract
     // The frontend's parseJson also has a prose-stripping fallback as a
     // belt-and-suspenders recovery for the rare slip-through.
-    let system = r#"You are fixing a Fishbones exercise lesson that failed automated validation.
+    let system = r#"You are fixing a Libre exercise lesson that failed automated validation.
 
 The user will send you the original lesson JSON and a description of the failure. You must return a corrected lesson JSON matching the same schema.
 
@@ -437,7 +437,7 @@ pub async fn enrich_lesson(
     title: String,
     body: String,
 ) -> Result<LlmResponse, String> {
-    let system = r#"You add reading-experience enrichment to an existing Fishbones lesson. Given the lesson's language, title, and body markdown, return a JSON object with EXACTLY these three fields — nothing else:
+    let system = r#"You add reading-experience enrichment to an existing Libre lesson. Given the lesson's language, title, and body markdown, return a JSON object with EXACTLY these three fields — nothing else:
 
   {
     "objectives": [ "3 to 5 short bullets (8-14 words each), verb-led, describing what the learner KNOWS or can DO after reading" ],
@@ -528,7 +528,7 @@ pub async fn generate_challenge(
     topic: String,
     model_override: Option<String>,
 ) -> Result<LlmResponse, String> {
-    let system = r#"You author ONE stand-alone kata-style coding challenge for the Fishbones app. Given a language, a difficulty tier, and a topic, return a single JSON object:
+    let system = r#"You author ONE stand-alone kata-style coding challenge for the Libre app. Given a language, a difficulty tier, and a topic, return a single JSON object:
 
   {
     "title": "short descriptive title (≤ 60 chars)",
@@ -586,7 +586,7 @@ TEST HARNESS — STRONG RULES (non-negotiable):
     If the task requires printing to stdout, REFORMULATE: make the learner implement a function that RETURNS the string, and have `main` (in `starter`/`solution`) just `println!("{}", user_fn())`. Tests assert on the return value.
 
   TypeScript / JavaScript:
-    Use the Fishbones harness:
+    Use the Libre harness:
       test("description", () => { ... })
       expect(x).toBe(y)
       expect(x).toEqual(y)
@@ -618,7 +618,7 @@ TEST HARNESS — STRONG RULES (non-negotiable):
       }
 
   Python:
-    Use the Fishbones harness: `def test_name(): expect(x).to_be(y)`.
+    Use the Libre harness: `def test_name(): expect(x).to_be(y)`.
     User code is exposed as `user` module; tests do `from user import thing`.
 
   Swift:
@@ -682,7 +682,7 @@ pub async fn generate_lesson_from_docs_page(
     chapter_total: Option<u32>,
     model_override: Option<String>,
 ) -> Result<LlmResponse, String> {
-    let system = r#"You turn ONE page from an online documentation site into ONE Codecademy-style lesson for the Fishbones learning app. The input is already lesson-sized — don't try to split it. The input is already cleaned markdown, but may still contain navigation fragments, edit-page links, or other chrome — filter these out silently.
+    let system = r#"You turn ONE page from an online documentation site into ONE Codecademy-style lesson for the Libre learning app. The input is already lesson-sized — don't try to split it. The input is already cleaned markdown, but may still contain navigation fragments, edit-page links, or other chrome — filter these out silently.
 
 Given:
   - a lesson kind (reading / exercise / quiz) — obey this strictly
@@ -827,7 +827,7 @@ pub async fn generate_chapter_capstone(
     lesson_id: String,
     model_override: Option<String>,
 ) -> Result<LlmResponse, String> {
-    let system = r#"You generate ONE capstone coding EXERCISE for a chapter of reading lessons in the Fishbones learning app. The learner has just read every lesson in the chapter; now they need to practice what they learned.
+    let system = r#"You generate ONE capstone coding EXERCISE for a chapter of reading lessons in the Libre learning app. The learner has just read every lesson in the chapter; now they need to practice what they learned.
 
 Your job: invent a small, focused coding task that synthesizes the chapter's CORE concepts into a single practice problem. The exercise should feel like the natural "try it now" cap at the end of a book chapter.
 
@@ -1122,7 +1122,7 @@ pub async fn structure_with_llm(
     language: String,
 ) -> Result<LlmResponse, String> {
     // Legacy single-pass entry point; runPipeline is the preferred path.
-    let legacy_system = r#"You are a single-pass legacy adapter. Return a JSON array of lessons for the Fishbones app given a chapter of raw text and a target language. Each lesson is either reading or exercise with the schema described in the generate_lesson system prompt. Keep it simple — 6 to 10 lessons."#;
+    let legacy_system = r#"You are a single-pass legacy adapter. Return a JSON array of lessons for the Libre app given a chapter of raw text and a target language. Each lesson is either reading or exercise with the schema described in the generate_lesson system prompt. Keep it simple — 6 to 10 lessons."#;
     let prompt = format!("Language: {language}\nSection: {section_title}\n\n{section_text}");
     call_llm(
         &settings,

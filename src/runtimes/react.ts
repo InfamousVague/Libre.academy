@@ -65,7 +65,7 @@ function buildPreviewHtml(userSource: string, userCss: string): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Fishbones — React preview</title>
+  <title>Libre — React preview</title>
   <style>
     html, body, #root { margin: 0; padding: 0; min-height: 100%; }
     body {
@@ -74,7 +74,7 @@ function buildPreviewHtml(userSource: string, userCss: string): string {
       color: #f5f5f7;
       -webkit-font-smoothing: antialiased;
     }
-    #__fishbones_error {
+    #__libre_error {
       position: fixed; inset: 0;
       padding: 24px;
       background: #1a0b0f;
@@ -119,9 +119,9 @@ ${userCss}
       .replace(/^\\s*export\\s+/gm, "");
 
     function showPhaseError(phase, err, _body) {
-      const node = document.getElementById("__fishbones_error") || (() => {
+      const node = document.getElementById("__libre_error") || (() => {
         const n = document.createElement("pre");
-        n.id = "__fishbones_error";
+        n.id = "__libre_error";
         document.body.appendChild(n);
         return n;
       })();
@@ -157,7 +157,7 @@ ${userCss}
         "React",
         [
           "const { Component, Fragment, StrictMode, useState, useEffect, useMemo, useCallback, useRef, useReducer, useContext, createContext, useLayoutEffect, useTransition, useDeferredValue, useId, useSyncExternalStore } = React;",
-          "return (function __fishbonesUserModule() {",
+          "return (function __libreUserModule() {",
           transpiled,
           "  return typeof App !== 'undefined' ? App : typeof __appExport !== 'undefined' ? __appExport : null;",
           "})();",
@@ -210,7 +210,7 @@ const CONSOLE_SHIM = `
   const post = (level, args) => {
     try {
       parentWin.postMessage({
-        __fishbones: true,
+        __libre: true,
         level,
         text: args.map(a => {
           if (a == null) return String(a);

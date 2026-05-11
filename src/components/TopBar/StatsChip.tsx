@@ -230,32 +230,32 @@ export default function StatsChip({
 
   return (
     <div
-      className="fishbones__topbar-stats-wrap"
+      className="libre__topbar-stats-wrap"
       ref={wrapRef}
       data-tauri-drag-region={false}
     >
       <button
-        className={`fishbones__topbar-stats-trigger ${
-          open ? "fishbones__topbar-stats-trigger--open" : ""
+        className={`libre__topbar-stats-trigger ${
+          open ? "libre__topbar-stats-trigger--open" : ""
         }`}
         onClick={() => setOpen((v) => !v)}
         title={`Level ${stats.level} · ${stats.streakDays} day streak`}
       >
         <span
-          className={`fishbones__topbar-streak ${
-            streakActive ? "fishbones__topbar-streak--active" : ""
+          className={`libre__topbar-streak ${
+            streakActive ? "libre__topbar-streak--active" : ""
           }`}
         >
-          <span className="fishbones__topbar-streak-flame" aria-hidden>
+          <span className="libre__topbar-streak-flame" aria-hidden>
             <Icon icon={flame} size="xs" color="currentColor" weight="bold" />
           </span>
-          <span className="fishbones__topbar-streak-count">{stats.streakDays}</span>
+          <span className="libre__topbar-streak-count">{stats.streakDays}</span>
           {/* Tiny snowflake when at least one day in the current run was
               shield-frozen — surfaces the protected state at a glance
               without forcing the learner to open the dropdown. */}
           {frozenDayCount > 0 && (
             <span
-              className="fishbones__topbar-streak-frozen"
+              className="libre__topbar-streak-frozen"
               aria-label={`${frozenDayCount} day${frozenDayCount === 1 ? "" : "s"} frozen`}
               title={`${frozenDayCount} day${frozenDayCount === 1 ? "" : "s"} frozen`}
             >
@@ -272,14 +272,14 @@ export default function StatsChip({
       </button>
 
       {open && (
-        <div className="fishbones__topbar-stats-panel" role="dialog" aria-label="Progress stats">
+        <div className="libre__topbar-stats-panel" role="dialog" aria-label="Progress stats">
           {/* Hero row. The ring's centre already shows the level
               number, so the right-hand body promotes the SIGNED-IN
               identity (name + email) instead of duplicating "Level N"
               as a heading. When the learner is signed out, we fall
               back to a plain Level heading so the row still has
               something to anchor against the ring. */}
-          <div className="fishbones__topbar-stats-hero">
+          <div className="libre__topbar-stats-hero">
             <ProgressRing
               progress={levelProgress}
               size={72}
@@ -287,25 +287,25 @@ export default function StatsChip({
               label={String(stats.level)}
               sublabel="level"
             />
-            <div className="fishbones__topbar-stats-hero-body">
+            <div className="libre__topbar-stats-hero-body">
               {signedIn === true && (userDisplayName?.trim() || userEmail) ? (
                 <>
-                  <div className="fishbones__topbar-stats-heading">
+                  <div className="libre__topbar-stats-heading">
                     {userDisplayName?.trim() || userEmail}
                   </div>
                   {userEmail && userDisplayName?.trim() && (
-                    <div className="fishbones__topbar-stats-sub">{userEmail}</div>
+                    <div className="libre__topbar-stats-sub">{userEmail}</div>
                   )}
                 </>
               ) : (
                 <>
-                  <div className="fishbones__topbar-stats-heading">Level {stats.level}</div>
-                  <div className="fishbones__topbar-stats-sub">
+                  <div className="libre__topbar-stats-heading">Level {stats.level}</div>
+                  <div className="libre__topbar-stats-sub">
                     {stats.xpIntoLevel} / {stats.xpForLevel} XP
                   </div>
                 </>
               )}
-              <div className="fishbones__topbar-stats-to-next">
+              <div className="libre__topbar-stats-to-next">
                 {xpToNext === 0
                   ? "Ready to level up — complete any lesson!"
                   : `${xpToNext} XP to level ${stats.level + 1}`}
@@ -313,9 +313,9 @@ export default function StatsChip({
             </div>
           </div>
 
-          <div className="fishbones__topbar-stats-divider" aria-hidden />
+          <div className="libre__topbar-stats-divider" aria-hidden />
 
-          <div className="fishbones__topbar-stats-grid">
+          <div className="libre__topbar-stats-grid">
             <StatBlock
               icon={flame}
               color={STAT_COLORS.streak}
@@ -376,21 +376,21 @@ export default function StatsChip({
               + badges. Hidden when `history` isn't wired. */}
           {miniHeatmap && (
             <div
-              className="fishbones__topbar-stats-mini-heat"
+              className="libre__topbar-stats-mini-heat"
               aria-label="Activity over the last 4 weeks"
             >
-              <div className="fishbones__topbar-stats-mini-heat-head">
-                <span className="fishbones__topbar-stats-mini-heat-label">
+              <div className="libre__topbar-stats-mini-heat-head">
+                <span className="libre__topbar-stats-mini-heat-label">
                   Recent activity
                 </span>
-                <span className="fishbones__topbar-stats-mini-heat-count">
+                <span className="libre__topbar-stats-mini-heat-count">
                   {miniHeatmap.activeDays === 0
                     ? "no activity yet"
                     : `${miniHeatmap.activeDays} active day${miniHeatmap.activeDays === 1 ? "" : "s"} · last 4 weeks`}
                 </span>
               </div>
-              <div className="fishbones__topbar-stats-mini-heat-body">
-                <div className="fishbones__topbar-stats-mini-heat-rowlabels" aria-hidden>
+              <div className="libre__topbar-stats-mini-heat-body">
+                <div className="libre__topbar-stats-mini-heat-rowlabels" aria-hidden>
                   <span />
                   <span>M</span>
                   <span />
@@ -399,13 +399,13 @@ export default function StatsChip({
                   <span>F</span>
                   <span />
                 </div>
-                <div className="fishbones__topbar-stats-mini-heat-grid">
+                <div className="libre__topbar-stats-mini-heat-grid">
                   {miniHeatmap.cells.map((c: { key: string; count: number; label: string; isPad: boolean }) => {
                     if (c.isPad) {
                       return (
                         <span
                           key={c.key}
-                          className="fishbones__topbar-stats-mini-heat-cell fishbones__topbar-stats-mini-heat-cell--pad"
+                          className="libre__topbar-stats-mini-heat-cell libre__topbar-stats-mini-heat-cell--pad"
                           aria-hidden
                         />
                       );
@@ -425,7 +425,7 @@ export default function StatsChip({
                     return (
                       <span
                         key={c.key}
-                        className={`fishbones__topbar-stats-mini-heat-cell fishbones__topbar-stats-mini-heat-cell--lvl-${lvl}`}
+                        className={`libre__topbar-stats-mini-heat-cell libre__topbar-stats-mini-heat-cell--lvl-${lvl}`}
                         title={c.label}
                       />
                     );
@@ -440,14 +440,14 @@ export default function StatsChip({
               a concrete reward attached to it. Hidden when every
               milestone is unlocked. */}
           {nextMilestone && (
-            <div className="fishbones__topbar-stats-next">
-              <span className="fishbones__topbar-stats-next-label">Next</span>
-              <span className="fishbones__topbar-stats-next-name">
+            <div className="libre__topbar-stats-next">
+              <span className="libre__topbar-stats-next-label">Next</span>
+              <span className="libre__topbar-stats-next-name">
                 {nextMilestone.label}
               </span>
-              <span className="fishbones__topbar-stats-next-progress">
+              <span className="libre__topbar-stats-next-progress">
                 {nextMilestone.actual}/{nextMilestone.target}{" "}
-                <span className="fishbones__topbar-stats-next-unit">
+                <span className="libre__topbar-stats-next-unit">
                   {nextMilestone.unit}
                 </span>
               </span>
@@ -463,37 +463,37 @@ export default function StatsChip({
               CTA below. */}
           {shields && (
             <div
-              className="fishbones__topbar-stats-freeze"
+              className="libre__topbar-stats-freeze"
               aria-label="Streak shields"
             >
-              <div className="fishbones__topbar-stats-freeze-head">
+              <div className="libre__topbar-stats-freeze-head">
                 <span
-                  className="fishbones__topbar-stats-freeze-icon"
+                  className="libre__topbar-stats-freeze-icon"
                   style={{ color: STAT_COLORS.freeze }}
                   aria-hidden
                 >
                   <Icon icon={snowflake} size="xs" color="currentColor" weight="bold" />
                 </span>
-                <span className="fishbones__topbar-stats-freeze-label">
+                <span className="libre__topbar-stats-freeze-label">
                   Streak shields
                 </span>
-                <span className="fishbones__topbar-stats-freeze-count">
+                <span className="libre__topbar-stats-freeze-count">
                   {shields.available} of {shields.perWeek}
                 </span>
               </div>
-              <div className="fishbones__topbar-stats-freeze-pips" aria-hidden>
+              <div className="libre__topbar-stats-freeze-pips" aria-hidden>
                 {Array.from({ length: shields.perWeek }).map((_, i) => (
                   <span
                     key={i}
-                    className={`fishbones__topbar-stats-freeze-pip ${
+                    className={`libre__topbar-stats-freeze-pip ${
                       i < usedShields
-                        ? "fishbones__topbar-stats-freeze-pip--used"
+                        ? "libre__topbar-stats-freeze-pip--used"
                         : ""
                     }`}
                   />
                 ))}
               </div>
-              <div className="fishbones__topbar-stats-freeze-hint">
+              <div className="libre__topbar-stats-freeze-hint">
                 {canFreezeYesterday
                   ? "You missed yesterday — freeze it to keep your streak."
                   : yesterdayFrozen
@@ -507,7 +507,7 @@ export default function StatsChip({
               {canFreezeYesterday && (
                 <button
                   type="button"
-                  className="fishbones__topbar-stats-freeze-btn"
+                  className="libre__topbar-stats-freeze-btn"
                   onClick={() => {
                     shields.freezeDay(yesterdayKey);
                   }}
@@ -526,11 +526,11 @@ export default function StatsChip({
               the identity + a quiet "Sign out" link replaces the row
               and "View profile" goes back to primary. */}
           {signedIn === false && onSignIn && (
-            <div className="fishbones__topbar-stats-account">
-              <div className="fishbones__topbar-stats-account-row">
+            <div className="libre__topbar-stats-account">
+              <div className="libre__topbar-stats-account-row">
                 <button
                   type="button"
-                  className="fishbones__topbar-stats-signin"
+                  className="libre__topbar-stats-signin"
                   onClick={() => {
                     setOpen(false);
                     onSignIn();
@@ -541,7 +541,7 @@ export default function StatsChip({
                 {onOpenProfile && (
                   <button
                     type="button"
-                    className="fishbones__topbar-stats-view-profile fishbones__topbar-stats-view-profile--secondary"
+                    className="libre__topbar-stats-view-profile libre__topbar-stats-view-profile--secondary"
                     onClick={() => {
                       setOpen(false);
                       onOpenProfile();
@@ -555,15 +555,15 @@ export default function StatsChip({
           )}
 
           {signedIn === true && (
-            <div className="fishbones__topbar-stats-account">
+            <div className="libre__topbar-stats-account">
               {/* Identity card removed from this row — the hero block
                   above promotes name + email next to the level ring,
                   so duplicating it here was just visual noise. */}
-              <div className="fishbones__topbar-stats-account-row">
+              <div className="libre__topbar-stats-account-row">
                 {onOpenProfile && (
                   <button
                     type="button"
-                    className="fishbones__topbar-stats-view-profile"
+                    className="libre__topbar-stats-view-profile"
                     onClick={() => {
                       setOpen(false);
                       onOpenProfile();
@@ -575,7 +575,7 @@ export default function StatsChip({
                 {onSignOut && (
                   <button
                     type="button"
-                    className="fishbones__topbar-stats-signout"
+                    className="libre__topbar-stats-signout"
                     onClick={() => {
                       setOpen(false);
                       onSignOut();
@@ -594,7 +594,7 @@ export default function StatsChip({
           {signedIn === undefined && onOpenProfile && (
             <button
               type="button"
-              className="fishbones__topbar-stats-view-profile"
+              className="libre__topbar-stats-view-profile"
               onClick={() => {
                 setOpen(false);
                 onOpenProfile();
@@ -633,18 +633,18 @@ function StatBlock({
 }) {
   return (
     <div
-      className="fishbones__topbar-stats-block"
+      className="libre__topbar-stats-block"
       style={span ? { gridColumn: "1 / -1" } : undefined}
     >
-      <div className="fishbones__topbar-stats-block-label" style={{ color }}>
-        <span className="fishbones__topbar-stats-block-icon" aria-hidden>
+      <div className="libre__topbar-stats-block-label" style={{ color }}>
+        <span className="libre__topbar-stats-block-icon" aria-hidden>
           <Icon icon={icon} size="xs" color="currentColor" weight="bold" />
         </span>
         {label}
       </div>
-      <div className="fishbones__topbar-stats-block-value">{value}</div>
+      <div className="libre__topbar-stats-block-value">{value}</div>
       <div
-        className="fishbones__topbar-stats-block-hint"
+        className="libre__topbar-stats-block-hint"
         style={span ? { whiteSpace: "normal" } : undefined}
       >
         {hint}

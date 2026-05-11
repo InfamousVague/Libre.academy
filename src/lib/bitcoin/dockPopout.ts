@@ -18,7 +18,7 @@ function isTauri(): boolean {
 }
 
 const POPOUT_LABEL = "btc-dock";
-const POPOUT_TITLE = "Fishbones — Local Bitcoin";
+const POPOUT_TITLE = "Libre — Local Bitcoin";
 
 type StateListener = (popped: boolean) => void;
 const listeners = new Set<StateListener>();

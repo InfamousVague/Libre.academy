@@ -53,7 +53,7 @@ Five tabs across the top of the strip:
 | js         | Keywords + common snippets (`const `, `=>`, `if () {}`, `console.log()`, `.map(...)`, `try / catch`, ...) |
 | cursor     | `tab`, `↩`, `←↑↓→`, line-start, line-end, delete-word, select-line |
 
-## Bringing it into Fishbones (next pass)
+## Bringing it into Libre (next pass)
 
 When this design feels right on the phone, the integration shape is:
 

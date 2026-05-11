@@ -225,7 +225,7 @@ export interface Course {
   /// this. The Library renders placeholders semi-opaque with a
   /// Download badge instead of an Open click.
   placeholder?: boolean;
-  /// Where the .fishbones archive (desktop) or course JSON (web)
+  /// Where the .libre archive (desktop) or course JSON (web)
   /// can be fetched from to install the course. Populated only on
   /// placeholders.
   downloadUrl?: string;

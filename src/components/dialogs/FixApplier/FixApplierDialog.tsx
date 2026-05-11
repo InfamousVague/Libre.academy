@@ -148,20 +148,20 @@ export default function FixApplierDialog({
   return (
     <ModalBackdrop onDismiss={onClose} zIndex={9100}>
       <div
-        className="fishbones-fixapplier-panel"
+        className="libre-fixapplier-panel"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="fishbones-fixapplier-title"
+        aria-labelledby="libre-fixapplier-title"
       >
-        <header className="fishbones-fixapplier-header">
+        <header className="libre-fixapplier-header">
           <h2
-            id="fishbones-fixapplier-title"
-            className="fishbones-fixapplier-title"
+            id="libre-fixapplier-title"
+            className="libre-fixapplier-title"
           >
             Apply fix patches
           </h2>
           <button
-            className="fishbones-fixapplier-icon-btn"
+            className="libre-fixapplier-icon-btn"
             onClick={onClose}
             aria-label="Close"
           >
@@ -169,8 +169,8 @@ export default function FixApplierDialog({
           </button>
         </header>
 
-        <div className="fishbones-fixapplier-body">
-          <p className="fishbones-fixapplier-help">
+        <div className="libre-fixapplier-body">
+          <p className="libre-fixapplier-help">
             Paste the LLM's reply to a "Copy fix prompt" export. Each
             fenced JSON block becomes one lesson patch. Patches apply
             to the installed copy of the course; to ship them in the
@@ -179,10 +179,10 @@ export default function FixApplierDialog({
             <code> public/starter-courses/&lt;id&gt;.json</code>.
           </p>
 
-          <label className="fishbones-fixapplier-label">
+          <label className="libre-fixapplier-label">
             Course
             <select
-              className="fishbones-fixapplier-select"
+              className="libre-fixapplier-select"
               value={courseId}
               onChange={(e) => setCourseId(e.target.value)}
               disabled={applying}
@@ -195,10 +195,10 @@ export default function FixApplierDialog({
             </select>
           </label>
 
-          <label className="fishbones-fixapplier-label">
+          <label className="libre-fixapplier-label">
             LLM reply
             <textarea
-              className="fishbones-fixapplier-textarea"
+              className="libre-fixapplier-textarea"
               value={pasted}
               onChange={(e) => setPasted(e.target.value)}
               placeholder='Paste the model&apos;s JSON reply here. Each ```json { "id": ..., "solution": ..., "tests": ... } ``` block becomes one patch.'
@@ -209,28 +209,28 @@ export default function FixApplierDialog({
           </label>
 
           {parsed.length > 0 && (
-            <div className="fishbones-fixapplier-preview">
-              <div className="fishbones-fixapplier-preview-head">
+            <div className="libre-fixapplier-preview">
+              <div className="libre-fixapplier-preview-head">
                 Parsed {parsed.length} patch{parsed.length === 1 ? "" : "es"}
                 {preview.notFound.length > 0 && (
-                  <span className="fishbones-fixapplier-warn">
+                  <span className="libre-fixapplier-warn">
                     · {preview.notFound.length} unknown id
                     {preview.notFound.length === 1 ? "" : "s"}
                   </span>
                 )}
               </div>
-              <ul className="fishbones-fixapplier-preview-list">
+              <ul className="libre-fixapplier-preview-list">
                 {preview.matched.map((m) => (
                   <li
                     key={m.id}
-                    className="fishbones-fixapplier-preview-row fishbones-fixapplier-preview-row--match"
+                    className="libre-fixapplier-preview-row libre-fixapplier-preview-row--match"
                   >
                     <Icon icon={check} size="xs" color="currentColor" />
-                    <span className="fishbones-fixapplier-preview-title">
+                    <span className="libre-fixapplier-preview-title">
                       {m.title}
                     </span>
                     {m.patch.diagnosis && (
-                      <span className="fishbones-fixapplier-preview-diag">
+                      <span className="libre-fixapplier-preview-diag">
                         {m.patch.diagnosis}
                       </span>
                     )}
@@ -239,10 +239,10 @@ export default function FixApplierDialog({
                 {preview.notFound.map((id) => (
                   <li
                     key={id}
-                    className="fishbones-fixapplier-preview-row fishbones-fixapplier-preview-row--miss"
+                    className="libre-fixapplier-preview-row libre-fixapplier-preview-row--miss"
                   >
                     <Icon icon={circleX} size="xs" color="currentColor" />
-                    <span className="fishbones-fixapplier-preview-title">
+                    <span className="libre-fixapplier-preview-title">
                       <code>{id}</code> — not in this course
                     </span>
                   </li>
@@ -252,7 +252,7 @@ export default function FixApplierDialog({
           )}
 
           {result && (
-            <div className="fishbones-fixapplier-success">
+            <div className="libre-fixapplier-success">
               ✓ Applied {result.applied.length} patch
               {result.applied.length === 1 ? "" : "es"}
               {result.notFound.length > 0
@@ -263,29 +263,29 @@ export default function FixApplierDialog({
           )}
 
           {promoteResult?.ok && (
-            <div className="fishbones-fixapplier-success">
+            <div className="libre-fixapplier-success">
               ✓ Wrote bundled starter to <code>{promoteResult.path}</code>
             </div>
           )}
           {promoteResult && !promoteResult.ok && (
-            <div className="fishbones-fixapplier-error">
+            <div className="libre-fixapplier-error">
               <Icon icon={circleX} size="xs" color="currentColor" />
               <span>Promote failed: {promoteResult.error}</span>
             </div>
           )}
 
           {error && (
-            <div className="fishbones-fixapplier-error">
+            <div className="libre-fixapplier-error">
               <Icon icon={circleX} size="xs" color="currentColor" />
               <span>{error}</span>
             </div>
           )}
         </div>
 
-        <footer className="fishbones-fixapplier-footer">
+        <footer className="libre-fixapplier-footer">
           {result && isDesktop && (
             <button
-              className="fishbones-fixapplier-btn"
+              className="libre-fixapplier-btn"
               onClick={() => void promoteToBundled()}
               title="(Dev only) Write the patched course straight to public/starter-courses/<id>.json"
             >
@@ -295,7 +295,7 @@ export default function FixApplierDialog({
           )}
           {result && (
             <button
-              className="fishbones-fixapplier-btn"
+              className="libre-fixapplier-btn"
               onClick={downloadCoursePromote}
               title="Download the updated course.json so you can ship the fixes back into the bundled starter"
             >
@@ -303,9 +303,9 @@ export default function FixApplierDialog({
               <span>Download updated</span>
             </button>
           )}
-          <span className="fishbones-fixapplier-spacer" />
+          <span className="libre-fixapplier-spacer" />
           <button
-            className="fishbones-fixapplier-btn"
+            className="libre-fixapplier-btn"
             onClick={onClose}
             disabled={applying}
           >
@@ -313,7 +313,7 @@ export default function FixApplierDialog({
           </button>
           {!result && (
             <button
-              className="fishbones-fixapplier-btn fishbones-fixapplier-btn--primary"
+              className="libre-fixapplier-btn libre-fixapplier-btn--primary"
               onClick={handleApply}
               disabled={
                 applying || parsed.length === 0 || preview.matched.length === 0

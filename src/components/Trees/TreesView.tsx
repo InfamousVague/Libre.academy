@@ -69,10 +69,10 @@ export default function TreesView({
   const specialtyTrees = TREES.filter((t) => t.audience === "specialty");
 
   return (
-    <div className="fishbones-trees">
-      <header className="fishbones-trees__header">
-        <h1 className="fishbones-trees__title">Skill Trees</h1>
-        <p className="fishbones-trees__blurb">
+    <div className="libre-trees">
+      <header className="libre-trees__header">
+        <h1 className="libre-trees__title">Skill Trees</h1>
+        <p className="libre-trees__blurb">
           Map out the path from where you are to where you want to be. Tap a
           tree to see its prerequisite graph and pick your entry point. Looking
           for a curated step-by-step recipe instead?{" "}
@@ -81,9 +81,9 @@ export default function TreesView({
       </header>
 
       {beginnerTrees.length > 0 && (
-        <section className="fishbones-trees__section">
-          <div className="fishbones-trees__section-label">Start here</div>
-          <div className="fishbones-trees__grid">
+        <section className="libre-trees__section">
+          <div className="libre-trees__section-label">Start here</div>
+          <div className="libre-trees__grid">
             {beginnerTrees.map((t) => (
               <TreeCard
                 key={t.id}
@@ -96,9 +96,9 @@ export default function TreesView({
         </section>
       )}
 
-      <section className="fishbones-trees__section">
-        <div className="fishbones-trees__section-label">Specialties</div>
-        <div className="fishbones-trees__grid">
+      <section className="libre-trees__section">
+        <div className="libre-trees__section-label">Specialties</div>
+        <div className="libre-trees__grid">
           {specialtyTrees.map((t) => (
             <TreeCard
               key={t.id}

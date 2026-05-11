@@ -55,17 +55,17 @@ export default function CourseGroup({
   // collapsed to their header row so the tree doesn't dominate.
   if (isActiveCourse) {
     return (
-      <div className="fishbones__course fishbones__course--active">
+      <div className="libre__course libre__course--active">
         <div
-          className="fishbones__course-card fishbones__course-card--expanded fishbones__course-card--active"
+          className="libre__course-card libre__course-card--expanded libre__course-card--active"
           onContextMenu={onContextMenu}
         >
-          <div className="fishbones__course-title fishbones__course-title--static">
-            <span className="fishbones__course-active-dot" aria-hidden />
+          <div className="libre__course-title libre__course-title--static">
+            <span className="libre__course-active-dot" aria-hidden />
             <LanguageChip language={course.language} size="xs" iconOnly />
-            <span className="fishbones__course-name">{course.title}</span>
+            <span className="libre__course-name">{course.title}</span>
             <span
-              className="fishbones__course-ring"
+              className="libre__course-ring"
               title={`${doneLessons}/${totalLessons} lessons complete`}
             >
               <ProgressRing
@@ -78,7 +78,7 @@ export default function CourseGroup({
           </div>
         </div>
 
-        <div className="fishbones__course-body">
+        <div className="libre__course-body">
           <ChapterTree
             chapters={course.chapters}
             courseId={course.id}
@@ -101,13 +101,13 @@ export default function CourseGroup({
   // it as active and shows the full card. The ring replaces the bare
   // "x/y" text so progress reads as a glance-able visual.
   return (
-    <div className="fishbones__course fishbones__course--compact">
+    <div className="libre__course libre__course--compact">
       <button
-        className="fishbones__course-row"
+        className="libre__course-row"
         onClick={() => setExpanded(!expanded)}
         onContextMenu={onContextMenu}
       >
-        <span className="fishbones__course-row-caret" aria-hidden>
+        <span className="libre__course-row-caret" aria-hidden>
           <Icon
             icon={expanded ? chevronDown : chevronRight}
             size="xs"
@@ -116,9 +116,9 @@ export default function CourseGroup({
           />
         </span>
         <LanguageChip language={course.language} size="xs" iconOnly />
-        <span className="fishbones__course-name">{course.title}</span>
+        <span className="libre__course-name">{course.title}</span>
         <span
-          className="fishbones__course-row-ring"
+          className="libre__course-row-ring"
           title={`${doneLessons}/${totalLessons} lessons complete`}
         >
           <ProgressRing progress={pct} size={18} stroke={2} label="" />
@@ -126,7 +126,7 @@ export default function CourseGroup({
       </button>
 
       {expanded && (
-        <div className="fishbones__course-body">
+        <div className="libre__course-body">
           {/* Same disclosure tree as the active branch — section
               grouping needs to behave identically whether the user is
               peeking at an in-progress course or working in the

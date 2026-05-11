@@ -8,14 +8,14 @@
 /// for the bone-palette tokens + audio-driven advance. Differences
 /// vs. stash:
 ///   - bone-tinted backdrop / spotlight (matches the rest of the
-///     Fishbones chrome instead of stash's slate palette);
+///     Libre chrome instead of stash's slate palette);
 ///   - per-step MP3 played via the `useTourAudio` singleton;
 ///   - auto-advance to the next step on `ended` so a user can
 ///     run the tour hands-free (still skippable + back-able);
 ///   - source of truth for steps is `tourSteps.json` →
 ///     `TOUR_STEPS` (typed + icon-resolved in `tourSteps.ts`),
 ///     not an i18n bundle. Single-language for now; refactor if
-///     Fishbones picks up i18next for the rest of the UI later.
+///     Libre picks up i18next for the rest of the UI later.
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Icon } from "@base/primitives/icon";

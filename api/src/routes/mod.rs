@@ -1,6 +1,6 @@
 //! Top-level router.
 //!
-//! The Fishbones routes live under `/fishbones/` so the same host
+//! The Libre routes live under `/libre/` so the same host
 //! (`api.mattssoftware.com`) can serve other APIs alongside this one
 //! without collisions. Public endpoints (signup, login, the OAuth
 //! start/callback dance, the public course feed) are merged at the
@@ -10,32 +10,32 @@
 //! and Apple insists on the root path for domain verification.
 //!
 //! Endpoint summary:
-//!   POST   /fishbones/auth/signup                    — email + password
-//!   POST   /fishbones/auth/login                     — email + password
-//!   POST   /fishbones/auth/password-reset/request    — email link
-//!   POST   /fishbones/auth/password-reset/confirm    — token + new password
-//!   POST   /fishbones/auth/apple                     — Apple identity_token
-//!   POST   /fishbones/auth/google                    — Google id_token
-//!   GET    /fishbones/auth/google/start              — browser OAuth
-//!   GET    /fishbones/auth/google/callback           — provider redirect
-//!   GET    /fishbones/auth/apple/start               — browser OAuth
-//!   POST   /fishbones/auth/apple/callback            — provider form_post
-//!   GET    /fishbones/auth/apple/callback            —   (also tolerated)
-//!   GET    /fishbones/me                             — current user
-//!   POST   /fishbones/auth/logout                    — revoke this device
-//!   DELETE /fishbones/auth/account                   — delete account
-//!   GET    /fishbones/progress                       — full dump
-//!   PUT    /fishbones/progress                       — bulk upsert
-//!   GET    /fishbones/solutions                      — full dump
-//!   PUT    /fishbones/solutions                      — bulk upsert (LWW)
-//!   GET    /fishbones/settings                       — full dump
-//!   PUT    /fishbones/settings                       — bulk upsert (LWW)
-//!   GET    /fishbones/sync/ws?token=…                — realtime fan-out
-//!   POST   /fishbones/courses                        — upload .fishbones
-//!   GET    /fishbones/courses                        — own courses
-//!   GET    /fishbones/courses/public                 — public feed
-//!   GET    /fishbones/courses/:id                    — download archive
-//!   DELETE /fishbones/courses/:id                    — delete
+//!   POST   /libre/auth/signup                    — email + password
+//!   POST   /libre/auth/login                     — email + password
+//!   POST   /libre/auth/password-reset/request    — email link
+//!   POST   /libre/auth/password-reset/confirm    — token + new password
+//!   POST   /libre/auth/apple                     — Apple identity_token
+//!   POST   /libre/auth/google                    — Google id_token
+//!   GET    /libre/auth/google/start              — browser OAuth
+//!   GET    /libre/auth/google/callback           — provider redirect
+//!   GET    /libre/auth/apple/start               — browser OAuth
+//!   POST   /libre/auth/apple/callback            — provider form_post
+//!   GET    /libre/auth/apple/callback            —   (also tolerated)
+//!   GET    /libre/me                             — current user
+//!   POST   /libre/auth/logout                    — revoke this device
+//!   DELETE /libre/auth/account                   — delete account
+//!   GET    /libre/progress                       — full dump
+//!   PUT    /libre/progress                       — bulk upsert
+//!   GET    /libre/solutions                      — full dump
+//!   PUT    /libre/solutions                      — bulk upsert (LWW)
+//!   GET    /libre/settings                       — full dump
+//!   PUT    /libre/settings                       — bulk upsert (LWW)
+//!   GET    /libre/sync/ws?token=…                — realtime fan-out
+//!   POST   /libre/courses                        — upload .libre
+//!   GET    /libre/courses                        — own courses
+//!   GET    /libre/courses/public                 — public feed
+//!   GET    /libre/courses/:id                    — download archive
+//!   DELETE /libre/courses/:id                    — delete
 //!   GET    /health                                   — liveness (root)
 //!   GET    /.well-known/apple-developer-domain-association.txt (root)
 
@@ -68,8 +68,8 @@ use crate::state::AppState;
 pub fn build_router(state: Arc<AppState>) -> Router {
     let public = Router::new()
         .route("/health", get(health_check))
-        .route("/fishbones/auth/signup", post(auth::signup))
-        .route("/fishbones/auth/login", post(auth::login))
+        .route("/libre/auth/signup", post(auth::signup))
+        .route("/libre/auth/login", post(auth::login))
         // Password-reset request + confirm. Both endpoints are
         // unauthenticated — the request endpoint is gated by email
         // ownership (you only get the token if you can read the
@@ -77,45 +77,45 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         // The request handler always returns 204 regardless of
         // whether the email is registered, to avoid enumeration.
         .route(
-            "/fishbones/auth/password-reset/request",
+            "/libre/auth/password-reset/request",
             post(auth::password_reset_request),
         )
         .route(
-            "/fishbones/auth/password-reset/confirm",
+            "/libre/auth/password-reset/confirm",
             post(auth::password_reset_confirm),
         )
         // Direct id_token paths — clients call these when they have a
         // native-SDK token in hand.
-        .route("/fishbones/auth/apple", post(auth::apple))
-        .route("/fishbones/auth/google", post(auth::google))
+        .route("/libre/auth/apple", post(auth::apple))
+        .route("/libre/auth/google", post(auth::google))
         // Browser-OAuth start endpoints. Desktop opens these in the
         // system browser; the `start` redirects to the provider, the
         // provider redirects back to `callback`, and the callback
-        // redirects into `fishbones://oauth/done?token=…`.
+        // redirects into `libre://oauth/done?token=…`.
         .route(
-            "/fishbones/auth/google/start",
+            "/libre/auth/google/start",
             get(oauth_flow::google_start),
         )
         .route(
-            "/fishbones/auth/google/callback",
+            "/libre/auth/google/callback",
             get(oauth_flow::google_callback),
         )
         .route(
-            "/fishbones/auth/apple/start",
+            "/libre/auth/apple/start",
             get(oauth_flow::apple_start),
         )
         // Apple uses `response_mode=form_post`; tolerate GET too for
         // dev-mode hand-built URLs.
         .route(
-            "/fishbones/auth/apple/callback",
+            "/libre/auth/apple/callback",
             post(oauth_flow::apple_callback_post).get(oauth_flow::apple_callback_get),
         )
-        .route("/fishbones/courses/public", get(courses::list_public))
+        .route("/libre/courses/public", get(courses::list_public))
         // Real-time sync WebSocket. Auth lives in the `?token=…`
         // query param (browsers can't set headers on a WS upgrade)
         // so this route stays in the public group; the handler
         // verifies the bearer before completing the upgrade.
-        .route("/fishbones/sync/ws", get(sync::ws_upgrade))
+        .route("/libre/sync/ws", get(sync::ws_upgrade))
         // Apple domain verification — must live at the literal root
         // path Apple fetches.
         .route(
@@ -124,29 +124,29 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         );
 
     let protected = Router::new()
-        .route("/fishbones/me", get(auth::me))
-        .route("/fishbones/auth/logout", post(auth::logout))
-        .route("/fishbones/auth/account", delete(auth::delete_account))
+        .route("/libre/me", get(auth::me))
+        .route("/libre/auth/logout", post(auth::logout))
+        .route("/libre/auth/account", delete(auth::delete_account))
         .route(
-            "/fishbones/progress",
+            "/libre/progress",
             get(progress::list)
                 .put(progress::upsert)
                 .delete(progress::clear),
         )
         .route(
-            "/fishbones/solutions",
+            "/libre/solutions",
             get(sync::list_solutions).put(sync::upsert_solutions),
         )
         .route(
-            "/fishbones/settings",
+            "/libre/settings",
             get(sync::list_settings).put(sync::upsert_settings),
         )
         .route(
-            "/fishbones/courses",
+            "/libre/courses",
             get(courses::list_mine).post(courses::upload),
         )
         .route(
-            "/fishbones/courses/:id",
+            "/libre/courses/:id",
             get(courses::download).delete(courses::delete_course),
         )
         .route_layer(axum_middleware::from_fn_with_state(

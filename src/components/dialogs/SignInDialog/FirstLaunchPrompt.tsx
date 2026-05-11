@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { UseFishbonesCloud } from "../../../hooks/useFishbonesCloud";
+import type { UseLibreCloud } from "../../../hooks/useLibreCloud";
 import SignInDialog from "./SignInDialog";
 
 /// First-launch sign-in nudge.
@@ -12,7 +12,7 @@ import SignInDialog from "./SignInDialog";
 ///
 ///   - sign in       → token gets written, user is logged in,
 ///                     prompt never reappears
-///   - skip + tick   → fishbones:cloud:dismissed-v1 = "permanent"
+///   - skip + tick   → libre:cloud:dismissed-v1 = "permanent"
 ///   - skip          → "session" (we re-prompt next launch)
 ///   - close (×)     → "session" (treated like skip — same intent)
 ///
@@ -20,7 +20,7 @@ import SignInDialog from "./SignInDialog";
 /// is render `<FirstLaunchPrompt cloud={cloud} />` near the top of
 /// the tree. The component renders nothing until it decides to show.
 
-const DISMISS_KEY = "fishbones:cloud:dismissed-v1";
+const DISMISS_KEY = "libre:cloud:dismissed-v1";
 
 function readDismissed(): "permanent" | "session" | null {
   try {
@@ -39,7 +39,7 @@ function writeDismissed(v: "permanent" | "session"): void {
 }
 
 interface Props {
-  cloud: UseFishbonesCloud;
+  cloud: UseLibreCloud;
 }
 
 export default function FirstLaunchPrompt({ cloud }: Props) {
@@ -82,13 +82,13 @@ export default function FirstLaunchPrompt({ cloud }: Props) {
         onClose={handleClose}
         showSkipButton
         onSkip={handleSkip}
-        headline="Save your progress with a Fishbones account"
-        blurb="Optional. Sign in to sync streaks and lesson progress between devices, upload your imported books, and share courses with friends. Skip to keep using Fishbones entirely on this machine — everything still runs locally."
+        headline="Save your progress with a Libre account"
+        blurb="Optional. Sign in to sync streaks and lesson progress between devices, upload your imported books, and share courses with friends. Skip to keep using Libre entirely on this machine — everything still runs locally."
       />
       {/* "Don't show again" sits inside the modal flow rather than
           as a separate widget so the user sees it before deciding to
           dismiss. Absolute-positioned over the backdrop layer. */}
-      <div className="fishbones-firstlaunch-dontshow">
+      <div className="libre-firstlaunch-dontshow">
         <label>
           <input
             type="checkbox"

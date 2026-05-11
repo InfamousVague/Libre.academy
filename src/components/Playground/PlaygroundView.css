@@ -1,7 +1,7 @@
 /* Root: takes the full main pane. Stacks a small header bar on top of
    the workbench (editor + output). No reading column — the playground
    is purely free-form code. */
-.fishbones-playground {
+.libre-playground {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -10,20 +10,20 @@
   margin: 10px 10px 10px 0;
 }
 
-.fishbones-playground-header {
+.libre-playground-header {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 0 4px 10px;
 }
 
-.fishbones-playground-lang-picker {
+.libre-playground-lang-picker {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.fishbones-playground-lang-label {
+.libre-playground-lang-label {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -31,7 +31,7 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones-playground-lang-select {
+.libre-playground-lang-select {
   padding: 4px 10px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
@@ -43,25 +43,25 @@
   cursor: pointer;
 }
 
-.fishbones-playground-lang-select:focus-visible {
+.libre-playground-lang-select:focus-visible {
   outline: 2px solid var(--color-text-secondary);
   outline-offset: 1px;
 }
 
-.fishbones-playground-spacer {
+.libre-playground-spacer {
   flex: 1;
 }
 
 /* AI helpers cluster — Explain + Generate sit between the spacer and the
    layout toggle. Same chrome as the language picker so they read as
    first-class controls, not stickers. */
-.fishbones-playground-ai {
+.libre-playground-ai {
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
 
-.fishbones-playground-ai-btn {
+.libre-playground-ai-btn {
   padding: 5px 12px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
@@ -74,19 +74,19 @@
   transition: background var(--fb-motion-snappy), border-color var(--fb-motion-snappy), opacity var(--fb-motion-snappy);
 }
 
-.fishbones-playground-ai-btn:hover:not(:disabled) {
+.libre-playground-ai-btn:hover:not(:disabled) {
   background: var(--color-bg-tertiary);
   border-color: var(--color-border-strong);
 }
 
-.fishbones-playground-ai-btn--active,
-.fishbones-playground-ai-btn--active:hover {
+.libre-playground-ai-btn--active,
+.libre-playground-ai-btn--active:hover {
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
   border-color: var(--color-text-primary);
 }
 
-.fishbones-playground-ai-btn:disabled {
+.libre-playground-ai-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
@@ -94,14 +94,14 @@
 /* Inline "describe what you want" strip — sits below the header when
    the Generate toggle is active. Mirrors the search bar shape so it
    doesn't feel like a separate dialog. */
-.fishbones-playground-generate {
+.libre-playground-generate {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 8px 4px 12px;
 }
 
-.fishbones-playground-generate-input {
+.libre-playground-generate-input {
   flex: 1;
   padding: 7px 12px;
   background: var(--color-bg-primary);
@@ -112,12 +112,12 @@
   font-size: 13px;
 }
 
-.fishbones-playground-generate-input:focus {
+.libre-playground-generate-input:focus {
   outline: none;
   border-color: var(--color-border-strong);
 }
 
-.fishbones-playground-generate-submit {
+.libre-playground-generate-submit {
   padding: 7px 14px;
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
@@ -130,16 +130,16 @@
   transition: opacity var(--fb-motion-snappy);
 }
 
-.fishbones-playground-generate-submit:hover:not(:disabled) {
+.libre-playground-generate-submit:hover:not(:disabled) {
   opacity: 0.9;
 }
 
-.fishbones-playground-generate-submit:disabled {
+.libre-playground-generate-submit:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.fishbones-playground-generate-cancel {
+.libre-playground-generate-cancel {
   width: 28px;
   height: 28px;
   display: grid;
@@ -153,7 +153,7 @@
   cursor: pointer;
 }
 
-.fishbones-playground-generate-cancel:hover {
+.libre-playground-generate-cancel:hover {
   color: var(--color-text-primary);
   background: var(--color-bg-tertiary);
 }
@@ -161,7 +161,7 @@
 /* Segmented toggle group. One for device presets (web/threejs only) and
    one for layout (split / editor / preview). Pills share chrome with
    the language select so the header reads as a single row of controls. */
-.fishbones-playground-seg {
+.libre-playground-seg {
   display: inline-flex;
   align-items: center;
   padding: 2px;
@@ -171,7 +171,7 @@
   gap: 2px;
 }
 
-.fishbones-playground-seg-btn {
+.libre-playground-seg-btn {
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -188,18 +188,18 @@
   transition: background var(--fb-motion-quick), color var(--fb-motion-quick);
 }
 
-.fishbones-playground-seg-btn:hover:not([disabled]) {
+.libre-playground-seg-btn:hover:not([disabled]) {
   color: var(--color-text-primary);
   background: rgba(255, 255, 255, 0.06);
 }
 
-.fishbones-playground-seg-btn--active,
-.fishbones-playground-seg-btn--active:hover {
+.libre-playground-seg-btn--active,
+.libre-playground-seg-btn--active:hover {
   color: var(--color-bg-primary);
   background: var(--color-text-primary);
 }
 
-.fishbones-playground-seg-btn[disabled] {
+.libre-playground-seg-btn[disabled] {
   opacity: 0.35;
   cursor: not-allowed;
 }
@@ -207,7 +207,7 @@
 /* Label next to the icon. Hide on narrow widths so the header never
    wraps — the icon alone still conveys intent at small sizes. */
 @media (max-width: 960px) {
-  .fishbones-playground-seg-label {
+  .libre-playground-seg-label {
     display: none;
   }
 }
@@ -215,13 +215,13 @@
 /* The workbench card takes the full remaining height. Workbench's own
    styles provide the 12px rounded border + subtle shadow; we just need
    to override its lesson-pane width (48%) so it spans the whole pane. */
-.fishbones-playground-workbench {
+.libre-playground-workbench {
   flex: 1;
   min-height: 0;
   display: flex;
 }
 
-.fishbones-playground-workbench > .fishbones-workbench {
+.libre-playground-workbench > .libre-workbench {
   width: 100%;
   min-width: 0;
   margin: 0; /* parent pane supplies the 10px margins */
@@ -230,7 +230,7 @@
 /* Editor-only / preview-only modes: reuse the workbench card chrome (same
    border + radius + shadow) but wrap a single pane instead of the split.
    The inner EditorPane / OutputPane already fills its container. */
-.fishbones-playground-solo {
+.libre-playground-solo {
   flex: 1;
   min-height: 0;
   display: flex;
@@ -246,9 +246,9 @@
    just its header strip and the rest of the card shows its own gray
    background — which looks like "a big gray box rendering over the
    editor". The equivalent rule inside Workbench is scoped to
-   `.fishbones-workbench-pane`, so solo mode needs its own match. */
-.fishbones-playground-solo > .fishbones-editor,
-.fishbones-playground-solo > .fishbones-output {
+   `.libre-workbench-pane`, so solo mode needs its own match. */
+.libre-playground-solo > .libre-editor,
+.libre-playground-solo > .libre-output {
   flex: 1;
   min-height: 0;
   min-width: 0;

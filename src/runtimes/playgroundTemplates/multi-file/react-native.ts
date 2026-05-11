@@ -46,7 +46,7 @@ export default function App() {
   );
 }
 
-// Reference the live Fishbones theme via CSS custom properties — the
+// Reference the live Libre theme via CSS custom properties — the
 // runtime injects these into the iframe's :root before the component
 // renders, so the preview adopts whatever theme is active in the app
 // (Catppuccin, Vesper, Word, etc.) without us hardcoding colour

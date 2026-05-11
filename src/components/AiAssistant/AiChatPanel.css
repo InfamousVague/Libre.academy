@@ -1,9 +1,9 @@
 /* Floating AI assistant panel. Sits above the floating button (no
-   overlap), styled to match the rest of the Fishbones surface
+   overlap), styled to match the rest of the Libre surface
    vocabulary — same `--color-bg-secondary` + `--color-border-default`
    the sidebar uses, same 12px outer radius, same border. */
 
-.fishbones-ai-panel {
+.libre-ai-panel {
   position: fixed;
   /* Anchor sits clear of the orb's top edge with breathing room.
      Orb button is 96×96 (bumped from the original 52px so the
@@ -44,7 +44,7 @@
     opacity 0.18s ease-out;
 }
 
-.fishbones-ai-panel.is-open {
+.libre-ai-panel.is-open {
   transform: translateY(0) scale(1);
   opacity: 1;
   pointer-events: auto;
@@ -52,7 +52,7 @@
 
 /* ---- Header ---------------------------------------------------- */
 
-.fishbones-ai-panel-header {
+.libre-ai-panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -62,7 +62,7 @@
      Matches the sidebar header / lesson reader feel. */
 }
 
-.fishbones-ai-panel-title {
+.libre-ai-panel-title {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -72,13 +72,13 @@
   color: var(--color-text-primary);
 }
 
-.fishbones-ai-panel-header-actions {
+.libre-ai-panel-header-actions {
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
 
-.fishbones-ai-panel-reset {
+.libre-ai-panel-reset {
   background: transparent;
   color: var(--color-text-tertiary);
   border: 1px solid var(--color-border-default);
@@ -93,18 +93,18 @@
   transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
 
-.fishbones-ai-panel-reset:hover:not(:disabled) {
+.libre-ai-panel-reset:hover:not(:disabled) {
   color: var(--color-text-primary);
   border-color: var(--color-border-strong);
   background: var(--color-bg-tertiary);
 }
 
-.fishbones-ai-panel-reset:disabled {
+.libre-ai-panel-reset:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.fishbones-ai-panel-close {
+.libre-ai-panel-close {
   width: 26px;
   height: 26px;
   border: none;
@@ -117,14 +117,14 @@
   justify-content: center;
 }
 
-.fishbones-ai-panel-close:hover {
+.libre-ai-panel-close:hover {
   background: var(--color-bg-tertiary);
   color: var(--color-text-primary);
 }
 
 /* ---- Context chip ---------------------------------------------- */
 
-.fishbones-ai-panel-context {
+.libre-ai-panel-context {
   padding: 6px 14px;
   font-size: 11px;
   color: var(--color-text-tertiary);
@@ -135,19 +135,19 @@
   text-overflow: ellipsis;
 }
 
-.fishbones-ai-panel-context-label {
+.libre-ai-panel-context-label {
   text-transform: uppercase;
   letter-spacing: 0.6px;
   font-weight: 600;
 }
 
-.fishbones-ai-panel-context-value {
+.libre-ai-panel-context-value {
   color: var(--color-text-secondary);
 }
 
 /* ---- Body: scrollable message list ----------------------------- */
 
-.fishbones-ai-panel-body {
+.libre-ai-panel-body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -159,7 +159,7 @@
 
 /* ---- Empty-state hint card ------------------------------------- */
 
-.fishbones-ai-panel-empty {
+.libre-ai-panel-empty {
   padding: 18px 14px;
   border: 1px dashed var(--color-border-default);
   border-radius: var(--radius-md, 8px);
@@ -168,21 +168,21 @@
   line-height: 1.5;
 }
 
-.fishbones-ai-panel-empty-title {
+.libre-ai-panel-empty-title {
   font-size: 14px;
   font-weight: 600;
   color: var(--color-text-primary);
   margin-bottom: 6px;
 }
 
-.fishbones-ai-panel-empty-chips {
+.libre-ai-panel-empty-chips {
   display: flex;
   flex-direction: column;
   gap: 6px;
   margin-top: 10px;
 }
 
-.fishbones-ai-panel-empty-chip {
+.libre-ai-panel-empty-chip {
   text-align: left;
   background: transparent;
   border: 1px solid var(--color-border-default);
@@ -196,14 +196,14 @@
   transition: border-color 0.12s, background 0.12s;
 }
 
-.fishbones-ai-panel-empty-chip:hover {
+.libre-ai-panel-empty-chip:hover {
   border-color: var(--color-border-strong);
   background: var(--color-bg-tertiary);
 }
 
 /* ---- Setup banner (probe failed) ------------------------------- */
 
-.fishbones-ai-panel-setup {
+.libre-ai-panel-setup {
   padding: 16px 14px;
   border-bottom: 1px solid var(--color-border-default);
   font-size: 13px;
@@ -211,17 +211,17 @@
   color: var(--color-text-secondary);
 }
 
-.fishbones-ai-panel-setup-title {
+.libre-ai-panel-setup-title {
   font-weight: 600;
   color: var(--color-text-primary);
   margin-bottom: 8px;
 }
 
-.fishbones-ai-panel-setup p {
+.libre-ai-panel-setup p {
   margin: 6px 0;
 }
 
-.fishbones-ai-panel-setup-cmd {
+.libre-ai-panel-setup-cmd {
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
   border-radius: var(--radius-md, 6px);
@@ -234,17 +234,17 @@
   word-break: break-all;
 }
 
-.fishbones-ai-panel-setup-note {
+.libre-ai-panel-setup-note {
   font-size: 12px;
   color: var(--color-text-tertiary);
 }
 
-.fishbones-ai-panel-setup-err {
+.libre-ai-panel-setup-err {
   color: var(--color-text-secondary);
   font-size: 12px;
 }
 
-.fishbones-ai-panel-setup-retry {
+.libre-ai-panel-setup-retry {
   margin-top: 8px;
   padding: 6px 12px;
   border: 1px solid var(--color-border-strong);
@@ -257,12 +257,12 @@
   font-weight: 600;
 }
 
-.fishbones-ai-panel-setup-retry:hover {
+.libre-ai-panel-setup-retry:hover {
   background: var(--color-bg-tertiary);
 }
 
 /* Primary action button — used for Install / Start / Download. */
-.fishbones-ai-panel-setup-primary {
+.libre-ai-panel-setup-primary {
   display: inline-block;
   margin-top: 4px;
   padding: 8px 14px;
@@ -277,17 +277,17 @@
   transition: opacity 0.12s, transform 0.12s;
 }
 
-.fishbones-ai-panel-setup-primary:hover:not(:disabled) {
+.libre-ai-panel-setup-primary:hover:not(:disabled) {
   transform: translateY(-1px);
 }
 
-.fishbones-ai-panel-setup-primary:disabled {
+.libre-ai-panel-setup-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
 /* Captured stdout/stderr tail from the last setup action. */
-.fishbones-ai-panel-setup-log {
+.libre-ai-panel-setup-log {
   margin-top: 10px;
   padding: 8px 10px;
   border-radius: var(--radius-md, 6px);
@@ -300,13 +300,13 @@
   word-break: break-all;
 }
 
-.fishbones-ai-panel-setup-log.is-ok {
+.libre-ai-panel-setup-log.is-ok {
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
   color: var(--color-text-secondary);
 }
 
-.fishbones-ai-panel-setup-log.is-fail {
+.libre-ai-panel-setup-log.is-fail {
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-strong);
   color: var(--color-text-secondary);
@@ -315,7 +315,7 @@
 /* ---- Message bubbles ------------------------------------------- */
 
 /* User bubble: filled card variant, right-aligned. */
-.fishbones-ai-bubble--user.card {
+.libre-ai-bubble--user.card {
   align-self: flex-end;
   max-width: 86%;
   background: var(--color-bg-tertiary);
@@ -331,7 +331,7 @@
 }
 
 /* Assistant bubble: outlined card, left-aligned. */
-.fishbones-ai-bubble--assistant.card {
+.libre-ai-bubble--assistant.card {
   align-self: flex-start;
   max-width: 100%;
   background: var(--color-bg-primary);
@@ -339,7 +339,7 @@
 }
 
 /* System bubble: rare; shown small + dim if it leaks through. */
-.fishbones-ai-bubble--system.card {
+.libre-ai-bubble--system.card {
   align-self: center;
   background: transparent;
   border: none;
@@ -349,7 +349,7 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones-ai-bubble-text {
+.libre-ai-bubble-text {
   font-size: 13px;
   line-height: 1.5;
   color: var(--color-text-primary);
@@ -357,7 +357,7 @@
   word-wrap: break-word;
 }
 
-.fishbones-ai-bubble-stream {
+.libre-ai-bubble-stream {
   font-size: 13px;
   line-height: 1.5;
   color: var(--color-text-primary);
@@ -365,42 +365,42 @@
   font-family: inherit;
 }
 
-.fishbones-ai-bubble-caret {
+.libre-ai-bubble-caret {
   display: inline-block;
   width: 7px;
   height: 14px;
   background: var(--color-text-tertiary);
   vertical-align: text-bottom;
-  animation: fishbones-ai-caret-blink 1s steps(2) infinite;
+  animation: libre-ai-caret-blink 1s steps(2) infinite;
 }
 
-@keyframes fishbones-ai-caret-blink {
+@keyframes libre-ai-caret-blink {
   to { opacity: 0; }
 }
 
-.fishbones-ai-bubble-markdown {
+.libre-ai-bubble-markdown {
   font-size: 13px;
   line-height: 1.5;
   color: var(--color-text-primary);
 }
 
 /* Code blocks share the LessonReader markdown pipeline, which wraps
-   each fence in `.fishbones-code-block` (with its own border + 8px
-   radius) and inserts an "Ask Fishbones" `?` badge. Inside an AI
+   each fence in `.libre-code-block` (with its own border + 8px
+   radius) and inserts an "Ask Libre" `?` badge. Inside an AI
    bubble both are redundant: the inner `<pre>` would get its own
    border too, producing the double-nested look; the badge would
    ask the AI to discuss its own answer. We flatten the wrapper to
    a single bordered surface and hide the badge. */
-.fishbones-ai-bubble-markdown .fishbones-code-block {
+.libre-ai-bubble-markdown .libre-code-block {
   margin: 6px 0;
   border-radius: var(--radius-md, 6px);
 }
 
-.fishbones-ai-bubble-markdown .fishbones-code-block-ask {
+.libre-ai-bubble-markdown .libre-code-block-ask {
   display: none;
 }
 
-.fishbones-ai-bubble-markdown pre {
+.libre-ai-bubble-markdown pre {
   font-size: 12px;
   padding: 8px 10px;
   margin: 0;
@@ -411,28 +411,28 @@
   white-space: pre;
 }
 
-.fishbones-ai-bubble-markdown code {
+.libre-ai-bubble-markdown code {
   font-family: var(--font-mono, ui-monospace, Menlo, monospace);
   font-size: 0.92em;
 }
 
-.fishbones-ai-bubble-markdown p {
+.libre-ai-bubble-markdown p {
   margin: 0 0 8px;
 }
 
-.fishbones-ai-bubble-markdown p:last-child {
+.libre-ai-bubble-markdown p:last-child {
   margin-bottom: 0;
 }
 
-.fishbones-ai-bubble-markdown ul,
-.fishbones-ai-bubble-markdown ol {
+.libre-ai-bubble-markdown ul,
+.libre-ai-bubble-markdown ol {
   margin: 4px 0 8px;
   padding-left: 20px;
 }
 
 /* ---- Error tray ------------------------------------------------ */
 
-.fishbones-ai-panel-error {
+.libre-ai-panel-error {
   padding: 10px 12px;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-strong);
@@ -444,14 +444,14 @@
 
 /* ---- Composer -------------------------------------------------- */
 
-.fishbones-ai-panel-composer {
+.libre-ai-panel-composer {
   display: flex;
   gap: 8px;
   padding: 16px 10px 10px;
   border-top: 1px solid var(--color-border-default);
 }
 
-.fishbones-ai-panel-input {
+.libre-ai-panel-input {
   flex: 1;
   /* No vertical drag — the JS auto-grow on input handles sizing as
      the user types. Resize handle would just fight the auto-fit. */
@@ -474,17 +474,17 @@
   overflow-y: auto;
 }
 
-.fishbones-ai-panel-input:focus {
+.libre-ai-panel-input:focus {
   outline: none;
   border-color: var(--color-border-strong);
 }
 
-.fishbones-ai-panel-input:disabled {
+.libre-ai-panel-input:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.fishbones-ai-panel-send {
+.libre-ai-panel-send {
   padding: 0 14px;
   border: 1px solid var(--color-border-strong);
   background: var(--color-text-primary);
@@ -497,7 +497,7 @@
   transition: opacity 0.12s;
 }
 
-.fishbones-ai-panel-send:disabled {
+.libre-ai-panel-send:disabled {
   opacity: 0.35;
   cursor: not-allowed;
 }

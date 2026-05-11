@@ -45,7 +45,7 @@ const COMMON_PREFIXES = [
   "welcome",
   "monkey",
   "dragon",
-  "fishbones",
+  "libre",
   "matt",
 ];
 
@@ -219,15 +219,15 @@ export default function PasswordField({
   const hasError = !!error;
 
   return (
-    <div className={`fishbones-pwfield${hasError ? " fishbones-pwfield--invalid" : ""}`}>
-      <label className="fishbones-pwfield__label" htmlFor={id}>
+    <div className={`libre-pwfield${hasError ? " libre-pwfield--invalid" : ""}`}>
+      <label className="libre-pwfield__label" htmlFor={id}>
         {label}
       </label>
 
-      <div className="fishbones-pwfield__row">
+      <div className="libre-pwfield__row">
         <input
           id={id}
-          className="fishbones-pwfield__input"
+          className="libre-pwfield__input"
           type={revealed ? "text" : "password"}
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -252,7 +252,7 @@ export default function PasswordField({
         />
         <button
           type="button"
-          className="fishbones-pwfield__toggle"
+          className="libre-pwfield__toggle"
           onClick={() => setRevealed((v) => !v)}
           disabled={disabled}
           aria-label={revealed ? "Hide password" : "Show password"}
@@ -266,19 +266,19 @@ export default function PasswordField({
       {showStrength && value.length > 0 && !hasError && (
         <div
           id={`${id}-strength`}
-          className={`fishbones-pwfield__strength fishbones-pwfield__strength--s${score.score}`}
+          className={`libre-pwfield__strength libre-pwfield__strength--s${score.score}`}
           // aria-live so screen readers hear the strength change as
           // the user types. Polite (not assertive) so we don't
           // interrupt a keystroke flow on every character.
           aria-live="polite"
         >
-          <div className="fishbones-pwfield__bar" aria-hidden>
-            <span className="fishbones-pwfield__bar-seg" data-on={score.score >= 1 || undefined} />
-            <span className="fishbones-pwfield__bar-seg" data-on={score.score >= 2 || undefined} />
-            <span className="fishbones-pwfield__bar-seg" data-on={score.score >= 3 || undefined} />
-            <span className="fishbones-pwfield__bar-seg" data-on={score.score >= 4 || undefined} />
+          <div className="libre-pwfield__bar" aria-hidden>
+            <span className="libre-pwfield__bar-seg" data-on={score.score >= 1 || undefined} />
+            <span className="libre-pwfield__bar-seg" data-on={score.score >= 2 || undefined} />
+            <span className="libre-pwfield__bar-seg" data-on={score.score >= 3 || undefined} />
+            <span className="libre-pwfield__bar-seg" data-on={score.score >= 4 || undefined} />
           </div>
-          <span className="fishbones-pwfield__label-strength">{score.label}</span>
+          <span className="libre-pwfield__label-strength">{score.label}</span>
         </div>
       )}
 
@@ -287,11 +287,11 @@ export default function PasswordField({
           Polite aria-live so screen readers announce a newly-
           appearing mismatch without interrupting typing. */}
       {hasError ? (
-        <small id={`${id}-error`} className="fishbones-pwfield__error" aria-live="polite">
+        <small id={`${id}-error`} className="libre-pwfield__error" aria-live="polite">
           {error}
         </small>
       ) : helper !== null ? (
-        <small className="fishbones-pwfield__helper">
+        <small className="libre-pwfield__helper">
           {/* When there's an active hint from scorePassword, swap it
               in for the static helper — it's more actionable than
               the generic "8+ chars" copy. */}

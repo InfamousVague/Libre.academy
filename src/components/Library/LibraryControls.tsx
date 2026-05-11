@@ -140,18 +140,18 @@ export default function LibraryControls(p: LibraryControlsProps): ReactElement {
   }
 
   return (
-    <div className="fishbones-library-controls fishbones-library-controls--compact">
+    <div className="libre-library-controls libre-library-controls--compact">
       {/* Left side: active filter chips + Filter popover trigger.
           The trigger pill itself doubles as a status when nothing's
           active ("Filter ▾") and as the entry-point when chips are
           present. */}
-      <div className="fishbones-library-filter-cluster" ref={wrapRef}>
+      <div className="libre-library-filter-cluster" ref={wrapRef}>
         {activeChips.map((c) => (
-          <span key={c.key} className="fishbones-library-filter-chip">
+          <span key={c.key} className="libre-library-filter-chip">
             {c.label}
             <button
               type="button"
-              className="fishbones-library-filter-chip-x"
+              className="libre-library-filter-chip-x"
               onClick={c.clear}
               aria-label={`Remove ${c.label} filter`}
             >
@@ -161,8 +161,8 @@ export default function LibraryControls(p: LibraryControlsProps): ReactElement {
         ))}
         <button
           type="button"
-          className={`fishbones-library-filter-trigger ${
-            filterOpen ? "fishbones-library-filter-trigger--open" : ""
+          className={`libre-library-filter-trigger ${
+            filterOpen ? "libre-library-filter-trigger--open" : ""
           }`}
           onClick={() => setFilterOpen((v) => !v)}
           aria-haspopup="dialog"
@@ -193,29 +193,29 @@ export default function LibraryControls(p: LibraryControlsProps): ReactElement {
 
       {/* Right side: search + sort + view. The dominant tools row.
           Sort + view collapse to icon buttons to save space. */}
-      <div className="fishbones-library-tools">
-        <label className="fishbones-library-search-wrap">
+      <div className="libre-library-tools">
+        <label className="libre-library-search-wrap">
           <Icon
             icon={searchIcon}
             size="xs"
             color="currentColor"
-            className="fishbones-library-search-icon"
+            className="libre-library-search-icon"
           />
           <input
             type="search"
-            className="fishbones-library-search"
+            className="libre-library-search"
             placeholder="Search…"
             value={p.query}
             onChange={(e) => p.onSetQuery(e.target.value)}
           />
         </label>
         <label
-          className="fishbones-library-sort fishbones-library-sort--compact"
+          className="libre-library-sort libre-library-sort--compact"
           title="Sort order"
         >
           <Icon icon={arrowUpDown} size="xs" color="currentColor" />
           <select
-            className="fishbones-library-sort-select"
+            className="libre-library-sort-select"
             value={p.sortBy}
             onChange={(e) => p.onSetSort(e.target.value as SortKey)}
           >
@@ -225,7 +225,7 @@ export default function LibraryControls(p: LibraryControlsProps): ReactElement {
           </select>
         </label>
         <div
-          className="fishbones-library-viewmode"
+          className="libre-library-viewmode"
           role="tablist"
           aria-label="View mode"
         >
@@ -233,9 +233,9 @@ export default function LibraryControls(p: LibraryControlsProps): ReactElement {
             type="button"
             role="tab"
             aria-selected={p.viewMode === "shelf"}
-            className={`fishbones-library-viewmode-btn fishbones-library-viewmode-btn--icon ${
+            className={`libre-library-viewmode-btn libre-library-viewmode-btn--icon ${
               p.viewMode === "shelf"
-                ? "fishbones-library-viewmode-btn--active"
+                ? "libre-library-viewmode-btn--active"
                 : ""
             }`}
             onClick={() => p.onSetViewMode("shelf")}
@@ -248,9 +248,9 @@ export default function LibraryControls(p: LibraryControlsProps): ReactElement {
             type="button"
             role="tab"
             aria-selected={p.viewMode === "grid"}
-            className={`fishbones-library-viewmode-btn fishbones-library-viewmode-btn--icon ${
+            className={`libre-library-viewmode-btn libre-library-viewmode-btn--icon ${
               p.viewMode === "grid"
-                ? "fishbones-library-viewmode-btn--active"
+                ? "libre-library-viewmode-btn--active"
                 : ""
             }`}
             onClick={() => p.onSetViewMode("grid")}
@@ -316,7 +316,7 @@ function FilterPopover(p: FilterPopoverProps): ReactElement {
 
   return (
     <div
-      className="fishbones-library-filter-pop"
+      className="libre-library-filter-pop"
       role="dialog"
       aria-label="Filter courses"
     >
@@ -421,9 +421,9 @@ function FilterSection({
   children: ReactNode;
 }): ReactElement {
   return (
-    <div className="fishbones-library-filter-section">
-      <div className="fishbones-library-filter-section-title">{title}</div>
-      <div className="fishbones-library-filter-section-options">{children}</div>
+    <div className="libre-library-filter-section">
+      <div className="libre-library-filter-section-title">{title}</div>
+      <div className="libre-library-filter-section-options">{children}</div>
     </div>
   );
 }
@@ -442,14 +442,14 @@ function FilterOption({
   return (
     <button
       type="button"
-      className={`fishbones-library-filter-opt ${
-        active ? "fishbones-library-filter-opt--active" : ""
+      className={`libre-library-filter-opt ${
+        active ? "libre-library-filter-opt--active" : ""
       }`}
       onClick={onSelect}
       aria-pressed={active}
     >
       <span>{label}</span>
-      <span className="fishbones-library-filter-opt-count">{count}</span>
+      <span className="libre-library-filter-opt-count">{count}</span>
     </button>
   );
 }

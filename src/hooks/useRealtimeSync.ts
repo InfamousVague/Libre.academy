@@ -4,12 +4,12 @@ import type {
   SettingRow,
   SolutionRow,
   SyncEvent,
-  UseFishbonesCloud,
-} from "./useFishbonesCloud";
+  UseLibreCloud,
+} from "./useLibreCloud";
 
 /// Real-time cross-device sync orchestrator.
 ///
-/// Wraps `useFishbonesCloud` with the lifecycle glue an app needs to
+/// Wraps `useLibreCloud` with the lifecycle glue an app needs to
 /// keep progress, solutions, and settings mirrored across every
 /// authenticated device:
 ///
@@ -35,7 +35,7 @@ import type {
 /// devices — the next successful push will re-sync them.
 
 export interface RealtimeSyncOpts {
-  cloud: UseFishbonesCloud;
+  cloud: UseLibreCloud;
   /// Apply a batch of progress rows pulled from the server (or
   /// pushed by another device via WS) to the local store. Row order
   /// is server-ordered (most-recent first); the applier should fold
@@ -254,7 +254,7 @@ export function useRealtimeSync(opts: RealtimeSyncOpts): RealtimeSyncHandle {
     void (async () => {
       // CRITICAL: use `allSettled`, NOT `all`. The three pull
       // endpoints are independent — if the relay returns 404 on
-      // one (e.g. `/fishbones/settings` is unimplemented on a
+      // one (e.g. `/libre/settings` is unimplemented on a
       // staging deploy or older relay version), `Promise.all`
       // would reject the whole batch and the progress + solutions
       // pulls — which DID succeed — would silently never apply.

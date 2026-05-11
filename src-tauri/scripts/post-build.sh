@@ -1,5 +1,5 @@
 #!/bin/bash
-# Post-build: Sign the Fishbones .app bundle with hardened runtime + secure
+# Post-build: Sign the Libre .app bundle with hardened runtime + secure
 # timestamp, then rebuild the DMG with an Applications symlink for
 # drag-to-install. Run after `cargo tauri build`.
 #
@@ -64,11 +64,11 @@ done < <(find "$APP_BUNDLE/Contents/Resources" -type f 2>/dev/null)
 echo "Signed: $NESTED_COUNT nested Mach-O binaries"
 
 # Sign the main binary with hardened runtime + entitlements. The binary
-# name matches the `[package] name` in Cargo.toml — `fishbones`.
+# name matches the `[package] name` in Cargo.toml — `libre`.
 codesign --force --options runtime --timestamp \
     --sign "$IDENTITY" \
     --entitlements "$TAURI_DIR/Entitlements.plist" \
-    "$APP_BUNDLE/Contents/MacOS/fishbones"
+    "$APP_BUNDLE/Contents/MacOS/libre"
 echo "Signed: main binary"
 
 # Sign the entire .app bundle (outermost, must be last). Inner Mach-O
@@ -96,7 +96,7 @@ case "$ARCH" in
     x86_64) ARCH_TAG="x64" ;;
     *) ARCH_TAG="$ARCH" ;;
 esac
-DMG_PATH="$DMG_DIR/Fishbones_${VERSION}_${ARCH_TAG}.dmg"
+DMG_PATH="$DMG_DIR/Libre_${VERSION}_${ARCH_TAG}.dmg"
 if [ -d "$DMG_DIR" ]; then
     echo ""
     echo "=== Rebuilding DMG with signed app ==="
@@ -105,7 +105,7 @@ if [ -d "$DMG_DIR" ]; then
     DMG_STAGE=$(mktemp -d)
     cp -R "$APP_BUNDLE" "$DMG_STAGE/"
     ln -s /Applications "$DMG_STAGE/Applications"
-    hdiutil create -volname "Fishbones" -srcfolder "$DMG_STAGE" -ov -format UDZO "$DMG_PATH"
+    hdiutil create -volname "Libre" -srcfolder "$DMG_STAGE" -ov -format UDZO "$DMG_PATH"
     rm -rf "$DMG_STAGE"
     # Sign the DMG
     codesign --force --sign "$IDENTITY" "$DMG_PATH"

@@ -1,12 +1,12 @@
 [package]
-name = "fishbones"
+name = "libre"
 version = "0.1.16"
 description = "Learn to code through books and guided exercises"
 edition = "2021"
-default-run = "fishbones"
+default-run = "libre"
 
 [lib]
-name = "fishbones_lib"
+name = "libre_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
@@ -79,7 +79,7 @@ tauri-plugin-process = "2.3.1"
 # hidapi: cross-platform HID device access. Powers the Ledger
 # transport — macOS Wry's WebKit doesn't expose WebUSB/WebHID, so
 # desktop users (especially mac) reach the device through Tauri
-# commands wrapping this crate. Web build of Fishbones uses
+# commands wrapping this crate. Web build of Libre uses
 # `navigator.hid` directly and bypasses Rust entirely.
 #
 # Gated to desktop targets: hidapi-rs's build script panics with

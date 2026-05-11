@@ -16,7 +16,7 @@
   justify-content: flex-start;
   gap: 9px;
   /* Pinned height locks the row in lockstep with
-     `.fishbones-reader-meta-glossary` — both chips share the same
+     `.libre-reader-meta-glossary` — both chips share the same
      height + padding + line-height so neither's inner content can
      drive a different intrinsic box. Bumped from 26px → 30px because
      the prior chip-size felt undersized for the primary play
@@ -52,7 +52,7 @@
 
 /* Static variant — when there's no audio for the lesson. Reads as
    a quiet "X min read" chip without affording press. The base pill
-   above is already chip-sized to match `.fishbones-reader-meta-glossary`,
+   above is already chip-sized to match `.libre-reader-meta-glossary`,
    so the static variant only needs to drop the cursor + flatten its
    hover state. */
 .fb-tts-pill--static {

@@ -1,6 +1,6 @@
-# Fishbones ingest pipeline — design
+# Libre ingest pipeline — design
 
-How Fishbones turns a book PDF into a Codecademy-style interactive course. This doc
+How Libre turns a book PDF into a Codecademy-style interactive course. This doc
 captures the decisions locked in for the pipeline; `PLAN.md` remains the
 product-level roadmap.
 
@@ -59,7 +59,7 @@ resuming is `read if exists, else compute`.
 ## Lesson types
 
 ### reading
-Rewritten-in-Fishbones-voice prose with fenced code blocks. Tight — doesn't quote
+Rewritten-in-Libre-voice prose with fenced code blocks. Tight — doesn't quote
 the book verbatim. Figures referenced by their extracted filename.
 
 ### exercise
@@ -105,7 +105,7 @@ Skipped for now. Multi-step projects land after the basics are polished.
 
 ## Prose handling
 
-Rewrite tight in Fishbones voice. The AI reads the book for ideas and code
+Rewrite tight in Libre voice. The AI reads the book for ideas and code
 examples, then authors lessons in a consistent, terse tone. Don't reproduce
 long passages verbatim — avoids copyright-ish smell and keeps voice
 consistent across books.

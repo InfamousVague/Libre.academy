@@ -10,7 +10,7 @@ import "@base/primitives/icon/icon.css";
 /// Right-click-anywhere-a-cover-appears context menu. Extracted from
 /// Sidebar so the library (shelf + grid) can mount the same UX without
 /// re-implementing dismissal/positioning state. CSS classes are shared
-/// with Sidebar's original menu (`.fishbones__context-menu*`) so visual
+/// with Sidebar's original menu (`.libre__context-menu*`) so visual
 /// consistency stays free.
 export interface CourseMenuTarget {
   courseId: string;
@@ -68,20 +68,20 @@ export default function CourseContextMenu({
   // ancestor's `overflow: hidden`.
   return createPortal(
     <div
-      className="fishbones__context-menu"
+      className="libre__context-menu"
       style={{ left: menu.x, top: menu.y, position: "fixed", zIndex: 1000 }}
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="fishbones__context-menu-label">{menu.courseTitle}</div>
+      <div className="libre__context-menu-label">{menu.courseTitle}</div>
       {onSettings && (
         <button
-          className="fishbones__context-menu-item"
+          className="libre__context-menu-item"
           onClick={() => {
             onSettings(menu.courseId);
             onDismiss();
           }}
         >
-          <span className="fishbones__context-menu-icon" aria-hidden>
+          <span className="libre__context-menu-icon" aria-hidden>
             <Icon icon={settingsIcon} size="xs" color="currentColor" />
           </span>
           Course settings…
@@ -89,13 +89,13 @@ export default function CourseContextMenu({
       )}
       {onExport && (
         <button
-          className="fishbones__context-menu-item"
+          className="libre__context-menu-item"
           onClick={() => {
             onExport(menu.courseId, menu.courseTitle);
             onDismiss();
           }}
         >
-          <span className="fishbones__context-menu-icon" aria-hidden>
+          <span className="libre__context-menu-icon" aria-hidden>
             <Icon icon={downloadIcon} size="xs" color="currentColor" />
           </span>
           Export course…
@@ -103,7 +103,7 @@ export default function CourseContextMenu({
       )}
       {onUpdate && (
         <button
-          className="fishbones__context-menu-item"
+          className="libre__context-menu-item"
           onClick={() => {
             onUpdate(menu.courseId, menu.courseTitle);
             onDismiss();
@@ -114,7 +114,7 @@ export default function CourseContextMenu({
               : "Re-extract the bundled archive over the installed copy"
           }
         >
-          <span className="fishbones__context-menu-icon" aria-hidden>
+          <span className="libre__context-menu-icon" aria-hidden>
             <Icon icon={arrowDownToLine} size="xs" color="currentColor" />
           </span>
           {menu.hasUpdate ? "Update available…" : "Reinstall course…"}
@@ -122,15 +122,15 @@ export default function CourseContextMenu({
       )}
       {onDelete && (
         <>
-          <div className="fishbones__context-menu-sep" aria-hidden />
+          <div className="libre__context-menu-sep" aria-hidden />
           <button
-            className="fishbones__context-menu-item fishbones__context-menu-item--danger"
+            className="libre__context-menu-item libre__context-menu-item--danger"
             onClick={() => {
               onDelete(menu.courseId, menu.courseTitle);
               onDismiss();
             }}
           >
-            <span className="fishbones__context-menu-icon" aria-hidden>
+            <span className="libre__context-menu-icon" aria-hidden>
               <Icon icon={xIcon} size="xs" color="currentColor" />
             </span>
             Delete course…

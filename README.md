@@ -1,8 +1,8 @@
-# Fishbones
+# Libre
 
 Learn to code through books and guided exercises. Mac + Windows (Tauri). Phone + Watch companions planned.
 
-Courses export to `.fishbones` archives; legacy `.kata` archives still import for backwards compatibility.
+Courses export to `.libre` archives; legacy `.kata` archives still import for backwards compatibility.
 
 See [PLAN.md](PLAN.md) for the full product plan.
 
@@ -28,7 +28,7 @@ npm run test          # vitest
 ## Layout
 
 ```
-fishbones/
+libre/
 ├── src/                    # React frontend
 │   ├── components/         # Sidebar, TabBar, Lesson, Editor, Output
 │   ├── data/               # types + seed courses

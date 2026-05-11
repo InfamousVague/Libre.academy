@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/// Translate one Fishbones-authored course into the supported non-EN
+/// Translate one Libre-authored course into the supported non-EN
 /// locales using the Anthropic Claude API. Idempotent — re-running
 /// only fills in the locales / lessons that don't already have a
 /// translation, so a partial run can resume seamlessly.
@@ -33,7 +33,7 @@
 ///   matches `src/data/locales.ts` (CourseTranslation / ChapterTranslation
 ///   / LessonTranslation).
 ///
-/// Recipe for translating ALL Fishbones-authored courses in one pass:
+/// Recipe for translating ALL Libre-authored courses in one pass:
 ///   for c in a-to-zig a-to-ts hellotrade learning-ledger \
 ///            challenges-{ruby,lua,dart,haskell,scala,sql,elixir,zig,move,cairo,sway}-handwritten \
 ///            {rust,go,javascript,python,react-native,c,cpp,java,kotlin,csharp,swift}-challenges \

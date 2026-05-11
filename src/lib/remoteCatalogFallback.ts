@@ -1,7 +1,7 @@
 /// Aspirational Discover tiles that point at content not yet shipped.
 ///
 /// HISTORY: this list used to carry ~20 placeholder entries for books
-/// in `cover-overrides/` whose `.fishbones` archive hadn't been
+/// in `cover-overrides/` whose `.libre` archive hadn't been
 /// authored yet. The Discover grid would render the cover so the
 /// shelf read as aspirational rather than empty; clicking install
 /// attempted a CDN download that 404'd, surfacing a generic error
@@ -9,8 +9,8 @@
 /// catalog entry would win via `dedupeById` and the placeholder row
 /// would drop out automatically.
 ///
-/// CURRENT STATE: the static CDN at `mattssoftware.com/fishbones/
-/// courses/` is gone — every `.fishbones` URL 404s, including the
+/// CURRENT STATE: the static CDN at `mattssoftware.com/libre/
+/// courses/` is gone — every `.libre` URL 404s, including the
 /// books that have local archives shipping in the bundle (those work
 /// via the Tauri `localPath` install path, not the CDN). All ~20
 /// placeholders here pointed at dead URLs and produced "couldn't
@@ -36,11 +36,11 @@ interface FallbackSeed {
   archiveSizeBytes?: number;
 }
 
-/// CDN base for remote `.fishbones` archives — kept in lockstep with
+/// CDN base for remote `.libre` archives — kept in lockstep with
 /// `REMOTE_ARCHIVE_BASE` in `scripts/course-tiers.mjs`. Currently
 /// unused (the seed list is empty) but retained so re-adding a seed
 /// is a one-line change rather than a recompose.
-const REMOTE_ARCHIVE_BASE = "https://mattssoftware.com/fishbones/courses";
+const REMOTE_ARCHIVE_BASE = "https://mattssoftware.com/libre/courses";
 
 const FALLBACK_SEEDS: FallbackSeed[] = [];
 
@@ -58,7 +58,7 @@ function seedToEntry(seed: FallbackSeed): CatalogEntry {
     cover: `${seed.id}.jpg`,
     sizeBytes: seed.archiveSizeBytes ?? 0,
     archiveSizeBytes: seed.archiveSizeBytes ?? 0,
-    archiveUrl: `${REMOTE_ARCHIVE_BASE.replace(/\/$/, "")}/${seed.id}.fishbones`,
+    archiveUrl: `${REMOTE_ARCHIVE_BASE.replace(/\/$/, "")}/${seed.id}.libre`,
     tier: "remote",
     packType: seed.packType ?? "course",
     releaseStatus: "UNREVIEWED",

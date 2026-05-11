@@ -87,7 +87,7 @@ export default function LessonPopover({
   return createPortal(
     <div
       ref={popRef}
-      className={`fishbones-popover fishbones-popover--${content.kind}`}
+      className={`libre-popover libre-popover--${content.kind}`}
       style={{
         // Park far offscreen on first paint (before we've measured) so
         // the popover never flashes in the wrong spot.
@@ -100,19 +100,19 @@ export default function LessonPopover({
       onMouseEnter={onPopoverEnter}
       onMouseLeave={onPopoverLeave}
     >
-      <div className="fishbones-popover-heading">{content.heading}</div>
+      <div className="libre-popover-heading">{content.heading}</div>
       {content.signature && (
-        <div className="fishbones-popover-signature">{content.signature}</div>
+        <div className="libre-popover-signature">{content.signature}</div>
       )}
-      <div className="fishbones-popover-body">{content.body}</div>
+      <div className="libre-popover-body">{content.body}</div>
       {content.docUrl && onOpenDoc && (
         <button
           type="button"
-          className="fishbones-popover-doclink"
+          className="libre-popover-doclink"
           onClick={() => onOpenDoc(content.docUrl!)}
         >
           View full docs
-          <span className="fishbones-popover-doclink-icon" aria-hidden>
+          <span className="libre-popover-doclink-icon" aria-hidden>
             <Icon icon={externalLink} size="xs" color="currentColor" />
           </span>
         </button>

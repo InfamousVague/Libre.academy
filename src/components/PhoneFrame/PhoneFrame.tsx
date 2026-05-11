@@ -30,43 +30,43 @@ export default function PhoneFrame({
   carrier = "FISH",
 }: PhoneFrameProps) {
   return (
-    <div className="fishbones-phone-frame-outer">
-      <div className="fishbones-phone-frame">
+    <div className="libre-phone-frame-outer">
+      <div className="libre-phone-frame">
         {/* Side-button silhouettes — non-functional, just visual cues. */}
         <span
-          className="fishbones-phone-frame-side-btn fishbones-phone-frame-side-btn--mute"
+          className="libre-phone-frame-side-btn libre-phone-frame-side-btn--mute"
           aria-hidden
         />
         <span
-          className="fishbones-phone-frame-side-btn fishbones-phone-frame-side-btn--volup"
+          className="libre-phone-frame-side-btn libre-phone-frame-side-btn--volup"
           aria-hidden
         />
         <span
-          className="fishbones-phone-frame-side-btn fishbones-phone-frame-side-btn--voldown"
+          className="libre-phone-frame-side-btn libre-phone-frame-side-btn--voldown"
           aria-hidden
         />
         <span
-          className="fishbones-phone-frame-side-btn fishbones-phone-frame-side-btn--sleep"
+          className="libre-phone-frame-side-btn libre-phone-frame-side-btn--sleep"
           aria-hidden
         />
 
-        <div className="fishbones-phone-frame-screen">
+        <div className="libre-phone-frame-screen">
           {/* Dynamic island — black pill near the top of the screen. */}
-          <div className="fishbones-phone-frame-island" aria-hidden />
+          <div className="libre-phone-frame-island" aria-hidden />
 
           {/* Status bar: carrier on the left, signal/wifi/battery on
               the right. The time sits below the island in iPhone 14 Pro
               chrome — we put it on the left for a stable read. */}
-          <div className="fishbones-phone-frame-status">
-            <div className="fishbones-phone-frame-status-left">
-              <span className="fishbones-phone-frame-status-carrier">
+          <div className="libre-phone-frame-status">
+            <div className="libre-phone-frame-status-left">
+              <span className="libre-phone-frame-status-carrier">
                 {carrier}
               </span>
             </div>
-            <div className="fishbones-phone-frame-status-right" aria-hidden>
+            <div className="libre-phone-frame-status-right" aria-hidden>
               {/* Signal — three rising bars. */}
               <svg
-                className="fishbones-phone-frame-glyph"
+                className="libre-phone-frame-glyph"
                 viewBox="0 0 18 12"
                 width="18"
                 height="12"
@@ -77,7 +77,7 @@ export default function PhoneFrame({
               </svg>
               {/* Wifi — three concentric arcs + a dot. */}
               <svg
-                className="fishbones-phone-frame-glyph"
+                className="libre-phone-frame-glyph"
                 viewBox="0 0 18 14"
                 width="18"
                 height="12"
@@ -100,7 +100,7 @@ export default function PhoneFrame({
               </svg>
               {/* Battery — outline rectangle with fill bar. */}
               <svg
-                className="fishbones-phone-frame-glyph"
+                className="libre-phone-frame-glyph"
                 viewBox="0 0 26 12"
                 width="26"
                 height="12"
@@ -140,10 +140,10 @@ export default function PhoneFrame({
           {/* The actual content slot. `overflow: auto` lets the inner
               UI scroll inside the screen rather than blowing past the
               frame's bottom edge. */}
-          <div className="fishbones-phone-frame-content">{children}</div>
+          <div className="libre-phone-frame-content">{children}</div>
 
           {/* Home indicator — flat capsule near the bottom of the screen. */}
-          <div className="fishbones-phone-frame-home" aria-hidden />
+          <div className="libre-phone-frame-home" aria-hidden />
         </div>
       </div>
     </div>

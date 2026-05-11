@@ -179,7 +179,7 @@ function SectionGroup({
       )
     : false;
 
-  const storageKey = `fishbones:section-open:${courseId}:${label}`;
+  const storageKey = `libre:section-open:${courseId}:${label}`;
   // The whole point of the grouping is to fold a 30-chapter outline
   // into a few digestible rows; default closed.
   const [open, setOpen] = useLocalStorageState<boolean>(storageKey, false, {
@@ -214,17 +214,17 @@ function SectionGroup({
 
   return (
     <div
-      className={`fishbones__section ${
-        open ? "fishbones__section--open" : "fishbones__section--closed"
+      className={`libre__section ${
+        open ? "libre__section--open" : "libre__section--closed"
       }`}
     >
       <button
         type="button"
-        className="fishbones__section-title"
+        className="libre__section-title"
         onClick={toggle}
         aria-expanded={open}
       >
-        <span className="fishbones__section-caret" aria-hidden>
+        <span className="libre__section-caret" aria-hidden>
           <Icon
             icon={open ? chevronDown : chevronRight}
             size="xs"
@@ -232,16 +232,16 @@ function SectionGroup({
             weight="bold"
           />
         </span>
-        <span className="fishbones__section-title-text">{label}</span>
+        <span className="libre__section-title-text">{label}</span>
         <span
-          className="fishbones__section-ring"
+          className="libre__section-ring"
           title={`${doneLessons}/${totalLessons} lessons complete`}
         >
           <ProgressRing progress={pct} size={16} stroke={2} label="" />
         </span>
       </button>
       {open && (
-        <div className="fishbones__section-children">
+        <div className="libre__section-children">
           {entries.map(({ chapter, displayTitle }) => (
             <ChapterBlock
               key={chapter.id}
@@ -306,13 +306,13 @@ function ChapterBlock({
 
   return (
     <div
-      className={`fishbones__chapter ${
-        open ? "fishbones__chapter--open" : "fishbones__chapter--closed"
+      className={`libre__chapter ${
+        open ? "libre__chapter--open" : "libre__chapter--closed"
       }`}
     >
       <button
         type="button"
-        className="fishbones__chapter-title"
+        className="libre__chapter-title"
         onClick={() => setOpen(!open)}
         onContextMenu={
           onChapterContextMenu
@@ -321,7 +321,7 @@ function ChapterBlock({
         }
         aria-expanded={open}
       >
-        <span className="fishbones__chapter-caret" aria-hidden>
+        <span className="libre__chapter-caret" aria-hidden>
           <Icon
             icon={open ? chevronDown : chevronRight}
             size="xs"
@@ -329,18 +329,18 @@ function ChapterBlock({
             weight="bold"
           />
         </span>
-        <span className="fishbones__chapter-title-text">
+        <span className="libre__chapter-title-text">
           {displayTitle ?? chapter.title}
         </span>
         <span
-          className="fishbones__chapter-ring"
+          className="libre__chapter-ring"
           title={`${done}/${total} lessons complete`}
         >
           <ProgressRing progress={pct} size={16} stroke={2} label="" />
         </span>
       </button>
       {open && (
-        <div className="fishbones__chapter-lessons">
+        <div className="libre__chapter-lessons">
           {chapter.lessons.map((lesson) => {
             const isCompleted = completed.has(`${courseId}:${lesson.id}`);
             return (
@@ -391,8 +391,8 @@ function LessonRow({
 }) {
   return (
     <button
-      className={`fishbones__nav-item fishbones__lesson-item fishbones__lesson-item--${lesson.kind} ${
-        isActive ? "fishbones__nav-item--active" : ""
+      className={`libre__nav-item libre__lesson-item libre__lesson-item--${lesson.kind} ${
+        isActive ? "libre__nav-item--active" : ""
       }`}
       onClick={onSelect}
       onContextMenu={onContextMenu}
@@ -403,7 +403,7 @@ function LessonRow({
         active={isActive}
         difficulty={difficulty}
       />
-      <span className="fishbones__lesson-name">{lesson.title}</span>
+      <span className="libre__lesson-name">{lesson.title}</span>
     </button>
   );
 }
@@ -433,10 +433,10 @@ function LessonStatusIcon({
   difficulty?: "easy" | "medium" | "hard";
 }) {
   const state = completed ? "done" : active ? "active" : "pending";
-  const diffClass = difficulty ? ` fishbones__lesson-status--diff-${difficulty}` : "";
+  const diffClass = difficulty ? ` libre__lesson-status--diff-${difficulty}` : "";
   return (
     <span
-      className={`fishbones__lesson-status fishbones__lesson-status--${state} fishbones__lesson-status--${kind}${diffClass}`}
+      className={`libre__lesson-status libre__lesson-status--${state} libre__lesson-status--${kind}${diffClass}`}
       aria-hidden
     >
       <Icon icon={iconForKind(kind)} size="xs" color="currentColor" />

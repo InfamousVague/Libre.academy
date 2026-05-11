@@ -110,8 +110,8 @@ function RailItem({ icon, label, onClick, active, pressed }: RailItemProps) {
       <button
         type="button"
         className={
-          "fishbones-nav-rail__item" +
-          (active ? " fishbones-nav-rail__item--active" : "")
+          "libre-nav-rail__item" +
+          (active ? " libre-nav-rail__item--active" : "")
         }
         onClick={onClick}
         aria-label={label}
@@ -160,7 +160,7 @@ export default function NavigationRail({
       return;
     }
     const activeBtn = top.querySelector(
-      ".fishbones-nav-rail__item--active",
+      ".libre-nav-rail__item--active",
     ) as HTMLElement | null;
     if (!activeBtn) {
       // Active route doesn't have a rail icon (e.g. "courses" or
@@ -180,11 +180,11 @@ export default function NavigationRail({
   }, [activeView, onDiscover, onTrees, onTracks, onPractice, onAchievements, onPlayground]);
 
   return (
-    <nav className="fishbones-nav-rail" aria-label="Primary navigation">
-      <div className="fishbones-nav-rail__top" ref={topRef}>
+    <nav className="libre-nav-rail" aria-label="Primary navigation">
+      <div className="libre-nav-rail__top" ref={topRef}>
         {pillTop !== null && (
           <span
-            className="fishbones-nav-rail__pill"
+            className="libre-nav-rail__pill"
             style={{ transform: `translateY(${pillTop}px)` }}
             aria-hidden
           />
@@ -266,7 +266,7 @@ export default function NavigationRail({
           />
         )}
       </div>
-      <div className="fishbones-nav-rail__bottom">
+      <div className="libre-nav-rail__bottom">
         {/* Bottom cluster, top → bottom: sidebar toggle, notification
             bell, help, settings. The sidebar toggle anchors the top
             of this group (the most common bottom-rail interaction),

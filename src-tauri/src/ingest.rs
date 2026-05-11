@@ -419,7 +419,7 @@ pub fn extract_pdf_cover(
 
     // Stamp coverFetchedAt into course.json if it exists. This is what
     // makes the field consistent on-disk — meaning when the course is
-    // later exported as a .fishbones, the JSON INSIDE the archive
+    // later exported as a .libre, the JSON INSIDE the archive
     // already carries the marker, and a fresh import on another
     // machine sees it without needing the source PDF available.
     //
@@ -712,9 +712,9 @@ pub fn extract_source_cover(
 ///
 /// Lookup order:
 ///   1. `<app-data>/courses/<course_id>/cover.{jpg,png}` — installed copy.
-///   2. `<resources>/bundled-packs/<course_id>.fishbones` (or `.kata`)
+///   2. `<resources>/bundled-packs/<course_id>.libre` (or `.kata`)
 ///      — extract `cover.{jpg,png}` straight out of the archive.
-///   3. Fallback scan of every `.fishbones` archive looking for one
+///   3. Fallback scan of every `.libre` archive looking for one
 ///      whose inner `course.json` matches `course_id`.
 ///
 /// Step 2 + 3 give the catalog placeholders (Discover view) real
@@ -829,7 +829,7 @@ pub fn load_course_covers(
     Ok(out)
 }
 
-/// Pull a cover image (anywhere in the archive) out of a `.fishbones`.
+/// Pull a cover image (anywhere in the archive) out of a `.libre`.
 /// Returns `Ok(None)` when the archive doesn't carry one — common for
 /// older / hand-built packs that pre-date cover artwork.
 ///

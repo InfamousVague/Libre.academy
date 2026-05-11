@@ -1,6 +1,6 @@
 # Multi-language translations
 
-Fishbones-authored courses (the in-house tutorials, HelloTrade, learning-ledger,
+Libre-authored courses (the in-house tutorials, HelloTrade, learning-ledger,
 and every challenge pack) can be translated into five additional locales:
 
 | Code | Language | Endonym  | Browser code |
@@ -15,7 +15,7 @@ and every challenge pack) can be translated into five additional locales:
 Third-party books bundled in the catalog (The Rust Programming Language,
 Mastering Bitcoin, Learning Go, etc.) ship in their original language only —
 their licenses cover redistribution but not translation derivatives, and
-shipping AI-translated versions of those books would conflate Fishbones'
+shipping AI-translated versions of those books would conflate Libre'
 authoring voice with the original authors'.
 
 ## What gets translated
@@ -162,7 +162,7 @@ node scripts/translate-course.mjs hellotrade --locales ru --dry-run
 The course identifier resolves to `public/starter-courses/<id>.json`.
 You can also pass an absolute path to translate any course JSON.
 
-## Translating every Fishbones-authored course
+## Translating every Libre-authored course
 
 ```bash
 for c in \
@@ -182,7 +182,7 @@ do
 done
 ```
 
-After the script completes for a course, re-pack the .fishbones
+After the script completes for a course, re-pack the .libre
 archive (`scripts/extract-starter-courses.mjs` rebuilds from the
 mutated JSON) and re-run the desktop installer's `make extract-pks`
 step to get the new translations bundled into the install.
@@ -202,7 +202,7 @@ Per the script's per-call instrumentation:
 (Sonnet 4.5 list pricing: $3/M input + $15/M output, average lesson
 ~700 in / ~900 out.)
 
-Whole catalog (~28 Fishbones-authored courses, ~1500 total lessons,
+Whole catalog (~28 Libre-authored courses, ~1500 total lessons,
 5 locales) ≈ $200-300. Single-locale runs are linear in lesson count.
 
 ## How the runtime picks a locale
@@ -213,12 +213,12 @@ Whole catalog (~28 Fishbones-authored courses, ~1500 total lessons,
 2. **User override**: the LanguageDropdown in Settings (desktop
    `SettingsDialog` Theme rail OR mobile `MobileSettings` Language
    section) writes the choice via `useLocale` → localStorage key
-   `fishbones:locale`.
+   `libre:locale`.
 3. **Cross-device**: when signed in, the cloud-sync `settings`
-   channel mirrors the choice via the existing `useFishbonesCloud`
+   channel mirrors the choice via the existing `useLibreCloud`
    pipeline — flip languages on iPad, see Spanish on the Mac next
    time it boots. (The bridge from `useLocale` to the cloud hook
-   uses a `CustomEvent("fishbones:setting-changed")` to avoid a
+   uses a `CustomEvent("libre:setting-changed")` to avoid a
    layered import cycle; the App-level cloud bootstrap subscribes.)
 
 ## Adding a new locale (e.g. Portuguese)
@@ -229,5 +229,5 @@ Whole catalog (~28 Fishbones-authored courses, ~1500 total lessons,
    `scripts/translate-course.mjs`.
 3. Add the browser-language-code mapping inside `detectLocale()`
    (`pt-BR` / `pt-PT` → `pt`).
-4. Run the pipeline once per Fishbones-authored course with
+4. Run the pipeline once per Libre-authored course with
    `--locales pt`.

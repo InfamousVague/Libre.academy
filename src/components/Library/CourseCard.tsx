@@ -86,29 +86,29 @@ function CourseCardImpl({
   if (placeholder) {
     return (
       <div
-        className="fishbones-library-card fishbones-library-card--placeholder"
+        className="libre-library-card libre-library-card--placeholder"
         onContextMenu={onContextMenu}
         style={style}
       >
-        <div className="fishbones-library-card-main">
-          <div className="fishbones-library-card-header">
+        <div className="libre-library-card-main">
+          <div className="libre-library-card-header">
             <LanguageChip language={course.language} size="sm" />
-            <span className="fishbones-library-card-status">Available</span>
+            <span className="libre-library-card-status">Available</span>
           </div>
-          <div className="fishbones-library-card-title">{course.title}</div>
+          <div className="libre-library-card-title">{course.title}</div>
           {course.author && (
-            <div className="fishbones-library-card-author">by {course.author}</div>
+            <div className="libre-library-card-author">by {course.author}</div>
           )}
-          <div className="fishbones-library-card-meta">
+          <div className="libre-library-card-meta">
             {chapters > 0
               ? `${chapters} chapter${chapters === 1 ? "" : "s"}`
               : "Catalog book"}
           </div>
         </div>
-        <div className="fishbones-library-card-actions">
+        <div className="libre-library-card-actions">
           <button
             type="button"
-            className="fishbones-library-card-action fishbones-library-card-action--install"
+            className="libre-library-card-action libre-library-card-action--install"
             onClick={(e) => {
               e.stopPropagation();
               onInstall?.();
@@ -124,17 +124,17 @@ function CourseCardImpl({
   }
 
   return (
-    <div className="fishbones-library-card" onContextMenu={onContextMenu} style={style}>
+    <div className="libre-library-card" onContextMenu={onContextMenu} style={style}>
       <button
         type="button"
-        className="fishbones-library-card-main"
+        className="libre-library-card-main"
         onClick={onOpen}
       >
-        <div className="fishbones-library-card-header">
+        <div className="libre-library-card-header">
           <LanguageChip language={course.language} size="sm" />
           {hasUpdate && (
             <span
-              className="fishbones-library-card-update-dot"
+              className="libre-library-card-update-dot"
               aria-label="Update available — right-click for actions"
               title="Update available — right-click for actions"
             />
@@ -142,8 +142,8 @@ function CourseCardImpl({
           <span
             className={
               isCompleted
-                ? "fishbones-library-card-status fishbones-library-card-status--completed"
-                : "fishbones-library-card-status"
+                ? "libre-library-card-status libre-library-card-status--completed"
+                : "libre-library-card-status"
             }
           >
             {isCompleted && (
@@ -152,7 +152,7 @@ function CourseCardImpl({
               // library just for one glyph; sized to sit in the
               // baseline of the uppercase status text.
               <svg
-                className="fishbones-library-card-status-icon"
+                className="libre-library-card-status-icon"
                 viewBox="0 0 24 24"
                 width="11"
                 height="11"
@@ -165,17 +165,17 @@ function CourseCardImpl({
             {status}
           </span>
         </div>
-        <div className="fishbones-library-card-title">{course.title}</div>
+        <div className="libre-library-card-title">{course.title}</div>
         {course.author && (
-          <div className="fishbones-library-card-author">by {course.author}</div>
+          <div className="libre-library-card-author">by {course.author}</div>
         )}
-        <div className="fishbones-library-card-progress" aria-hidden>
+        <div className="libre-library-card-progress" aria-hidden>
           <div
-            className="fishbones-library-card-progress-fill"
+            className="libre-library-card-progress-fill"
             style={{ width: `${pct * 100}%` }}
           />
         </div>
-        <div className="fishbones-library-card-meta">
+        <div className="libre-library-card-meta">
           {done}/{total} lessons · {chapters} chapter{chapters === 1 ? "" : "s"}
         </div>
       </button>

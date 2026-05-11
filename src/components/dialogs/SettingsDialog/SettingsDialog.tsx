@@ -5,7 +5,7 @@ import { check as checkIcon } from "@base/primitives/icon/icons/check";
 import "@base/primitives/icon/icon.css";
 import { applyTheme, loadTheme, type ThemeName } from "../../../theme/themes";
 import { resetAccount } from "../../../lib/resetAccount";
-import type { UseFishbonesCloud } from "../../../hooks/useFishbonesCloud";
+import type { UseLibreCloud } from "../../../hooks/useLibreCloud";
 import type { RealtimeSyncHandle } from "../../../hooks/useRealtimeSync";
 import type { Completion } from "../../../hooks/useProgress";
 import type { Course } from "../../../data/types";
@@ -26,7 +26,7 @@ interface Props {
   /// the Account section. Required — SettingsDialog is only ever
   /// rendered inside App where `cloud` is in scope, so we don't
   /// bother making it optional.
-  cloud: UseFishbonesCloud;
+  cloud: UseLibreCloud;
   /// Realtime sync hook handle (also from App.tsx). Drives the
   /// Sync section's status badge, pending-push counter, manual
   /// resync button, and diff view.
@@ -247,29 +247,29 @@ export default function SettingsDialog({
 
   return (
     <ModalBackdrop onDismiss={onDismiss}>
-      <div className="fishbones-settings-panel">
-        <div className="fishbones-settings-header">
-          <span className="fishbones-settings-title">Settings</span>
-          <button className="fishbones-settings-close" onClick={onDismiss}>×</button>
+      <div className="libre-settings-panel">
+        <div className="libre-settings-header">
+          <span className="libre-settings-title">Settings</span>
+          <button className="libre-settings-close" onClick={onDismiss}>×</button>
         </div>
 
-        <div className="fishbones-settings-columns">
-          <nav className="fishbones-settings-nav" aria-label="Settings sections">
+        <div className="libre-settings-columns">
+          <nav className="libre-settings-nav" aria-label="Settings sections">
             {sections.map((s) => (
               <button
                 key={s.id}
-                className={`fishbones-settings-nav-item ${
-                  section === s.id ? "fishbones-settings-nav-item--active" : ""
+                className={`libre-settings-nav-item ${
+                  section === s.id ? "libre-settings-nav-item--active" : ""
                 }`}
                 onClick={() => setSection(s.id)}
               >
-                <span className="fishbones-settings-nav-label">{s.label}</span>
-                <span className="fishbones-settings-nav-hint">{s.hint}</span>
+                <span className="libre-settings-nav-label">{s.label}</span>
+                <span className="libre-settings-nav-hint">{s.hint}</span>
               </button>
             ))}
           </nav>
 
-          <div className="fishbones-settings-body">
+          <div className="libre-settings-body">
             {section === "general" && <GeneralPane />}
 
             {section === "ai" && (
@@ -290,20 +290,20 @@ export default function SettingsDialog({
 
             {section === "data" && (
               <section>
-                <h3 className="fishbones-settings-section">Data</h3>
-                <p className="fishbones-settings-blurb">
+                <h3 className="libre-settings-section">Data</h3>
+                <p className="libre-settings-blurb">
                   Pull in new bundled books, clear caches, or wipe local content.
                   Your API key and preferences stay.
                 </p>
-                <div className="fishbones-settings-data-row">
+                <div className="libre-settings-data-row">
                   <div>
-                    <div className="fishbones-settings-data-label">Sync latest courses</div>
-                    <div className="fishbones-settings-data-hint">
+                    <div className="libre-settings-data-label">Sync latest courses</div>
+                    <div className="libre-settings-data-hint">
                       Pulls newly-bundled books into your library and refreshes any
                       existing courses with the latest lessons + drills. Deleted
                       packs stay deleted.
                       {syncResult && (
-                        <span className="fishbones-settings-data-success">
+                        <span className="libre-settings-data-success">
                           {" · "}
                           {syncResult}
                         </span>
@@ -311,7 +311,7 @@ export default function SettingsDialog({
                     </div>
                   </div>
                   <button
-                    className="fishbones-settings-secondary"
+                    className="libre-settings-secondary"
                     onClick={syncCourses}
                     disabled={syncingCourses}
                   >
@@ -349,8 +349,8 @@ export default function SettingsDialog({
                 />
               ) : (
                 <section>
-                  <h3 className="fishbones-settings-section">Sync</h3>
-                  <p className="fishbones-settings-blurb">
+                  <h3 className="libre-settings-section">Sync</h3>
+                  <p className="libre-settings-blurb">
                     Sync diagnostics aren't available in this build.
                   </p>
                 </section>
@@ -413,7 +413,7 @@ export default function SettingsDialog({
               />
             )}
 
-            {error && <div className="fishbones-settings-error">{error}</div>}
+            {error && <div className="libre-settings-error">{error}</div>}
           </div>
         </div>
 
@@ -421,16 +421,16 @@ export default function SettingsDialog({
             visible regardless of section length. Only the AI section has a
             committable field; on other sections the Save button is hidden
             to avoid implying unsaved state. */}
-        <div className="fishbones-settings-footer">
+        <div className="libre-settings-footer">
           {saved && (
-            <span className="fishbones-settings-saved">
+            <span className="libre-settings-saved">
               <Icon icon={checkIcon} size="xs" color="currentColor" />
               saved
             </span>
           )}
           {section === "ai" && (
             <button
-              className="fishbones-settings-primary"
+              className="libre-settings-primary"
               onClick={save}
               disabled={saving}
             >
@@ -438,7 +438,7 @@ export default function SettingsDialog({
             </button>
           )}
           {section !== "ai" && (
-            <span className="fishbones-settings-footer-hint">
+            <span className="libre-settings-footer-hint">
               Changes on this tab apply immediately.
             </span>
           )}
@@ -459,7 +459,7 @@ function SignedOutAccountSection({
   cloud,
   onRequestSignIn,
 }: {
-  cloud: UseFishbonesCloud;
+  cloud: UseLibreCloud;
   onRequestSignIn: () => void;
 }) {
   const [armed, setArmed] = useState(false);
@@ -472,28 +472,28 @@ function SignedOutAccountSection({
   }, [armed]);
   return (
     <section>
-      <h3 className="fishbones-settings-section">Account</h3>
-      <p className="fishbones-settings-blurb">
+      <h3 className="libre-settings-section">Account</h3>
+      <p className="libre-settings-blurb">
         Sign in to sync progress, streaks, and lesson history between
         devices, upload your imported books, and share courses with
-        friends. Fishbones works fully offline without an account —
+        friends. Libre works fully offline without an account —
         signing in is purely additive.
       </p>
       <button
         type="button"
-        className="fishbones-settings-primary"
+        className="libre-settings-primary"
         onClick={onRequestSignIn}
       >
         Sign in
       </button>
 
       <div
-        className="fishbones-settings-data-row"
+        className="libre-settings-data-row"
         style={{ marginTop: 24 }}
       >
         <div>
-          <div className="fishbones-settings-data-label">Start fresh</div>
-          <div className="fishbones-settings-data-hint">
+          <div className="libre-settings-data-label">Start fresh</div>
+          <div className="libre-settings-data-hint">
             {armed
               ? "Tap Confirm within 5 s to wipe every course, completion, achievement, streak, and cached progress on this device. The page will reload with a freshly-seeded library."
               : busy
@@ -504,7 +504,7 @@ function SignedOutAccountSection({
           </div>
         </div>
         <button
-          className="fishbones-settings-danger"
+          className="libre-settings-danger"
           disabled={busy}
           onClick={async () => {
             if (!armed) {

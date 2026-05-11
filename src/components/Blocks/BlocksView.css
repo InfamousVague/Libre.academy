@@ -8,7 +8,7 @@
 
    The layout is single-column on every viewport — phone, tablet,
    desktop. The lesson reader's existing column constraints
-   (.fishbones-reader-body / .m-reader__prose) already cap width;
+   (.libre-reader-body / .m-reader__prose) already cap width;
    we don't impose further. */
 
 .fb-blocks {
@@ -37,7 +37,7 @@
   color: var(--color-text-secondary);
 }
 
-/* Header bar — mirrors `.fishbones-editor-header`'s chrome
+/* Header bar — mirrors `.libre-editor-header`'s chrome
    (bg-secondary fill + border-bottom + 6×12 padding) so swapping
    between editor and blocks modes feels like swapping which body
    sits beneath a shared header bar. The negative margin breaks
@@ -478,7 +478,7 @@
    so CSS + render-path agree. */
 @media (max-width: 767px) {
   /* Edge-to-edge handling on phone is owned by the parent Workbench
-     (`.fishbones-workbench` mobile override drops its card chrome and
+     (`.libre-workbench` mobile override drops its card chrome and
      negative-margins out of `.m-lesson` padding). We only adjust the
      inner blocks-content padding here so chips don't slam the
      viewport edge, and drop the rounded borders on the template + pool

@@ -100,7 +100,7 @@ if (verbose) console.error(`[verify] course: ${COURSE_PATH}`);
 // project's `node_modules/@ethereumjs/*` + `node_modules/viem`. A
 // /tmp dir would fail with ERR_MODULE_NOT_FOUND. `.cache/` is
 // .gitignored upstream and a natural home for derived artifacts.
-const BUNDLE_DIR = join(ROOT, "node_modules/.cache/fishbones-evm-headless");
+const BUNDLE_DIR = join(ROOT, "node_modules/.cache/libre-evm-headless");
 mkdirSync(BUNDLE_DIR, { recursive: true });
 const BUNDLE_PATH = join(BUNDLE_DIR, "chain-bundle.mjs");
 const ENTRY_PATH = join(BUNDLE_DIR, "chain-entry.ts");

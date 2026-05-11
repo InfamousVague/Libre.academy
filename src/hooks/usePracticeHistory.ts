@@ -18,7 +18,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-const STORAGE_KEY = "fishbones-practice-history-v1";
+const STORAGE_KEY = "libre-practice-history-v1";
 
 /// Tracks per-card attempt history + computes the next-due date
 /// using a tiny Anki-flavoured schedule.

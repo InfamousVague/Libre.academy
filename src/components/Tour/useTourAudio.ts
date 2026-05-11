@@ -41,7 +41,7 @@ interface TourManifest {
 /// `<base>/tour-audio/manifest.json`. We compose the URL from
 /// Vite's `import.meta.env.BASE_URL` (which is `/` for the
 /// desktop / Tauri build, `/learn/` for the libre.academy
-/// embed, `/fishbones/learn/` for the legacy mattssoftware embed)
+/// embed, `/libre/learn/` for the legacy mattssoftware embed)
 /// so the same code works under every base path. Hardcoding the
 /// root-absolute `/tour-audio/manifest.json` previously made the
 /// embed surface fall through to the marketing site's SPA

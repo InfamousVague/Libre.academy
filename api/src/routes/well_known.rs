@@ -9,7 +9,7 @@
 //! Apple fetches that URL when you click "Verify" in the developer
 //! portal. We serve the file from disk (path in
 //! `APPLE_DOMAIN_ASSOCIATION_FILE` — defaulting to
-//! `/etc/fishbones-api/apple-domain-association.txt`) so a fresh
+//! `/etc/libre-api/apple-domain-association.txt`) so a fresh
 //! verification token can be dropped in by `scp` without rebuilding
 //! the API server.
 //!
@@ -30,7 +30,7 @@ pub async fn apple_domain_association(State(state): State<Arc<AppState>>) -> Res
         .apple_domain_association_file
         .clone()
         .unwrap_or_else(|| {
-            "/etc/fishbones-api/apple-domain-association.txt".to_string()
+            "/etc/libre-api/apple-domain-association.txt".to_string()
         });
 
     match tokio::fs::read(&path).await {

@@ -5,7 +5,7 @@ import "@base/primitives/icon/icon.css";
 import type { Course, LanguageId } from "../../data/types";
 import { isChallengePack } from "../../data/types";
 import BookCover from "./BookCover";
-import FishbonesLoader from "../Shared/FishbonesLoader";
+import LibreLoader from "../Shared/LibreLoader";
 import CourseContextMenu, { useCourseMenu } from "../Shared/CourseContextMenu";
 import { prefetchCovers } from "../../hooks/useCourseCover";
 import { useCourseUpdates } from "../../hooks/useCourseUpdates";
@@ -41,7 +41,7 @@ import "./CourseLibrary.css";
 /// Inverted from the original "shelf default" after user feedback that
 /// the dense-info card view is more useful at a glance for someone
 /// deciding what to open.
-const VIEW_MODE_STORAGE_KEY = "fishbones:library-view-mode";
+const VIEW_MODE_STORAGE_KEY = "libre:library-view-mode";
 const VIEW_MODE_DEFAULT: ViewMode = "grid";
 
 interface Props {
@@ -65,7 +65,7 @@ interface Props {
   /// wired by the host (keeps this component useful in tests / web
   /// previews that don't have the Tauri crawl command available).
   onDocsImport?: () => void;
-  /// Opens a file picker for a previously-exported `.fishbones` (or legacy
+  /// Opens a file picker for a previously-exported `.libre` (or legacy
   /// `.kata`) archive and unzips it into the courses dir. Optional — when omitted the button
   /// is hidden (e.g. in environments where the Tauri dialog plugin isn't
   /// available).
@@ -89,21 +89,21 @@ interface Props {
   /// hidden cleanly when the host doesn't wire it (e.g. tests).
   onUpdateCourse?: (courseId: string) => Promise<void> | void;
   /// Smart "Add course" entry point. Opens an OS file picker with
-  /// all supported formats (.pdf, .epub, .fishbones, .kata, .zip,
+  /// all supported formats (.pdf, .epub, .libre, .kata, .zip,
   /// .json) and dispatches each picked file to the right pipeline.
   /// When supplied, replaces the old 4-segment Book / Bulk books /
   /// Docs site / Archive cluster with a single split button. The
   /// dropdown still surfaces the explicit options for users who
   /// want them.
   onAddCourse?: () => void;
-  /// Opens the catalog browser modal — search the official Fishbones
+  /// Opens the catalog browser modal — search the official Libre
   /// library and install courses the user doesn't have yet. Distinct
   /// from `onAddCourse` (which is for files the user already has on
   /// disk) and from `onInstallCatalogEntry` (the lower-level install
   /// primitive that the browser modal calls).
   onBrowseCatalog?: () => void;
   /// Install a remote-catalog placeholder. Wired by App.tsx to fetch
-  /// the .fishbones archive (desktop) or course JSON (web), persist
+  /// the .libre archive (desktop) or course JSON (web), persist
   /// it via storage.saveCourse, then refresh the in-memory list so
   /// the placeholder is replaced with the real installed cover. When
   /// omitted the Library still renders catalog placeholders, but
@@ -565,7 +565,7 @@ export default function CourseLibrary({
   const updateAllButton = hasAnyUpdates ? (
     <button
       type="button"
-      className="fishbones-library-section-update-btn"
+      className="libre-library-section-update-btn"
       onClick={handleUpdateAll}
       disabled={updateAllBusy || pendingUpdateIds.length === 0}
       title="Re-sync each updated book against its bundled source"
@@ -583,25 +583,25 @@ export default function CourseLibrary({
   // modal wraps with a full-viewport backdrop, inline just renders in place.
   const panel = (
     <div
-      className={`fishbones-library-panel ${isInline ? "fishbones-library-panel--inline" : ""}`}
+      className={`libre-library-panel ${isInline ? "libre-library-panel--inline" : ""}`}
       onClick={(e) => e.stopPropagation()}
     >
-        <div className="fishbones-library-header">
+        <div className="libre-library-header">
           {/* Title block — back to the pre-logo treatment. The
               Libre.academy wordmark moved out to the sidebar, so
               the page identity here is just "Library" / "Discover"
               + the count metadata. */}
-          <div className="fishbones-library-titleblock">
-            <span className="fishbones-library-title">
+          <div className="libre-library-titleblock">
+            <span className="libre-library-title">
               {scope === "discover" ? "Discover" : "Library"}
             </span>
-            <span className="fishbones-library-subtitle">
+            <span className="libre-library-subtitle">
               {scope === "discover"
                 ? `${placeholderCourses.length} book${placeholderCourses.length === 1 ? "" : "s"} available to install`
                 : `${courses.length} course${courses.length === 1 ? "" : "s"} on this machine`}
             </span>
           </div>
-          <div className="fishbones-library-header-actions">
+          <div className="libre-library-header-actions">
             {/* Single "Import" label + a segmented cluster of destinations.
                 Beats repeating "Import from PDF…", "Import archive…",
                 "Bulk import…" three times — the label answers "what do
@@ -628,7 +628,7 @@ export default function CourseLibrary({
             {!onAddCourse && onBrowseCatalog && (
               <button
                 type="button"
-                className="fishbones-library-import"
+                className="libre-library-import"
                 onClick={onBrowseCatalog}
               >
                 Browse catalog
@@ -640,7 +640,7 @@ export default function CourseLibrary({
                 the library still has a visible import entry. */}
             {!onAddCourse && onImport && (
               <button
-                className="fishbones-library-import-seg fishbones-library-import-seg--primary"
+                className="libre-library-import-seg libre-library-import-seg--primary"
                 onClick={onImport}
                 title="Run the AI pipeline on a PDF or EPUB to generate a course"
               >
@@ -649,7 +649,7 @@ export default function CourseLibrary({
             )}
             {onBulkExport && (
               <button
-                className="fishbones-library-bulk-export"
+                className="libre-library-bulk-export"
                 onClick={onBulkExport}
                 disabled={filtered.length === 0 && courses.length === 0}
                 title="Export every course in the library as .academy archives to a folder of your choice"
@@ -658,7 +658,7 @@ export default function CourseLibrary({
               </button>
             )}
             {!isInline && (
-              <button className="fishbones-library-close" onClick={onDismiss} aria-label="Close">
+              <button className="libre-library-close" onClick={onDismiss} aria-label="Close">
                 ×
               </button>
             )}
@@ -686,7 +686,7 @@ export default function CourseLibrary({
         */}
         <div
           className={
-            "fishbones-library-body" +
+            "libre-library-body" +
             (isCardListPending ? " is-deferred-pending" : "")
           }
         >
@@ -743,7 +743,7 @@ export default function CourseLibrary({
             // command that walks the bundled-packs dir; the web build
             // fetches a static JSON manifest. Either way, on cold
             // start the catalog can take a moment — show the
-            // FishbonesLoader instead of the misleading "No courses
+            // LibreLoader instead of the misleading "No courses
             // yet" or "No matches" empty states.
             //
             // Reads derivedScope (not scope) so we don't briefly
@@ -751,28 +751,28 @@ export default function CourseLibrary({
             // committing the chrome of a discover→library swap; the
             // body keeps showing the previous Library cards until
             // the deferred recomputation lands.
-            <div className="fishbones-library-empty">
-              <FishbonesLoader size="md" label="Loading catalog…" />
+            <div className="libre-library-empty">
+              <LibreLoader size="md" label="Loading catalog…" />
             </div>
           ) : courses.length === 0 && derivedScope !== "discover" ? (
-            <div className="fishbones-library-empty">
-              <div className="fishbones-library-empty-glyph" aria-hidden>
+            <div className="libre-library-empty">
+              <div className="libre-library-empty-glyph" aria-hidden>
                 <Icon icon={libraryBig} size="2xl" color="currentColor" weight="light" />
               </div>
-              <div className="fishbones-library-empty-title">No courses yet</div>
-              <div className="fishbones-library-empty-blurb">
+              <div className="libre-library-empty-title">No courses yet</div>
+              <div className="libre-library-empty-blurb">
                 {onImport
                   ? "Import your first book to get started. Libre splits a PDF or EPUB into lessons and generates exercises with the Claude API, or you can import a `.academy` course someone else shared."
                   : "Sign in to sync courses from another device, or grab the desktop app to ingest your own books."}
               </div>
-              <div className="fishbones-library-empty-actions">
+              <div className="libre-library-empty-actions">
                 {onImport ? (
-                  <button className="fishbones-library-empty-primary" onClick={onImport}>
+                  <button className="libre-library-empty-primary" onClick={onImport}>
                     Import a book…
                   </button>
                 ) : (
                   <a
-                    className="fishbones-library-empty-primary"
+                    className="libre-library-empty-primary"
                     href="https://github.com/InfamousVague/Kata/releases/latest"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -782,7 +782,7 @@ export default function CourseLibrary({
                 )}
                 {onImportArchive && (
                   <button
-                    className="fishbones-library-empty-secondary"
+                    className="libre-library-empty-secondary"
                     onClick={onImportArchive}
                   >
                     Import .academy archive…
@@ -791,32 +791,32 @@ export default function CourseLibrary({
               </div>
             </div>
           ) : filtered.length === 0 ? (
-            <div className="fishbones-library-empty">
-              <div className="fishbones-library-empty-title">No matches</div>
-              <div className="fishbones-library-empty-blurb">
+            <div className="libre-library-empty">
+              <div className="libre-library-empty-title">No matches</div>
+              <div className="libre-library-empty-blurb">
                 Try clearing the filter or searching for a different title.
               </div>
             </div>
           ) : viewMode === "shelf" ? (
             // Shelf mode — each release-status tier gets its own
             // labelled section. Section heading + blurb sit above the
-            // cover grid; the inner .fishbones-library-shelf keeps its
+            // cover grid; the inner .libre-library-shelf keeps its
             // original layout so card sizing is unchanged.
-            <div className="fishbones-library-sections">
+            <div className="libre-library-sections">
               {sections.map((sec, secIdx) => (
                 <section
                   key={sec.key}
-                  className={`fishbones-library-section fishbones-library-section--${sec.key}`}
+                  className={`libre-library-section libre-library-section--${sec.key}`}
                   aria-label={sec.label}
                 >
-                  <header className="fishbones-library-section-head">
-                    <h2 className="fishbones-library-section-title">
+                  <header className="libre-library-section-head">
+                    <h2 className="libre-library-section-title">
                       {sec.label}
                     </h2>
-                    <span className="fishbones-library-section-count">
+                    <span className="libre-library-section-count">
                       {sec.rows.length}
                     </span>
-                    <span className="fishbones-library-section-blurb">
+                    <span className="libre-library-section-blurb">
                       {sec.blurb}
                     </span>
                     {/* Update-all button docks into the FIRST section's
@@ -826,7 +826,7 @@ export default function CourseLibrary({
                         natural single anchor. */}
                     {secIdx === 0 && updateAllButton}
                   </header>
-                  <div className="fishbones-library-shelf">
+                  <div className="libre-library-shelf">
                     {sec.rows.map((e, idx) => (
                       <BookCover
                         key={e.course.id}
@@ -884,21 +884,21 @@ export default function CourseLibrary({
             </div>
           ) : (
             // Grid mode — same sectioning rule, different inner layout.
-            <div className="fishbones-library-sections">
+            <div className="libre-library-sections">
               {sections.map((sec, secIdx) => (
                 <section
                   key={sec.key}
-                  className={`fishbones-library-section fishbones-library-section--${sec.key}`}
+                  className={`libre-library-section libre-library-section--${sec.key}`}
                   aria-label={sec.label}
                 >
-                  <header className="fishbones-library-section-head">
-                    <h2 className="fishbones-library-section-title">
+                  <header className="libre-library-section-head">
+                    <h2 className="libre-library-section-title">
                       {sec.label}
                     </h2>
-                    <span className="fishbones-library-section-count">
+                    <span className="libre-library-section-count">
                       {sec.rows.length}
                     </span>
-                    <span className="fishbones-library-section-blurb">
+                    <span className="libre-library-section-blurb">
                       {sec.blurb}
                     </span>
                     {/* See comment on the shelf-mode map above —
@@ -906,7 +906,7 @@ export default function CourseLibrary({
                         action. */}
                     {secIdx === 0 && updateAllButton}
                   </header>
-                  <div className="fishbones-library-grid">
+                  <div className="libre-library-grid">
                     {sec.rows.map((e, idx) => (
                       <CourseCard
                         key={e.course.id}
@@ -979,7 +979,7 @@ export default function CourseLibrary({
   // container. In modal mode, wrap in a backdrop and intercept clicks.
   if (isInline) return panel;
   return (
-    <div className="fishbones-library-backdrop" onClick={onDismiss}>
+    <div className="libre-library-backdrop" onClick={onDismiss}>
       {panel}
     </div>
   );

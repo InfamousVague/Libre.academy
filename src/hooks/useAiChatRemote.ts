@@ -123,14 +123,14 @@ export function useAiChatRemote(model?: string): UseAiChat {
     // event we dispatch from `writeAiHost` consumers (the settings
     // dialog).
     const onStorage = (ev: StorageEvent) => {
-      if (ev.key === "fishbones:ai-host") void refreshProbe();
+      if (ev.key === "libre:ai-host") void refreshProbe();
     };
     const onCustom = () => void refreshProbe();
     window.addEventListener("storage", onStorage);
-    window.addEventListener("fishbones:ai-host-changed", onCustom);
+    window.addEventListener("libre:ai-host-changed", onCustom);
     return () => {
       window.removeEventListener("storage", onStorage);
-      window.removeEventListener("fishbones:ai-host-changed", onCustom);
+      window.removeEventListener("libre:ai-host-changed", onCustom);
     };
   }, [refreshProbe]);
 

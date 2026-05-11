@@ -4,7 +4,7 @@
 /// the localhost daemon the desktop binary calls via Tauri IPC.
 ///
 /// The host is plain user-config: a Tailscale hostname like
-/// `fishbones-mac.tailnet-123.ts.net`, a LAN IP like `192.168.1.42`,
+/// `libre-mac.tailnet-123.ts.net`, a LAN IP like `192.168.1.42`,
 /// or eventually a hosted-relay URL. Persisted in localStorage so it
 /// survives launches without round-tripping the cloud-sync path
 /// (which we don't want — the host is per-device, your phone and a
@@ -14,7 +14,7 @@ import { isDesktop, isMobile } from "./platform";
 
 /// Storage key. Single source of truth — every reader / writer
 /// imports `STORAGE_KEY` so a future rename here is one-line.
-export const STORAGE_KEY = "fishbones:ai-host";
+export const STORAGE_KEY = "libre:ai-host";
 
 /// Enable / disable the in-app AI assistant entirely. Defaults vary
 /// by platform — see `readAiEnabled` below for the resolution rules.
@@ -25,19 +25,19 @@ export const STORAGE_KEY = "fishbones:ai-host";
 /// silent until they explicitly opt in). Either default can be
 /// overridden by an explicit "0" / "1" in localStorage — the user's
 /// previous toggle choice always wins over the platform default.
-const ENABLED_KEY = "fishbones:ai-assistant-enabled";
+const ENABLED_KEY = "libre:ai-assistant-enabled";
 
 /// Custom event consumers can listen for so a Settings toggle takes
 /// effect across the React tree without prop-drilling. The host
-/// field already dispatches `fishbones:ai-host-changed`; the toggle
+/// field already dispatches `libre:ai-host-changed`; the toggle
 /// dispatches the same event since the downstream effect (re-render
 /// the assistant + maybe re-probe) is identical regardless of which
 /// input changed.
-const CONFIG_CHANGE_EVENT = "fishbones:ai-host-changed";
+const CONFIG_CHANGE_EVENT = "libre:ai-host-changed";
 
 /// Default Ollama HTTP port. Overridable in the configured host
 /// string itself if a user runs the daemon on a non-standard port
-/// (`fishbones-mac.tailnet.ts.net:11500` works just by including the
+/// (`libre-mac.tailnet.ts.net:11500` works just by including the
 /// port in the field).
 const DEFAULT_PORT = 11434;
 
@@ -103,7 +103,7 @@ export function readAiEnabled(): boolean {
 
 /// Persist the enable toggle. We use "0" / "1" rather than JSON
 /// booleans for parity with other on/off settings in the codebase
-/// (`fishbones:sidebarCollapsed`, etc.) — the parser is the same
+/// (`libre:sidebarCollapsed`, etc.) — the parser is the same
 /// "value === '1'" check everywhere. Fires the config-change event
 /// so a same-tab toggle takes effect without a remount.
 export function writeAiEnabled(enabled: boolean): void {

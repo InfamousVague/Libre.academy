@@ -26,6 +26,7 @@
 /// same history / saved env / connection state.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { Icon } from "@base/primitives/icon";
 import { useLocalStorageState } from "../../hooks/useLocalStorageState";
 import { panelLeftClose } from "@base/primitives/icon/icons/panel-left-close";
@@ -52,9 +53,9 @@ import "./TradeDock.css";
 // ── Singleton store ─────────────────────────────────────────────
 
 const STORAGE_KEYS = {
-  liveMode: "fishbones:tradedock:live-mode",
-  env: "fishbones:tradedock:env",
-  history: "fishbones:tradedock:history",
+  liveMode: "libre:tradedock:live-mode",
+  env: "libre:tradedock:env",
+  history: "libre:tradedock:history",
 };
 
 /// Resizable banner height — matches the BitcoinChainDock pattern.
@@ -553,24 +554,38 @@ function RestPanel({
     const startedAt = performance.now();
     const parsedHeaders = parseHeaders(headers);
     if (liveMode) {
+      // Route through the Rust `proxy_http` command instead of
+      // `fetch()`. The webview's origin (`http://localhost:1420`
+      // in dev, `tauri://localhost` in prod) is never going to be
+      // whitelisted by third-party APIs' `Access-Control-Allow-Origin`,
+      // so a direct browser-side fetch dies on CORS. The Rust side
+      // makes the request server-style via reqwest — no CORS — and
+      // hands the raw response back. See
+      // `src-tauri/src/http_proxy.rs` for the command.
       try {
-        const r = await fetch(resolvedUrl, {
-          method,
-          headers: parsedHeaders,
-          body:
-            method === "GET" || method === "DELETE"
-              ? undefined
-              : resolvedBody ?? undefined,
+        const r = await invoke<{
+          status: number;
+          statusText: string;
+          headers: Record<string, string>;
+          body: string;
+        }>("proxy_http", {
+          req: {
+            method,
+            url: resolvedUrl,
+            headers: parsedHeaders,
+            body:
+              method === "GET" || method === "DELETE"
+                ? null
+                : resolvedBody ?? null,
+          },
         });
-        const text = await r.text();
-        const formatted = tryFormatJson(text);
         setState({
           loading: false,
           status: r.status,
           statusText: r.statusText,
           durationMs: Math.round(performance.now() - startedAt),
-          responseHeaders: headersToObject(r.headers),
-          responseBody: formatted,
+          responseHeaders: r.headers,
+          responseBody: tryFormatJson(r.body),
           source: "live",
         });
       } catch (e) {
@@ -1008,14 +1023,6 @@ function tryFormatJson(s: string): string {
   } catch {
     return s;
   }
-}
-
-function headersToObject(h: Headers): Record<string, string> {
-  const out: Record<string, string> = {};
-  h.forEach((v, k) => {
-    out[k] = v;
-  });
-  return out;
 }
 
 function statusTone(s: number): "ok" | "warn" | "err" | "neutral" {

@@ -296,7 +296,7 @@ impl BitcoinState {
             lock_time: LockTime::ZERO,
             input: vec![TxIn {
                 previous_output: OutPoint::null(),
-                script_sig: ScriptBuf::from(b"fishbones-bootstrap".to_vec()),
+                script_sig: ScriptBuf::from(b"libre-bootstrap".to_vec()),
                 sequence: Sequence::MAX,
                 witness: Witness::new(),
             }],

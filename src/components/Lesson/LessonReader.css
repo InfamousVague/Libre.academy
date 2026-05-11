@@ -1,5 +1,5 @@
 /* Reading/exercise prose column. Horizontal padding + max-width match
-   `.fishbones-quiz` and `.fishbones__lesson-nav-wrap` so the content gutter is
+   `.libre-quiz` and `.libre__lesson-nav-wrap` so the content gutter is
    uniform across reading, quiz, and exercise lessons.
    No background — the reader sits directly on the app base surface so
    prose is the figure, not an object in a frame. Code blocks and quiz
@@ -9,7 +9,7 @@
    rail at the top, and the scrollable content underneath. The rail is
    pulled out of the scroll container so it doesn't drift away as the
    learner scrolls through a long lesson. */
-.fishbones-reader {
+.libre-reader {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -18,28 +18,28 @@
   position: relative;
 }
 
-.fishbones-reader-progress {
+.libre-reader-progress {
   flex-shrink: 0;
   height: 2px;
   width: 100%;
   background: transparent;
 }
 
-.fishbones-reader-progress-fill {
+.libre-reader-progress-fill {
   height: 100%;
   background: var(--color-text-primary);
   opacity: 0.85;
   transition: width 0.12s linear;
 }
 
-.fishbones-reader-scroll {
+.libre-reader-scroll {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   padding: 32px 16px 24px;
 }
 
-.fishbones-reader-inner {
+.libre-reader-inner {
   max-width: 860px;
   margin: 0 auto;
 }
@@ -47,7 +47,7 @@
 /* Lesson title pinned above the meta row. Matches the scale of the body h1
    it replaces so removing the duplicated markdown heading doesn't shrink
    the visual anchor at the top of the page. */
-.fishbones-reader-title {
+.libre-reader-title {
   margin: 0 0 10px;
   font-size: 26px;
   font-weight: 700;
@@ -57,7 +57,7 @@
 }
 
 /* Meta row — time-to-read chip on the left, glossary toggle on the right. */
-.fishbones-reader-meta {
+.libre-reader-meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -65,7 +65,7 @@
   margin-bottom: 20px;
 }
 
-.fishbones-reader-meta-time {
+.libre-reader-meta-time {
   font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.5px;
@@ -74,7 +74,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-.fishbones-reader-meta-glossary {
+.libre-reader-meta-glossary {
   display: inline-flex;
   align-items: center;
   /* Left-aligned cluster — icon + "Glossary" label + count badge
@@ -105,19 +105,19 @@
   transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy), border-color var(--fb-motion-snappy);
 }
 
-.fishbones-reader-meta-glossary:hover {
+.libre-reader-meta-glossary:hover {
   color: var(--color-text-primary);
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-.fishbones-reader-meta-glossary--open,
-.fishbones-reader-meta-glossary--open:hover {
+.libre-reader-meta-glossary--open,
+.libre-reader-meta-glossary--open:hover {
   color: var(--color-bg-primary);
   background: var(--color-text-primary);
   border-color: var(--color-text-primary);
 }
 
-.fishbones-reader-meta-glossary-icon {
+.libre-reader-meta-glossary-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -129,7 +129,7 @@
   height: 14px;
 }
 
-.fishbones-reader-meta-glossary-count {
+.libre-reader-meta-glossary-count {
   /* Vertically + horizontally center the digits inside the badge so
      a 1-digit and a 3-digit count both read as balanced. */
   display: inline-flex;
@@ -152,7 +152,7 @@
   line-height: 1;
 }
 
-.fishbones-reader-meta-glossary--open .fishbones-reader-meta-glossary-count {
+.libre-reader-meta-glossary--open .libre-reader-meta-glossary-count {
   background: rgba(0, 0, 0, 0.2);
   color: var(--color-bg-primary);
 }
@@ -160,7 +160,7 @@
 /* Retry-exercise card — shows on lessons the ingest pipeline demoted
    after 3 validation failures. Amber accent (warn semantics) + a
    primary CTA, distinct from the cyan "You'll learn" objectives box. */
-.fishbones-reader-retry {
+.libre-reader-retry {
   margin: 0 0 20px;
   padding: 14px 16px 12px;
   background: rgba(232, 196, 107, 0.06);
@@ -169,14 +169,14 @@
   border-radius: var(--fb-radius-sm);
 }
 
-.fishbones-reader-retry-head {
+.libre-reader-retry-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 6px;
 }
 
-.fishbones-reader-retry-label {
+.libre-reader-retry-label {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.6px;
@@ -184,14 +184,14 @@
   color: #e8c46b;
 }
 
-.fishbones-reader-retry-body {
+.libre-reader-retry-body {
   font-size: 13px;
   line-height: 1.55;
   color: var(--color-text-secondary);
   margin-bottom: 10px;
 }
 
-.fishbones-reader-retry-reason {
+.libre-reader-retry-reason {
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -204,7 +204,7 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones-reader-retry-reason-label {
+.libre-reader-retry-reason-label {
   flex-shrink: 0;
   font-weight: 700;
   letter-spacing: 0.4px;
@@ -214,13 +214,13 @@
   padding-top: 1px;
 }
 
-.fishbones-reader-retry-reason-text {
+.libre-reader-retry-reason-text {
   font-family: "SF Mono", ui-monospace, Menlo, monospace;
   color: var(--color-text-secondary);
   word-break: break-word;
 }
 
-.fishbones-reader-retry-btn {
+.libre-reader-retry-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -237,12 +237,12 @@
   transition: opacity var(--fb-motion-snappy);
 }
 
-.fishbones-reader-retry-btn:hover {
+.libre-reader-retry-btn:hover {
   opacity: 0.9;
 }
 
 /* Objectives card — small "You'll learn" box above the body. */
-.fishbones-reader-objectives {
+.libre-reader-objectives {
   margin: 0 0 24px;
   padding: 12px 16px;
   background: rgba(124, 193, 217, 0.06);
@@ -251,7 +251,7 @@
   border-radius: var(--fb-radius-sm);
 }
 
-.fishbones-reader-objectives-label {
+.libre-reader-objectives-label {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.6px;
@@ -260,13 +260,13 @@
   margin-bottom: 6px;
 }
 
-.fishbones-reader-objectives-list {
+.libre-reader-objectives-list {
   margin: 0;
   padding-left: 18px;
   color: var(--color-text-primary);
 }
 
-.fishbones-reader-objectives-list li {
+.libre-reader-objectives-list li {
   font-size: 13px;
   line-height: 1.55;
   margin: 3px 0;
@@ -284,7 +284,7 @@
    is below the topbar in the layout flow), so a 10px top here
    already keeps it clear of the chrome — the trees panel uses
    `position: fixed` and needs an explicit topbar offset. */
-.fishbones-reader-glossary {
+.libre-reader-glossary {
   position: absolute;
   top: 10px;
   right: 10px;
@@ -304,15 +304,15 @@
   box-shadow:
     inset 0 1px 0 var(--color-glass-rim),
     0 12px 28px var(--color-glass-shadow);
-  animation: fishbones-glossary-enter 0.2s ease-out;
+  animation: libre-glossary-enter 0.2s ease-out;
 }
 
-@keyframes fishbones-glossary-enter {
+@keyframes libre-glossary-enter {
   from { transform: translateX(20px); opacity: 0; }
   to   { transform: translateX(0);    opacity: 1; }
 }
 
-.fishbones-reader-glossary-head {
+.libre-reader-glossary-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -325,7 +325,7 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones-reader-glossary-close {
+.libre-reader-glossary-close {
   background: none;
   border: 0;
   color: var(--color-text-tertiary);
@@ -336,11 +336,11 @@
   justify-content: center;
 }
 
-.fishbones-reader-glossary-close:hover {
+.libre-reader-glossary-close:hover {
   color: var(--color-text-primary);
 }
 
-.fishbones-reader-glossary-body {
+.libre-reader-glossary-body {
   flex: 1;
   overflow-y: auto;
   padding: 12px 16px;
@@ -349,19 +349,19 @@
   gap: 14px;
 }
 
-.fishbones-reader-glossary-entry {
+.libre-reader-glossary-entry {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.fishbones-reader-glossary-term {
+.libre-reader-glossary-term {
   font-size: 13px;
   font-weight: 700;
   color: var(--color-text-primary);
 }
 
-.fishbones-reader-glossary-def {
+.libre-reader-glossary-def {
   font-size: 12px;
   line-height: 1.55;
   color: var(--color-text-secondary);
@@ -369,7 +369,7 @@
 
 /* ---- Callouts ---- */
 
-.fishbones-callout {
+.libre-callout {
   margin: 16px 0;
   padding: 10px 14px;
   border: 1px solid var(--color-border-default);
@@ -378,7 +378,7 @@
   background: var(--color-bg-secondary);
 }
 
-.fishbones-callout-head {
+.libre-callout-head {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -389,7 +389,7 @@
   text-transform: uppercase;
 }
 
-.fishbones-callout-glyph {
+.libre-callout-glyph {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -400,64 +400,64 @@
 
 /* Four semantic colorings — concept-coded so each callout kind reads
    at a glance. */
-.fishbones-callout--note {
+.libre-callout--note {
   border-left-color: #7cc1d9;
   background: rgba(124, 193, 217, 0.06);
 }
-.fishbones-callout--note .fishbones-callout-head { color: #7cc1d9; }
-.fishbones-callout--note .fishbones-callout-glyph {
+.libre-callout--note .libre-callout-head { color: #7cc1d9; }
+.libre-callout--note .libre-callout-glyph {
   background: rgba(124, 193, 217, 0.18);
   color: #7cc1d9;
 }
 
-.fishbones-callout--warning {
+.libre-callout--warning {
   border-left-color: #e8c46b;
   background: rgba(232, 196, 107, 0.06);
 }
-.fishbones-callout--warning .fishbones-callout-head { color: #e8c46b; }
-.fishbones-callout--warning .fishbones-callout-glyph {
+.libre-callout--warning .libre-callout-head { color: #e8c46b; }
+.libre-callout--warning .libre-callout-glyph {
   background: rgba(232, 196, 107, 0.18);
   color: #e8c46b;
 }
 
-.fishbones-callout--tip {
+.libre-callout--tip {
   border-left-color: #7cd97c;
   background: rgba(124, 217, 124, 0.06);
 }
-.fishbones-callout--tip .fishbones-callout-head { color: #7cd97c; }
-.fishbones-callout--tip .fishbones-callout-glyph {
+.libre-callout--tip .libre-callout-head { color: #7cd97c; }
+.libre-callout--tip .libre-callout-glyph {
   background: rgba(124, 217, 124, 0.18);
   color: #7cd97c;
 }
 
-.fishbones-callout--example {
+.libre-callout--example {
   border-left-color: #c79bff;
   background: rgba(199, 155, 255, 0.06);
 }
-.fishbones-callout--example .fishbones-callout-head { color: #c79bff; }
-.fishbones-callout--example .fishbones-callout-glyph {
+.libre-callout--example .libre-callout-head { color: #c79bff; }
+.libre-callout--example .libre-callout-glyph {
   background: rgba(199, 155, 255, 0.18);
   color: #c79bff;
 }
 
-.fishbones-callout-body {
+.libre-callout-body {
   font-size: 13px;
   line-height: 1.55;
   color: var(--color-text-secondary);
 }
 
-.fishbones-callout-body > :first-child { margin-top: 0; }
-.fishbones-callout-body > :last-child { margin-bottom: 0; }
-.fishbones-callout-body p {
+.libre-callout-body > :first-child { margin-top: 0; }
+.libre-callout-body > :last-child { margin-bottom: 0; }
+.libre-callout-body p {
   margin: 4px 0;
 }
-.fishbones-callout-body code {
+.libre-callout-body code {
   /* Slightly tighter than the default reader-body code treatment so
      callouts don't feel stuffed with chips. */
   padding: 1px 4px;
 }
 
-.fishbones-reader-body h1 {
+.libre-reader-body h1 {
   font-size: 26px;
   font-weight: 700;
   margin: 0 0 16px;
@@ -465,28 +465,28 @@
   color: var(--color-text-primary);
 }
 
-.fishbones-reader-body h2 {
+.libre-reader-body h2 {
   font-size: 20px;
   font-weight: 600;
   margin: 28px 0 12px;
   color: var(--color-text-primary);
 }
 
-.fishbones-reader-body h3 {
+.libre-reader-body h3 {
   font-size: 16px;
   font-weight: 600;
   margin: 22px 0 8px;
   color: var(--color-text-primary);
 }
 
-.fishbones-reader-body p {
+.libre-reader-body p {
   font-size: 14px;
   line-height: 1.65;
   color: var(--color-text-secondary);
   margin: 0 0 14px;
 }
 
-.fishbones-reader-body code {
+.libre-reader-body code {
   padding: 1px 5px;
   background: var(--color-bg-tertiary);
   border-radius: 3px;
@@ -495,7 +495,7 @@
   color: var(--color-text-primary);
 }
 
-.fishbones-code-block {
+.libre-code-block {
   position: relative;
   margin: 16px 0;
   border-radius: var(--fb-radius-md);
@@ -510,7 +510,7 @@
    muted so it reads as metadata, not as code. The `--with-filename`
    variant on the wrapper drops top padding so the strip butts up to
    the code; the strip itself owns its own padding. */
-.fishbones-code-filename {
+.libre-code-filename {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -524,7 +524,7 @@
   letter-spacing: 0.1px;
 }
 
-.fishbones-code-filename span {
+.libre-code-filename span {
   /* Truncate long paths (e.g. `src/routes/api/[slug]/+server.js`)
      so the strip never wraps to two lines. */
   overflow: hidden;
@@ -532,25 +532,25 @@
   white-space: nowrap;
 }
 
-/* Make room on the right for the `?` Ask Fishbones badge so it
+/* Make room on the right for the `?` Ask Libre badge so it
    doesn't overlap the filename text when the snippet is short. */
-.fishbones-code-block--with-filename .fishbones-code-filename {
+.libre-code-block--with-filename .libre-code-filename {
   padding-right: 40px;
 }
 
 /* When a filename strip is present, the Ask badge sits over the
    strip rather than over the code body — looks tidier and keeps it
    out of the way of the first line. */
-.fishbones-code-block--with-filename .fishbones-code-block-ask {
+.libre-code-block--with-filename .libre-code-block-ask {
   top: 4px;
 }
 
 /* `?` badge that opens the AI panel pre-loaded with a "walk me
    through this" prompt for the snippet. Hidden until the block is
    hovered so the badge doesn't compete with the code itself.
-   Same visual vocabulary as `.fishbones-quiz-ask` so the
+   Same visual vocabulary as `.libre-quiz-ask` so the
    "ask the local assistant" affordance reads consistently. */
-.fishbones-code-block-ask {
+.libre-code-block-ask {
   position: absolute;
   top: 8px;
   right: 8px;
@@ -580,13 +580,13 @@
     background 0.12s;
 }
 
-.fishbones-code-block:hover .fishbones-code-block-ask,
-.fishbones-code-block-ask:focus-visible {
+.libre-code-block:hover .libre-code-block-ask,
+.libre-code-block-ask:focus-visible {
   opacity: 1;
   transform: scale(1);
 }
 
-.fishbones-code-block-ask:hover {
+.libre-code-block-ask:hover {
   color: var(--color-text-primary);
   border-color: var(--color-border-strong);
   background: var(--color-bg-tertiary);
@@ -606,14 +606,14 @@
    incorrectly skip the rule even though the primary input is
    still touch. */
 @media (pointer: coarse) {
-  .fishbones-code-block-ask {
+  .libre-code-block-ask {
     opacity: 1;
     transform: scale(1);
   }
 }
 
-.fishbones-code-block pre,
-.fishbones-code-plain {
+.libre-code-block pre,
+.libre-code-plain {
   margin: 0;
   /* Tighter vertical padding so the block hugs its code — prior 14px
      left a visible empty strip above the first line + below the last
@@ -633,15 +633,15 @@
    so only the foreground syntax colors survive. !important beats Shiki's
    inline style because inline without !important loses to external with
    !important. */
-.fishbones-code-block pre *,
-.fishbones-code-block code,
-.fishbones-code-block code * {
+.libre-code-block pre *,
+.libre-code-block code,
+.libre-code-block code * {
   background: transparent !important;
   background-color: transparent !important;
 }
 
 /* Reset the inline-code chip treatment for the <code> element inside a
-   highlighted block. The `.fishbones-reader-body code` rule above gives
+   highlighted block. The `.libre-reader-body code` rule above gives
    INLINE backticked code a 5px horizontal pad + rounded bg chip — which
    is correct for `foo` in prose, but catastrophic for `<pre><code>…</code></pre>`:
    the <code> element is display:inline by default, so the 5px padding
@@ -649,14 +649,14 @@
    while subsequent lines wrap past the padding and sit flush. Zeroing
    padding + clearing the font override restores alignment across every
    line. */
-.fishbones-code-block code {
+.libre-code-block code {
   padding: 0 !important;
   background: transparent !important;
   border-radius: 0 !important;
   color: inherit;
 }
 
-.fishbones-code-plain {
+.libre-code-plain {
   color: var(--color-text-primary);
   border-radius: var(--fb-radius-md);
   border: 1px solid var(--color-border-default);
@@ -664,19 +664,19 @@
 
 /* GFM tables: subtle borders, tight padding, sticky-free. Markdown-it emits
    a standard <table><thead><tbody> structure that we style directly. */
-.fishbones-reader-body table {
+.libre-reader-body table {
   width: 100%;
   border-collapse: collapse;
   margin: 16px 0;
   font-size: 13px;
 }
 
-.fishbones-reader-body thead {
+.libre-reader-body thead {
   background: var(--color-bg-tertiary);
 }
 
-.fishbones-reader-body th,
-.fishbones-reader-body td {
+.libre-reader-body th,
+.libre-reader-body td {
   border: 1px solid var(--color-border-default);
   padding: 7px 10px;
   text-align: left;
@@ -684,44 +684,44 @@
   color: var(--color-text-primary);
 }
 
-.fishbones-reader-body th {
+.libre-reader-body th {
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
-.fishbones-reader-body td {
+.libre-reader-body td {
   color: var(--color-text-secondary);
 }
 
-.fishbones-reader-body tbody tr:nth-child(even) {
+.libre-reader-body tbody tr:nth-child(even) {
   background: rgba(255, 255, 255, 0.02);
 }
 
 /* Lists: tighten the default margins, keep markers aligned with the prose
    column rather than hanging off to the left. */
-.fishbones-reader-body ul,
-.fishbones-reader-body ol {
+.libre-reader-body ul,
+.libre-reader-body ol {
   margin: 12px 0;
   padding-left: 24px;
   color: var(--color-text-secondary);
 }
 
-.fishbones-reader-body li {
+.libre-reader-body li {
   margin: 4px 0;
   font-size: 14px;
   line-height: 1.6;
 }
 
-.fishbones-reader-body li > p {
+.libre-reader-body li > p {
   margin: 0;
 }
 
-.fishbones-reader-body li::marker {
+.libre-reader-body li::marker {
   color: var(--color-text-tertiary);
 }
 
 /* Blockquotes — small left accent stripe + dimmed text to read as "aside". */
-.fishbones-reader-body blockquote {
+.libre-reader-body blockquote {
   margin: 16px 0;
   padding: 4px 14px;
   border-left: 3px solid var(--color-border-default);
@@ -729,25 +729,25 @@
   font-style: italic;
 }
 
-.fishbones-reader-body blockquote > :last-child {
+.libre-reader-body blockquote > :last-child {
   margin-bottom: 0;
 }
 
 /* Inline links. Underline-only so they don't compete with the accent colors
    used for buttons / active state elsewhere. */
-.fishbones-reader-body a {
+.libre-reader-body a {
   color: var(--color-text-primary);
   text-decoration: underline;
   text-decoration-color: var(--color-text-tertiary);
   text-underline-offset: 2px;
 }
 
-.fishbones-reader-body a:hover {
+.libre-reader-body a:hover {
   text-decoration-color: var(--color-text-primary);
 }
 
 /* Horizontal rule — a subtle divider between major sections. */
-.fishbones-reader-body hr {
+.libre-reader-body hr {
   margin: 24px 0;
   border: 0;
   height: 1px;
@@ -756,7 +756,7 @@
 
 /* Inline bold / italic nested inside paragraphs kept the same visual
    weight as the default `inline(...)` helper used before. */
-.fishbones-reader-body strong {
+.libre-reader-body strong {
   color: var(--color-text-primary);
   font-weight: 600;
 }
@@ -771,7 +771,7 @@
    block-fill (less visually loud than a full background block).
    Transitions in/out so the cursor glides between paragraphs
    instead of stutter-cutting. */
-.fishbones-reader-body [data-tts-block].fb-tts-current {
+.libre-reader-body [data-tts-block].fb-tts-current {
   position: relative;
   background: linear-gradient(
     90deg,
@@ -789,7 +789,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fishbones-reader-body [data-tts-block].fb-tts-current {
+  .libre-reader-body [data-tts-block].fb-tts-current {
     transition: none;
   }
 }

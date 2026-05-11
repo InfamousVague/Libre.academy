@@ -126,7 +126,7 @@ export default function CourseSettingsModal({
   // bundled pack; otherwise it falls through to a generic install
   // hint that points the recipient at the desktop app's "Import
   // archive" flow. The URL is intentionally extension-agnostic — the
-  // server resolves to `.academy` (or legacy `.fishbones`) by id.
+  // server resolves to `.academy` (or legacy `.libre`) by id.
   const shareUrl = `https://libre.academy/install?course=${encodeURIComponent(course.id)}`;
   const [shareCopied, setShareCopied] = useState(false);
   async function copyShareLink() {
@@ -335,17 +335,17 @@ export default function CourseSettingsModal({
 
   return (
     <ModalBackdrop onDismiss={onDismiss} zIndex={120}>
-      <div className="fishbones-coursesettings-panel">
-        <div className="fishbones-coursesettings-header">
-          <div className="fishbones-coursesettings-titleblock">
-            <div className="fishbones-coursesettings-title">Course settings</div>
-            <div className="fishbones-coursesettings-course">{course.title}</div>
+      <div className="libre-coursesettings-panel">
+        <div className="libre-coursesettings-header">
+          <div className="libre-coursesettings-titleblock">
+            <div className="libre-coursesettings-title">Course settings</div>
+            <div className="libre-coursesettings-course">{course.title}</div>
             {course.author && (
-              <div className="fishbones-coursesettings-author">by {course.author}</div>
+              <div className="libre-coursesettings-author">by {course.author}</div>
             )}
           </div>
           <button
-            className="fishbones-coursesettings-close"
+            className="libre-coursesettings-close"
             onClick={onDismiss}
             aria-label="Close"
           >
@@ -353,27 +353,27 @@ export default function CourseSettingsModal({
           </button>
         </div>
 
-        <div className="fishbones-coursesettings-body">
+        <div className="libre-coursesettings-body">
           <section>
-            <div className="fishbones-coursesettings-section">At a glance</div>
-            <div className="fishbones-coursesettings-stats">
+            <div className="libre-coursesettings-section">At a glance</div>
+            <div className="libre-coursesettings-stats">
               <div>
-                <div className="fishbones-coursesettings-stat-value">
+                <div className="libre-coursesettings-stat-value">
                   {course.chapters.length}
                 </div>
-                <div className="fishbones-coursesettings-stat-label">chapters</div>
+                <div className="libre-coursesettings-stat-label">chapters</div>
               </div>
               <div>
-                <div className="fishbones-coursesettings-stat-value">{stats.lessons}</div>
-                <div className="fishbones-coursesettings-stat-label">lessons</div>
+                <div className="libre-coursesettings-stat-value">{stats.lessons}</div>
+                <div className="libre-coursesettings-stat-label">lessons</div>
               </div>
               <div>
-                <div className="fishbones-coursesettings-stat-value">{stats.exercises}</div>
-                <div className="fishbones-coursesettings-stat-label">exercises</div>
+                <div className="libre-coursesettings-stat-value">{stats.exercises}</div>
+                <div className="libre-coursesettings-stat-label">exercises</div>
               </div>
               <div>
-                <div className="fishbones-coursesettings-stat-value">{stats.readings}</div>
-                <div className="fishbones-coursesettings-stat-label">readings</div>
+                <div className="libre-coursesettings-stat-value">{stats.readings}</div>
+                <div className="libre-coursesettings-stat-label">readings</div>
               </div>
             </div>
           </section>
@@ -385,13 +385,13 @@ export default function CourseSettingsModal({
               changes so accidental edits don't trigger a write. */}
           {onChangeMetadata && (
             <section>
-              <div className="fishbones-coursesettings-section">Course details</div>
-              <div className="fishbones-coursesettings-row fishbones-coursesettings-row--column">
-                <div className="fishbones-coursesettings-row-text">
-                  <div className="fishbones-coursesettings-row-label">
+              <div className="libre-coursesettings-section">Course details</div>
+              <div className="libre-coursesettings-row libre-coursesettings-row--column">
+                <div className="libre-coursesettings-row-text">
+                  <div className="libre-coursesettings-row-label">
                     Title, author, and release status
                   </div>
-                  <div className="fishbones-coursesettings-row-hint">
+                  <div className="libre-coursesettings-row-hint">
                     Edit any of the three and click Save to write the
                     change back to <code>course.json</code>. Title can't
                     be empty. Clearing the author leaves the byline blank.
@@ -399,12 +399,12 @@ export default function CourseSettingsModal({
                     on the library shelf.
                   </div>
                 </div>
-                <div className="fishbones-coursesettings-meta-fields">
-                  <label className="fishbones-coursesettings-meta-field">
-                    <span className="fishbones-coursesettings-meta-field-label">Title</span>
+                <div className="libre-coursesettings-meta-fields">
+                  <label className="libre-coursesettings-meta-field">
+                    <span className="libre-coursesettings-meta-field-label">Title</span>
                     <input
                       type="text"
-                      className="fishbones-coursesettings-meta-input"
+                      className="libre-coursesettings-meta-input"
                       value={pendingTitle}
                       onChange={(e) => setPendingTitle(e.target.value)}
                       disabled={savingMetadata}
@@ -412,11 +412,11 @@ export default function CourseSettingsModal({
                       aria-label="Course title"
                     />
                   </label>
-                  <label className="fishbones-coursesettings-meta-field">
-                    <span className="fishbones-coursesettings-meta-field-label">Author</span>
+                  <label className="libre-coursesettings-meta-field">
+                    <span className="libre-coursesettings-meta-field-label">Author</span>
                     <input
                       type="text"
-                      className="fishbones-coursesettings-meta-input"
+                      className="libre-coursesettings-meta-input"
                       value={pendingAuthor}
                       onChange={(e) => setPendingAuthor(e.target.value)}
                       disabled={savingMetadata}
@@ -424,12 +424,12 @@ export default function CourseSettingsModal({
                       aria-label="Course author"
                     />
                   </label>
-                  <label className="fishbones-coursesettings-meta-field">
-                    <span className="fishbones-coursesettings-meta-field-label">
+                  <label className="libre-coursesettings-meta-field">
+                    <span className="libre-coursesettings-meta-field-label">
                       Release status
                     </span>
                     <select
-                      className="fishbones-coursesettings-meta-input"
+                      className="libre-coursesettings-meta-input"
                       value={pendingReleaseStatus}
                       onChange={(e) =>
                         setPendingReleaseStatus(e.target.value as ReleaseStatus)
@@ -446,14 +446,14 @@ export default function CourseSettingsModal({
                   </label>
                 </div>
                 {metadataError && (
-                  <div className="fishbones-coursesettings-row-error">
+                  <div className="libre-coursesettings-row-error">
                     {metadataError}
                   </div>
                 )}
-                <div className="fishbones-coursesettings-meta-actions">
+                <div className="libre-coursesettings-meta-actions">
                   {metadataSaved && !metadataDirty && (
                     <span
-                      className="fishbones-coursesettings-meta-saved"
+                      className="libre-coursesettings-meta-saved"
                       role="status"
                     >
                       Saved
@@ -461,7 +461,7 @@ export default function CourseSettingsModal({
                   )}
                   <button
                     type="button"
-                    className="fishbones-coursesettings-btn fishbones-coursesettings-btn--primary"
+                    className="libre-coursesettings-btn libre-coursesettings-btn--primary"
                     onClick={commitMetadataChange}
                     disabled={!metadataDirty || !titleValid || savingMetadata}
                   >
@@ -473,13 +473,13 @@ export default function CourseSettingsModal({
           )}
 
           <section>
-            <div className="fishbones-coursesettings-section">Regenerate content</div>
-            <div className="fishbones-coursesettings-row">
-              <div className="fishbones-coursesettings-row-text">
-                <div className="fishbones-coursesettings-row-label">
+            <div className="libre-coursesettings-section">Regenerate content</div>
+            <div className="libre-coursesettings-row">
+              <div className="libre-coursesettings-row-text">
+                <div className="libre-coursesettings-row-label">
                   Regenerate exercises
                 </div>
-                <div className="fishbones-coursesettings-row-hint">
+                <div className="libre-coursesettings-row-hint">
                   Re-run the AI generation for all {stats.exercises} exercise
                   lessons using the latest prompt. Readings and quizzes are
                   untouched. Progress shows in the floating panel and each
@@ -487,7 +487,7 @@ export default function CourseSettingsModal({
                 </div>
               </div>
               <button
-                className="fishbones-coursesettings-btn fishbones-coursesettings-btn--primary"
+                className="libre-coursesettings-btn libre-coursesettings-btn--primary"
                 onClick={() => {
                   onRegenerateExercises();
                   onDismiss();
@@ -501,15 +501,15 @@ export default function CourseSettingsModal({
 
           {onChangeLanguage && (
             <section>
-              <div className="fishbones-coursesettings-section">
+              <div className="libre-coursesettings-section">
                 Course language
               </div>
-              <div className="fishbones-coursesettings-row">
-                <div className="fishbones-coursesettings-row-text">
-                  <div className="fishbones-coursesettings-row-label">
+              <div className="libre-coursesettings-row">
+                <div className="libre-coursesettings-row-text">
+                  <div className="libre-coursesettings-row-label">
                     Fix the course's language
                   </div>
-                  <div className="fishbones-coursesettings-row-hint">
+                  <div className="libre-coursesettings-row-hint">
                     Currently set to{" "}
                     <code>{labelFor(course.language)}</code>. LLM-generated
                     courses from docs sites sometimes land with the wrong
@@ -519,14 +519,14 @@ export default function CourseSettingsModal({
                     the course's top-level tag changes.
                   </div>
                   {languageError && (
-                    <div className="fishbones-coursesettings-row-error">
+                    <div className="libre-coursesettings-row-error">
                       {languageError}
                     </div>
                   )}
                 </div>
-                <div className="fishbones-coursesettings-lang-controls">
+                <div className="libre-coursesettings-lang-controls">
                   <select
-                    className="fishbones-coursesettings-lang-select"
+                    className="libre-coursesettings-lang-select"
                     value={pendingLanguage}
                     onChange={(e) =>
                       setPendingLanguage(e.target.value as LanguageId)
@@ -542,7 +542,7 @@ export default function CourseSettingsModal({
                   </select>
                   <button
                     type="button"
-                    className="fishbones-coursesettings-btn fishbones-coursesettings-btn--primary"
+                    className="libre-coursesettings-btn libre-coursesettings-btn--primary"
                     onClick={commitLanguageChange}
                     disabled={
                       savingLanguage || pendingLanguage === course.language
@@ -556,15 +556,15 @@ export default function CourseSettingsModal({
           )}
 
           <section>
-            <div className="fishbones-coursesettings-section">
+            <div className="libre-coursesettings-section">
               Reading experience
             </div>
-            <div className="fishbones-coursesettings-row">
-              <div className="fishbones-coursesettings-row-text">
-                <div className="fishbones-coursesettings-row-label">
+            <div className="libre-coursesettings-row">
+              <div className="libre-coursesettings-row-text">
+                <div className="libre-coursesettings-row-label">
                   Enrich lessons
                 </div>
-                <div className="fishbones-coursesettings-row-hint">
+                <div className="libre-coursesettings-row-hint">
                   Generate learning objectives, glossary terms, and inline
                   symbol doc-links for {enrichRemaining} lesson
                   {enrichRemaining === 1 ? "" : "s"} that don't have them yet.
@@ -581,7 +581,7 @@ export default function CourseSettingsModal({
                 </div>
               </div>
               <button
-                className="fishbones-coursesettings-btn fishbones-coursesettings-btn--primary"
+                className="libre-coursesettings-btn libre-coursesettings-btn--primary"
                 onClick={() => {
                   onEnrichLessons();
                   onDismiss();
@@ -595,14 +595,14 @@ export default function CourseSettingsModal({
 
           {onCoverRefreshed && (
             <section>
-              <div className="fishbones-coursesettings-section">Appearance</div>
-              <div className="fishbones-coursesettings-row">
-                <div className="fishbones-coursesettings-row-text">
-                  <div className="fishbones-coursesettings-row-label">
+              <div className="libre-coursesettings-section">Appearance</div>
+              <div className="libre-coursesettings-row">
+                <div className="libre-coursesettings-row-text">
+                  <div className="libre-coursesettings-row-label">
                     Fetch cover artwork
                   </div>
-                  <div className="fishbones-coursesettings-row-hint">
-                    Point Fishbones at a PDF or EPUB (the original book,
+                  <div className="libre-coursesettings-row-hint">
+                    Point Libre at a PDF or EPUB (the original book,
                     or a single-page cover image saved as PDF) and we'll
                     pull the cover art for the shelf. Useful when the
                     original ingest didn't grab a cover, or if you want
@@ -610,7 +610,7 @@ export default function CourseSettingsModal({
                   </div>
                 </div>
                 <button
-                  className="fishbones-coursesettings-btn"
+                  className="libre-coursesettings-btn"
                   onClick={fetchCoverFromPdf}
                   disabled={coverFetching || coverGenerating}
                   type="button"
@@ -618,19 +618,19 @@ export default function CourseSettingsModal({
                   {coverFetching ? "Fetching…" : "Choose book…"}
                 </button>
               </div>
-              <div className="fishbones-coursesettings-row">
-                <div className="fishbones-coursesettings-row-text">
-                  <div className="fishbones-coursesettings-row-label">
+              <div className="libre-coursesettings-row">
+                <div className="libre-coursesettings-row-text">
+                  <div className="libre-coursesettings-row-label">
                     Import image file
                   </div>
-                  <div className="fishbones-coursesettings-row-hint">
+                  <div className="libre-coursesettings-row-hint">
                     Use any PNG, JPEG, WebP, or GIF from disk as the cover.
                     Best for custom art or when the PDF's first page isn't
                     the cover you want.
                   </div>
                 </div>
                 <button
-                  className="fishbones-coursesettings-btn"
+                  className="libre-coursesettings-btn"
                   onClick={importCoverImage}
                   disabled={coverFetching || coverGenerating}
                   type="button"
@@ -638,12 +638,12 @@ export default function CourseSettingsModal({
                   {coverFetching ? "Importing…" : "Choose image…"}
                 </button>
               </div>
-              <div className="fishbones-coursesettings-row">
-                <div className="fishbones-coursesettings-row-text">
-                  <div className="fishbones-coursesettings-row-label">
+              <div className="libre-coursesettings-row">
+                <div className="libre-coursesettings-row-text">
+                  <div className="libre-coursesettings-row-label">
                     Generate artwork with AI
                   </div>
-                  <div className="fishbones-coursesettings-row-hint">
+                  <div className="libre-coursesettings-row-hint">
                     Ask <code>gpt-image-1</code> for a fresh cover in the
                     library's shared editorial style — abstract geometric,
                     no typography, cohesive across every book on the
@@ -653,7 +653,7 @@ export default function CourseSettingsModal({
                   </div>
                 </div>
                 <button
-                  className="fishbones-coursesettings-btn fishbones-coursesettings-btn--primary"
+                  className="libre-coursesettings-btn libre-coursesettings-btn--primary"
                   onClick={generateCoverWithAi}
                   disabled={coverFetching || coverGenerating}
                   type="button"
@@ -662,7 +662,7 @@ export default function CourseSettingsModal({
                 </button>
               </div>
               {coverError && (
-                <div className="fishbones-coursesettings-row-error">
+                <div className="libre-coursesettings-row-error">
                   {coverError}
                 </div>
               )}
@@ -670,20 +670,20 @@ export default function CourseSettingsModal({
           )}
 
           <section>
-            <div className="fishbones-coursesettings-section">Share</div>
-            <div className="fishbones-coursesettings-row">
-              <div className="fishbones-coursesettings-row-text">
-                <div className="fishbones-coursesettings-row-label">
+            <div className="libre-coursesettings-section">Share</div>
+            <div className="libre-coursesettings-row">
+              <div className="libre-coursesettings-row-text">
+                <div className="libre-coursesettings-row-label">
                   Copy share link
                 </div>
-                <div className="fishbones-coursesettings-row-hint">
+                <div className="libre-coursesettings-row-hint">
                   Public URL anyone can open. If the course is in the
                   Libre catalog they install with one click; otherwise
                   the page guides them to import your shared file.
                 </div>
               </div>
               <button
-                className="fishbones-coursesettings-btn"
+                className="libre-coursesettings-btn"
                 onClick={() => {
                   void copyShareLink();
                 }}
@@ -692,20 +692,20 @@ export default function CourseSettingsModal({
                 {shareCopied ? "Copied!" : "Copy link"}
               </button>
             </div>
-            <div className="fishbones-coursesettings-row">
-              <div className="fishbones-coursesettings-row-text">
-                <div className="fishbones-coursesettings-row-label">
+            <div className="libre-coursesettings-row">
+              <div className="libre-coursesettings-row-text">
+                <div className="libre-coursesettings-row-label">
                   Export as .academy
                 </div>
-                <div className="fishbones-coursesettings-row-hint">
+                <div className="libre-coursesettings-row-hint">
                   Save the course as a portable <code>.academy</code> archive
-                  (the new name for the previous <code>.fishbones</code>
+                  (the new name for the previous <code>.libre</code>
                   format). Anyone with Libre can drop it onto the app
                   window to import.
                 </div>
               </div>
               <button
-                className="fishbones-coursesettings-btn"
+                className="libre-coursesettings-btn"
                 onClick={() => {
                   onExport();
                   onDismiss();
@@ -717,19 +717,19 @@ export default function CourseSettingsModal({
           </section>
 
           <section>
-            <div className="fishbones-coursesettings-section fishbones-coursesettings-section--danger">
+            <div className="libre-coursesettings-section libre-coursesettings-section--danger">
               Danger zone
             </div>
-            <div className="fishbones-coursesettings-row">
-              <div className="fishbones-coursesettings-row-text">
-                <div className="fishbones-coursesettings-row-label">Delete course</div>
-                <div className="fishbones-coursesettings-row-hint">
+            <div className="libre-coursesettings-row">
+              <div className="libre-coursesettings-row-text">
+                <div className="libre-coursesettings-row-label">Delete course</div>
+                <div className="libre-coursesettings-row-hint">
                   Removes the course, all lesson progress, and the ingest
                   cache from disk. Can't be undone.
                 </div>
               </div>
               <button
-                className="fishbones-coursesettings-btn fishbones-coursesettings-btn--danger"
+                className="libre-coursesettings-btn libre-coursesettings-btn--danger"
                 onClick={() => {
                   onDelete();
                   onDismiss();

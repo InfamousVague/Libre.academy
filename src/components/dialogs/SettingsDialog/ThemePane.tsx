@@ -9,27 +9,27 @@ interface ThemePaneProps {
 export default function ThemePane({ theme, onThemeChange }: ThemePaneProps) {
   return (
     <section>
-      <h3 className="fishbones-settings-section">Theme</h3>
-      <p className="fishbones-settings-blurb">
+      <h3 className="libre-settings-section">Theme</h3>
+      <p className="libre-settings-blurb">
         Applied immediately. Preference is stored locally; it syncs with
         your machine's light/dark setting only for the default Libre themes.
       </p>
-      <div className="fishbones-settings-model-group fishbones-settings-model-group--scroll">
+      <div className="libre-settings-model-group libre-settings-model-group--scroll">
         {THEMES.map((t) => (
           <label
             key={t.id}
-            className={`fishbones-settings-model ${theme === t.id ? "is-active" : ""}`}
+            className={`libre-settings-model ${theme === t.id ? "is-active" : ""}`}
           >
             <input
               type="radio"
-              name="fishbones-theme"
+              name="libre-theme"
               value={t.id}
               checked={theme === t.id}
               onChange={() => onThemeChange(t.id)}
             />
             <div>
-              <div className="fishbones-settings-model-label">{t.label}</div>
-              <div className="fishbones-settings-model-hint">{t.description}</div>
+              <div className="libre-settings-model-label">{t.label}</div>
+              <div className="libre-settings-model-hint">{t.description}</div>
             </div>
           </label>
         ))}
@@ -42,13 +42,13 @@ export default function ThemePane({ theme, onThemeChange }: ThemePaneProps) {
           so this UI is just the chrome — the state lives in the
           shared hook. */}
       <h3
-        className="fishbones-settings-section"
+        className="libre-settings-section"
         style={{ marginTop: "24px" }}
       >
         Language
       </h3>
-      <p className="fishbones-settings-blurb">
-        Switches the language of Fishbones-authored courses (the in-house
+      <p className="libre-settings-blurb">
+        Switches the language of Libre-authored courses (the in-house
         tutorials and challenge packs). Third-party books bundled in the
         library stay in their original language. The choice persists
         locally and syncs to your other devices when you sign in.

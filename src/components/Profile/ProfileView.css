@@ -1,7 +1,7 @@
 /* Root: takes the whole main pane, scrolls its own content. The outer
    scroll wrapper keeps the hero from sticking to the header when the
    pane is short. */
-.fishbones-profile {
+.libre-profile {
   flex: 1;
   display: flex;
   min-height: 0;
@@ -9,7 +9,7 @@
   margin: 10px 10px 10px 0;
 }
 
-.fishbones-profile-scroll {
+.libre-profile-scroll {
   flex: 1;
   overflow-y: auto;
 }
@@ -17,7 +17,7 @@
 /* Content column. We bumped from 720px to 880px when we added the
    heatmap + lang-chart + badges — those modules need horizontal room
    to breathe. The page still feels composed and not sprawl-y. */
-.fishbones-profile-inner {
+.libre-profile-inner {
   max-width: 880px;
   margin: 0 auto;
   padding: 36px 32px 56px;
@@ -28,21 +28,21 @@
 
 /* ---- Hero (twin rings + title) ------------------------------------- */
 
-.fishbones-profile-hero {
+.libre-profile-hero {
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
   gap: 28px;
 }
 
-.fishbones-profile-hero-text {
+.libre-profile-hero-text {
   display: flex;
   flex-direction: column;
   gap: 6px;
   min-width: 0;
 }
 
-.fishbones-profile-hero-title {
+.libre-profile-hero-title {
   margin: 0;
   font-size: 32px;
   font-weight: 800;
@@ -50,7 +50,7 @@
   color: var(--color-text-primary);
 }
 
-.fishbones-profile-hero-sub {
+.libre-profile-hero-sub {
   margin: 0;
   font-size: 14px;
   color: var(--color-text-secondary);
@@ -59,12 +59,12 @@
 
 /* ---- Twin rings ---------------------------------------------------- */
 
-.fishbones-profile-rings {
+.libre-profile-rings {
   display: flex;
   gap: 14px;
 }
 
-.fishbones-profile-ring {
+.libre-profile-ring {
   position: relative;
   width: 184px;
   height: 184px;
@@ -86,35 +86,35 @@
   --ring-tone-soft: rgba(255, 255, 255, 0.08);
 }
 
-.fishbones-profile-ring--streak {
+.libre-profile-ring--streak {
   --ring-tone: #f59e3b;
   --ring-tone-soft: rgba(245, 158, 59, 0.16);
 }
 
-.fishbones-profile-ring--level {
+.libre-profile-ring--level {
   --ring-tone: #7cd97c;
   --ring-tone-soft: rgba(124, 217, 124, 0.16);
 }
 
-.fishbones-profile-ring-svg {
+.libre-profile-ring-svg {
   position: absolute;
   inset: 36px;
   width: calc(100% - 72px);
   height: calc(100% - 72px);
 }
 
-.fishbones-profile-ring-track {
+.libre-profile-ring-track {
   stroke: var(--ring-tone-soft);
   stroke-width: 6;
 }
 
-.fishbones-profile-ring-fill {
+.libre-profile-ring-fill {
   stroke: var(--ring-tone);
   stroke-width: 6;
   transition: stroke-dashoffset 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.fishbones-profile-ring-body {
+.libre-profile-ring-body {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -125,14 +125,14 @@
   z-index: 1;
 }
 
-.fishbones-profile-ring-icon {
+.libre-profile-ring-icon {
   color: var(--ring-tone);
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-.fishbones-profile-ring-value {
+.libre-profile-ring-value {
   font-size: 17px;
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -142,7 +142,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-.fishbones-profile-ring-label {
+.libre-profile-ring-label {
   font-size: 8.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -156,13 +156,13 @@
    row wraps into 2x2 automatically — `auto-fit` with a 200px floor
    keeps the tiles legible without us having to add a media query. */
 
-.fishbones-profile-stats {
+.libre-profile-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 12px;
 }
 
-.fishbones-profile-stat {
+.libre-profile-stat {
   display: flex;
   align-items: center;
   gap: 14px;
@@ -178,7 +178,7 @@
 /* Toned accent strip on the left edge — same trick the mobile profile
    uses. Gives each tile its own identity without a busy color
    background. */
-.fishbones-profile-stat::before {
+.libre-profile-stat::before {
   content: "";
   position: absolute;
   left: 0;
@@ -189,16 +189,16 @@
   opacity: 0.85;
 }
 
-.fishbones-profile-stat--streak  { --stat-tone: #f59e3b; }
-.fishbones-profile-stat--lessons { --stat-tone: #7cd9d3; }
-.fishbones-profile-stat--xp      { --stat-tone: #fcd34d; }
-.fishbones-profile-stat--level   { --stat-tone: #7cd97c; }
-.fishbones-profile-stat--longest { --stat-tone: #c79bff; }
+.libre-profile-stat--streak  { --stat-tone: #f59e3b; }
+.libre-profile-stat--lessons { --stat-tone: #7cd9d3; }
+.libre-profile-stat--xp      { --stat-tone: #fcd34d; }
+.libre-profile-stat--level   { --stat-tone: #7cd97c; }
+.libre-profile-stat--longest { --stat-tone: #c79bff; }
 /* Coin gold — saturated enough to feel like a currency badge without
    colliding with XP's softer butter tone next to it. */
-.fishbones-profile-stat--coins   { --stat-tone: #f3a93a; }
+.libre-profile-stat--coins   { --stat-tone: #f3a93a; }
 
-.fishbones-profile-stat-icon {
+.libre-profile-stat-icon {
   width: 36px;
   height: 36px;
   display: grid;
@@ -209,14 +209,14 @@
   flex-shrink: 0;
 }
 
-.fishbones-profile-stat-text {
+.libre-profile-stat-text {
   display: flex;
   flex-direction: column;
   gap: 0;
   min-width: 0;
 }
 
-.fishbones-profile-stat-value {
+.libre-profile-stat-value {
   font-size: 28px;
   font-weight: 800;
   letter-spacing: -0.015em;
@@ -225,7 +225,7 @@
   line-height: 1.1;
 }
 
-.fishbones-profile-stat-label {
+.libre-profile-stat-label {
   font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -236,7 +236,7 @@
 
 /* ---- Section shell ------------------------------------------------- */
 
-.fishbones-profile-section {
+.libre-profile-section {
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -246,7 +246,7 @@
    on the right (e.g. the heatmap's "X completions across N days"
    summary). The two slide together on narrow shells so the title
    never wraps under its own subtitle. */
-.fishbones-profile-section-head {
+.libre-profile-section-head {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -254,7 +254,7 @@
   gap: 4px 16px;
 }
 
-.fishbones-profile-section-title {
+.libre-profile-section-title {
   margin: 0;
   font-size: 13px;
   font-weight: 700;
@@ -263,7 +263,7 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones-profile-empty {
+.libre-profile-empty {
   margin: 0;
   font-size: 13px;
   line-height: 1.55;
@@ -281,7 +281,7 @@
    actual grid stretches to the right. We use a flex row instead of
    grid because the heatmap itself uses flex-column-wrap internally —
    nesting two grids gets fussy. */
-.fishbones-profile-heatmap-wrap {
+.libre-profile-heatmap-wrap {
   display: flex;
   align-items: stretch;
   gap: 8px;
@@ -290,7 +290,7 @@
 /* Day-of-week labels — Mon / Wed / Fri only, every other row. The 7
    slots line up exactly with the 7 cell rows because the same gap
    value is used. */
-.fishbones-profile-heatmap-rowlabels {
+.libre-profile-heatmap-rowlabels {
   display: grid;
   grid-template-rows: repeat(7, 16px);
   row-gap: 4px;
@@ -302,7 +302,7 @@
   user-select: none;
 }
 
-.fishbones-profile-heatmap-rowlabels span {
+.libre-profile-heatmap-rowlabels span {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -310,13 +310,13 @@
   min-width: 24px;
 }
 
-.fishbones-profile-heatmap-summary {
+.libre-profile-heatmap-summary {
   font-size: 12px;
   color: var(--color-text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
-.fishbones-profile-heatmap {
+.libre-profile-heatmap {
   display: flex;
   flex-direction: column;
   flex-wrap: wrap;
@@ -326,7 +326,7 @@
   padding: 4px 0;
 }
 
-.fishbones-profile-heatmap-cell {
+.libre-profile-heatmap-cell {
   width: 16px;
   height: 16px;
   border-radius: var(--fb-radius-xs);
@@ -341,18 +341,18 @@
    rectangle. The dashed treatment hints at "not yet" without
    needing an extra legend; their position (always the bottom of
    the rightmost column) makes the meaning obvious in context. */
-.fishbones-profile-heatmap-cell--pad {
+.libre-profile-heatmap-cell--pad {
   background: rgba(255, 255, 255, 0.025);
   border: 1px dashed rgba(255, 255, 255, 0.08);
 }
 
-.fishbones-profile-heatmap-cell--lvl-0 { background: rgba(255, 255, 255, 0.04); }
-.fishbones-profile-heatmap-cell--lvl-1 { background: rgba(124, 217, 124, 0.22); border-color: rgba(124, 217, 124, 0.18); }
-.fishbones-profile-heatmap-cell--lvl-2 { background: rgba(124, 217, 124, 0.42); border-color: rgba(124, 217, 124, 0.32); }
-.fishbones-profile-heatmap-cell--lvl-3 { background: rgba(124, 217, 124, 0.65); border-color: rgba(124, 217, 124, 0.55); }
-.fishbones-profile-heatmap-cell--lvl-4 { background: #7cd97c;                     border-color: rgba(124, 217, 124, 0.85); }
+.libre-profile-heatmap-cell--lvl-0 { background: rgba(255, 255, 255, 0.04); }
+.libre-profile-heatmap-cell--lvl-1 { background: rgba(124, 217, 124, 0.22); border-color: rgba(124, 217, 124, 0.18); }
+.libre-profile-heatmap-cell--lvl-2 { background: rgba(124, 217, 124, 0.42); border-color: rgba(124, 217, 124, 0.32); }
+.libre-profile-heatmap-cell--lvl-3 { background: rgba(124, 217, 124, 0.65); border-color: rgba(124, 217, 124, 0.55); }
+.libre-profile-heatmap-cell--lvl-4 { background: #7cd97c;                     border-color: rgba(124, 217, 124, 0.85); }
 
-.fishbones-profile-heatmap-legend {
+.libre-profile-heatmap-legend {
   display: flex;
   align-items: center;
   gap: 5px;
@@ -361,7 +361,7 @@
   margin-top: 4px;
 }
 
-.fishbones-profile-heatmap-legend .fishbones-profile-heatmap-cell {
+.libre-profile-heatmap-legend .libre-profile-heatmap-cell {
   width: 12px;
   height: 12px;
 }
@@ -372,7 +372,7 @@
    color table on the JS side. The grid columns: language name,
    stretchy bar, lessons-done fraction, XP total. */
 
-.fishbones-profile-lang-chart {
+.libre-profile-lang-chart {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -381,14 +381,14 @@
   gap: 8px;
 }
 
-.fishbones-profile-lang-row {
+.libre-profile-lang-row {
   display: grid;
   grid-template-columns: 140px 1fr 80px 70px;
   align-items: center;
   gap: 12px;
 }
 
-.fishbones-profile-lang-name {
+.libre-profile-lang-name {
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text-primary);
@@ -397,14 +397,14 @@
   white-space: nowrap;
 }
 
-.fishbones-profile-lang-bar {
+.libre-profile-lang-bar {
   height: 10px;
   background: var(--color-bg-inset, rgba(255, 255, 255, 0.06));
   border-radius: 5px;
   overflow: hidden;
 }
 
-.fishbones-profile-lang-bar-fill {
+.libre-profile-lang-bar-fill {
   height: 100%;
   background: var(--color-text-primary);
   border-radius: 5px;
@@ -414,29 +414,29 @@
 /* Brand colors per language — applied via [data-lang]. Mirrors mobile
    exactly so JS reads yellow on every surface, Rust reads oxblood, etc.
    Adding a new language: add an entry here AND in MobileProfile.css. */
-.fishbones-profile-lang-bar[data-lang="javascript"] .fishbones-profile-lang-bar-fill { background: #f7df1e; }
-.fishbones-profile-lang-bar[data-lang="typescript"] .fishbones-profile-lang-bar-fill { background: #3178c6; }
-.fishbones-profile-lang-bar[data-lang="python"]     .fishbones-profile-lang-bar-fill { background: #3776ab; }
-.fishbones-profile-lang-bar[data-lang="rust"]       .fishbones-profile-lang-bar-fill { background: #ce412b; }
-.fishbones-profile-lang-bar[data-lang="go"]         .fishbones-profile-lang-bar-fill { background: #00add8; }
-.fishbones-profile-lang-bar[data-lang="swift"]      .fishbones-profile-lang-bar-fill { background: #fa7343; }
-.fishbones-profile-lang-bar[data-lang="reactnative"]   .fishbones-profile-lang-bar-fill { background: #61dafb; }
-.fishbones-profile-lang-bar[data-lang="svelte"]     .fishbones-profile-lang-bar-fill { background: #ff3e00; }
-.fishbones-profile-lang-bar[data-lang="solid"]      .fishbones-profile-lang-bar-fill { background: #2c4f7c; }
-.fishbones-profile-lang-bar[data-lang="htmx"]       .fishbones-profile-lang-bar-fill { background: #3a4252; }
-.fishbones-profile-lang-bar[data-lang="astro"]      .fishbones-profile-lang-bar-fill { background: #ff5d01; }
-.fishbones-profile-lang-bar[data-lang="bun"]        .fishbones-profile-lang-bar-fill { background: #fbf0df; }
-.fishbones-profile-lang-bar[data-lang="solidity"]   .fishbones-profile-lang-bar-fill { background: #6b4f7a; }
-.fishbones-profile-lang-bar[data-lang="vyper"]      .fishbones-profile-lang-bar-fill { background: #3f8a7c; }
-.fishbones-profile-lang-bar[data-lang="c"]          .fishbones-profile-lang-bar-fill { background: #a8b9cc; }
-.fishbones-profile-lang-bar[data-lang="cpp"]        .fishbones-profile-lang-bar-fill { background: #00599c; }
-.fishbones-profile-lang-bar[data-lang="java"]       .fishbones-profile-lang-bar-fill { background: #d9a74a; }
-.fishbones-profile-lang-bar[data-lang="kotlin"]     .fishbones-profile-lang-bar-fill { background: #7f52ff; }
-.fishbones-profile-lang-bar[data-lang="csharp"]     .fishbones-profile-lang-bar-fill { background: #5c2d91; }
-.fishbones-profile-lang-bar[data-lang="assembly"]   .fishbones-profile-lang-bar-fill { background: #6b6b6b; }
-.fishbones-profile-lang-bar[data-lang="threejs"]    .fishbones-profile-lang-bar-fill { background: #2d2d2d; }
+.libre-profile-lang-bar[data-lang="javascript"] .libre-profile-lang-bar-fill { background: #f7df1e; }
+.libre-profile-lang-bar[data-lang="typescript"] .libre-profile-lang-bar-fill { background: #3178c6; }
+.libre-profile-lang-bar[data-lang="python"]     .libre-profile-lang-bar-fill { background: #3776ab; }
+.libre-profile-lang-bar[data-lang="rust"]       .libre-profile-lang-bar-fill { background: #ce412b; }
+.libre-profile-lang-bar[data-lang="go"]         .libre-profile-lang-bar-fill { background: #00add8; }
+.libre-profile-lang-bar[data-lang="swift"]      .libre-profile-lang-bar-fill { background: #fa7343; }
+.libre-profile-lang-bar[data-lang="reactnative"]   .libre-profile-lang-bar-fill { background: #61dafb; }
+.libre-profile-lang-bar[data-lang="svelte"]     .libre-profile-lang-bar-fill { background: #ff3e00; }
+.libre-profile-lang-bar[data-lang="solid"]      .libre-profile-lang-bar-fill { background: #2c4f7c; }
+.libre-profile-lang-bar[data-lang="htmx"]       .libre-profile-lang-bar-fill { background: #3a4252; }
+.libre-profile-lang-bar[data-lang="astro"]      .libre-profile-lang-bar-fill { background: #ff5d01; }
+.libre-profile-lang-bar[data-lang="bun"]        .libre-profile-lang-bar-fill { background: #fbf0df; }
+.libre-profile-lang-bar[data-lang="solidity"]   .libre-profile-lang-bar-fill { background: #6b4f7a; }
+.libre-profile-lang-bar[data-lang="vyper"]      .libre-profile-lang-bar-fill { background: #3f8a7c; }
+.libre-profile-lang-bar[data-lang="c"]          .libre-profile-lang-bar-fill { background: #a8b9cc; }
+.libre-profile-lang-bar[data-lang="cpp"]        .libre-profile-lang-bar-fill { background: #00599c; }
+.libre-profile-lang-bar[data-lang="java"]       .libre-profile-lang-bar-fill { background: #d9a74a; }
+.libre-profile-lang-bar[data-lang="kotlin"]     .libre-profile-lang-bar-fill { background: #7f52ff; }
+.libre-profile-lang-bar[data-lang="csharp"]     .libre-profile-lang-bar-fill { background: #5c2d91; }
+.libre-profile-lang-bar[data-lang="assembly"]   .libre-profile-lang-bar-fill { background: #6b6b6b; }
+.libre-profile-lang-bar[data-lang="threejs"]    .libre-profile-lang-bar-fill { background: #2d2d2d; }
 
-.fishbones-profile-lang-meta {
+.libre-profile-lang-meta {
   font-size: 12.5px;
   font-weight: 700;
   color: var(--color-text-secondary);
@@ -444,12 +444,12 @@
   font-variant-numeric: tabular-nums;
 }
 
-.fishbones-profile-lang-meta-sub {
+.libre-profile-lang-meta-sub {
   color: var(--color-text-tertiary);
   font-weight: 500;
 }
 
-.fishbones-profile-lang-xp {
+.libre-profile-lang-xp {
   font-size: 12.5px;
   font-weight: 700;
   color: var(--color-text-primary);
@@ -461,7 +461,7 @@
 /* 6-col × 2-row grid on desktop (vs mobile's 3×4). Locked badges dim
    with a "x / target" hint; unlocked ones gain a gold tint + glow. */
 
-.fishbones-profile-badges {
+.libre-profile-badges {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -474,12 +474,12 @@
   /* Profile column rarely gets this narrow on desktop, but the
    * settings dialog can host this layout in a popup. Drop to 4 cols
    * before things get cramped. */
-  .fishbones-profile-badges {
+  .libre-profile-badges {
     grid-template-columns: repeat(4, 1fr);
   }
 }
 
-.fishbones-profile-badge {
+.libre-profile-badge {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -494,7 +494,7 @@
   transition: opacity 0.2s ease, filter 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
-.fishbones-profile-badge--unlocked {
+.libre-profile-badge--unlocked {
   opacity: 1;
   filter: none;
   border-color: rgba(252, 211, 77, 0.4);
@@ -503,12 +503,12 @@
     var(--color-bg-secondary);
 }
 
-.fishbones-profile-badge--unlocked:hover {
+.libre-profile-badge--unlocked:hover {
   transform: translateY(-1px);
   border-color: rgba(252, 211, 77, 0.6);
 }
 
-.fishbones-profile-badge-icon {
+.libre-profile-badge-icon {
   width: 40px;
   height: 40px;
   display: grid;
@@ -518,38 +518,38 @@
   background: rgba(252, 211, 77, 0.12);
 }
 
-.fishbones-profile-badge--unlocked .fishbones-profile-badge-icon {
+.libre-profile-badge--unlocked .libre-profile-badge-icon {
   background: rgba(252, 211, 77, 0.18);
   box-shadow: 0 0 0 2px rgba(252, 211, 77, 0.18);
 }
 
-.fishbones-profile-badge-label {
+.libre-profile-badge-label {
   font-size: 12px;
   font-weight: 700;
   color: var(--color-text-primary);
   line-height: 1.2;
 }
 
-.fishbones-profile-badge-meta {
+.libre-profile-badge-meta {
   font-size: 10.5px;
   font-weight: 600;
   color: var(--color-text-tertiary);
   font-variant-numeric: tabular-nums;
 }
 
-.fishbones-profile-badge--unlocked .fishbones-profile-badge-meta {
+.libre-profile-badge--unlocked .libre-profile-badge-meta {
   color: rgba(252, 211, 77, 0.85);
 }
 
 /* ---- Topics chips (desktop-unique, kept from previous design) ----- */
 
-.fishbones-profile-topic-grid {
+.libre-profile-topic-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.fishbones-profile-topic-chip {
+.libre-profile-topic-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -561,11 +561,11 @@
   color: var(--color-text-primary);
 }
 
-.fishbones-profile-topic-name {
+.libre-profile-topic-name {
   font-weight: 500;
 }
 
-.fishbones-profile-topic-count {
+.libre-profile-topic-count {
   padding: 0 6px;
   border-radius: var(--fb-radius-pill);
   background: var(--color-bg-tertiary);
@@ -577,7 +577,7 @@
 
 /* ---- Activity timeline (preserved) -------------------------------- */
 
-.fishbones-profile-activity {
+.libre-profile-activity {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -586,7 +586,7 @@
   gap: 2px;
 }
 
-.fishbones-profile-activity-row {
+.libre-profile-activity-row {
   width: 100%;
   display: flex;
   align-items: center;
@@ -602,11 +602,11 @@
   transition: background var(--fb-motion-snappy);
 }
 
-.fishbones-profile-activity-row:hover {
+.libre-profile-activity-row:hover {
   background: var(--color-bg-secondary);
 }
 
-.fishbones-profile-activity-kind {
+.libre-profile-activity-kind {
   width: 6px;
   height: 6px;
   border-radius: 50%;
@@ -614,22 +614,22 @@
   flex-shrink: 0;
 }
 
-.fishbones-profile-activity-kind--exercise,
-.fishbones-profile-activity-kind--mixed       { background: #7cc1d9; }
-.fishbones-profile-activity-kind--quiz         { background: #e8c46b; }
-.fishbones-profile-activity-kind--reading      { background: #7cd97c; }
-.fishbones-profile-activity-kind--puzzle,
-.fishbones-profile-activity-kind--cloze,
-.fishbones-profile-activity-kind--micropuzzle { background: #c79bff; }
+.libre-profile-activity-kind--exercise,
+.libre-profile-activity-kind--mixed       { background: #7cc1d9; }
+.libre-profile-activity-kind--quiz         { background: #e8c46b; }
+.libre-profile-activity-kind--reading      { background: #7cd97c; }
+.libre-profile-activity-kind--puzzle,
+.libre-profile-activity-kind--cloze,
+.libre-profile-activity-kind--micropuzzle { background: #c79bff; }
 
-.fishbones-profile-activity-body {
+.libre-profile-activity-body {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
 
-.fishbones-profile-activity-lesson {
+.libre-profile-activity-lesson {
   font-size: 13px;
   color: var(--color-text-primary);
   white-space: nowrap;
@@ -637,7 +637,7 @@
   text-overflow: ellipsis;
 }
 
-.fishbones-profile-activity-course {
+.libre-profile-activity-course {
   font-size: 10.5px;
   color: var(--color-text-tertiary);
   white-space: nowrap;
@@ -645,7 +645,7 @@
   text-overflow: ellipsis;
 }
 
-.fishbones-profile-activity-time {
+.libre-profile-activity-time {
   font-size: 10.5px;
   color: var(--color-text-tertiary);
   font-variant-numeric: tabular-nums;
@@ -657,11 +657,11 @@
    stacks: title above rings instead of beside them. Keeps the rings
    as the visual anchor on tight widths. */
 @media (max-width: 640px) {
-  .fishbones-profile-hero {
+  .libre-profile-hero {
     grid-template-columns: 1fr;
     gap: 18px;
   }
-  .fishbones-profile-rings {
+  .libre-profile-rings {
     justify-content: center;
   }
 }

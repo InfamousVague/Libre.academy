@@ -212,7 +212,7 @@ function loadCourse() {
   return { dir, path, course: JSON.parse(readFileSync(path, "utf8")) };
 }
 
-const SYSTEM_PROMPT = `You author ONE chain-aware Solidity exercise for the Fishbones app's mastering-ethereum course. Each exercise compiles real Solidity, deploys it to an in-process EVM, and exercises real tx flows — NOT just ABI checks.
+const SYSTEM_PROMPT = `You author ONE chain-aware Solidity exercise for the Libre app's mastering-ethereum course. Each exercise compiles real Solidity, deploys it to an in-process EVM, and exercises real tx flows — NOT just ABI checks.
 
 Return a single JSON object:
 

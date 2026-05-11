@@ -39,9 +39,9 @@ interface Props {
 /// difficulty-dot palette so a learner who tints a card "Easy" green
 /// in the Library sees the same green when they open the lesson.
 const DIFFICULTY_META: Record<string, { label: string; cls: string }> = {
-  easy: { label: "Easy", cls: "fishbones-challenge-frame__pill--easy" },
-  medium: { label: "Medium", cls: "fishbones-challenge-frame__pill--medium" },
-  hard: { label: "Hard", cls: "fishbones-challenge-frame__pill--hard" },
+  easy: { label: "Easy", cls: "libre-challenge-frame__pill--easy" },
+  medium: { label: "Medium", cls: "libre-challenge-frame__pill--medium" },
+  hard: { label: "Hard", cls: "libre-challenge-frame__pill--hard" },
 };
 
 export default function ChallengeFrame({ course, lesson }: Props) {
@@ -99,32 +99,32 @@ export default function ChallengeFrame({ course, lesson }: Props) {
 
   return (
     <div
-      className="fishbones-challenge-frame"
+      className="libre-challenge-frame"
       role="complementary"
       aria-label={`${course.title} — challenge ${tierIndex + 1} of ${tierTotal}`}
     >
-      <div className="fishbones-challenge-frame__lead">
-        <span className="fishbones-challenge-frame__icon" aria-hidden>
+      <div className="libre-challenge-frame__lead">
+        <span className="libre-challenge-frame__icon" aria-hidden>
           <Icon icon={swords} size="xs" color="currentColor" />
         </span>
-        <span className="fishbones-challenge-frame__title">{course.title}</span>
+        <span className="libre-challenge-frame__title">{course.title}</span>
       </div>
-      <div className="fishbones-challenge-frame__meta">
+      <div className="libre-challenge-frame__meta">
         {topicLabel && (
-          <span className="fishbones-challenge-frame__topic" title={topic}>
+          <span className="libre-challenge-frame__topic" title={topic}>
             {topicLabel}
           </span>
         )}
         {diffMeta && (
           <span
-            className={`fishbones-challenge-frame__pill ${diffMeta.cls}`}
+            className={`libre-challenge-frame__pill ${diffMeta.cls}`}
             title={`Difficulty tier — ${diffMeta.label}`}
           >
             {diffMeta.label}
           </span>
         )}
         {tierIndex >= 0 && tierTotal > 0 && (
-          <span className="fishbones-challenge-frame__position">
+          <span className="libre-challenge-frame__position">
             {tierIndex + 1} of {tierTotal}
           </span>
         )}

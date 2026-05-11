@@ -51,7 +51,7 @@ pub struct AppState {
     pub apple_domain_association_file: Option<String>,
 
     // ── Sign in with Google ─────────────────────────────────────
-    /// Google OAuth client id (web or iOS, whichever Fishbones
+    /// Google OAuth client id (web or iOS, whichever Libre
     /// ships with). Audience for verifying Google `id_token`s.
     /// Loaded from `GOOGLE_CLIENT_ID`. `None` disables Google
     /// sign-in.

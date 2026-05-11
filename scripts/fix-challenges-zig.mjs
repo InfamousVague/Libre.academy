@@ -37,7 +37,7 @@
 ///
 /// Usage:
 ///   node scripts/fix-challenges-zig.mjs
-/// Then re-pack the fishbones archive and re-deploy.
+/// Then re-pack the libre archive and re-deploy.
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";

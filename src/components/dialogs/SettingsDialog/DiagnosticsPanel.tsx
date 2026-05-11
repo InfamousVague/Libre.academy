@@ -78,17 +78,17 @@ export default function DiagnosticsPanel(): React.ReactElement {
 
   return (
     <section>
-      <h3 className="fishbones-settings-section">Resources</h3>
-      <p className="fishbones-settings-blurb">
+      <h3 className="libre-settings-section">Resources</h3>
+      <p className="libre-settings-blurb">
         Read-only probes for bundled assets and user data. If something on
         the app is missing or broken, the cause usually shows up here as a
         red row with a remedy hint. Send a screenshot of this pane when
         filing a bug.
       </p>
 
-      <div className="fishbones-settings-data-row">
+      <div className="libre-settings-data-row">
         <div>
-          <div className="fishbones-settings-data-label">
+          <div className="libre-settings-data-label">
             {loading
               ? "Running checks…"
               : checks
@@ -100,13 +100,13 @@ export default function DiagnosticsPanel(): React.ReactElement {
                 : ""}
           </div>
           {error && (
-            <div className="fishbones-settings-data-hint">
+            <div className="libre-settings-data-hint">
               Resource probes failed to run: {error}
             </div>
           )}
         </div>
         <button
-          className="fishbones-settings-secondary"
+          className="libre-settings-secondary"
           onClick={() => void run()}
           disabled={loading}
         >
@@ -116,9 +116,9 @@ export default function DiagnosticsPanel(): React.ReactElement {
 
       {checks &&
         Array.from(byCategory.entries()).map(([cat, items]) => (
-          <div key={cat} className="fishbones-diagnostics-group">
-            <div className="fishbones-diagnostics-group-title">{cat}</div>
-            <ul className="fishbones-diagnostics-list">
+          <div key={cat} className="libre-diagnostics-group">
+            <div className="libre-diagnostics-group-title">{cat}</div>
+            <ul className="libre-diagnostics-list">
               {items.map((c) => {
                 const lang = languageForCheckId(c.id);
                 const canInstall = c.status !== "pass" && !!lang;
@@ -126,36 +126,36 @@ export default function DiagnosticsPanel(): React.ReactElement {
                 return (
                   <li
                     key={c.id}
-                    className={`fishbones-diagnostics-item fishbones-diagnostics-item--${c.status}`}
+                    className={`libre-diagnostics-item libre-diagnostics-item--${c.status}`}
                   >
                     <span
-                      className={`fishbones-diagnostics-dot fishbones-diagnostics-dot--${c.status}`}
+                      className={`libre-diagnostics-dot libre-diagnostics-dot--${c.status}`}
                       aria-hidden
                     />
-                    <div className="fishbones-diagnostics-body">
-                      <div className="fishbones-diagnostics-label">
+                    <div className="libre-diagnostics-body">
+                      <div className="libre-diagnostics-label">
                         {lang && (
                           <LanguageChip
                             language={lang}
                             size="xs"
                             iconOnly
-                            className="fishbones-diagnostics-langchip"
+                            className="libre-diagnostics-langchip"
                           />
                         )}
                         <span>{c.label}</span>
                       </div>
-                      <div className="fishbones-diagnostics-detail">{c.detail}</div>
+                      <div className="libre-diagnostics-detail">{c.detail}</div>
                       {c.remedy && c.status !== "pass" && (
-                        <div className="fishbones-diagnostics-remedy">
+                        <div className="libre-diagnostics-remedy">
                           → {c.remedy}
                         </div>
                       )}
                       {canInstall && lang && (
-                        <div className="fishbones-diagnostics-install-row">
+                        <div className="libre-diagnostics-install-row">
                           {!isExpanded ? (
                             <button
                               type="button"
-                              className="fishbones-settings-secondary"
+                              className="libre-settings-secondary"
                               onClick={() => setExpandedInstallId(c.id)}
                             >
                               Install {capitalize(lang)}
@@ -202,7 +202,7 @@ function ToolchainInstallSlot({
   const { status, loading } = useToolchainStatus(language, 0);
   if (loading) {
     return (
-      <div className="fishbones-diagnostics-install-loading">
+      <div className="libre-diagnostics-install-loading">
         Probing {capitalize(language)} install hint…
       </div>
     );
@@ -212,7 +212,7 @@ function ToolchainInstallSlot({
     // background install finished) or no install hint shipped — close
     // the slot and trigger a re-probe so the row updates anyway.
     return (
-      <div className="fishbones-diagnostics-install-loading">
+      <div className="libre-diagnostics-install-loading">
         No install recipe shipped for {capitalize(language)}. Try the
         remedy hint above.
       </div>

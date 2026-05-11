@@ -130,18 +130,18 @@ export default function Sidebar({
   }, [menu, chapterMenu, lessonMenu]);
 
   return (
-    <aside className="fishbones__sidebar">
+    <aside className="libre__sidebar">
       {/* Brand wordmark — pinned at the very top of the sidebar so the
           Libre.academy lockup anchors the rail and stays visible
           regardless of which view is active. Moved here from the
           Library / Discover headers (where it doubled up the page
           identity with the title block). Naked image, no card chrome
           — the rail's frosted-glass surface is the framing. */}
-      <div className="fishbones__sidebar-brand" aria-hidden>
+      <div className="libre__sidebar-brand" aria-hidden>
         <img
           src={`${import.meta.env.BASE_URL}libreacademy.png`}
           alt="Libre.academy"
-          className="fishbones__sidebar-brand-img"
+          className="libre__sidebar-brand-img"
           draggable={false}
         />
       </div>
@@ -190,7 +190,7 @@ export default function Sidebar({
           components/NavigationRail/NavigationRail.tsx. The sidebar's
           job here is the course tree + carousel only. */}
 
-      <nav className="fishbones__nav">
+      <nav className="libre__nav">
         {(() => {
           // Partition into books vs challenge packs so they render under
           // distinct section headers. Order within each group is preserved
@@ -311,20 +311,20 @@ export default function Sidebar({
             <>
               {activeCourse && (
                 <>
-                  <div className="fishbones__nav-section">Current</div>
+                  <div className="libre__nav-section">Current</div>
                   {renderGroup(activeCourse)}
                 </>
               )}
               {!activeCourse && inactiveBooks.length > 0 && (
                 <>
-                  <div className="fishbones__nav-section">In progress</div>
+                  <div className="libre__nav-section">In progress</div>
                   {inactiveBooks.map(renderGroup)}
                 </>
               )}
               {relevantPacks.length > 0 && (
                 <>
-                  <div className="fishbones__nav-section fishbones__nav-section--packs">
-                    <span className="fishbones__nav-section-icon" aria-hidden>
+                  <div className="libre__nav-section libre__nav-section--packs">
+                    <span className="libre__nav-section-icon" aria-hidden>
                       <Icon icon={swords} size="xs" color="currentColor" />
                     </span>
                     {activeCourse
@@ -335,17 +335,17 @@ export default function Sidebar({
                 </>
               )}
               {!hasAnything && (
-                <div className="fishbones__nav-empty">
-                  <p className="fishbones__nav-empty-headline">
+                <div className="libre__nav-empty">
+                  <p className="libre__nav-empty-headline">
                     Nothing started yet
                   </p>
-                  <p className="fishbones__nav-empty-body">
+                  <p className="libre__nav-empty-body">
                     Pick something from the library to get going. Courses
                     you start will show up here.
                   </p>
                   <button
                     type="button"
-                    className="fishbones__nav-empty-cta"
+                    className="libre__nav-empty-cta"
                     onClick={onLibrary}
                   >
                     <span aria-hidden>
@@ -362,7 +362,7 @@ export default function Sidebar({
 
       {menu && (onExportCourse || onDeleteCourse || onCourseSettings || onResetCourse) && createPortal(
         <div
-          className="fishbones__context-menu"
+          className="libre__context-menu"
           // Position at cursor. Fixed positioning so scroll state doesn't
           // matter — the window-level click listener dismisses us anyway.
           // Portalled to document.body so the sidebar's `backdrop-filter`
@@ -373,17 +373,17 @@ export default function Sidebar({
           // the item's onClick fires.
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="fishbones__context-menu-label">{menu.courseTitle}</div>
+          <div className="libre__context-menu-label">{menu.courseTitle}</div>
           {onCourseSettings && (
             <button
               type="button"
-              className="fishbones__context-menu-item"
+              className="libre__context-menu-item"
               onClick={() => {
                 onCourseSettings(menu.courseId);
                 setMenu(null);
               }}
             >
-              <span className="fishbones__context-menu-icon" aria-hidden>
+              <span className="libre__context-menu-icon" aria-hidden>
                 <Icon icon={settingsIcon} size="xs" color="currentColor" />
               </span>
               Course settings…
@@ -392,13 +392,13 @@ export default function Sidebar({
           {onExportCourse && (
             <button
               type="button"
-              className="fishbones__context-menu-item"
+              className="libre__context-menu-item"
               onClick={() => {
                 onExportCourse(menu.courseId, menu.courseTitle);
                 setMenu(null);
               }}
             >
-              <span className="fishbones__context-menu-icon" aria-hidden>
+              <span className="libre__context-menu-icon" aria-hidden>
                 <Icon icon={downloadIcon} size="xs" color="currentColor" />
               </span>
               Export course…
@@ -411,13 +411,13 @@ export default function Sidebar({
           {onResetCourse && (
             <button
               type="button"
-              className="fishbones__context-menu-item"
+              className="libre__context-menu-item"
               onClick={() => {
                 onResetCourse(menu.courseId);
                 setMenu(null);
               }}
             >
-              <span className="fishbones__context-menu-icon" aria-hidden>
+              <span className="libre__context-menu-icon" aria-hidden>
                 <Icon icon={rotateCcw} size="xs" color="currentColor" />
               </span>
               Reset progress
@@ -426,16 +426,16 @@ export default function Sidebar({
           {onDeleteCourse && (
             <>
               {/* Separator between non-destructive and destructive actions. */}
-              <div className="fishbones__context-menu-sep" aria-hidden />
+              <div className="libre__context-menu-sep" aria-hidden />
               <button
                 type="button"
-                className="fishbones__context-menu-item fishbones__context-menu-item--danger"
+                className="libre__context-menu-item libre__context-menu-item--danger"
                 onClick={() => {
                   onDeleteCourse(menu.courseId, menu.courseTitle);
                   setMenu(null);
                 }}
               >
-                <span className="fishbones__context-menu-icon" aria-hidden>
+                <span className="libre__context-menu-icon" aria-hidden>
                   <Icon icon={xIcon} size="xs" color="currentColor" />
                 </span>
                 Delete course…
@@ -448,20 +448,20 @@ export default function Sidebar({
 
       {chapterMenu && onResetChapter && createPortal(
         <div
-          className="fishbones__context-menu"
+          className="libre__context-menu"
           style={{ left: chapterMenu.x, top: chapterMenu.y }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="fishbones__context-menu-label">{chapterMenu.chapterTitle}</div>
+          <div className="libre__context-menu-label">{chapterMenu.chapterTitle}</div>
           <button
             type="button"
-            className="fishbones__context-menu-item"
+            className="libre__context-menu-item"
             onClick={() => {
               onResetChapter(chapterMenu.courseId, chapterMenu.lessonIds);
               setChapterMenu(null);
             }}
           >
-            <span className="fishbones__context-menu-icon" aria-hidden>
+            <span className="libre__context-menu-icon" aria-hidden>
               <Icon icon={rotateCcw} size="xs" color="currentColor" />
             </span>
             Reset chapter progress
@@ -472,20 +472,20 @@ export default function Sidebar({
 
       {lessonMenu && onResetLesson && createPortal(
         <div
-          className="fishbones__context-menu"
+          className="libre__context-menu"
           style={{ left: lessonMenu.x, top: lessonMenu.y }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="fishbones__context-menu-label">{lessonMenu.lessonTitle}</div>
+          <div className="libre__context-menu-label">{lessonMenu.lessonTitle}</div>
           <button
             type="button"
-            className="fishbones__context-menu-item"
+            className="libre__context-menu-item"
             onClick={() => {
               onResetLesson(lessonMenu.courseId, lessonMenu.lessonId);
               setLessonMenu(null);
             }}
           >
-            <span className="fishbones__context-menu-icon" aria-hidden>
+            <span className="libre__context-menu-icon" aria-hidden>
               <Icon icon={rotateCcw} size="xs" color="currentColor" />
             </span>
             Mark incomplete

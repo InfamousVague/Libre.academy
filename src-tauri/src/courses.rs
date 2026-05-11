@@ -12,8 +12,8 @@
 //! future step will split prose out into sibling .md files.
 //!
 //! Share/export uses a `.academy` archive — a zip of the course folder.
-//! `.fishbones` (the previous name) and `.kata` (the original Tauri-era
-//! name before the Fishbones → Libre rebrand) are still accepted on
+//! `.libre` (the previous name) and `.kata` (the original Tauri-era
+//! name before the Libre → Libre rebrand) are still accepted on
 //! import for backwards compatibility with archives shipped or
 //! exported by older builds.
 //! Import unpacks the archive into `<app_data_dir>/courses/<course-id>/`.
@@ -72,7 +72,7 @@ pub fn courses_dir(app: &tauri::AppHandle) -> anyhow::Result<PathBuf> {
 ///       `svelte-5-complete`, `javascript-crash-course`). Existing
 ///       desktop / mobile installs that still have these on disk get
 ///       them removed on next launch. Mirrors the web seeder's V6
-///       LEGACY_STARTER_IDS prune (Apps/Fishbones/src/data/webSeedCourses.ts)
+///       LEGACY_STARTER_IDS prune (Apps/Libre/src/data/webSeedCourses.ts)
 ///       so all three platforms drop the same retirees in lockstep.
 /// V9 — Library curation: introduces `should_seed_pack` allow-list
 /// (see below). On version bump, ensure_seed prunes any auto-seeded
@@ -87,7 +87,7 @@ pub fn courses_dir(app: &tauri::AppHandle) -> anyhow::Result<PathBuf> {
 //
 // V11 — Re-extract every pack to pick up restored blocks data +
 // the audio-driven section blocks (`splitMarkdownIntoSections` +
-// `apply-blocks` pipeline). The bundled .fishbones archives were
+// `apply-blocks` pipeline). The bundled .libre archives were
 // repacked from the desktop's installed library via
 // `promote-library-to-bundle.mjs`, which runs after `apply-blocks
 // --install` so each course.json carries blocks payloads. Existing
@@ -137,12 +137,12 @@ const RETIRED_PACK_IDS: &[&str] = &[
 ];
 
 /// Course-archive file extensions, in priority order. `.academy` is
-/// the canonical extension after the Fishbones → Libre rebrand;
-/// `.fishbones` and `.kata` remain accepted for backwards compat with
+/// the canonical extension after the Libre → Libre rebrand;
+/// `.libre` and `.kata` remain accepted for backwards compat with
 /// older shipped archives + user exports. Used by every match arm
 /// that sniffs the bundled-packs directory (here + ingest.rs +
 /// diagnostics.rs).
-pub const ARCHIVE_EXTS: &[&str] = &["academy", "fishbones", "kata"];
+pub const ARCHIVE_EXTS: &[&str] = &["academy", "libre", "kata"];
 
 /// True when the given path's extension is one of our course-archive
 /// extensions. Pass the result of `path.extension().and_then(|s|
@@ -156,7 +156,7 @@ pub fn is_archive_ext(ext: Option<&str>) -> bool {
 /// just two foundational books plus every challenge pack — and the
 /// user discovers + installs everything else from the in-app catalog
 /// browser (CatalogBrowser modal, served from
-/// mattssoftware.com/fishbones/catalog/manifest.json).
+/// mattssoftware.com/libre/catalog/manifest.json).
 ///
 /// In dev mode, `app.path().resource_dir()` resolves to the source
 /// `src-tauri/resources/` directory, which contains every archive
@@ -174,7 +174,7 @@ pub fn is_archive_ext(ext: Option<&str>) -> bool {
 fn should_seed_pack(filename: &str) -> bool {
     let stem = filename
         .trim_end_matches(".academy")
-        .trim_end_matches(".fishbones")
+        .trim_end_matches(".libre")
         .trim_end_matches(".kata");
     matches!(
         stem,
@@ -192,7 +192,7 @@ fn should_seed_pack(filename: &str) -> bool {
 ///      protocol that streams "what's installed on my other device,"
 ///      the next-best heuristic is "ship everything we have."
 ///   3. Storage on iOS is plentiful relative to a few hundred MB of
-///      .fishbones archives; sync is more expensive than redundant
+///      .libre archives; sync is more expensive than redundant
 ///      copies for our scale.
 /// Retired pack ids still get filtered out via RETIRED_PACK_IDS in
 /// the caller.
@@ -201,7 +201,7 @@ fn should_seed_pack(_filename: &str) -> bool {
     true
 }
 
-/// Import any `.fishbones` / `.kata` archives bundled under
+/// Import any `.libre` / `.kata` archives bundled under
 /// `resources/bundled-packs/` into the user's courses dir on first launch.
 /// Idempotent — never overwrites an existing course (unless SEED_VERSION
 /// has bumped, see above), and records every id we've seeded into
@@ -209,7 +209,7 @@ fn should_seed_pack(_filename: &str) -> bool {
 /// instead of getting resurrected on the next run.
 ///
 /// This is the entry point that ships the default Rust / TypeScript / Go
-/// challenge packs along with Fishbones. Drop a `.fishbones` (or legacy
+/// challenge packs along with Libre. Drop a `.libre` (or legacy
 /// `.kata`) file in `src-tauri/resources/bundled-packs/`, commit it, and
 /// new installs pick it up automatically.
 pub fn ensure_seed(app: &tauri::AppHandle) -> anyhow::Result<()> {
@@ -236,7 +236,7 @@ pub fn ensure_seed(app: &tauri::AppHandle) -> anyhow::Result<()> {
     // lives in progress.sqlite which we leave alone, so if a future
     // build ever resurrects a retired id the completion history is
     // still there. We DON'T add the retired id to seed_ids: with the
-    // .fishbones already gone from bundled-packs/ it would never be
+    // .libre already gone from bundled-packs/ it would never be
     // re-imported anyway, and leaving seed_ids untouched lets a
     // future bundle re-introduce the id without needing a marker
     // surgery.
@@ -256,7 +256,7 @@ pub fn ensure_seed(app: &tauri::AppHandle) -> anyhow::Result<()> {
                 }
                 Err(e) => {
                     eprintln!(
-                        "[fishbones:seed] failed to prune retired pack {:?}: {}",
+                        "[libre:seed] failed to prune retired pack {:?}: {}",
                         dir, e
                     );
                 }
@@ -299,7 +299,7 @@ pub fn ensure_seed(app: &tauri::AppHandle) -> anyhow::Result<()> {
                     }
                     Err(e) => {
                         eprintln!(
-                            "[fishbones:seed] failed to prune deseeded pack {:?}: {}",
+                            "[libre:seed] failed to prune deseeded pack {:?}: {}",
                             dir, e
                         );
                     }
@@ -338,7 +338,7 @@ pub fn ensure_seed(app: &tauri::AppHandle) -> anyhow::Result<()> {
         let id = match peek_archive_id(&path) {
             Ok(id) => id,
             Err(e) => {
-                eprintln!("[fishbones:seed] could not read id from {:?}: {}", path, e);
+                eprintln!("[libre:seed] could not read id from {:?}: {}", path, e);
                 continue;
             }
         };
@@ -362,7 +362,7 @@ pub fn ensure_seed(app: &tauri::AppHandle) -> anyhow::Result<()> {
             if needs_refresh {
                 if let Err(e) = unzip_to(&path, &courses_root) {
                     eprintln!(
-                        "[fishbones:seed] refresh-extract failed for {:?}: {}",
+                        "[libre:seed] refresh-extract failed for {:?}: {}",
                         path, e
                     );
                     continue;
@@ -379,7 +379,7 @@ pub fn ensure_seed(app: &tauri::AppHandle) -> anyhow::Result<()> {
 
         // Fresh seed — extract into the courses dir.
         if let Err(e) = unzip_to(&path, &courses_root) {
-            eprintln!("[fishbones:seed] unzip failed for {:?}: {}", path, e);
+            eprintln!("[libre:seed] unzip failed for {:?}: {}", path, e);
             continue;
         }
         packs.seed_ids.push(id);
@@ -388,19 +388,19 @@ pub fn ensure_seed(app: &tauri::AppHandle) -> anyhow::Result<()> {
 
     if imported_this_run > 0 {
         eprintln!(
-            "[fishbones:seed] imported {} bundled pack(s) from {:?}",
+            "[libre:seed] imported {} bundled pack(s) from {:?}",
             imported_this_run, resource_dir
         );
     }
     if refreshed_this_run > 0 {
         eprintln!(
-            "[fishbones:seed] refreshed {} pack(s) (seed_version {} → {})",
+            "[libre:seed] refreshed {} pack(s) (seed_version {} → {})",
             refreshed_this_run, packs.seed_version, SEED_VERSION
         );
     }
     if pruned_this_run > 0 {
         eprintln!(
-            "[fishbones:seed] pruned {} retired pack(s) on seed_version bump",
+            "[libre:seed] pruned {} retired pack(s) on seed_version bump",
             pruned_this_run
         );
     }
@@ -456,7 +456,7 @@ fn save_seeded_packs(path: &Path, packs: &SeededPacks) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Read ONLY the course id out of a .fishbones/.kata archive without
+/// Read ONLY the course id out of a .libre/.kata archive without
 /// extracting anything. Used by the seed routine to decide whether to skip.
 pub fn peek_archive_id(archive: &Path) -> anyhow::Result<String> {
     let file = fs::File::open(archive)?;
@@ -619,7 +619,7 @@ pub fn delete_course(
     Ok(())
 }
 
-/// Export a course as a `.fishbones` zip archive at the chosen destination path.
+/// Export a course as a `.libre` zip archive at the chosen destination path.
 #[tauri::command]
 pub fn export_course(
     app: tauri::AppHandle,
@@ -635,7 +635,7 @@ pub fn export_course(
     Ok(())
 }
 
-/// Import a `.fishbones` / `.kata` archive, extracting it into
+/// Import a `.libre` / `.kata` archive, extracting it into
 /// app_data_dir/courses/<id>/. The archive's course.json determines the id.
 #[tauri::command]
 pub fn import_course(app: tauri::AppHandle, archive_path: String) -> Result<String, String> {
@@ -656,13 +656,13 @@ pub struct BundledCatalogEntry {
     pub pack_type: Option<String>,
     pub lesson_count: u32,
     pub size_bytes: u64,
-    /// Filesystem path to the .fishbones archive in
+    /// Filesystem path to the .libre archive in
     /// resources/bundled-packs/. The frontend passes this back to
     /// `import_course` to install without a network round-trip.
     pub local_path: String,
 }
 
-/// Read the FULL course.json out of a bundled `.fishbones` archive
+/// Read the FULL course.json out of a bundled `.libre` archive
 /// without extracting anything else. Used by the per-course update
 /// detection (`fetchBundledCourse` in courseSync.ts) so it compares
 /// against the in-binary source of truth instead of the
@@ -672,7 +672,7 @@ pub struct BundledCatalogEntry {
 /// Looks the archive up by FILENAME first (fast — a single stat),
 /// falls back to scanning every archive's course.id when the
 /// filename doesn't match the requested id (some packs ship with a
-/// .fishbones name that differs from the inner id).
+/// .libre name that differs from the inner id).
 #[tauri::command]
 pub fn read_bundled_course(
     app: tauri::AppHandle,
@@ -727,7 +727,7 @@ fn read_course_json_from_archive(archive: &Path) -> anyhow::Result<CourseJson> {
     anyhow::bail!("course.json not found in archive");
 }
 
-/// Lists every `.fishbones` archive shipped under
+/// Lists every `.libre` archive shipped under
 /// `resources/bundled-packs/` along with peek-extracted metadata.
 /// Powers the in-app CatalogBrowser on desktop — no server needed,
 /// since the catalog IS the bundled archives. Web uses a fetched
@@ -737,8 +737,8 @@ fn read_course_json_from_archive(archive: &Path) -> anyhow::Result<CourseJson> {
 ///
 /// Tauri 2 places `resources` in different absolute locations
 /// per-OS, but ALWAYS preserves the relative subpath declared in
-/// `tauri.conf.json`. So `resources/bundled-packs/foo.fishbones`
-/// lands at `<resource_dir>/resources/bundled-packs/foo.fishbones`
+/// `tauri.conf.json`. So `resources/bundled-packs/foo.libre`
+/// lands at `<resource_dir>/resources/bundled-packs/foo.libre`
 /// on every platform — in theory.
 ///
 /// In practice, Windows MSI packaging has historically been
@@ -750,7 +750,7 @@ fn read_course_json_from_archive(archive: &Path) -> anyhow::Result<CourseJson> {
 /// `NotFound`, the function bailed, the JS got `[]`.
 ///
 /// The fix: try a SHORT LIST of known candidate paths, take the
-/// first one with at least one `.fishbones` inside, and walk it.
+/// first one with at least one `.libre` inside, and walk it.
 /// Logs every attempt so future regressions show up loudly in
 /// `journalctl`/Console.app/whatever Windows users send us.
 #[tauri::command]
@@ -760,7 +760,7 @@ pub fn list_bundled_catalog_entries(
     let base = match app.path().resource_dir() {
         Ok(p) => p,
         Err(e) => {
-            eprintln!("[fishbones:catalog] resource_dir() failed: {}", e);
+            eprintln!("[libre:catalog] resource_dir() failed: {}", e);
             return Ok(Vec::new());
         }
     };
@@ -777,11 +777,11 @@ pub fn list_bundled_catalog_entries(
     let mut chosen: Option<std::path::PathBuf> = None;
     for c in &candidates {
         if !c.exists() {
-            eprintln!("[fishbones:catalog] candidate missing: {:?}", c);
+            eprintln!("[libre:catalog] candidate missing: {:?}", c);
             continue;
         }
         // Quick probe: does this dir contain any course archive at
-        // all (.academy / .fishbones / .kata)? We don't want to
+        // all (.academy / .libre / .kata)? We don't want to
         // silently pick `base` (the resource_dir root) just because
         // it exists — only the dir that actually holds course
         // archives wins.
@@ -790,12 +790,12 @@ pub fn list_bundled_catalog_entries(
                 .filter_map(|e| e.ok())
                 .any(|e| is_archive_ext(e.path().extension().and_then(|s| s.to_str()))),
             Err(e) => {
-                eprintln!("[fishbones:catalog] read_dir({:?}) failed: {}", c, e);
+                eprintln!("[libre:catalog] read_dir({:?}) failed: {}", c, e);
                 false
             }
         };
         if has_archives {
-            eprintln!("[fishbones:catalog] using {:?}", c);
+            eprintln!("[libre:catalog] using {:?}", c);
             chosen = Some(c.clone());
             break;
         }
@@ -805,7 +805,7 @@ pub fn list_bundled_catalog_entries(
         Some(p) => p,
         None => {
             eprintln!(
-                "[fishbones:catalog] no course archives found under any of: {:?}",
+                "[libre:catalog] no course archives found under any of: {:?}",
                 candidates
             );
             return Ok(Vec::new());
@@ -832,13 +832,13 @@ pub fn list_bundled_catalog_entries(
                 // Defensive filter — RETIRED_PACK_IDS lists every pack
                 // we've ever shipped and pulled. If an old archive
                 // survived a build-target cleanup or a user dropped a
-                // stale .fishbones into resources/bundled-packs by hand,
+                // stale .libre into resources/bundled-packs by hand,
                 // it won't surface in Discover. ensure_seed already
                 // prunes the corresponding installed dir on a SEED_VERSION
                 // bump — this complements that for the catalog side.
                 if RETIRED_PACK_IDS.contains(&id.as_str()) {
                     eprintln!(
-                        "[fishbones:catalog] skipping retired archive {:?} (id={})",
+                        "[libre:catalog] skipping retired archive {:?} (id={})",
                         path, id
                     );
                     continue;
@@ -856,7 +856,7 @@ pub fn list_bundled_catalog_entries(
             }
             Err(e) => {
                 eprintln!(
-                    "[fishbones:catalog] could not read metadata from {:?}: {}",
+                    "[libre:catalog] could not read metadata from {:?}: {}",
                     path, e
                 );
             }
@@ -865,7 +865,7 @@ pub fn list_bundled_catalog_entries(
     // Stable order so the JS list doesn't shuffle between calls.
     out.sort_by(|a, b| a.title.to_lowercase().cmp(&b.title.to_lowercase()));
     eprintln!(
-        "[fishbones:catalog] returning {} entries from {:?}",
+        "[libre:catalog] returning {} entries from {:?}",
         out.len(),
         bundled_dir
     );
@@ -920,7 +920,7 @@ fn opt_str_field(v: &CourseJson, key: &str) -> Option<String> {
 
 /// Walk up from cwd + the running binary's dir looking for a folder
 /// that contains BOTH `package.json` and `public/starter-courses/`.
-/// That signature uniquely identifies the Fishbones repo root in dev
+/// That signature uniquely identifies the Libre repo root in dev
 /// (where the binary lives at `src-tauri/target/debug/`) without
 /// misfiring on someone else's checkout. Returns None when not found
 /// (production builds, foreign cwd) — callers turn that into a
@@ -973,7 +973,7 @@ pub fn save_bundled_starter_course(course_id: String, body: CourseJson) -> Resul
         return Err("invalid course id (expected url-safe alphanumeric)".into());
     }
     let repo = find_repo_root_for_starter_promotion().ok_or_else(|| {
-        "Couldn't locate the Fishbones repo root from this binary — are you running via `npm run tauri:dev`?"
+        "Couldn't locate the Libre repo root from this binary — are you running via `npm run tauri:dev`?"
             .to_string()
     })?;
     let dest = repo
@@ -988,7 +988,7 @@ pub fn save_bundled_starter_course(course_id: String, body: CourseJson) -> Resul
     Ok(dest.to_string_lossy().into_owned())
 }
 
-/// Fetch a remote `.fishbones` archive over HTTPS and install it into
+/// Fetch a remote `.libre` archive over HTTPS and install it into
 /// the user's courses dir. Used by the catalog's "Install" button on
 /// remote-tier placeholders. Returns the in-zip course id on success.
 #[tauri::command]
@@ -1016,7 +1016,7 @@ pub async fn download_and_install_course(
     // Stage to a temp file so unzip_to can read by path. We use a
     // unique name per call so concurrent installs don't collide.
     let tmp = std::env::temp_dir().join(format!(
-        "fishbones-install-{}.fishbones",
+        "libre-install-{}.libre",
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map(|d| d.as_millis())
@@ -1093,7 +1093,7 @@ pub fn refresh_bundled_courses(app: tauri::AppHandle) -> Result<RefreshReport, S
             Ok(id) if !id.is_empty() => id,
             Ok(_) => continue,
             Err(e) => {
-                eprintln!("[fishbones:refresh] could not read id from {:?}: {}", path, e);
+                eprintln!("[libre:refresh] could not read id from {:?}: {}", path, e);
                 continue;
             }
         };
@@ -1110,7 +1110,7 @@ pub fn refresh_bundled_courses(app: tauri::AppHandle) -> Result<RefreshReport, S
             }
             if let Err(e) = unzip_to(&path, &courses_root) {
                 eprintln!(
-                    "[fishbones:refresh] re-extract failed for {:?}: {}",
+                    "[libre:refresh] re-extract failed for {:?}: {}",
                     path, e
                 );
                 continue;
@@ -1127,7 +1127,7 @@ pub fn refresh_bundled_courses(app: tauri::AppHandle) -> Result<RefreshReport, S
 
         // Brand-new pack — fresh seed.
         if let Err(e) = unzip_to(&path, &courses_root) {
-            eprintln!("[fishbones:refresh] unzip failed for {:?}: {}", path, e);
+            eprintln!("[libre:refresh] unzip failed for {:?}: {}", path, e);
             continue;
         }
         packs.seed_ids.push(id);
@@ -1138,10 +1138,10 @@ pub fn refresh_bundled_courses(app: tauri::AppHandle) -> Result<RefreshReport, S
     // launch-path's responsibility. Manual sync just records new
     // ids; the version-gated upgrade behavior stays as-is.
     if let Err(e) = save_seeded_packs(&marker, &packs) {
-        eprintln!("[fishbones:refresh] failed to save marker: {}", e);
+        eprintln!("[libre:refresh] failed to save marker: {}", e);
     }
     eprintln!(
-        "[fishbones:refresh] new={} refreshed={} skipped_deleted={}",
+        "[libre:refresh] new={} refreshed={} skipped_deleted={}",
         report.new_count, report.refreshed, report.skipped_deleted
     );
     Ok(report)
@@ -1272,7 +1272,7 @@ fn unzip_to(archive: &Path, courses_dir: &Path) -> anyhow::Result<String> {
 
 fn strip_top_level(path: &str) -> String {
     // If the zip contains a single top-level folder wrapping course.json, skip
-    // it. Otherwise return as-is. This lets people share `my-course.fishbones`
+    // it. Otherwise return as-is. This lets people share `my-course.libre`
     // created from a folder OR from its contents.
     let trimmed = path.trim_end_matches('/');
     let parts: Vec<&str> = trimmed.split('/').collect();

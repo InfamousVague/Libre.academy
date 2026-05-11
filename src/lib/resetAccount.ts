@@ -25,11 +25,11 @@
 ///   - Every progress-shaped localStorage key:
 ///       fb:achievements:unlocked, fb:achievements:freezes-used,
 ///       fb:streak-shields:v1, fb:streak-frozen-days:v1,
-///       fishbones-practice-history-v1, fishbones:practice:records:v1,
-///       fishbones:practice:today:v1, fishbones:recent-courses:v1,
-///       fishbones:notifications:last-seen-at,
-///       fishbones:open-tabs:v2, fb:catalog-cache-v2
-///   - **Cloud progress** — DELETE /fishbones/progress (best-effort;
+///       libre-practice-history-v1, libre:practice:records:v1,
+///       libre:practice:today:v1, libre:recent-courses:v1,
+///       libre:notifications:last-seen-at,
+///       libre:open-tabs:v2, fb:catalog-cache-v2
+///   - **Cloud progress** — DELETE /libre/progress (best-effort;
 ///     falls back to local-only if the relay route 404s)
 ///
 /// What it KEEPS (preferences):
@@ -46,7 +46,7 @@
 
 import { storage, metaDelete } from "./storage";
 import { isWeb } from "./platform";
-import type { UseFishbonesCloud } from "../hooks/useFishbonesCloud";
+import type { UseLibreCloud } from "../hooks/useLibreCloud";
 
 /// localStorage keys that carry progress-shaped (earned) data. Kept
 /// here rather than imported from the constituent modules because
@@ -63,16 +63,16 @@ const ACCOUNT_STATE_KEYS: readonly string[] = [
   // Practice history (two key generations — the older flat-history
   // hook + the newer per-record store both persist independently;
   // wipe both so the SRS schedule starts from scratch)
-  "fishbones-practice-history-v1",
-  "fishbones:practice:records:v1",
-  "fishbones:practice:today:v1",
+  "libre-practice-history-v1",
+  "libre:practice:records:v1",
+  "libre:practice:today:v1",
   // Recents row + notification drawer marker
-  "fishbones:recent-courses:v1",
-  "fishbones:notifications:last-seen-at",
+  "libre:recent-courses:v1",
+  "libre:notifications:last-seen-at",
   // Workbench-side state that can carry stale references to courses
   // we're about to delete (stale tabs would 404 their lessons after
   // the reseed renames things)
-  "fishbones:open-tabs:v2",
+  "libre:open-tabs:v2",
   // In-memory catalog cache. Without this, the SWR layer would
   // re-paint the just-wiped Discover grid from the cached snapshot
   // before the network refetch completes.
@@ -101,7 +101,7 @@ export interface ResetAccountReport {
 }
 
 export async function resetAccount(
-  cloud: Pick<UseFishbonesCloud, "resetProgress" | "signedIn">,
+  cloud: Pick<UseLibreCloud, "resetProgress" | "signedIn">,
 ): Promise<ResetAccountReport> {
   let localCleared = true;
   let coursesCleared = true;

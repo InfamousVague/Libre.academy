@@ -10,7 +10,7 @@ import "./AddCourseButton.css";
 
 interface Props {
   /// Smart file picker: open the OS file dialog with all supported
-  /// course formats (.pdf, .epub, .academy, .fishbones, .kata, .zip,
+  /// course formats (.pdf, .epub, .academy, .libre, .kata, .zip,
   /// .json), then sniff each result and dispatch to the right
   /// handler. Fires when the user clicks the main split-button face
   /// OR the matching dropdown item.
@@ -24,12 +24,12 @@ interface Props {
   /// menu item rather than folded into the smart picker.
   onDocsUrl?: () => void;
   /// Imports a previously-exported `.academy` archive (or its legacy
-  /// `.fishbones` predecessor). The smart picker handles archives
+  /// `.libre` predecessor). The smart picker handles archives
   /// too, so this is a redundant convenience — kept for users who
   /// specifically want the "Archive" affordance.
   onArchive?: () => void;
   /// Opens the catalog browser modal so the user can search the
-  /// official Fishbones library and install courses they don't
+  /// official Libre library and install courses they don't
   /// have yet. Distinct from `onSmartPick` — that's for files /
   /// URLs the user already has; this discovers what's available.
   onBrowseCatalog?: () => void;
@@ -87,11 +87,11 @@ export default function AddCourseButton({
   };
 
   return (
-    <div className="fishbones-addcourse" ref={wrapperRef}>
-      <div className="fishbones-addcourse-split">
+    <div className="libre-addcourse" ref={wrapperRef}>
+      <div className="libre-addcourse-split">
         <button
           type="button"
-          className="fishbones-addcourse-main"
+          className="libre-addcourse-main"
           onClick={onSmartPick}
           title="Pick a PDF, EPUB, .academy archive, or course.json — we'll figure out which pipeline to run"
         >
@@ -100,7 +100,7 @@ export default function AddCourseButton({
         </button>
         <button
           type="button"
-          className="fishbones-addcourse-caret"
+          className="libre-addcourse-caret"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-haspopup="menu"
@@ -113,22 +113,22 @@ export default function AddCourseButton({
 
       {open && (
         <div
-          className="fishbones-addcourse-menu"
+          className="libre-addcourse-menu"
           role="menu"
           aria-label="Import options"
         >
           <button
             type="button"
             role="menuitem"
-            className="fishbones-addcourse-item"
+            className="libre-addcourse-item"
             onClick={() => dispatch(onSmartPick)}
           >
             <Icon icon={filePlus} size="xs" color="currentColor" />
-            <span className="fishbones-addcourse-item-body">
-              <span className="fishbones-addcourse-item-title">
+            <span className="libre-addcourse-item-body">
+              <span className="libre-addcourse-item-title">
                 Pick file(s)…
               </span>
-              <span className="fishbones-addcourse-item-hint">
+              <span className="libre-addcourse-item-hint">
                 PDF, EPUB, .academy, course.json — we sniff and route
               </span>
             </span>
@@ -137,15 +137,15 @@ export default function AddCourseButton({
             <button
               type="button"
               role="menuitem"
-              className="fishbones-addcourse-item"
+              className="libre-addcourse-item"
               onClick={() => dispatch(onBulkPdfs)}
             >
               <Icon icon={libraryBig} size="xs" color="currentColor" />
-              <span className="fishbones-addcourse-item-body">
-                <span className="fishbones-addcourse-item-title">
+              <span className="libre-addcourse-item-body">
+                <span className="libre-addcourse-item-title">
                   Bulk PDFs…
                 </span>
-                <span className="fishbones-addcourse-item-hint">
+                <span className="libre-addcourse-item-hint">
                   Queue many books for unattended batch import
                 </span>
               </span>
@@ -155,15 +155,15 @@ export default function AddCourseButton({
             <button
               type="button"
               role="menuitem"
-              className="fishbones-addcourse-item"
+              className="libre-addcourse-item"
               onClick={() => dispatch(onDocsUrl)}
             >
               <Icon icon={globe} size="xs" color="currentColor" />
-              <span className="fishbones-addcourse-item-body">
-                <span className="fishbones-addcourse-item-title">
+              <span className="libre-addcourse-item-body">
+                <span className="libre-addcourse-item-title">
                   From docs URL…
                 </span>
-                <span className="fishbones-addcourse-item-hint">
+                <span className="libre-addcourse-item-hint">
                   Crawl a documentation site and generate a course
                 </span>
               </span>
@@ -173,16 +173,16 @@ export default function AddCourseButton({
             <button
               type="button"
               role="menuitem"
-              className="fishbones-addcourse-item"
+              className="libre-addcourse-item"
               onClick={() => dispatch(onArchive)}
             >
               <Icon icon={filePlus} size="xs" color="currentColor" />
-              <span className="fishbones-addcourse-item-body">
-                <span className="fishbones-addcourse-item-title">
+              <span className="libre-addcourse-item-body">
+                <span className="libre-addcourse-item-title">
                   Import archive…
                 </span>
-                <span className="fishbones-addcourse-item-hint">
-                  .academy / .fishbones / .kata exports (also handled by the smart picker)
+                <span className="libre-addcourse-item-hint">
+                  .academy / .libre / .kata exports (also handled by the smart picker)
                 </span>
               </span>
             </button>
@@ -191,15 +191,15 @@ export default function AddCourseButton({
             <button
               type="button"
               role="menuitem"
-              className="fishbones-addcourse-item"
+              className="libre-addcourse-item"
               onClick={() => dispatch(onBrowseCatalog)}
             >
               <Icon icon={libraryBig} size="xs" color="currentColor" />
-              <span className="fishbones-addcourse-item-body">
-                <span className="fishbones-addcourse-item-title">
+              <span className="libre-addcourse-item-body">
+                <span className="libre-addcourse-item-title">
                   Browse catalog…
                 </span>
-                <span className="fishbones-addcourse-item-hint">
+                <span className="libre-addcourse-item-hint">
                   Search and install books from the Libre library
                 </span>
               </span>

@@ -71,7 +71,7 @@ export interface SkillTree {
   /// learner has an obvious on-ramp.
   audience: "beginner" | "specialty";
   /// Visual accent — a hex string used for the tree's card border,
-  /// node ring, and progress bar. Picked from the Fishbones cover
+  /// node ring, and progress bar. Picked from the Libre cover
   /// palette so each tree has a distinct identity in the shelf.
   accent: string;
   nodes: readonly SkillNode[];

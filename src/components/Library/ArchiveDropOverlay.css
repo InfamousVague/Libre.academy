@@ -4,7 +4,7 @@
 
 /* --- Drop target (during drag) ------------------------------------ */
 
-.fishbones-archive-drop {
+.libre-archive-drop {
   position: fixed;
   inset: 0;
   /* Stack above the app shell + every modal except the topmost
@@ -31,13 +31,13 @@
   -webkit-backdrop-filter: blur(4px);
 }
 
-.fishbones-archive-drop--active {
+.libre-archive-drop--active {
   opacity: 1;
   visibility: visible;
   transition: opacity 140ms ease, visibility 0s linear 0s;
 }
 
-.fishbones-archive-drop__panel {
+.libre-archive-drop__panel {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -56,11 +56,11 @@
   transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.fishbones-archive-drop--active .fishbones-archive-drop__panel {
+.libre-archive-drop--active .libre-archive-drop__panel {
   transform: scale(1);
 }
 
-.fishbones-archive-drop__icon {
+.libre-archive-drop__icon {
   width: 48px;
   height: 48px;
   display: grid;
@@ -71,19 +71,19 @@
   box-shadow: 0 0 0 1px rgba(124, 92, 255, 0.25) inset;
 }
 
-.fishbones-archive-drop__title {
+.libre-archive-drop__title {
   font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.015em;
   color: var(--color-text-primary, rgba(255, 255, 255, 0.96));
 }
 
-.fishbones-archive-drop__sub {
+.libre-archive-drop__sub {
   font-size: 13px;
   color: var(--color-text-tertiary, rgba(255, 255, 255, 0.6));
 }
 
-.fishbones-archive-drop__sub code {
+.libre-archive-drop__sub code {
   font-family: var(--font-mono, "SF Mono", "JetBrains Mono", monospace);
   font-size: 12px;
   padding: 1px 5px;
@@ -95,7 +95,7 @@
 
 /* --- Progress toast (after drop, during import) ------------------- */
 
-.fishbones-archive-toast {
+.libre-archive-toast {
   position: fixed;
   bottom: 24px;
   left: 50%;
@@ -118,38 +118,38 @@
   backdrop-filter: blur(8px) saturate(140%);
   -webkit-backdrop-filter: blur(8px) saturate(140%);
   /* Slide-in from below; mirrors macOS-style notifications. */
-  animation: fishbones-archive-toast-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: libre-archive-toast-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@keyframes fishbones-archive-toast-in {
+@keyframes libre-archive-toast-in {
   from { opacity: 0; transform: translate(-50%, 12px); }
   to { opacity: 1; transform: translate(-50%, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fishbones-archive-drop,
-  .fishbones-archive-drop__panel,
-  .fishbones-archive-toast {
+  .libre-archive-drop,
+  .libre-archive-drop__panel,
+  .libre-archive-toast {
     transition: none;
     animation: none;
   }
 }
 
-.fishbones-archive-toast__icon {
+.libre-archive-toast__icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: var(--color-text-secondary, rgba(255, 255, 255, 0.78));
 }
 
-.fishbones-archive-toast__label {
+.libre-archive-toast__label {
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.005em;
 }
 
 /* Inline progress bar — sits as a thin sliver under the pill so it
    reads as a quiet completion indicator, not a UI focus stealer. */
-.fishbones-archive-toast__bar {
+.libre-archive-toast__bar {
   position: absolute;
   left: 12px;
   right: 12px;
@@ -160,7 +160,7 @@
   background: rgba(255, 255, 255, 0.08);
 }
 
-.fishbones-archive-toast__bar::after {
+.libre-archive-toast__bar::after {
   content: "";
   position: absolute;
   left: 0;

@@ -803,7 +803,7 @@ function BlocksViewInner({
           stamping `width: 48%` onto `.m-lesson__body` — collapsing the
           whole blocks experience into half the screen. `fillWidth`
           lets the Workbench claim 100%, and the matching mobile CSS
-          override on `.fishbones-workbench` drops the floating-card
+          override on `.libre-workbench` drops the floating-card
           chrome so it reads as edge-to-edge content. */}
       <Workbench
         widthControlsParent={!isMobile}

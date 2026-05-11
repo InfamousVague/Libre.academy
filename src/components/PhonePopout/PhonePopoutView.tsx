@@ -60,10 +60,10 @@ export default function PhonePopoutView() {
   }, [scope]);
 
   return (
-    <div className="fishbones-phone-popout-root">
+    <div className="libre-phone-popout-root">
       <PhoneFrame carrier="FISH">
         {state.kind === "empty" && (
-          <div className="fishbones-phone-frame-placeholder">
+          <div className="libre-phone-frame-placeholder">
             <span>
               run your code to see it here
               <br />
@@ -72,30 +72,30 @@ export default function PhonePopoutView() {
           </div>
         )}
         {state.kind === "running" && (
-          <div className="fishbones-phone-frame-placeholder">
+          <div className="libre-phone-frame-placeholder">
             <span>running…</span>
           </div>
         )}
         {state.kind === "preview" && (
           <iframe
-            className="fishbones-phone-frame-iframe"
+            className="libre-phone-frame-iframe"
             title="React Native preview"
             src={state.url}
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
           />
         )}
         {state.kind === "console" && (
-          <div className="fishbones-phone-frame-console">
+          <div className="libre-phone-frame-console">
             {state.logs.map((line, i) => (
               <div
                 key={`popped-phone-log-${i}`}
-                className={`fishbones-phone-frame-console-line fishbones-phone-frame-console-line--${line.level}`}
+                className={`libre-phone-frame-console-line libre-phone-frame-console-line--${line.level}`}
               >
                 {line.text}
               </div>
             ))}
             {state.error && (
-              <pre className="fishbones-phone-frame-console-error-block">
+              <pre className="libre-phone-frame-console-error-block">
                 {state.error}
               </pre>
             )}

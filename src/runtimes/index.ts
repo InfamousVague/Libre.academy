@@ -51,7 +51,7 @@ const DESKTOP_ONLY_REASONS: Record<string, string> = {
 /// Desktop-only runtimes (Swift, the native-toolchain pack, SvelteKit's
 /// Node sidecar) are loaded via dynamic import so Vite chunk-splits
 /// them into their own lazy bundles. Two benefits:
-///   1. The web build (FISHBONES_TARGET=web) doesn't pull these into
+///   1. The web build (LIBRE_TARGET=web) doesn't pull these into
 ///      the main chunk; once Phase 3 lands the runtime gate, the
 ///      lazy chunks are also never fetched on web. Even before the
 ///      gate, the chunks just sit unused unless the learner clicks

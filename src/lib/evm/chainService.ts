@@ -108,7 +108,7 @@ const FAUCET_AMOUNT_WEI = 100n * 10n ** 18n; // +100 ETH per click
 /// matches what real testnet faucets do, lets the learner build
 /// muscle memory without making test flow annoying.
 const FAUCET_COOLDOWN_MS = 5 * 60 * 1000;
-const FAUCET_KEY_PREFIX = "fishbones:evm-faucet:";
+const FAUCET_KEY_PREFIX = "libre:evm-faucet:";
 const RECENT_TXS_LIMIT = 30;
 const RECENT_CONTRACTS_LIMIT = 20;
 

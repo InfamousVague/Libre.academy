@@ -1,6 +1,6 @@
 # Catalog deployment
 
-Fishbones now ships with a small **core** set of bundled courses (Rust Book, Learning Go, all 13 challenge packs) and treats every other book as a **remote** placeholder the user installs on demand.
+Libre now ships with a small **core** set of bundled courses (Rust Book, Learning Go, all 13 challenge packs) and treats every other book as a **remote** placeholder the user installs on demand.
 
 This doc covers the server side: what files to host, where, and how the client finds them.
 
@@ -21,15 +21,15 @@ public/starter-courses/
 ├── ...
 ```
 
-**Plus** the original `.fishbones` archives in `src-tauri/resources/bundled-packs/` (47 files, ~145 MB total). The desktop app downloads these directly when a user clicks Install on a remote placeholder.
+**Plus** the original `.libre` archives in `src-tauri/resources/bundled-packs/` (47 files, ~145 MB total). The desktop app downloads these directly when a user clicks Install on a remote placeholder.
 
 You need **two upload buckets** (or one with two prefixes):
 
 | Path | Contents | Size | Purpose |
 |---|---|---|---|
-| `https://mattssoftware.com/fishbones/catalog/manifest.json` | Manifest JSON | ~30 KB | Desktop catalog fetch |
-| `https://mattssoftware.com/fishbones/catalog/<id>.jpg` | Cover thumbnails | ~1 MB total | Desktop placeholder cover lookup |
-| `https://mattssoftware.com/fishbones/courses/<id>.fishbones` | Original .fishbones archives | ~145 MB total | Desktop install download |
+| `https://mattssoftware.com/libre/catalog/manifest.json` | Manifest JSON | ~30 KB | Desktop catalog fetch |
+| `https://mattssoftware.com/libre/catalog/<id>.jpg` | Cover thumbnails | ~1 MB total | Desktop placeholder cover lookup |
+| `https://mattssoftware.com/libre/courses/<id>.libre` | Original .libre archives | ~145 MB total | Desktop install download |
 
 Web build uses same-origin paths under `/starter-courses/` — no remote hosting needed for web users; these CDN paths are desktop-only.
 
@@ -37,16 +37,16 @@ Web build uses same-origin paths under `/starter-courses/` — no remote hosting
 
 ## URL configuration
 
-The default catalog URL is **`https://mattssoftware.com/fishbones/catalog/manifest.json`** (web build uses same-origin instead — `/<base>/starter-courses/manifest.json`).
+The default catalog URL is **`https://mattssoftware.com/libre/catalog/manifest.json`** (web build uses same-origin instead — `/<base>/starter-courses/manifest.json`).
 
 Override at build time:
 
 ```bash
 # At extract-time, sets the per-course archiveUrl in the manifest
-FISHBONES_CATALOG_BASE_URL=https://your-cdn.example.com/fishbones/courses npm run starter:web
+LIBRE_CATALOG_BASE_URL=https://your-cdn.example.com/libre/courses npm run starter:web
 
 # At runtime (Vite env), overrides where the app FETCHES the catalog from
-FISHBONES_CATALOG_URL=https://your-cdn.example.com/fishbones/catalog/manifest.json npm run build
+LIBRE_CATALOG_URL=https://your-cdn.example.com/libre/catalog/manifest.json npm run build
 ```
 
 Both vars accept any HTTPS URL. The app refuses to download from non-HTTPS (the Rust command guards on the `archive_url` prefix).
@@ -61,12 +61,12 @@ The simplest path: a single `aws s3 sync` (or equivalent for your provider).
 # After `npm run build:web` finishes…
 
 # Catalog + per-course JSON + covers (~16 MB)
-aws s3 sync public/starter-courses/ s3://your-bucket/fishbones/catalog/ \
+aws s3 sync public/starter-courses/ s3://your-bucket/libre/catalog/ \
   --acl public-read \
   --cache-control "public, max-age=300"
 
-# .fishbones archives (~145 MB; only changes when you re-pack a course)
-aws s3 sync src-tauri/resources/bundled-packs/ s3://your-bucket/fishbones/courses/ \
+# .libre archives (~145 MB; only changes when you re-pack a course)
+aws s3 sync src-tauri/resources/bundled-packs/ s3://your-bucket/libre/courses/ \
   --acl public-read \
   --cache-control "public, max-age=86400" \
   --exclude "README.md"
@@ -92,9 +92,9 @@ Otherwise the desktop app's catalog fetch + cover image loads will be blocked.
 
 ## Adding a new bundled book
 
-1. Drop the `.fishbones` archive into `src-tauri/resources/bundled-packs/`
+1. Drop the `.libre` archive into `src-tauri/resources/bundled-packs/`
 2. Add the id to `ALL_PACK_IDS` in `scripts/course-tiers.mjs`
-3. **If core** (always installed): also add to `CORE_PACK_IDS` AND add the matching `resources/bundled-packs/<id>.fishbones` line to `tauri.conf.json` `resources`
+3. **If core** (always installed): also add to `CORE_PACK_IDS` AND add the matching `resources/bundled-packs/<id>.libre` line to `tauri.conf.json` `resources`
 4. Run `npm run starter:web` to regenerate the manifest
 5. Re-upload (`s3 sync` again) — only the new files will transfer
 
@@ -104,9 +104,9 @@ The client picks up the new entry automatically on the next library mount (catal
 
 ## Rolling out an update to an existing book
 
-1. Re-pack the `.fishbones` (e.g. via the in-app verifier's "Promote to bundled")
+1. Re-pack the `.libre` (e.g. via the in-app verifier's "Promote to bundled")
 2. Run `npm run starter:web`
-3. Upload new `manifest.json` + `<id>.json` + `<id>.fishbones`
+3. Upload new `manifest.json` + `<id>.json` + `<id>.libre`
 
 Users who already have it installed will see the **update available** badge on the cover (the `bundleSha` comparison from the earlier work). One click reapplies.
 
@@ -120,4 +120,4 @@ Users who already have it installed will see the **update available** badge on t
 
 If hosting cost becomes an issue, swap to:
 - **Cloudflare R2** — zero egress fees
-- **GitHub Releases** — host `.fishbones` archives as release assets, free public bandwidth (point `FISHBONES_CATALOG_BASE_URL` at the release URL)
+- **GitHub Releases** — host `.libre` archives as release assets, free public bandwidth (point `LIBRE_CATALOG_BASE_URL` at the release URL)

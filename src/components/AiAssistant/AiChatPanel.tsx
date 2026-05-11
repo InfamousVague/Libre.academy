@@ -13,7 +13,7 @@ import type {
   InstallResult,
 } from "../../hooks/useAiChat";
 import { renderMarkdown } from "../Lesson/markdown";
-import FishbonesLoader from "../Shared/FishbonesLoader";
+import LibreLoader from "../Shared/LibreLoader";
 import "./AiChatPanel.css";
 
 interface Props {
@@ -99,19 +99,19 @@ export default function AiChatPanel({
 
   return (
     <aside
-      className={`fishbones-ai-panel ${open ? "is-open" : ""}`}
+      className={`libre-ai-panel ${open ? "is-open" : ""}`}
       role="complementary"
       aria-label="Local assistant"
       aria-hidden={!open}
     >
-      <div className="fishbones-ai-panel-header">
-        <div className="fishbones-ai-panel-title">
-          <span>Ask Fishbones</span>
+      <div className="libre-ai-panel-header">
+        <div className="libre-ai-panel-title">
+          <span>Ask Libre</span>
         </div>
-        <div className="fishbones-ai-panel-header-actions">
+        <div className="libre-ai-panel-header-actions">
           {messages.length > 0 && (
             <button
-              className="fishbones-ai-panel-reset"
+              className="libre-ai-panel-reset"
               onClick={onReset}
               disabled={streaming}
               title="Clear this conversation"
@@ -120,7 +120,7 @@ export default function AiChatPanel({
             </button>
           )}
           <button
-            className="fishbones-ai-panel-close"
+            className="libre-ai-panel-close"
             onClick={onClose}
             aria-label="Close assistant"
           >
@@ -130,9 +130,9 @@ export default function AiChatPanel({
       </div>
 
       {contextLabel && (
-        <div className="fishbones-ai-panel-context" title={contextLabel}>
-          <span className="fishbones-ai-panel-context-label">Context:</span>{" "}
-          <span className="fishbones-ai-panel-context-value">{contextLabel}</span>
+        <div className="libre-ai-panel-context" title={contextLabel}>
+          <span className="libre-ai-panel-context-label">Context:</span>{" "}
+          <span className="libre-ai-panel-context-value">{contextLabel}</span>
         </div>
       )}
 
@@ -151,7 +151,7 @@ export default function AiChatPanel({
         />
       )}
 
-      <div className="fishbones-ai-panel-body" ref={scrollerRef}>
+      <div className="libre-ai-panel-body" ref={scrollerRef}>
         {messages.length === 0 && probeOk(probe) && (
           <EmptyHint onPick={(p) => { setDraft(p); inputRef.current?.focus(); }} />
         )}
@@ -163,14 +163,14 @@ export default function AiChatPanel({
           />
         ))}
         {error && (
-          <div className="fishbones-ai-panel-error" role="alert">
+          <div className="libre-ai-panel-error" role="alert">
             {error}
           </div>
         )}
       </div>
 
       <form
-        className="fishbones-ai-panel-composer"
+        className="libre-ai-panel-composer"
         onSubmit={(e) => {
           e.preventDefault();
           submit();
@@ -178,7 +178,7 @@ export default function AiChatPanel({
       >
         <textarea
           ref={inputRef}
-          className="fishbones-ai-panel-input"
+          className="libre-ai-panel-input"
           value={draft}
           onChange={(e) => {
             setDraft(e.target.value);
@@ -210,7 +210,7 @@ export default function AiChatPanel({
         />
         <button
           type="submit"
-          className="fishbones-ai-panel-send"
+          className="libre-ai-panel-send"
           disabled={!canSend}
         >
           {streaming ? "…" : "Send"}
@@ -262,8 +262,8 @@ function SetupBanner({
 
   if (!probe) {
     return (
-      <div className="fishbones-ai-panel-setup">
-        <FishbonesLoader label="Probing local assistant" size="sm" />
+      <div className="libre-ai-panel-setup">
+        <LibreLoader label="Probing local assistant" size="sm" />
       </div>
     );
   }
@@ -275,24 +275,24 @@ function SetupBanner({
   // 1. ollama binary missing → install
   if (installStatus && !installStatus.ollamaInstalled) {
     return (
-      <div className="fishbones-ai-panel-setup">
-        <div className="fishbones-ai-panel-setup-title">
+      <div className="libre-ai-panel-setup">
+        <div className="libre-ai-panel-setup-title">
           Install the local assistant
         </div>
         <p>
-          Fishbones uses Ollama to run a small coding model on your own
+          Libre uses Ollama to run a small coding model on your own
           machine. No API keys, no usage fees — but it has to be
           installed once.
         </p>
         {!installStatus.homebrewInstalled ? (
           <>
-            <p className="fishbones-ai-panel-setup-note">
+            <p className="libre-ai-panel-setup-note">
               Homebrew isn't installed yet. Paste this into Terminal,
               then come back:
             </p>
-            <pre className="fishbones-ai-panel-setup-cmd">{`/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`}</pre>
+            <pre className="libre-ai-panel-setup-cmd">{`/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`}</pre>
             <button
-              className="fishbones-ai-panel-setup-retry"
+              className="libre-ai-panel-setup-retry"
               onClick={onRetry}
             >
               I've installed Homebrew
@@ -300,9 +300,9 @@ function SetupBanner({
           </>
         ) : (
           <>
-            <pre className="fishbones-ai-panel-setup-cmd">brew install ollama</pre>
+            <pre className="libre-ai-panel-setup-cmd">brew install ollama</pre>
             <button
-              className="fishbones-ai-panel-setup-primary"
+              className="libre-ai-panel-setup-primary"
               onClick={() => void wrap(onInstallOllama)}
               disabled={busy}
             >
@@ -318,28 +318,28 @@ function SetupBanner({
   // 2. binary present but daemon unreachable → start
   if (!probe.reachable) {
     return (
-      <div className="fishbones-ai-panel-setup">
-        <div className="fishbones-ai-panel-setup-title">
+      <div className="libre-ai-panel-setup">
+        <div className="libre-ai-panel-setup-title">
           Start the local assistant
         </div>
         <p>
-          Ollama is installed but isn't running yet. Fishbones can
+          Ollama is installed but isn't running yet. Libre can
           start it as a background service so it stays up across
           restarts.
         </p>
-        <pre className="fishbones-ai-panel-setup-cmd">brew services start ollama</pre>
+        <pre className="libre-ai-panel-setup-cmd">brew services start ollama</pre>
         <button
-          className="fishbones-ai-panel-setup-primary"
+          className="libre-ai-panel-setup-primary"
           onClick={() => void wrap(onStartOllama)}
           disabled={busy}
         >
           {busy ? "Starting…" : "Start Ollama"}
         </button>
         {probe.error && (
-          <p className="fishbones-ai-panel-setup-err">{probe.error}</p>
+          <p className="libre-ai-panel-setup-err">{probe.error}</p>
         )}
         <ResultLog result={lastResult} />
-        <button className="fishbones-ai-panel-setup-retry" onClick={onRetry}>
+        <button className="libre-ai-panel-setup-retry" onClick={onRetry}>
           Retry probe
         </button>
       </div>
@@ -348,30 +348,30 @@ function SetupBanner({
 
   // 3. reachable but missing the default model → pull
   return (
-    <div className="fishbones-ai-panel-setup">
-      <div className="fishbones-ai-panel-setup-title">
+    <div className="libre-ai-panel-setup">
+      <div className="libre-ai-panel-setup-title">
         Download the coding model
       </div>
       <p>
-        One-time ~4 GB download. You can keep using Fishbones in the
+        One-time ~4 GB download. You can keep using Libre in the
         meantime — the button below kicks off the pull and the panel
         unlocks when it finishes.
       </p>
-      <pre className="fishbones-ai-panel-setup-cmd">ollama pull qwen2.5-coder:7b</pre>
+      <pre className="libre-ai-panel-setup-cmd">ollama pull qwen2.5-coder:7b</pre>
       <button
-        className="fishbones-ai-panel-setup-primary"
+        className="libre-ai-panel-setup-primary"
         onClick={() => void wrap(onPullModel)}
         disabled={busy}
       >
         {busy ? "Downloading…" : "Download model"}
       </button>
-      <p className="fishbones-ai-panel-setup-note">
+      <p className="libre-ai-panel-setup-note">
         On 16 GB RAM or less, swap the model name to{" "}
         <code>qwen2.5-coder:3b</code> from the Settings panel for a
         faster (slightly weaker) variant.
       </p>
       <ResultLog result={lastResult} />
-      <button className="fishbones-ai-panel-setup-retry" onClick={onRetry}>
+      <button className="libre-ai-panel-setup-retry" onClick={onRetry}>
         Retry probe
       </button>
     </div>
@@ -391,7 +391,7 @@ function ResultLog({ result }: { result: InstallResult | null }) {
   const lines = tail.split("\n").slice(-12).join("\n");
   return (
     <pre
-      className={`fishbones-ai-panel-setup-log ${
+      className={`libre-ai-panel-setup-log ${
         result.success ? "is-ok" : "is-fail"
       }`}
     >
@@ -407,20 +407,20 @@ function EmptyHint({ onPick }: { onPick: (prompt: string) => void }) {
     "Walk me through the solution step by step.",
   ];
   return (
-    <div className="fishbones-ai-panel-empty">
-      <div className="fishbones-ai-panel-empty-title">
+    <div className="libre-ai-panel-empty">
+      <div className="libre-ai-panel-empty-title">
         Hi — I'm your local tutor.
       </div>
       <p>
         I run entirely on your machine and know the lesson you're on. Try
         one of these, or ask anything:
       </p>
-      <div className="fishbones-ai-panel-empty-chips">
+      <div className="libre-ai-panel-empty-chips">
         {prompts.map((p) => (
           <button
             key={p}
             type="button"
-            className="fishbones-ai-panel-empty-chip"
+            className="libre-ai-panel-empty-chip"
             onClick={() => onPick(p)}
           >
             {p}
@@ -451,14 +451,14 @@ function Bubble({
     <Card
       variant={variant}
       padding="sm"
-      className={`fishbones-ai-bubble fishbones-ai-bubble--${message.role} ${
+      className={`libre-ai-bubble libre-ai-bubble--${message.role} ${
         streaming ? "is-streaming" : ""
       }`}
     >
       {message.role === "assistant" ? (
         <AssistantBody content={message.content} streaming={streaming} />
       ) : (
-        <div className="fishbones-ai-bubble-text">{message.content}</div>
+        <div className="libre-ai-bubble-text">{message.content}</div>
       )}
     </Card>
   );
@@ -489,19 +489,19 @@ function AssistantBody({
 
   if (streaming) {
     return (
-      <div className="fishbones-ai-bubble-stream">
-        {content || <span className="fishbones-ai-bubble-caret" />}
+      <div className="libre-ai-bubble-stream">
+        {content || <span className="libre-ai-bubble-caret" />}
       </div>
     );
   }
   if (!html) {
     // Initial mount between "done streaming" and "markdown pass
     // settled" — show the raw text so the transition isn't jumpy.
-    return <div className="fishbones-ai-bubble-stream">{content}</div>;
+    return <div className="libre-ai-bubble-stream">{content}</div>;
   }
   return (
     <div
-      className="fishbones-ai-bubble-markdown"
+      className="libre-ai-bubble-markdown"
       // Markdown output comes from our own renderer (trusted) and is
       // already escaped there; dangerously set is intentional.
       dangerouslySetInnerHTML={{ __html: html }}

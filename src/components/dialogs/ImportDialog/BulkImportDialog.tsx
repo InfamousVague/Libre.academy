@@ -220,17 +220,17 @@ export default function BulkImportDialog({ onDismiss, onStartQueue }: Props) {
 
   return (
     <ModalBackdrop onDismiss={onDismiss} zIndex={110}>
-      <div className="fishbones-bulk-panel">
-        <div className="fishbones-bulk-header">
+      <div className="libre-bulk-panel">
+        <div className="libre-bulk-header">
           <div>
-            <div className="fishbones-bulk-kicker">Bulk import</div>
-            <div className="fishbones-bulk-title">
+            <div className="libre-bulk-kicker">Bulk import</div>
+            <div className="libre-bulk-title">
               Queue multiple books
             </div>
           </div>
           <button
             type="button"
-            className="fishbones-bulk-close"
+            className="libre-bulk-close"
             onClick={onDismiss}
             aria-label="Close"
           >
@@ -238,10 +238,10 @@ export default function BulkImportDialog({ onDismiss, onStartQueue }: Props) {
           </button>
         </div>
 
-        <div className="fishbones-bulk-body">
+        <div className="libre-bulk-body">
           {items.length === 0 ? (
-            <div className="fishbones-bulk-empty">
-              <p className="fishbones-bulk-empty-blurb">
+            <div className="libre-bulk-empty">
+              <p className="libre-bulk-empty-blurb">
                 Pick one or more PDFs or EPUBs. We'll auto-detect the title,
                 author, and programming language for each, then queue them
                 up for unattended processing. Failures in one book don't
@@ -249,7 +249,7 @@ export default function BulkImportDialog({ onDismiss, onStartQueue }: Props) {
               </p>
               <button
                 type="button"
-                className="fishbones-bulk-primary"
+                className="libre-bulk-primary"
                 onClick={pickFiles}
               >
                 Choose books…
@@ -257,41 +257,41 @@ export default function BulkImportDialog({ onDismiss, onStartQueue }: Props) {
             </div>
           ) : (
             <>
-              <div className="fishbones-bulk-summary">
+              <div className="libre-bulk-summary">
                 {items.length} book{items.length === 1 ? "" : "s"}{" "}
                 {detecting ? (
-                  <span className="fishbones-bulk-summary-hint">
+                  <span className="libre-bulk-summary-hint">
                     · detecting metadata…
                   </span>
                 ) : (
-                  <span className="fishbones-bulk-summary-hint">
+                  <span className="libre-bulk-summary-hint">
                     · ready to queue
                   </span>
                 )}
                 <button
                   type="button"
-                  className="fishbones-bulk-add"
+                  className="libre-bulk-add"
                   onClick={pickFiles}
                 >
                   Add more…
                 </button>
               </div>
 
-              <div className="fishbones-bulk-list">
+              <div className="libre-bulk-list">
                 {items.map((r) => (
                   <div
                     key={r.pdfPath}
-                    className={`fishbones-bulk-row fishbones-bulk-row--${r.status}`}
+                    className={`libre-bulk-row libre-bulk-row--${r.status}`}
                   >
-                    <div className="fishbones-bulk-row-file">
-                      <span className="fishbones-bulk-row-filename" title={r.pdfPath}>
+                    <div className="libre-bulk-row-file">
+                      <span className="libre-bulk-row-filename" title={r.pdfPath}>
                         {r.filename}
                       </span>
-                      <span className="fishbones-bulk-row-status">
+                      <span className="libre-bulk-row-status">
                         {r.status === "detecting" && (
                           <>
                             <span
-                              className="fishbones-bulk-row-spinner"
+                              className="libre-bulk-row-spinner"
                               aria-hidden
                             />
                             detecting
@@ -299,14 +299,14 @@ export default function BulkImportDialog({ onDismiss, onStartQueue }: Props) {
                         )}
                         {r.status === "ready" && "ready"}
                         {r.status === "error" && (
-                          <span className="fishbones-bulk-row-errtag">
+                          <span className="libre-bulk-row-errtag">
                             detect failed
                           </span>
                         )}
                       </span>
                       <button
                         type="button"
-                        className="fishbones-bulk-row-remove"
+                        className="libre-bulk-row-remove"
                         onClick={() => removeItem(r.pdfPath)}
                         title="Remove from queue"
                         aria-label="Remove"
@@ -314,21 +314,21 @@ export default function BulkImportDialog({ onDismiss, onStartQueue }: Props) {
                         ×
                       </button>
                     </div>
-                    <div className="fishbones-bulk-row-grid">
-                      <label className="fishbones-bulk-row-field">
+                    <div className="libre-bulk-row-grid">
+                      <label className="libre-bulk-row-field">
                         <span>Title</span>
                         <input
-                          className="fishbones-bulk-row-input"
+                          className="libre-bulk-row-input"
                           value={r.title}
                           onChange={(e) =>
                             updateField(r.pdfPath, "title", e.target.value)
                           }
                         />
                       </label>
-                      <label className="fishbones-bulk-row-field">
+                      <label className="libre-bulk-row-field">
                         <span>Author</span>
                         <input
-                          className="fishbones-bulk-row-input"
+                          className="libre-bulk-row-input"
                           value={r.author}
                           placeholder="optional"
                           onChange={(e) =>
@@ -336,10 +336,10 @@ export default function BulkImportDialog({ onDismiss, onStartQueue }: Props) {
                           }
                         />
                       </label>
-                      <label className="fishbones-bulk-row-field fishbones-bulk-row-field--narrow">
+                      <label className="libre-bulk-row-field libre-bulk-row-field--narrow">
                         <span>Language</span>
                         <select
-                          className="fishbones-bulk-row-input fishbones-bulk-row-langselect"
+                          className="libre-bulk-row-input libre-bulk-row-langselect"
                           value={r.language}
                           onChange={(e) =>
                             updateLanguage(
@@ -362,26 +362,26 @@ export default function BulkImportDialog({ onDismiss, onStartQueue }: Props) {
             </>
           )}
 
-          {error && <div className="fishbones-bulk-error">{error}</div>}
+          {error && <div className="libre-bulk-error">{error}</div>}
         </div>
 
         {items.length > 0 && (
-          <div className="fishbones-bulk-footer">
-            <div className="fishbones-bulk-footer-hint">
+          <div className="libre-bulk-footer">
+            <div className="libre-bulk-footer-hint">
               Queue runs one book at a time. A failure is logged and the
               next book starts automatically.
             </div>
-            <div className="fishbones-bulk-footer-actions">
+            <div className="libre-bulk-footer-actions">
               <button
                 type="button"
-                className="fishbones-bulk-secondary"
+                className="libre-bulk-secondary"
                 onClick={onDismiss}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className="fishbones-bulk-primary"
+                className="libre-bulk-primary"
                 onClick={handleStart}
                 disabled={!startable}
               >

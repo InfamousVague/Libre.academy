@@ -9,7 +9,7 @@
 ///   {
 ///     "version": 2,
 ///     "generatedAt": "2026-04-30T...",
-///     "archiveBaseUrl": "https://mattssoftware.com/fishbones/courses",
+///     "archiveBaseUrl": "https://mattssoftware.com/libre/courses",
 ///     "courses": [
 ///       {
 ///         "id": "the-rust-programming-language",
@@ -20,8 +20,8 @@
 ///         "file": "the-rust-programming-language.json",
 ///         "cover": "the-rust-programming-language.jpg",
 ///         "sizeBytes": 1234567,         // unzipped course.json size
-///         "archiveSizeBytes": 234567,    // .fishbones archive size
-///         "archiveUrl": "https://...   /the-rust-programming-language.fishbones",
+///         "archiveSizeBytes": 234567,    // .libre archive size
+///         "archiveUrl": "https://...   /the-rust-programming-language.libre",
 ///         "tier": "core" | "remote",
 ///         "packType": "course" | "challenges",
 ///         "releaseStatus": "BETA" | "ALPHA" | "UNREVIEWED",
@@ -55,13 +55,13 @@ export interface CatalogEntry {
   cover?: string;
   sizeBytes: number;
   archiveSizeBytes: number;
-  /// Full URL to the .fishbones archive on the catalog host. Used
+  /// Full URL to the .libre archive on the catalog host. Used
   /// by the desktop downloader when `localPath` is unset (i.e.
   /// remote catalogs). Empty string for entries that ship inside
   /// the desktop binary's bundled-packs/ — those install from the
   /// local archive without a network round-trip.
   archiveUrl: string;
-  /// Filesystem path to the .fishbones archive when this entry is
+  /// Filesystem path to the .libre archive when this entry is
   /// already shipped inside the desktop binary (populated by the
   /// `list_bundled_catalog_entries` Tauri command). The install
   /// handler prefers this over `archiveUrl` — no network needed,
@@ -88,9 +88,9 @@ interface CatalogJson {
 /// Default catalog URLs by build target. Web fetches same-origin
 /// (the manifest sits next to the per-course JSON files); desktop
 /// hits a remote host. Override either with the
-/// `FISHBONES_CATALOG_URL` env var at build time.
+/// `LIBRE_CATALOG_URL` env var at build time.
 const CATALOG_URL_OVERRIDE = (
-  import.meta.env.FISHBONES_CATALOG_URL as string | undefined
+  import.meta.env.LIBRE_CATALOG_URL as string | undefined
 )?.trim();
 
 function defaultCatalogUrl(): string {
@@ -99,7 +99,7 @@ function defaultCatalogUrl(): string {
     const base = (import.meta.env.BASE_URL ?? "/").replace(/\/?$/, "/");
     return `${base}starter-courses/manifest.json`;
   }
-  return "https://mattssoftware.com/fishbones/catalog/manifest.json";
+  return "https://mattssoftware.com/libre/catalog/manifest.json";
 }
 
 let cachedPromise: Promise<CatalogEntry[]> | null = null;
@@ -203,7 +203,7 @@ function writePersistedCatalog(entries: CatalogEntry[]): void {
 /// settled — see `readPersistedCatalog`.
 ///
 /// Desktop: invokes the Tauri `list_bundled_catalog_entries` command,
-/// which enumerates `.fishbones` archives shipped under
+/// which enumerates `.libre` archives shipped under
 /// `src-tauri/resources/bundled-packs/` and reads their per-archive
 /// metadata. No server needed — the catalog IS the bundled
 /// archives, every entry is already on disk and installs locally.
@@ -224,7 +224,7 @@ export function fetchCatalog(opts: { refresh?: boolean } = {}): Promise<
   }
   // Always dedupe-by-id at the layer boundary. Desktop's
   // `list_bundled_catalog_entries` is supposed to walk one directory,
-  // but a renamed archive (e.g. someone copied a .fishbones to a new
+  // but a renamed archive (e.g. someone copied a .libre to a new
   // filename without changing the inner course.json id) silently
   // produces two rows with the same id — the Discover grid would
   // then show two tiles for the same install. Web fetches a single
@@ -358,7 +358,7 @@ async function fetchDesktopCatalog(): Promise<CatalogEntry[]> {
       // Stamp `hidden: true` on entries the bundle ships but we don't
       // want surfaced in Discover. The catalog's `.filter(e => !e.hidden)`
       // step (in fetchCatalog above) drops them; install via direct
-      // lesson URL or `.fishbones` import still works.
+      // lesson URL or `.libre` import still works.
       ...(HIDDEN_DESKTOP_PACK_IDS.has(r.id) ? { hidden: true } : {}),
     }));
   } catch (e) {

@@ -1,5 +1,5 @@
 /* Slim icon-only navigation rail. Lives at the left edge of
-   `.fishbones__body`, between the viewport edge and the floating
+   `.libre__body`, between the viewport edge and the floating
    sidebar. Same frosted-glass vocabulary as the sidebar so the two
    surfaces read as a paired pair-of-panels rather than competing
    chrome. The rail stays visible when the sidebar collapses, so
@@ -7,13 +7,13 @@
    infrastructure cluster (Settings + sidebar toggle) remain
    reachable in either state. */
 
-.fishbones-nav-rail {
+.libre-nav-rail {
   /* 56px wide hits the macOS sidebar-icon-rail convention for tap
      targets while leaving the floating course-tree sidebar plenty
      of breathing room. */
   width: 56px;
   flex-shrink: 0;
-  /* Same vertical breathing room as `.fishbones__sidebar` so the
+  /* Same vertical breathing room as `.libre__sidebar` so the
      two surfaces sit on the same baseline. The sidebar's CSS uses
      `margin: 10px 0 10px 10px`; the rail mirrors that on its own
      edge so the inter-rail-and-sidebar gap reads as 10px (not
@@ -49,8 +49,8 @@
 /* Top + bottom clusters — `space-between` on the parent pushes the
    bottom group (Settings + sidebar toggle) to the floor regardless
    of how many top-cluster items render. */
-.fishbones-nav-rail__top,
-.fishbones-nav-rail__bottom {
+.libre-nav-rail__top,
+.libre-nav-rail__bottom {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -60,7 +60,7 @@
 /* `__top` hosts the sliding active-route pill (below) so it needs
    to be a positioning context for the pill's absolute `transform:
    translateY(...)` placement. */
-.fishbones-nav-rail__top {
+.libre-nav-rail__top {
   position: relative;
 }
 
@@ -74,7 +74,7 @@
    doesn't trigger layout. The cubic-bezier matches the easing the
    editor / blocks-mode toggle and the route-fade animation use, so
    the rail's motion language reads as part of the same family. */
-.fishbones-nav-rail__pill {
+.libre-nav-rail__pill {
   position: absolute;
   top: 0;
   /* `__top` is `align-items: center` on the rail, so it's only as
@@ -95,12 +95,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fishbones-nav-rail__pill {
+  .libre-nav-rail__pill {
     transition: none;
   }
 }
 
-.fishbones-nav-rail__item {
+.libre-nav-rail__item {
   width: 40px;
   height: 40px;
   display: inline-flex;
@@ -112,7 +112,7 @@
   color: var(--color-text-secondary);
   cursor: pointer;
   /* `position: relative` + `z-index: 1` lifts the button above the
-     sliding pill (`.fishbones-nav-rail__pill`, z-index: 0) so the
+     sliding pill (`.libre-nav-rail__pill`, z-index: 0) so the
      icon glyph paints on top of the pill's bone-white fill on the
      active button. Color transition matches the pill's slide
      duration so the icon inverts at roughly the same time the pill
@@ -125,27 +125,27 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.fishbones-nav-rail__item:hover {
+.libre-nav-rail__item:hover {
   background: var(--color-bg-tertiary);
   color: var(--color-text-primary);
 }
 
-.fishbones-nav-rail__item:focus-visible {
+.libre-nav-rail__item:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--color-text-primary);
 }
 
 /* Active-route highlight. The bone-white fill is now drawn by the
-   sliding `.fishbones-nav-rail__pill` underneath; this rule only
+   sliding `.libre-nav-rail__pill` underneath; this rule only
    inverts the icon colour to the bg-primary so it reads against the
    pill. Background stays transparent so the pill (z-index: 0) shows
    through the button's z-index: 1 layer. */
-.fishbones-nav-rail__item--active {
+.libre-nav-rail__item--active {
   background: transparent;
   color: var(--color-bg-primary);
 }
 
-.fishbones-nav-rail__item--active:hover {
+.libre-nav-rail__item--active:hover {
   /* Suppress hover bg on the active item — the pill is its bg. */
   background: transparent;
   color: var(--color-bg-primary);
@@ -157,7 +157,7 @@
    inside the rail's column layout — without this the wrapper's
    inline-flex default lets the trigger drift a couple of pixels
    off the rail's centerline. */
-.fishbones-nav-rail .tooltip-trigger {
+.libre-nav-rail .tooltip-trigger {
   display: inline-flex;
   align-items: center;
   justify-content: center;

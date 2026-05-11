@@ -32,21 +32,21 @@ export default function ConfirmDialog({
   return (
     <ModalBackdrop onDismiss={onCancel} zIndex={200}>
       <div
-        className="fishbones-confirm-panel"
+        className="libre-confirm-panel"
         role="alertdialog"
-        aria-labelledby="fishbones-confirm-title"
-        aria-describedby="fishbones-confirm-message"
+        aria-labelledby="libre-confirm-title"
+        aria-describedby="libre-confirm-message"
       >
-        <div className="fishbones-confirm-title" id="fishbones-confirm-title">
+        <div className="libre-confirm-title" id="libre-confirm-title">
           {title}
         </div>
-        <div className="fishbones-confirm-message" id="fishbones-confirm-message">
+        <div className="libre-confirm-message" id="libre-confirm-message">
           {message}
         </div>
-        <div className="fishbones-confirm-actions">
+        <div className="libre-confirm-actions">
           <button
             type="button"
-            className="fishbones-confirm-btn fishbones-confirm-btn--cancel"
+            className="libre-confirm-btn libre-confirm-btn--cancel"
             onClick={onCancel}
             autoFocus
           >
@@ -54,8 +54,8 @@ export default function ConfirmDialog({
           </button>
           <button
             type="button"
-            className={`fishbones-confirm-btn ${
-              danger ? "fishbones-confirm-btn--danger" : "fishbones-confirm-btn--primary"
+            className={`libre-confirm-btn ${
+              danger ? "libre-confirm-btn--danger" : "libre-confirm-btn--primary"
             }`}
             onClick={onConfirm}
           >

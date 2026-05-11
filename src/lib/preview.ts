@@ -24,10 +24,10 @@ import { isWeb } from "./platform";
 
 /// Compute the absolute origin-prefixed root for the active web
 /// build. Combines `window.location.origin` with Vite's
-/// `import.meta.env.BASE_URL` (e.g. `/fishbones/learn/`) so the
+/// `import.meta.env.BASE_URL` (e.g. `/libre/learn/`) so the
 /// returned string is the same root that served `index.html`.
 ///
-/// e.g. when deployed:    `https://mattssoftware.com/fishbones/learn`
+/// e.g. when deployed:    `https://mattssoftware.com/libre/learn`
 ///      when dev:         `http://localhost:1420`
 function webRootUrl(): string {
   if (typeof window === "undefined") return "";

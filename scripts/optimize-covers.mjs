@@ -8,7 +8,7 @@
  * "seconds of blank tiles" to instant.
  *
  * What it touches:
- *   - `src-tauri/resources/bundled-packs/<id>.fishbones` — extracts
+ *   - `src-tauri/resources/bundled-packs/<id>.libre` — extracts
  *     each archive, replaces inner `cover.png` with `cover.jpg`,
  *     repacks. The Rust `load_course_cover` is updated in this same
  *     change to prefer `.jpg` (with the right MIME) and fall back
@@ -23,7 +23,7 @@
  *     the lossless source-of-truth for re-encodes.
  *
  * Special case: the A to Zig course folder doesn't have ANY cover yet
- * (the .fishbones built earlier carries only course.json). When run,
+ * (the .libre built earlier carries only course.json). When run,
  * this script seeds it from `cover-overrides/a-to-zig.png` and packs
  * the result into the archive in one pass.
  *
@@ -146,7 +146,7 @@ function optimizeLocalInstall(courseId) {
   return { before, after };
 }
 
-/// Process a `.fishbones` archive in place: extract, replace any
+/// Process a `.libre` archive in place: extract, replace any
 /// `cover.png` inside with `cover.jpg`, repack at the same path.
 /// Special case: when `seedFromOverride` is true (used for A to Zig
 /// which had NO cover at all), reads cover-overrides/<id>.png and
@@ -229,9 +229,9 @@ function main() {
 
   // ── Bundled archives ─────────────────────────────────────────
   // Accept both `.academy` (post-rebrand canonical extension) and
-  // `.fishbones` (legacy) so partial migrations still get optimised.
-  const ARCHIVE_EXTS = [".academy", ".fishbones"];
-  console.log("== bundled-packs/*.{academy,fishbones} ==");
+  // `.libre` (legacy) so partial migrations still get optimised.
+  const ARCHIVE_EXTS = [".academy", ".libre"];
+  console.log("== bundled-packs/*.{academy,libre} ==");
   let totalBundledBefore = 0;
   let totalBundledAfter = 0;
   let bundledChanged = 0;

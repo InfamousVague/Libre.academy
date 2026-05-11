@@ -21,7 +21,7 @@ interface Props {
 }
 
 /// Floating bottom-right entry point to the local AI tutor. Renders as
-/// a gradient-filled disc with the Fishbones logo, anchored absolutely
+/// a gradient-filled disc with the Libre logo, anchored absolutely
 /// to the viewport. State drives palette + animation speed, not asset
 /// swaps — the disc is pure CSS so the whole assistant ships with zero
 /// bundled image bytes.
@@ -156,7 +156,7 @@ export default function AiCharacter({
   return (
     <button
       type="button"
-      className={`fishbones-ai-character fishbones-ai-character--${mood} ${
+      className={`libre-ai-character libre-ai-character--${mood} ${
         open ? "is-open" : ""
       }`}
       onClick={handleClick}
@@ -174,7 +174,7 @@ export default function AiCharacter({
     >
       {/* "How can I assist?" tooltip floating to the LEFT of the
           orb. Hidden by default; revealed on hover via the CSS
-          rule on the parent button (`:hover .fishbones-ai-character-tip`
+          rule on the parent button (`:hover .libre-ai-character-tip`
           fades opacity 0 → 1). Mounted only when none of the
           state moods (open / streaming / alert / celebrating)
           would be telling a different story — those moods carry
@@ -182,7 +182,7 @@ export default function AiCharacter({
           with them. aria-hidden because the button's aria-label
           already carries the canonical text for screen readers. */}
       {!open && !streaming && !alert && !celebrating && (
-        <span className="fishbones-ai-character-tip" aria-hidden>
+        <span className="libre-ai-character-tip" aria-hidden>
           How can I assist?
         </span>
       )}
@@ -197,7 +197,7 @@ export default function AiCharacter({
           animations on every render and look glitchy. The helix
           itself is colour-randomised at mount time — see DnaHelix
           for the palette + per-strand stagger maths. */}
-      <DnaHelix className="fishbones-ai-character-icon" speed={speed} />
+      <DnaHelix className="libre-ai-character-icon" speed={speed} />
     </button>
   );
 }

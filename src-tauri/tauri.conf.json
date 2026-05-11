@@ -32,13 +32,13 @@
     "deep-link": {
       "mobile": [],
       "desktop": {
-        "schemes": ["fishbones"]
+        "schemes": ["libre"]
       }
     },
     "updater": {
       "active": true,
       "endpoints": [
-        "https://github.com/InfamousVague/Fishbones/releases/latest/download/latest.json"
+        "https://github.com/InfamousVague/Libre/releases/latest/download/latest.json"
       ],
       "dialog": false,
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDg4QTFEMkIzMDRCMUIyOTkKUldTWnNyRUVzOUtoaUlVL1ZkSjZsc2FPdEEya1dYYXJlMmJhSUJwOEY0cmNPT0FMQ1QvbGFLdGwK"

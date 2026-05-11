@@ -2,7 +2,7 @@
    image fills the frame, title fades in from a dark gradient along
    the bottom. Hover nudges the card up for physicality. */
 
-.fishbones-book {
+.libre-book {
   position: relative;
   display: block;
   width: 100%;
@@ -33,7 +33,7 @@
   container-name: fb-book;
 }
 
-.fishbones-book:hover {
+.libre-book:hover {
   transform: translateY(-3px) scale(1.012);
   border-color: var(--color-border-strong);
   /* Soft lift shadow, scaled with the translate so the elevation
@@ -43,7 +43,7 @@
   box-shadow: 0 6px 18px -8px rgba(0, 0, 0, 0.45);
 }
 
-.fishbones-book:active {
+.libre-book:active {
   transform: translateY(-1px) scale(1);
   transition-duration: 0.08s;
 }
@@ -69,22 +69,22 @@
    rise` stays as the default for any context where the cover renders
    outside a library container (recents strip, search-result row,
    etc.) so those still get a soft fade-in. */
-.fishbones-library-shelf .fishbones-book,
-.fishbones-library-grid .fishbones-book {
+.libre-library-shelf .libre-book,
+.libre-library-grid .libre-book {
   animation: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fishbones-book {
+  .libre-book {
     animation: none;
   }
-  .fishbones-book:hover,
-  .fishbones-book:active {
+  .libre-book:hover,
+  .libre-book:active {
     transform: none;
   }
 }
 
-.fishbones-book:focus-visible {
+.libre-book:focus-visible {
   outline: 2px solid var(--color-text-primary);
   outline-offset: 2px;
 }
@@ -96,7 +96,7 @@
    class) once the browser fires `onLoad`. The 1.05 scale during
    loading conceals the blur's halo at the edges so the transition
    reads as "image sharpening" rather than "blur fading away". */
-.fishbones-book-cover {
+.libre-book-cover {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -117,14 +117,14 @@
    wire. The blur radius is generous (16px) because the actual
    rendered tile is small; on a Retina display the image scales up
    ~2x so the blur reads stronger than its number suggests. */
-.fishbones-book-cover--loading {
+.libre-book-cover--loading {
   filter: blur(16px) saturate(140%);
   opacity: 0.65;
   transform: scale(1.05);
 }
 
 /* Post-load state — clear, fully opaque, at native scale. */
-.fishbones-book-cover--loaded {
+.libre-book-cover--loaded {
   filter: blur(0) saturate(100%);
   opacity: 1;
   transform: scale(1);
@@ -133,10 +133,10 @@
 /* Honor reduced-motion preferences — drop the blur transition for
    users who'd rather see the cover snap in directly. */
 @media (prefers-reduced-motion: reduce) {
-  .fishbones-book-cover {
+  .libre-book-cover {
     transition: none;
   }
-  .fishbones-book-cover--loading {
+  .libre-book-cover--loading {
     filter: none;
     opacity: 1;
     transform: none;
@@ -146,7 +146,7 @@
 /* Gradient that fades from transparent (top) to dark (bottom) so the
    title stays legible over photographic / bright covers. Covers only
    the bottom 40% of the card so the cover art is otherwise unobscured. */
-.fishbones-book-shadow {
+.libre-book-shadow {
   position: absolute;
   left: 0;
   right: 0;
@@ -161,19 +161,19 @@
   pointer-events: none;
 }
 
-.fishbones-book-label {
+.libre-book-label {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
   padding: 10px 12px 14px;
-  /* Sits over the dark gradient (`.fishbones-book-shadow`); the
+  /* Sits over the dark gradient (`.libre-book-shadow`); the
      bone-tinted text-primary keeps the title legible AND on-brand
      instead of stark white that fights the warm wordmark. */
   color: var(--color-text-primary, #fff);
 }
 
-.fishbones-book-title {
+.libre-book-title {
   font-size: 13px;
   font-weight: 700;
   letter-spacing: -0.005em;
@@ -185,7 +185,7 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
-.fishbones-book-author {
+.libre-book-author {
   margin-top: 3px;
   font-size: 10.5px;
   color: rgba(255, 255, 255, 0.75);
@@ -201,7 +201,7 @@
    a colorful set. Each tile puts the language glyph big and the title
    underneath, like a minimalist book jacket designed from scratch. */
 
-.fishbones-book-fallback {
+.libre-book-fallback {
   position: absolute;
   inset: 0;
   display: flex;
@@ -211,7 +211,7 @@
   color: var(--color-text-primary, #fff);
 }
 
-.fishbones-book-fallback-lang {
+.libre-book-fallback-lang {
   font-family: "SF Mono", ui-monospace, Menlo, monospace;
   font-size: 28px;
   font-weight: 800;
@@ -219,7 +219,7 @@
   color: rgba(255, 255, 255, 0.85);
 }
 
-.fishbones-book-fallback-title {
+.libre-book-fallback-title {
   font-size: 15px;
   font-weight: 700;
   line-height: 1.25;
@@ -231,7 +231,7 @@
   overflow: hidden;
 }
 
-.fishbones-book-fallback-author {
+.libre-book-fallback-author {
   margin-top: 6px;
   font-size: 11px;
   color: rgba(255, 255, 255, 0.72);
@@ -243,25 +243,25 @@
 /* Language tints for the fallback tile. Muted, book-jacket-adjacent
    palette — NOT the syntax-highlight colors, which would clash with
    cover images when mixed on the shelf. */
-.fishbones-book--lang-javascript.fishbones-book--no-cover,
-.fishbones-book--lang-typescript.fishbones-book--no-cover {
+.libre-book--lang-javascript.libre-book--no-cover,
+.libre-book--lang-typescript.libre-book--no-cover {
   background: linear-gradient(145deg, #4e432a, #262013);
 }
-.fishbones-book--lang-python.fishbones-book--no-cover {
+.libre-book--lang-python.libre-book--no-cover {
   background: linear-gradient(145deg, #1f3b5a, #101d2d);
 }
-.fishbones-book--lang-rust.fishbones-book--no-cover {
+.libre-book--lang-rust.libre-book--no-cover {
   background: linear-gradient(145deg, #6b2f1e, #2d140c);
 }
-.fishbones-book--lang-swift.fishbones-book--no-cover {
+.libre-book--lang-swift.libre-book--no-cover {
   background: linear-gradient(145deg, #6b2b2b, #2d1212);
 }
-.fishbones-book--lang-go.fishbones-book--no-cover {
+.libre-book--lang-go.libre-book--no-cover {
   background: linear-gradient(145deg, #204f5e, #0e2630);
 }
 
 /* ---- Bottom progress strip ---- */
-.fishbones-book-progress {
+.libre-book-progress {
   position: absolute;
   left: 0;
   right: 0;
@@ -270,7 +270,7 @@
   background: rgba(255, 255, 255, 0.12);
 }
 
-.fishbones-book-progress-fill {
+.libre-book-progress-fill {
   height: 100%;
   background: var(--color-text-primary, #fff);
   opacity: 0.92;
@@ -279,8 +279,8 @@
 
 /* Respect reduced-motion — kill the hover lift animation. */
 @media (prefers-reduced-motion: reduce) {
-  .fishbones-book,
-  .fishbones-book:hover {
+  .libre-book,
+  .libre-book:hover {
     transform: none;
     transition: none;
   }
@@ -289,15 +289,15 @@
 /* ---- Loading state ----
 
    While the course's full body is still hydrating, dim the cover/fallback
-   art and float a small Fishbones spinner in the center so the learner
+   art and float a small Libre spinner in the center so the learner
    knows that book is still finishing its load. */
-.fishbones-book--loading .fishbones-book-cover,
-.fishbones-book--loading .fishbones-book-fallback {
+.libre-book--loading .libre-book-cover,
+.libre-book--loading .libre-book-fallback {
   filter: brightness(0.45) saturate(0.7);
   transition: filter 0.25s ease;
 }
 
-.fishbones-book-loading {
+.libre-book-loading {
   position: absolute;
   inset: 0;
   display: flex;
@@ -306,17 +306,17 @@
   z-index: 2;
   color: var(--color-text-primary, #fff);
   pointer-events: none;
-  animation: fishbones-book-loading-fade 0.2s ease-out both;
+  animation: libre-book-loading-fade 0.2s ease-out both;
 }
 
-@keyframes fishbones-book-loading-fade {
+@keyframes libre-book-loading-fade {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 
 /* Hover lift is disorienting on a loading card — the book shouldn't feel
    interactive until it's fully there. */
-.fishbones-book--loading:hover {
+.libre-book--loading:hover {
   transform: none;
 }
 
@@ -332,7 +332,7 @@
  * read like a flat sticker and pulled the eye away from the cover art.
  * Dark glass + brand-coloured icon keeps the language readable while
  * letting the cover stay the dominant visual. */
-.fishbones-book-langbadge {
+.libre-book-langbadge {
   position: absolute;
   top: 8px;
   right: 8px;
@@ -363,7 +363,7 @@
   transition: none;
 }
 
-.fishbones-book-langbadge svg {
+.libre-book-langbadge svg {
   width: 16px;
   height: 16px;
   display: block;
@@ -376,7 +376,7 @@
    as "tag" and the colour as the "tier".
    Each tier modifier supplies one custom property for the foreground
    colour; the base rule handles everything else. */
-.fishbones-book-status {
+.libre-book-status {
   position: absolute;
   top: 8px;
   left: 8px;
@@ -406,23 +406,23 @@
 }
 
 /* The glyph picks up the tier's foreground colour via currentColor. */
-.fishbones-book-status-icon {
+.libre-book-status-icon {
   flex-shrink: 0;
 }
 
 /* The text label sits next to the icon. Letter-spacing and uppercase
    come from the parent so we don't repeat them here. */
-.fishbones-book-status-label {
+.libre-book-status-label {
   line-height: 1;
 }
 
 /* ALPHA — warm amber. "Next up" in the editorial pipeline. */
-.fishbones-book-status--alpha {
+.libre-book-status--alpha {
   --book-status-fg: #f5b13a;
 }
 
 /* BETA — emerald. Top tier; final polish before release. */
-.fishbones-book-status--beta {
+.libre-book-status--beta {
   --book-status-fg: #4dd699;
 }
 
@@ -431,7 +431,7 @@
    normalises legacy `"PRE-RELEASE"` values to `"UNREVIEWED"` (see
    `releaseStatusFor` in BookCover.tsx) so we only need the one
    modifier here. */
-.fishbones-book-status--unreviewed {
+.libre-book-status--unreviewed {
   --book-status-fg: #9aa0b4;
 }
 
@@ -447,7 +447,7 @@
    `top: 32px` positions it directly under the status pill — the
    pill's own height is ~18px (3px+lineheight+3px) at top:8, so
    8 + 18 + 6px gap = 32. */
-.fishbones-book-kind {
+.libre-book-kind {
   position: absolute;
   top: 32px;
   left: 8px;
@@ -473,13 +473,13 @@
     0 2px 6px rgba(0, 0, 0, 0.45);
 }
 
-.fishbones-book-kind-icon { flex-shrink: 0; }
-.fishbones-book-kind-label { line-height: 1; }
+.libre-book-kind-icon { flex-shrink: 0; }
+.libre-book-kind-label { line-height: 1; }
 
 /* Challenges variant — soft violet so it sits visually distinct from
    the tier-pill colour space (amber / emerald / slate) while still
    reading as a peer chip rather than a special CTA. */
-.fishbones-book-kind--challenges {
+.libre-book-kind--challenges {
   --book-kind-fg: #b39bff;
 }
 
@@ -489,7 +489,7 @@
    progress bar by giving it z-index 4 (one higher than the bar's 3).
    Slightly hover-lifted to invite the click; the whole thing stops
    propagation so clicking it doesn't open the course. */
-.fishbones-book-update {
+.libre-book-update {
   position: absolute;
   bottom: 10px;
   right: 8px;
@@ -517,7 +517,7 @@
     box-shadow 120ms ease;
 }
 
-.fishbones-book-update:hover {
+.libre-book-update:hover {
   transform: translateY(-1px);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
@@ -526,13 +526,13 @@
   border-color: rgba(138, 166, 255, 0.6);
 }
 
-.fishbones-book-update svg {
+.libre-book-update svg {
   width: 11px;
   height: 11px;
   flex-shrink: 0;
 }
 
-.fishbones-book-update-label {
+.libre-book-update-label {
   line-height: 1;
 }
 
@@ -540,20 +540,20 @@
    installed locally. Faded so the eye reads them as "available
    but not active", with a centered Install affordance that
    replaces the corner badge. */
-.fishbones-book--placeholder {
+.libre-book--placeholder {
   opacity: 0.55;
   filter: saturate(0.7);
   cursor: pointer;
   transition: opacity 160ms ease, filter 160ms ease, transform 160ms ease;
 }
 
-.fishbones-book--placeholder:hover {
+.libre-book--placeholder:hover {
   opacity: 0.85;
   filter: saturate(1);
   transform: translateY(-2px);
 }
 
-.fishbones-book--installing {
+.libre-book--installing {
   cursor: wait;
 }
 
@@ -562,7 +562,7 @@
    pill (`bottom: 50%; translate(-50%, 50%)`) which on compact
    shelf cells covered the title underneath, making a Discover
    tile read as just "INSTALL · 12 MB" with no book name. */
-.fishbones-book-install {
+.libre-book-install {
   position: absolute;
   top: 28%;
   left: 50%;
@@ -589,16 +589,16 @@
   pointer-events: none; /* parent button handles the click */
 }
 
-.fishbones-book-install svg {
+.libre-book-install svg {
   width: 18px;
   height: 18px;
 }
 
-.fishbones-book-install-label {
+.libre-book-install-label {
   line-height: 1;
 }
 
-.fishbones-book-install-size {
+.libre-book-install-size {
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.02em;
@@ -607,11 +607,11 @@
   margin-top: 2px;
 }
 
-.fishbones-book--installing .fishbones-book-install svg {
-  animation: fishbones-book-install-spin 0.9s linear infinite;
+.libre-book--installing .libre-book-install svg {
+  animation: libre-book-install-spin 0.9s linear infinite;
 }
 
-@keyframes fishbones-book-install-spin {
+@keyframes libre-book-install-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
@@ -620,22 +620,22 @@
    Swap the icon to a spinner via animation; dim the badge a touch
    so it visually retreats while busy. Disabled at the DOM level
    too — the button is non-interactive until the sync resolves. */
-.fishbones-book-update--working {
+.libre-book-update--working {
   cursor: wait;
   opacity: 0.85;
 }
 
-.fishbones-book-update--working:hover {
+.libre-book-update--working:hover {
   /* Disable the lift-on-hover from the base rule so a hover during
      the sync doesn't read as "still clickable". */
   transform: none;
 }
 
-.fishbones-book-update--working svg {
-  animation: fishbones-book-update-spin 0.9s linear infinite;
+.libre-book-update--working svg {
+  animation: libre-book-update-spin 0.9s linear infinite;
 }
 
-@keyframes fishbones-book-update-spin {
+@keyframes libre-book-update-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }

@@ -14,7 +14,7 @@
    masked backdrop-filter + a subtle alpha gradient so the effect
    ramps from "no blur" at the top to "fully blurred + dimmed" at
    the bottom of the band. */
-.fishbones-mtab-blur {
+.libre-mtab-blur {
   position: fixed;
   left: 0;
   right: 0;
@@ -43,7 +43,7 @@
    the bottom edge a touch darker so even on a fully-black scrolled
    page the band reads as "slightly different" and the floating pill
    has visual ground beneath it. */
-.fishbones-mtab-blur::after {
+.libre-mtab-blur::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -56,7 +56,7 @@
   pointer-events: none;
 }
 
-.fishbones-mtab {
+.libre-mtab {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
@@ -79,7 +79,7 @@
   z-index: 100;
 }
 
-.fishbones-mtab__btn {
+.libre-mtab__btn {
   flex: 1;
   display: inline-flex;
   flex-direction: column;
@@ -99,23 +99,23 @@
   transition: color var(--fb-motion-quick), background 0.18s ease;
 }
 
-.fishbones-mtab__btn:active {
+.libre-mtab__btn:active {
   /* Touch feedback — no hover state on iOS, but :active is what fires
      on tap. Slightly dim the icon to confirm the tap registered. */
   opacity: 0.7;
 }
 
-.fishbones-mtab__btn--active {
+.libre-mtab__btn--active {
   color: var(--color-text-primary, #fafafa);
   background: rgba(255, 255, 255, 0.08);
 }
 
-.fishbones-mtab__btn:disabled,
-.fishbones-mtab__btn[aria-disabled="true"] {
+.libre-mtab__btn:disabled,
+.libre-mtab__btn[aria-disabled="true"] {
   opacity: 0.4;
   cursor: default;
 }
 
-.fishbones-mtab__btn span {
+.libre-mtab__btn span {
   display: block;
 }

@@ -2,7 +2,7 @@
    traffic lights visible via `titleBarStyle: "Overlay"`. The whole bar is a
    drag region; clickable children intercept events. */
 
-.fishbones__topbar {
+.libre__topbar {
   display: flex;
   align-items: center;
   height: 44px;
@@ -39,7 +39,7 @@
    (right pad) = ~88px.
    On Windows/Linux the OS window controls live on the right, so this empty
    leader just acts as a small gutter. */
-.fishbones__topbar-window-controls {
+.libre__topbar-window-controls {
   width: 88px;
   flex-shrink: 0;
   height: 100%;
@@ -50,7 +50,7 @@
    it in the topbar too duplicated the brand presence and stole
    horizontal space from the tab strip on narrow windows. */
 
-.fishbones__topbar-tabs {
+.libre__topbar-tabs {
   display: flex;
   gap: 4px;
   flex: 1;
@@ -61,7 +61,7 @@
   scrollbar-width: none;
 }
 
-.fishbones__topbar-tabs::-webkit-scrollbar {
+.libre__topbar-tabs::-webkit-scrollbar {
   display: none;
 }
 
@@ -69,7 +69,7 @@
    and the tabs, so the click target lands where the learner expects a
    panel control. Inherits color from --color-text-secondary and bumps
    to primary on hover / when the sidebar is hidden (aria-pressed). */
-.fishbones__topbar-sidebar-toggle {
+.libre__topbar-sidebar-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -86,8 +86,8 @@
   transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy);
 }
 
-.fishbones__topbar-sidebar-toggle:hover,
-.fishbones__topbar-sidebar-toggle[aria-pressed="true"] {
+.libre__topbar-sidebar-toggle:hover,
+.libre__topbar-sidebar-toggle[aria-pressed="true"] {
   color: var(--color-text-primary);
   background: var(--color-bg-secondary);
 }
@@ -95,7 +95,7 @@
 /* "Recents" label anchoring the tab strip — matches the uppercase section
    labels the sidebar uses so the top bar reads like a breadcrumb of
    where the learner has been. */
-.fishbones__topbar-tabs-label {
+.libre__topbar-tabs-label {
   font-size: 9.5px;
   font-weight: 700;
   letter-spacing: 0.6px;
@@ -105,7 +105,7 @@
   white-space: nowrap;
 }
 
-.fishbones__topbar-actions {
+.libre__topbar-actions {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -126,7 +126,7 @@
    Width is bounded so it doesn't crush the tab strip on narrow
    windows; on tighter widths the placeholder + kbd hint hide
    progressively (see media queries below). */
-.fishbones__topbar-search {
+.libre__topbar-search {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -145,20 +145,20 @@
   transition: background var(--fb-motion-snappy), border-color var(--fb-motion-snappy), color var(--fb-motion-snappy);
 }
 
-.fishbones__topbar-search:hover,
-.fishbones__topbar-search:focus-visible {
+.libre__topbar-search:hover,
+.libre__topbar-search:focus-visible {
   color: var(--color-text-secondary);
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.18);
   outline: none;
 }
 
-.fishbones__topbar-search-icon {
+.libre__topbar-search-icon {
   flex-shrink: 0;
   opacity: 0.75;
 }
 
-.fishbones__topbar-search-placeholder {
+.libre__topbar-search-placeholder {
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -169,7 +169,7 @@
   font-weight: 500;
 }
 
-.fishbones__topbar-search-kbd {
+.libre__topbar-search-kbd {
   flex-shrink: 0;
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 10px;
@@ -185,21 +185,21 @@
 /* Tight windows: drop the kbd hint, then the placeholder, leaving a
    bare-icon trigger. Same staged collapse pattern as TopBar's tabs. */
 @media (max-width: 900px) {
-  .fishbones__topbar-search {
+  .libre__topbar-search {
     min-width: 0;
   }
-  .fishbones__topbar-search-kbd {
+  .libre__topbar-search-kbd {
     display: none;
   }
 }
 @media (max-width: 720px) {
-  .fishbones__topbar-search {
+  .libre__topbar-search {
     width: 28px;
     min-width: 28px;
     padding: 0;
     justify-content: center;
   }
-  .fishbones__topbar-search-placeholder {
+  .libre__topbar-search-placeholder {
     display: none;
   }
 }
@@ -207,11 +207,11 @@
 /* Combined streak + level chip with a dropdown detail panel. Lives on
    the right of the top bar. Chip shows the streak flame + a small circular
    progress ring (level-into-XP); clicking opens the full stats panel. */
-.fishbones__topbar-stats-wrap {
+.libre__topbar-stats-wrap {
   position: relative;
 }
 
-.fishbones__topbar-stats-trigger {
+.libre__topbar-stats-trigger {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -229,14 +229,14 @@
   transition: background var(--fb-motion-snappy), border-color var(--fb-motion-snappy), color var(--fb-motion-snappy);
 }
 
-.fishbones__topbar-stats-trigger:hover,
-.fishbones__topbar-stats-trigger--open {
+.libre__topbar-stats-trigger:hover,
+.libre__topbar-stats-trigger--open {
   color: var(--color-text-primary);
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.18);
 }
 
-.fishbones__topbar-streak {
+.libre__topbar-streak {
   display: inline-flex;
   align-items: center;
   gap: 3px;
@@ -244,11 +244,11 @@
   transition: color var(--fb-motion-snappy);
 }
 
-.fishbones__topbar-streak--active {
+.libre__topbar-streak--active {
   color: #ff9b5e; /* warm orange for active fire */
 }
 
-.fishbones__topbar-streak-flame {
+.libre__topbar-streak-flame {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -257,7 +257,7 @@
   line-height: 1;
 }
 
-.fishbones__topbar-streak-count {
+.libre__topbar-streak-count {
   font-weight: 700;
 }
 
@@ -268,15 +268,15 @@
 
 /* Dropdown panel below the chip. Anchored right so it doesn't clip the
    right edge of the window. */
-.fishbones__topbar-stats-panel {
+.libre__topbar-stats-panel {
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
   /* z-index only sorts within the topbar's own stacking context
-     (the backdrop-filter on .fishbones__topbar creates one). The
+     (the backdrop-filter on .libre__topbar creates one). The
      POPover-over-page-content lifting actually happens at the
      topbar root via its own position+z-index — see the comment on
-     `.fishbones__topbar`. Here we just need to be above any inline
+     `.libre__topbar`. Here we just need to be above any inline
      siblings inside the topbar, which is comfortably handled by 1. */
   z-index: 1;
   width: 360px;
@@ -288,23 +288,23 @@
      uses negative margin to bleed across the full panel width even
      with this larger inset. */
   padding: 18px 20px 16px;
-  animation: fishbones-stats-enter 0.16s ease-out;
+  animation: libre-stats-enter 0.16s ease-out;
 }
 
-@keyframes fishbones-stats-enter {
+@keyframes libre-stats-enter {
   from { opacity: 0; transform: translateY(-6px) scale(0.98); }
   to   { opacity: 1; transform: translateY(0)    scale(1); }
 }
 
 /* Hero row: ring on left, level + XP text on right. */
-.fishbones__topbar-stats-hero {
+.libre__topbar-stats-hero {
   display: flex;
   align-items: center;
   gap: 14px;
   padding: 2px 0 4px;
 }
 
-.fishbones__topbar-stats-hero-body {
+.libre__topbar-stats-hero-body {
   display: flex;
   flex-direction: column;
   gap: 1px;
@@ -312,39 +312,39 @@
   flex: 1;
 }
 
-.fishbones__topbar-stats-heading {
+.libre__topbar-stats-heading {
   font-size: 15px;
   font-weight: 700;
   color: var(--color-text-primary);
   letter-spacing: -0.01em;
 }
 
-.fishbones__topbar-stats-sub {
+.libre__topbar-stats-sub {
   font-size: 12px;
   color: var(--color-text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
-.fishbones__topbar-stats-to-next {
+.libre__topbar-stats-to-next {
   margin-top: 3px;
   font-size: 10.5px;
   color: var(--color-text-tertiary);
   font-style: italic;
 }
 
-.fishbones__topbar-stats-divider {
+.libre__topbar-stats-divider {
   height: 1px;
   background: var(--color-border-default);
   margin: 10px -14px;
 }
 
-.fishbones__topbar-stats-grid {
+.libre__topbar-stats-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px 14px;
 }
 
-.fishbones__topbar-stats-block {
+.libre__topbar-stats-block {
   display: flex;
   flex-direction: column;
   gap: 1px;
@@ -355,7 +355,7 @@
    so the uppercase heading reads the same hue as its icon. The token
    fallback here just matches the original neutral in case color is
    omitted. */
-.fishbones__topbar-stats-block-label {
+.libre__topbar-stats-block-label {
   display: flex;
   align-items: center;
   gap: 5px;
@@ -366,7 +366,7 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones__topbar-stats-block-icon {
+.libre__topbar-stats-block-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -375,7 +375,7 @@
   line-height: 1;
 }
 
-.fishbones__topbar-stats-block-value {
+.libre__topbar-stats-block-value {
   font-size: 14px;
   font-weight: 700;
   color: var(--color-text-primary);
@@ -383,7 +383,7 @@
   margin-top: 1px;
 }
 
-.fishbones__topbar-stats-block-hint {
+.libre__topbar-stats-block-hint {
   font-size: 10px;
   color: var(--color-text-tertiary);
   white-space: nowrap;
@@ -398,7 +398,7 @@
    milestone teaser; clicking through to View Profile shows the
    full 20-week version. */
 
-.fishbones__topbar-stats-mini-heat {
+.libre__topbar-stats-mini-heat {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -416,14 +416,14 @@
   border-radius: 10px;
 }
 
-.fishbones__topbar-stats-mini-heat-head {
+.libre__topbar-stats-mini-heat-head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
 }
 
-.fishbones__topbar-stats-mini-heat-label {
+.libre__topbar-stats-mini-heat-label {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -431,19 +431,19 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones__topbar-stats-mini-heat-count {
+.libre__topbar-stats-mini-heat-count {
   font-size: 10.5px;
   color: var(--color-text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
-.fishbones__topbar-stats-mini-heat-body {
+.libre__topbar-stats-mini-heat-body {
   display: flex;
   align-items: stretch;
   gap: 6px;
 }
 
-.fishbones__topbar-stats-mini-heat-rowlabels {
+.libre__topbar-stats-mini-heat-rowlabels {
   display: grid;
   /* Row gap matches the cell grid's gap exactly so the M / W / F
      labels line up with their corresponding cell rows. Bumped from
@@ -458,14 +458,14 @@
   user-select: none;
 }
 
-.fishbones__topbar-stats-mini-heat-rowlabels span {
+.libre__topbar-stats-mini-heat-rowlabels span {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   min-width: 10px;
 }
 
-.fishbones__topbar-stats-mini-heat-grid {
+.libre__topbar-stats-mini-heat-grid {
   display: flex;
   flex-direction: column;
   flex-wrap: wrap;
@@ -474,7 +474,7 @@
   gap: 3px;
 }
 
-.fishbones__topbar-stats-mini-heat-cell {
+.libre__topbar-stats-mini-heat-cell {
   width: 10px;
   height: 10px;
   border-radius: 2px;
@@ -489,7 +489,7 @@
    bottom of the rightmost column. The position implies "not yet";
    we don't ink them differently because the calendar context
    already tells you they're upcoming. */
-.fishbones__topbar-stats-mini-heat-cell--pad {
+.libre__topbar-stats-mini-heat-cell--pad {
   background: rgba(255, 255, 255, 0.03);
   border: 1px dashed rgba(255, 255, 255, 0.06);
   /* Compensate for the 1px border so the cell still occupies 10×10
@@ -498,18 +498,18 @@
   height: 8px;
 }
 
-.fishbones__topbar-stats-mini-heat-cell--lvl-0 { background: rgba(255, 255, 255, 0.05); }
-.fishbones__topbar-stats-mini-heat-cell--lvl-1 { background: rgba(124, 217, 124, 0.28); }
-.fishbones__topbar-stats-mini-heat-cell--lvl-2 { background: rgba(124, 217, 124, 0.5); }
-.fishbones__topbar-stats-mini-heat-cell--lvl-3 { background: rgba(124, 217, 124, 0.72); }
-.fishbones__topbar-stats-mini-heat-cell--lvl-4 { background: #7cd97c; }
+.libre__topbar-stats-mini-heat-cell--lvl-0 { background: rgba(255, 255, 255, 0.05); }
+.libre__topbar-stats-mini-heat-cell--lvl-1 { background: rgba(124, 217, 124, 0.28); }
+.libre__topbar-stats-mini-heat-cell--lvl-2 { background: rgba(124, 217, 124, 0.5); }
+.libre__topbar-stats-mini-heat-cell--lvl-3 { background: rgba(124, 217, 124, 0.72); }
+.libre__topbar-stats-mini-heat-cell--lvl-4 { background: #7cd97c; }
 
 /* ---- Next-milestone teaser ---------------------------------------- */
 /* Single-line strip showing the closest still-locked achievement.
    Gives the View Profile button below a concrete reward to point at
    ("Next: Week strong (3/7 days)") so the gateway feels purposeful. */
 
-.fishbones__topbar-stats-next {
+.libre__topbar-stats-next {
   display: flex;
   align-items: baseline;
   gap: 8px;
@@ -520,7 +520,7 @@
   font-size: 12px;
 }
 
-.fishbones__topbar-stats-next-label {
+.libre__topbar-stats-next-label {
   font-size: 9.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -529,7 +529,7 @@
   flex-shrink: 0;
 }
 
-.fishbones__topbar-stats-next-name {
+.libre__topbar-stats-next-name {
   font-weight: 600;
   color: var(--color-text-primary);
   flex: 1;
@@ -538,7 +538,7 @@
   white-space: nowrap;
 }
 
-.fishbones__topbar-stats-next-progress {
+.libre__topbar-stats-next-progress {
   font-size: 11.5px;
   font-weight: 700;
   color: var(--color-text-secondary);
@@ -546,7 +546,7 @@
   flex-shrink: 0;
 }
 
-.fishbones__topbar-stats-next-unit {
+.libre__topbar-stats-next-unit {
   color: var(--color-text-tertiary);
   font-weight: 500;
 }
@@ -559,7 +559,7 @@
    intentionally distinct from the next-milestone strip's gold so the
    two panels read as two different affordances at a glance. */
 
-.fishbones__topbar-stats-freeze {
+.libre__topbar-stats-freeze {
   margin-top: 10px;
   padding: 9px 12px 10px;
   background: linear-gradient(90deg, rgba(127, 200, 255, 0.08), transparent 90%);
@@ -570,13 +570,13 @@
   gap: 6px;
 }
 
-.fishbones__topbar-stats-freeze-head {
+.libre__topbar-stats-freeze-head {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.fishbones__topbar-stats-freeze-icon {
+.libre__topbar-stats-freeze-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -585,7 +585,7 @@
   line-height: 1;
 }
 
-.fishbones__topbar-stats-freeze-label {
+.libre__topbar-stats-freeze-label {
   font-size: 9.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -594,19 +594,19 @@
   flex: 1;
 }
 
-.fishbones__topbar-stats-freeze-count {
+.libre__topbar-stats-freeze-count {
   font-size: 11.5px;
   font-weight: 700;
   color: var(--color-text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
-.fishbones__topbar-stats-freeze-pips {
+.libre__topbar-stats-freeze-pips {
   display: flex;
   gap: 5px;
 }
 
-.fishbones__topbar-stats-freeze-pip {
+.libre__topbar-stats-freeze-pip {
   display: inline-block;
   width: 10px;
   height: 10px;
@@ -616,12 +616,12 @@
   transition: background var(--fb-motion-snappy);
 }
 
-.fishbones__topbar-stats-freeze-pip--used {
+.libre__topbar-stats-freeze-pip--used {
   background: rgba(127, 200, 255, 0.55);
   border-color: rgba(127, 200, 255, 0.55);
 }
 
-.fishbones__topbar-stats-freeze-hint {
+.libre__topbar-stats-freeze-hint {
   font-size: 11px;
   line-height: 1.35;
   color: var(--color-text-secondary);
@@ -631,7 +631,7 @@
    profile but tinted toward the freeze blue so it doesn't compete
    with the bottom button. Only shown when the streak is in danger
    AND a shield is available. */
-.fishbones__topbar-stats-freeze-btn {
+.libre__topbar-stats-freeze-btn {
   margin-top: 4px;
   display: inline-flex;
   align-items: center;
@@ -652,7 +652,7 @@
   transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy);
 }
 
-.fishbones__topbar-stats-freeze-btn:hover {
+.libre__topbar-stats-freeze-btn:hover {
   background: rgba(127, 200, 255, 0.3);
   color: #ffffff;
 }
@@ -661,7 +661,7 @@
    collapsed chip when the current run includes at least one
    shield-frozen day. Inherits its colour through `currentColor`
    inside the trigger button so it picks up the chip's foreground. */
-.fishbones__topbar-streak-frozen {
+.libre__topbar-streak-frozen {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -675,7 +675,7 @@
 /* Full-width "View profile" CTA pinned to the bottom of the dropdown.
    Uses the primary-fill treatment (inverted) so it reads as the
    natural next action rather than another stat chip. */
-.fishbones__topbar-stats-view-profile {
+.libre__topbar-stats-view-profile {
   width: 100%;
   margin-top: 14px;
   padding: 9px 12px;
@@ -691,7 +691,7 @@
   transition: opacity var(--fb-motion-snappy);
 }
 
-.fishbones__topbar-stats-view-profile:hover {
+.libre__topbar-stats-view-profile:hover {
   opacity: 0.9;
 }
 
@@ -701,7 +701,7 @@
    View-profile metrics so it matches the slim Sign-in button beside
    it (the standalone one was sized to anchor the bottom of the panel
    on its own; in a 2-button row the bigger metrics look chunky). */
-.fishbones__topbar-stats-view-profile--secondary {
+.libre__topbar-stats-view-profile--secondary {
   background: transparent;
   color: var(--color-text-primary);
   border: 1px solid var(--color-border, rgba(127, 127, 127, 0.3));
@@ -712,7 +712,7 @@
   font-weight: 600;
   line-height: 1.2;
 }
-.fishbones__topbar-stats-view-profile--secondary:hover {
+.libre__topbar-stats-view-profile--secondary:hover {
   background: var(--color-bg-hover, rgba(127, 127, 127, 0.08));
   opacity: 1;
 }
@@ -722,21 +722,21 @@
    Sign-out). Visually separated from the stat grid by margin only —
    the existing divider treatment above the View-profile button reads
    as enough hierarchy. */
-.fishbones__topbar-stats-account {
+.libre__topbar-stats-account {
   margin-top: 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.fishbones__topbar-stats-account-blurb {
+.libre__topbar-stats-account-blurb {
   margin: 0;
   font-size: 11.5px;
   line-height: 1.4;
   color: var(--color-text-secondary, rgba(127, 127, 127, 0.85));
 }
 
-.fishbones__topbar-stats-account-identity {
+.libre__topbar-stats-account-identity {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -746,7 +746,7 @@
   overflow: hidden;
 }
 
-.fishbones__topbar-stats-account-name {
+.libre__topbar-stats-account-name {
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text-primary);
@@ -755,7 +755,7 @@
   white-space: nowrap;
 }
 
-.fishbones__topbar-stats-account-email {
+.libre__topbar-stats-account-email {
   font-size: 11.5px;
   color: var(--color-text-secondary, rgba(127, 127, 127, 0.85));
   overflow: hidden;
@@ -763,7 +763,7 @@
   white-space: nowrap;
 }
 
-.fishbones__topbar-stats-account-row {
+.libre__topbar-stats-account-row {
   display: flex;
   gap: 8px;
   align-items: stretch;
@@ -773,14 +773,14 @@
    balanced regardless of label length. The single-button cases (CSS
    fallback when only one is rendered) still look fine because flex
    width:100% on a lone child fills the row. */
-.fishbones__topbar-stats-account-row > button {
+.libre__topbar-stats-account-row > button {
   flex: 1 1 0;
 }
 
 /* When View-profile lives inside the account row (signed-in case), it
    loses its standalone "anchored to the bottom" margin and matches
    the slim button metrics of its row neighbours. */
-.fishbones__topbar-stats-account-row > .fishbones__topbar-stats-view-profile {
+.libre__topbar-stats-account-row > .libre__topbar-stats-view-profile {
   margin-top: 0;
   padding: 7px 12px;
   border-radius: 7px;
@@ -793,8 +793,8 @@
    fill (Sign in) and the outline/ghost (Sign out) only differ in
    colour, not metrics. Padding kept slim so adding this row doesn't
    make the dropdown feel chunky. */
-.fishbones__topbar-stats-signin,
-.fishbones__topbar-stats-signout {
+.libre__topbar-stats-signin,
+.libre__topbar-stats-signout {
   padding: 7px 12px;
   border-radius: 7px;
   font-family: inherit;
@@ -806,33 +806,33 @@
 
 /* "Sign in" — primary fill, same treatment as View-profile's primary
    variant so a signed-out learner sees a single dominant CTA. */
-.fishbones__topbar-stats-signin {
+.libre__topbar-stats-signin {
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
   border: 1px solid var(--color-text-primary);
   font-weight: 600;
   transition: opacity var(--fb-motion-snappy);
 }
-.fishbones__topbar-stats-signin:hover {
+.libre__topbar-stats-signin:hover {
   opacity: 0.9;
 }
 
 /* "Sign out" — quiet outline / ghost so it doesn't compete with the
    View-profile primary above it. */
-.fishbones__topbar-stats-signout {
+.libre__topbar-stats-signout {
   background: transparent;
   color: var(--color-text-secondary, rgba(127, 127, 127, 0.85));
   border: 1px solid var(--color-border, rgba(127, 127, 127, 0.3));
   font-weight: 500;
   transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy);
 }
-.fishbones__topbar-stats-signout:hover {
+.libre__topbar-stats-signout:hover {
   background: var(--color-bg-hover, rgba(127, 127, 127, 0.08));
   color: var(--color-text-primary);
 }
 
 /* Tab pills */
-.fishbones__tab {
+.libre__tab {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -847,12 +847,12 @@
   transition: color var(--fb-motion-snappy), background var(--fb-motion-snappy), border-color var(--fb-motion-snappy);
 }
 
-.fishbones__tab:hover {
+.libre__tab:hover {
   color: var(--color-text-primary);
   background: var(--color-bg-secondary);
 }
 
-.fishbones__tab--active {
+.libre__tab--active {
   background: var(--color-bg-secondary);
   color: var(--color-text-primary);
   border-color: var(--color-border-default);
@@ -861,7 +861,7 @@
 /* While being dragged the source tab dims and lifts so the user
    sees what they're holding. The browser's own drag image still
    renders normally over the cursor. */
-.fishbones__tab--dragging {
+.libre__tab--dragging {
   opacity: 0.4;
   cursor: grabbing;
 }
@@ -872,10 +872,10 @@
    drags (source from the right) drop before → leading edge. The
    indicator uses ::before so we don't have to touch the tab's
    layout box. */
-.fishbones__tab--drag-over {
+.libre__tab--drag-over {
   position: relative;
 }
-.fishbones__tab--drag-over::before {
+.libre__tab--drag-over::before {
   content: "";
   position: absolute;
   top: 4px;
@@ -886,7 +886,7 @@
   background: var(--color-text-primary);
   pointer-events: none;
 }
-.fishbones__tab--drag-over.fishbones__tab--drop-after::before {
+.libre__tab--drag-over.libre__tab--drop-after::before {
   left: auto;
   right: -3px;
 }
@@ -894,11 +894,11 @@
 /* Layout-only positioning for the language chip inside the tab pill.
    The chip's own classes handle the visual treatment (background, color,
    padding, sizing). */
-.fishbones__tab-lang {
+.libre__tab-lang {
   flex-shrink: 0;
 }
 
-.fishbones__tab-close {
+.libre__tab-close {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -909,7 +909,7 @@
   cursor: pointer;
 }
 
-.fishbones__tab-close:hover {
+.libre__tab-close:hover {
   opacity: 1;
 }
 
@@ -922,9 +922,9 @@
    each contiguous group run) also render a small group-name badge
    prefix so the learner sees what the group is called. */
 
-.fishbones__tab--grouped {
+.libre__tab--grouped {
   /* Soft tint behind the tab using the group's colour at 8% alpha.
-     Mixed against the existing `.fishbones__tab` background so an
+     Mixed against the existing `.libre__tab` background so an
      active tab still reads as active (its base bg is bg-secondary,
      which dominates over the 8% tint). */
   background: color-mix(in srgb, var(--fb-tab-group-color, transparent) 8%, transparent);
@@ -934,11 +934,11 @@
   box-shadow: inset 0 -2px 0 0 var(--fb-tab-group-color, transparent);
 }
 
-.fishbones__tab--grouped:hover {
+.libre__tab--grouped:hover {
   background: color-mix(in srgb, var(--fb-tab-group-color, transparent) 14%, transparent);
 }
 
-.fishbones__tab--grouped.fishbones__tab--active {
+.libre__tab--grouped.libre__tab--active {
   /* Active grouped tab — keep the active treatment but bump the
      underline opacity so the group affiliation still shows. */
   background: var(--color-bg-secondary);
@@ -946,7 +946,7 @@
   box-shadow: inset 0 -2px 0 0 var(--fb-tab-group-color, transparent);
 }
 
-.fishbones__tab-group-badge {
+.libre__tab-group-badge {
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
@@ -987,7 +987,7 @@
    dropdown + sidebar context menu so menus across the app feel
    like one family. */
 
-.fishbones__tab-menu {
+.libre__tab-menu {
   position: fixed;
   z-index: 100;
   min-width: 220px;
@@ -1004,7 +1004,7 @@
   font-size: 12px;
 }
 
-.fishbones__tab-menu-label {
+.libre__tab-menu-label {
   padding: 4px 10px 6px;
   font-size: 10.5px;
   font-weight: 600;
@@ -1017,7 +1017,7 @@
   text-overflow: ellipsis;
 }
 
-.fishbones__tab-menu-section {
+.libre__tab-menu-section {
   padding: 6px 10px 2px;
   font-size: 10px;
   font-weight: 600;
@@ -1026,13 +1026,13 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones__tab-menu-sep {
+.libre__tab-menu-sep {
   height: 1px;
   margin: 4px 0;
   background: var(--color-border-default);
 }
 
-.fishbones__tab-menu-item {
+.libre__tab-menu-item {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1047,11 +1047,11 @@
   font-family: inherit;
 }
 
-.fishbones__tab-menu-item:hover {
+.libre__tab-menu-item:hover {
   background: var(--color-bg-tertiary);
 }
 
-.fishbones__tab-menu-swatch {
+.libre__tab-menu-swatch {
   width: 10px;
   height: 10px;
   border-radius: 50%;

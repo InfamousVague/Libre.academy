@@ -10,14 +10,14 @@
 //!     (Docusaurus, Nextra, Sphinx, VitePress with SSR) emit enough
 //!     content in the raw HTML response for us to work with. Sites that
 //!     hide everything behind client-side JS fall back to the manual
-//!     "import a .fishbones archive" path.
+//!     "import a .libre archive" path.
 //!   - Same-origin + same-path-prefix crawl scope. Prefix is auto-
 //!     detected from the start URL up to the last "/segment" (so
 //!     `https://site.com/docs/a/b` → prefix `https://site.com/docs/`).
 //!   - Rate-limited (configurable delay between requests, default 250ms)
 //!     to be polite to the hosting server.
 //!   - Images get downloaded inline to the course's ingest cache so the
-//!     resulting `.fishbones` archive is self-contained.
+//!     resulting `.libre` archive is self-contained.
 //!
 //! The actual LLM work happens downstream in the frontend pipeline:
 //! `crawl_docs_site` just returns the extracted markdown + metadata.
@@ -53,7 +53,7 @@ pub struct CrawlConfig {
     /// If true, download each image referenced in the extracted content
     /// and inline it as a `data:image/...;base64,...` URL in the
     /// markdown. Makes the resulting course self-contained (ships in
-    /// the `.fishbones` archive without external fetches) at the cost
+    /// the `.libre` archive without external fetches) at the cost
     /// of extra network + a larger course JSON. Skipped images keep
     /// their original remote URLs.
     pub download_images: bool,
@@ -251,7 +251,7 @@ pub async fn crawl_docs_site(
     // Dedicated client so we can set a friendly User-Agent (some sites
     // 403 requests with no UA) and a reasonable per-request timeout.
     let client = reqwest::Client::builder()
-        .user_agent("Fishbones/0.1 (learning-app; +https://fishbones.app)")
+        .user_agent("Libre/0.1 (learning-app; +https://libre.app)")
         .timeout(Duration::from_secs(30))
         .build()
         .map_err(|e| format!("couldn't build HTTP client: {e}"))?;
@@ -311,7 +311,7 @@ pub async fn crawl_docs_site(
                 // Embed images as base64 data URLs directly in the
                 // markdown. Keeps the course self-contained — no
                 // secondary asset-loading plumbing needed, and the
-                // `.fishbones` archive is portable by default.
+                // `.libre` archive is portable by default.
                 let mut inlined = 0u32;
                 let mut markdown = extracted.markdown;
                 if config.download_images {
@@ -712,7 +712,7 @@ async fn download_image_as_data_url(
 
 /// Entry in the flat crawl plan built from a NavTree. Ordered by nav
 /// position; chapter carries the top-level category label so the
-/// frontend can build Fishbones chapters directly from it.
+/// frontend can build Libre chapters directly from it.
 struct PlanItem {
     url: Url,
     chapter: String,
@@ -870,7 +870,7 @@ pub async fn extract_docs_nav(url: String) -> Result<NavTree, String> {
     }
 
     let client = reqwest::Client::builder()
-        .user_agent("Fishbones/0.1 (learning-app; +https://fishbones.app)")
+        .user_agent("Libre/0.1 (learning-app; +https://libre.app)")
         .timeout(Duration::from_secs(30))
         .build()
         .map_err(|e| format!("couldn't build HTTP client: {e}"))?;

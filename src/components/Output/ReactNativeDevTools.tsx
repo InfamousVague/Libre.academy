@@ -112,37 +112,37 @@ export default function ReactNativeDevTools({ previewUrl }: Props) {
   }
 
   return (
-    <div className="fishbones-rndev">
-      <div className="fishbones-rndev-head">
+    <div className="libre-rndev">
+      <div className="libre-rndev-head">
         <Icon icon={smartphone} size="xs" color="currentColor" />
-        <span className="fishbones-rndev-label">React Native tools</span>
+        <span className="libre-rndev-label">React Native tools</span>
       </div>
 
-      <div className="fishbones-rndev-grid">
+      <div className="libre-rndev-grid">
         {/* Left column — QR for the local preview URL */}
-        <div className="fishbones-rndev-card">
-          <div className="fishbones-rndev-card-title">Scan on your phone</div>
-          <div className="fishbones-rndev-card-hint">
+        <div className="libre-rndev-card">
+          <div className="libre-rndev-card-title">Scan on your phone</div>
+          <div className="libre-rndev-card-hint">
             Camera app → opens the preview in mobile Safari (same Wi-Fi as
             this Mac).
           </div>
-          <div className="fishbones-rndev-qrwrap">
+          <div className="libre-rndev-qrwrap">
             {localQr ? (
               <img
-                className="fishbones-rndev-qr"
+                className="libre-rndev-qr"
                 src={localQr}
                 alt={`QR code for ${previewUrl}`}
               />
             ) : (
-              <div className="fishbones-rndev-qr-placeholder" aria-hidden />
+              <div className="libre-rndev-qr-placeholder" aria-hidden />
             )}
           </div>
-          <div className="fishbones-rndev-url" title={previewUrl}>
+          <div className="libre-rndev-url" title={previewUrl}>
             {previewUrl}
           </div>
           <button
             type="button"
-            className="fishbones-rndev-btn"
+            className="libre-rndev-btn"
             onClick={openInSim}
           >
             <Icon icon={smartphone} size="xs" color="currentColor" />
@@ -150,7 +150,7 @@ export default function ReactNativeDevTools({ previewUrl }: Props) {
           </button>
           {simMessage && (
             <div
-              className={`fishbones-rndev-msg fishbones-rndev-msg--${simMessage.kind}`}
+              className={`libre-rndev-msg libre-rndev-msg--${simMessage.kind}`}
             >
               {simMessage.text}
             </div>
@@ -158,12 +158,12 @@ export default function ReactNativeDevTools({ previewUrl }: Props) {
         </div>
 
         {/* Right column — Expo Go */}
-        <div className="fishbones-rndev-card">
-          <div className="fishbones-rndev-card-titlerow">
-            <div className="fishbones-rndev-card-title">Expo Go</div>
+        <div className="libre-rndev-card">
+          <div className="libre-rndev-card-titlerow">
+            <div className="libre-rndev-card-title">Expo Go</div>
             <button
               type="button"
-              className="fishbones-rndev-probebtn"
+              className="libre-rndev-probebtn"
               onClick={runExpoProbe}
               disabled={probing}
               title="Re-probe for a running Expo dev server"
@@ -174,47 +174,47 @@ export default function ReactNativeDevTools({ previewUrl }: Props) {
           </div>
           {expo?.exp_url ? (
             <>
-              <div className="fishbones-rndev-card-hint">
+              <div className="libre-rndev-card-hint">
                 Expo dev server detected. Scan with the Expo Go app.
               </div>
-              <div className="fishbones-rndev-qrwrap">
+              <div className="libre-rndev-qrwrap">
                 {expoQr ? (
                   <img
-                    className="fishbones-rndev-qr"
+                    className="libre-rndev-qr"
                     src={expoQr}
                     alt={`QR code for ${expo.exp_url}`}
                   />
                 ) : (
                   <div
-                    className="fishbones-rndev-qr-placeholder"
+                    className="libre-rndev-qr-placeholder"
                     aria-hidden
                   />
                 )}
               </div>
-              <div className="fishbones-rndev-url" title={expo.exp_url}>
+              <div className="libre-rndev-url" title={expo.exp_url}>
                 {expo.exp_url}
               </div>
             </>
           ) : (
             <>
-              <div className="fishbones-rndev-card-hint">
+              <div className="libre-rndev-card-hint">
                 No Expo dev server found on the usual ports. Full Expo Go
                 support needs your own Expo project and Metro bundler —
                 Libre doesn't host one. The playground runtime here
                 uses{" "}
-                <code className="fishbones-rndev-code">react-native-web</code>
+                <code className="libre-rndev-code">react-native-web</code>
                 {" "}so same APIs, different rendering path.
               </div>
-              <ol className="fishbones-rndev-steps">
+              <ol className="libre-rndev-steps">
                 <li>
                   Install Expo CLI:{" "}
-                  <code className="fishbones-rndev-code">
+                  <code className="libre-rndev-code">
                     npm i -g expo-cli
                   </code>
                 </li>
                 <li>
                   Start your project:{" "}
-                  <code className="fishbones-rndev-code">npx expo start</code>
+                  <code className="libre-rndev-code">npx expo start</code>
                 </li>
                 <li>Click Probe above, then scan the QR with Expo Go.</li>
               </ol>

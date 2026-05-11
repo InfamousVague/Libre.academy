@@ -17,7 +17,7 @@
 ///     `subtree: false` the article-level observer interacted badly
 ///     with the React-mounted descendants the lesson body hydrates
 ///     (InlineSandbox via createRoot, glossary popovers, code-block
-///     "Ask Fishbones" badges). The html string is a complete signal
+///     "Ask Libre" badges). The html string is a complete signal
 ///     because `annotateTtsBlocks` runs inside `renderMarkdown` and
 ///     bakes the data-attributes into the string — there's no
 ///     post-render DOM rewrite we'd need to react to.

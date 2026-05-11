@@ -45,27 +45,27 @@ export function DesktopUpsellBanner({ language, reason }: Props) {
   const niceName = NAMES[language] ?? language;
 
   return (
-    <div className="fishbones-desktop-upsell">
-      <div className="fishbones-desktop-upsell__head">
-        <span className="fishbones-desktop-upsell__icon" aria-hidden>
+    <div className="libre-desktop-upsell">
+      <div className="libre-desktop-upsell__head">
+        <span className="libre-desktop-upsell__icon" aria-hidden>
           <Icon icon={monitor} size="sm" color="currentColor" />
         </span>
-        <div className="fishbones-desktop-upsell__heading">
-          <div className="fishbones-desktop-upsell__title">
+        <div className="libre-desktop-upsell__heading">
+          <div className="libre-desktop-upsell__title">
             Run {niceName} on the desktop app
           </div>
-          <div className="fishbones-desktop-upsell__reason">{reason}</div>
+          <div className="libre-desktop-upsell__reason">{reason}</div>
         </div>
       </div>
 
-      <div className="fishbones-desktop-upsell__actions">
-        <a className="fishbones-desktop-upsell__primary" href={primary.url}>
+      <div className="libre-desktop-upsell__actions">
+        <a className="libre-desktop-upsell__primary" href={primary.url}>
           <span aria-hidden>
             <Icon icon={downloadIcon} size="xs" color="currentColor" />
           </span>
           {primary.label}
         </a>
-        <details className="fishbones-desktop-upsell__more">
+        <details className="libre-desktop-upsell__more">
           <summary>Other platforms</summary>
           <ul>
             {all
@@ -79,7 +79,7 @@ export function DesktopUpsellBanner({ language, reason }: Props) {
         </details>
       </div>
 
-      <div className="fishbones-desktop-upsell__foot">
+      <div className="libre-desktop-upsell__foot">
         You can keep reading the lesson — only the Run button is
         gated on web.
       </div>

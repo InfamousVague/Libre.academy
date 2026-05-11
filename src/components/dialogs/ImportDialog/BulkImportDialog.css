@@ -1,6 +1,6 @@
 /* Backdrop chrome lives in `Shared/ModalBackdrop.css`. */
 
-.fishbones-bulk-panel {
+.libre-bulk-panel {
   width: min(720px, 94vw);
   max-height: 88vh;
   background: var(--color-bg-secondary);
@@ -11,7 +11,7 @@
   overflow: hidden;
 }
 
-.fishbones-bulk-header {
+.libre-bulk-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -19,7 +19,7 @@
   border-bottom: 1px solid var(--color-border-default);
 }
 
-.fishbones-bulk-kicker {
+.libre-bulk-kicker {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -27,14 +27,14 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones-bulk-title {
+.libre-bulk-title {
   font-size: 16px;
   font-weight: 700;
   color: var(--color-text-primary);
   margin-top: 2px;
 }
 
-.fishbones-bulk-close {
+.libre-bulk-close {
   background: none;
   border: 0;
   color: var(--color-text-tertiary);
@@ -44,11 +44,11 @@
   padding: 2px 8px;
 }
 
-.fishbones-bulk-close:hover {
+.libre-bulk-close:hover {
   color: var(--color-text-primary);
 }
 
-.fishbones-bulk-body {
+.libre-bulk-body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -58,21 +58,21 @@
   gap: 14px;
 }
 
-.fishbones-bulk-empty {
+.libre-bulk-empty {
   display: flex;
   flex-direction: column;
   gap: 14px;
   align-items: flex-start;
 }
 
-.fishbones-bulk-empty-blurb {
+.libre-bulk-empty-blurb {
   margin: 0;
   font-size: 13px;
   line-height: 1.55;
   color: var(--color-text-secondary);
 }
 
-.fishbones-bulk-primary {
+.libre-bulk-primary {
   padding: 8px 16px;
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
@@ -84,16 +84,16 @@
   cursor: pointer;
 }
 
-.fishbones-bulk-primary:hover:not(:disabled) {
+.libre-bulk-primary:hover:not(:disabled) {
   opacity: 0.92;
 }
 
-.fishbones-bulk-primary:disabled {
+.libre-bulk-primary:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.fishbones-bulk-secondary {
+.libre-bulk-secondary {
   padding: 8px 14px;
   background: transparent;
   color: var(--color-text-secondary);
@@ -105,13 +105,13 @@
   cursor: pointer;
 }
 
-.fishbones-bulk-secondary:hover {
+.libre-bulk-secondary:hover {
   color: var(--color-text-primary);
   background: var(--color-bg-tertiary);
 }
 
 /* Summary strip above the list. */
-.fishbones-bulk-summary {
+.libre-bulk-summary {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -119,11 +119,11 @@
   color: var(--color-text-primary);
 }
 
-.fishbones-bulk-summary-hint {
+.libre-bulk-summary-hint {
   color: var(--color-text-tertiary);
 }
 
-.fishbones-bulk-add {
+.libre-bulk-add {
   margin-left: auto;
   padding: 4px 10px;
   background: transparent;
@@ -135,19 +135,19 @@
   cursor: pointer;
 }
 
-.fishbones-bulk-add:hover {
+.libre-bulk-add:hover {
   color: var(--color-text-primary);
   background: var(--color-bg-tertiary);
 }
 
 /* List of rows — one per PDF. */
-.fishbones-bulk-list {
+.libre-bulk-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.fishbones-bulk-row {
+.libre-bulk-row {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -157,21 +157,21 @@
   border-radius: var(--fb-radius-md);
 }
 
-.fishbones-bulk-row--detecting {
+.libre-bulk-row--detecting {
   border-color: rgba(124, 193, 217, 0.35);
 }
 
-.fishbones-bulk-row--error {
+.libre-bulk-row--error {
   border-color: rgba(217, 168, 0, 0.35);
 }
 
-.fishbones-bulk-row-file {
+.libre-bulk-row-file {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.fishbones-bulk-row-filename {
+.libre-bulk-row-filename {
   flex: 1;
   font-family: "SF Mono", ui-monospace, Menlo, monospace;
   font-size: 11.5px;
@@ -181,7 +181,7 @@
   text-overflow: ellipsis;
 }
 
-.fishbones-bulk-row-status {
+.libre-bulk-row-status {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -192,28 +192,28 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones-bulk-row--detecting .fishbones-bulk-row-status {
+.libre-bulk-row--detecting .libre-bulk-row-status {
   color: #7cc1d9;
 }
 
-.fishbones-bulk-row-errtag {
+.libre-bulk-row-errtag {
   color: #d9a800;
 }
 
-.fishbones-bulk-row-spinner {
+.libre-bulk-row-spinner {
   width: 10px;
   height: 10px;
   border: 1.5px solid rgba(124, 193, 217, 0.3);
   border-top-color: #7cc1d9;
   border-radius: 50%;
-  animation: fishbones-bulk-spin 0.9s linear infinite;
+  animation: libre-bulk-spin 0.9s linear infinite;
 }
 
-@keyframes fishbones-bulk-spin {
+@keyframes libre-bulk-spin {
   to { transform: rotate(360deg); }
 }
 
-.fishbones-bulk-row-remove {
+.libre-bulk-row-remove {
   background: none;
   border: 0;
   color: var(--color-text-tertiary);
@@ -223,25 +223,25 @@
   padding: 2px 6px;
 }
 
-.fishbones-bulk-row-remove:hover {
+.libre-bulk-row-remove:hover {
   color: #ef6f6f;
 }
 
-.fishbones-bulk-row-grid {
+.libre-bulk-row-grid {
   display: grid;
   grid-template-columns: 2fr 1.5fr auto;
   gap: 10px;
   align-items: end;
 }
 
-.fishbones-bulk-row-field {
+.libre-bulk-row-field {
   display: flex;
   flex-direction: column;
   gap: 3px;
   min-width: 0;
 }
 
-.fishbones-bulk-row-field span {
+.libre-bulk-row-field span {
   font-size: 9.5px;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -249,7 +249,7 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones-bulk-row-input {
+.libre-bulk-row-input {
   padding: 6px 9px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
@@ -259,23 +259,23 @@
   font-size: 12.5px;
 }
 
-.fishbones-bulk-row-input:focus {
+.libre-bulk-row-input:focus {
   outline: none;
   border-color: rgba(255, 255, 255, 0.3);
 }
 
-.fishbones-bulk-row-langselect {
+.libre-bulk-row-langselect {
   cursor: pointer;
   font-family: "SF Mono", ui-monospace, Menlo, monospace;
   font-weight: 600;
   text-transform: lowercase;
 }
 
-.fishbones-bulk-row-field--narrow {
+.libre-bulk-row-field--narrow {
   min-width: 72px;
 }
 
-.fishbones-bulk-error {
+.libre-bulk-error {
   padding: 10px 12px;
   background: rgba(239, 111, 111, 0.08);
   border: 1px solid rgba(239, 111, 111, 0.35);
@@ -284,7 +284,7 @@
   font-size: 12px;
 }
 
-.fishbones-bulk-footer {
+.libre-bulk-footer {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -292,14 +292,14 @@
   border-top: 1px solid var(--color-border-default);
 }
 
-.fishbones-bulk-footer-hint {
+.libre-bulk-footer-hint {
   flex: 1;
   font-size: 11px;
   color: var(--color-text-tertiary);
   font-style: italic;
 }
 
-.fishbones-bulk-footer-actions {
+.libre-bulk-footer-actions {
   display: flex;
   gap: 8px;
 }

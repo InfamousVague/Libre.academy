@@ -2,18 +2,18 @@
  * container chrome so the two routes feel like siblings: same
  * `--color-*` tokens, same hero shape, same color-toned stat tiles.
  *
- * Critical layout: the route is mounted inside `.fishbones__main`,
+ * Critical layout: the route is mounted inside `.libre__main`,
  * which has `display: flex; flex-direction: column; overflow: hidden`.
  * That means the immediate child MUST own its own scroll — otherwise
  * tall content just gets clipped at the bottom (the bug the
  * previous version shipped with). Pattern is exactly the one
  * ProfileView uses:
- *   .fishbones-practice         flex 1, overflow hidden
- *   .fishbones-practice-scroll  flex 1, overflow-y auto
- *   .fishbones-practice-inner   max-width column with padding
+ *   .libre-practice         flex 1, overflow hidden
+ *   .libre-practice-scroll  flex 1, overflow-y auto
+ *   .libre-practice-inner   max-width column with padding
  */
 
-.fishbones-practice {
+.libre-practice {
   flex: 1;
   display: flex;
   min-height: 0;
@@ -21,12 +21,12 @@
   margin: 10px 10px 10px 0;
 }
 
-.fishbones-practice-scroll {
+.libre-practice-scroll {
   flex: 1;
   overflow-y: auto;
 }
 
-.fishbones-practice-inner {
+.libre-practice-inner {
   max-width: 880px;
   margin: 0 auto;
   padding: 36px 32px 56px;
@@ -37,21 +37,21 @@
 
 /* ---- Hero (title + due ring) -------------------------------------- */
 
-.fishbones-practice-hero {
+.libre-practice-hero {
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
   gap: 28px;
 }
 
-.fishbones-practice-hero-text {
+.libre-practice-hero-text {
   display: flex;
   flex-direction: column;
   gap: 6px;
   min-width: 0;
 }
 
-.fishbones-practice-hero-title {
+.libre-practice-hero-title {
   margin: 0;
   font-size: 32px;
   font-weight: 800;
@@ -59,7 +59,7 @@
   color: var(--color-text-primary);
 }
 
-.fishbones-practice-hero-sub {
+.libre-practice-hero-sub {
   margin: 0;
   font-size: 14px;
   color: var(--color-text-secondary);
@@ -71,7 +71,7 @@
  * centred body. Colour-toned via --ring-tone so a future "weak" or
  * "streak" variant slots in cleanly. */
 
-.fishbones-practice-ring {
+.libre-practice-ring {
   position: relative;
   width: 184px;
   height: 184px;
@@ -85,30 +85,30 @@
   --ring-tone-soft: rgba(255, 255, 255, 0.08);
 }
 
-.fishbones-practice-ring--due {
+.libre-practice-ring--due {
   --ring-tone: #f59e3b;
   --ring-tone-soft: rgba(245, 158, 59, 0.16);
 }
 
-.fishbones-practice-ring-svg {
+.libre-practice-ring-svg {
   position: absolute;
   inset: 36px;
   width: calc(100% - 72px);
   height: calc(100% - 72px);
 }
 
-.fishbones-practice-ring-track {
+.libre-practice-ring-track {
   stroke: var(--ring-tone-soft);
   stroke-width: 6;
 }
 
-.fishbones-practice-ring-fill {
+.libre-practice-ring-fill {
   stroke: var(--ring-tone);
   stroke-width: 6;
   transition: stroke-dashoffset 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.fishbones-practice-ring-body {
+.libre-practice-ring-body {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -119,14 +119,14 @@
   z-index: 1;
 }
 
-.fishbones-practice-ring-icon {
+.libre-practice-ring-icon {
   color: var(--ring-tone);
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-.fishbones-practice-ring-value {
+.libre-practice-ring-value {
   font-size: 17px;
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -136,7 +136,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-.fishbones-practice-ring-label {
+.libre-practice-ring-label {
   font-size: 8.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -151,7 +151,7 @@
  * to drill before clicking. Single-row on desktop; stacks on narrow
  * widths. */
 
-.fishbones-practice-cta {
+.libre-practice-cta {
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
@@ -167,7 +167,7 @@
 /* Subtle accent strip on the left edge — same trick the stat tiles
  * use, plus a glow so the CTA card reads as the primary action on
  * the page without needing a colour-flooded background. */
-.fishbones-practice-cta::before {
+.libre-practice-cta::before {
   content: "";
   position: absolute;
   left: 0;
@@ -178,14 +178,14 @@
   opacity: 0.85;
 }
 
-.fishbones-practice-cta-meta {
+.libre-practice-cta-meta {
   display: flex;
   flex-direction: column;
   gap: 4px;
   min-width: 0;
 }
 
-.fishbones-practice-cta-label {
+.libre-practice-cta-label {
   font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -193,7 +193,7 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones-practice-cta-title {
+.libre-practice-cta-title {
   font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.01em;
@@ -201,13 +201,13 @@
   font-variant-numeric: tabular-nums;
 }
 
-.fishbones-practice-cta-hint {
+.libre-practice-cta-hint {
   font-size: 12.5px;
   line-height: 1.5;
   color: var(--color-text-secondary);
 }
 
-.fishbones-practice-cta-button {
+.libre-practice-cta-button {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -226,28 +226,28 @@
   flex-shrink: 0;
 }
 
-.fishbones-practice-cta-button:hover:not(:disabled) {
+.libre-practice-cta-button:hover:not(:disabled) {
   opacity: 0.88;
 }
 
-.fishbones-practice-cta-button:active:not(:disabled) {
+.libre-practice-cta-button:active:not(:disabled) {
   transform: translateY(1px);
 }
 
-.fishbones-practice-cta-button:disabled {
+.libre-practice-cta-button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
 /* ---- Color-toned stat tiles (matches ProfileView design) ---------- */
 
-.fishbones-practice-stats {
+.libre-practice-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 12px;
 }
 
-.fishbones-practice-stat {
+.libre-practice-stat {
   display: flex;
   align-items: center;
   gap: 14px;
@@ -260,7 +260,7 @@
   overflow: hidden;
 }
 
-.fishbones-practice-stat::before {
+.libre-practice-stat::before {
   content: "";
   position: absolute;
   left: 0;
@@ -271,12 +271,12 @@
   opacity: 0.85;
 }
 
-.fishbones-practice-stat--cards { --stat-tone: #7cd9d3; }
-.fishbones-practice-stat--due   { --stat-tone: #f59e3b; }
-.fishbones-practice-stat--weak  { --stat-tone: #c79bff; }
-.fishbones-practice-stat--done  { --stat-tone: #7cd97c; }
+.libre-practice-stat--cards { --stat-tone: #7cd9d3; }
+.libre-practice-stat--due   { --stat-tone: #f59e3b; }
+.libre-practice-stat--weak  { --stat-tone: #c79bff; }
+.libre-practice-stat--done  { --stat-tone: #7cd97c; }
 
-.fishbones-practice-stat-icon {
+.libre-practice-stat-icon {
   width: 36px;
   height: 36px;
   display: grid;
@@ -287,13 +287,13 @@
   flex-shrink: 0;
 }
 
-.fishbones-practice-stat-text {
+.libre-practice-stat-text {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
 
-.fishbones-practice-stat-value {
+.libre-practice-stat-value {
   font-size: 26px;
   font-weight: 800;
   letter-spacing: -0.015em;
@@ -302,7 +302,7 @@
   line-height: 1.1;
 }
 
-.fishbones-practice-stat-label {
+.libre-practice-stat-label {
   font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -313,13 +313,13 @@
 
 /* ---- Section shell (matches ProfileView) -------------------------- */
 
-.fishbones-practice-section {
+.libre-practice-section {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.fishbones-practice-section-head {
+.libre-practice-section-head {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -327,7 +327,7 @@
   gap: 4px 16px;
 }
 
-.fishbones-practice-section-title {
+.libre-practice-section-title {
   margin: 0;
   font-size: 13px;
   font-weight: 700;
@@ -336,14 +336,14 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones-practice-section-sub {
+.libre-practice-section-sub {
   font-size: 12px;
   color: var(--color-text-secondary);
 }
 
 /* ---- Recent misses list (sibling of Profile's activity list) ------ */
 
-.fishbones-practice-misses {
+.libre-practice-misses {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -352,7 +352,7 @@
   gap: 2px;
 }
 
-.fishbones-practice-miss-row {
+.libre-practice-miss-row {
   width: 100%;
   display: flex;
   align-items: center;
@@ -368,18 +368,18 @@
   transition: background 140ms ease;
 }
 
-.fishbones-practice-miss-row:hover:not(:disabled) {
+.libre-practice-miss-row:hover:not(:disabled) {
   background: var(--color-bg-secondary);
 }
 
-.fishbones-practice-miss-row:disabled {
+.libre-practice-miss-row:disabled {
   cursor: default;
 }
 
 /* Same kind-dot palette as Profile's activity row, restricted to the
  * three kinds Practice surfaces (mcq + short live in quiz lessons,
  * blocks lives in exercise lessons). */
-.fishbones-practice-miss-kind {
+.libre-practice-miss-kind {
   width: 6px;
   height: 6px;
   border-radius: 50%;
@@ -387,18 +387,18 @@
   flex-shrink: 0;
 }
 
-.fishbones-practice-miss-kind--mcq,
-.fishbones-practice-miss-kind--short  { background: #e8c46b; }
-.fishbones-practice-miss-kind--blocks { background: #7cc1d9; }
+.libre-practice-miss-kind--mcq,
+.libre-practice-miss-kind--short  { background: #e8c46b; }
+.libre-practice-miss-kind--blocks { background: #7cc1d9; }
 
-.fishbones-practice-miss-body {
+.libre-practice-miss-body {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
 
-.fishbones-practice-miss-lesson {
+.libre-practice-miss-lesson {
   font-size: 13px;
   color: var(--color-text-primary);
   white-space: nowrap;
@@ -406,7 +406,7 @@
   text-overflow: ellipsis;
 }
 
-.fishbones-practice-miss-course {
+.libre-practice-miss-course {
   font-size: 10.5px;
   color: var(--color-text-tertiary);
   white-space: nowrap;
@@ -414,7 +414,7 @@
   text-overflow: ellipsis;
 }
 
-.fishbones-practice-miss-meta {
+.libre-practice-miss-meta {
   font-size: 11.5px;
   font-weight: 700;
   color: var(--color-text-secondary);
@@ -428,7 +428,7 @@
  * panel is meant to feel like a "for the curious" surface — sits at
  * the bottom of the page, collapsed by default, never required. */
 
-.fishbones-practice-customize-toggle {
+.libre-practice-customize-toggle {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -446,12 +446,12 @@
   transition: background 140ms ease, border-color 140ms ease;
 }
 
-.fishbones-practice-customize-toggle:hover {
+.libre-practice-customize-toggle:hover {
   background: var(--color-bg-secondary);
   border-color: var(--color-border-strong, var(--color-border-default));
 }
 
-.fishbones-practice-customize-summary {
+.libre-practice-customize-summary {
   flex: 1;
   font-size: 12px;
   font-weight: 500;
@@ -463,7 +463,7 @@
   text-overflow: ellipsis;
 }
 
-.fishbones-practice-customize {
+.libre-practice-customize {
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -473,13 +473,13 @@
   border-radius: 12px;
 }
 
-.fishbones-practice-customize-row {
+.libre-practice-customize-row {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.fishbones-practice-customize-row-label {
+.libre-practice-customize-row-label {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -490,7 +490,7 @@
   gap: 12px;
 }
 
-.fishbones-practice-customize-clear {
+.libre-practice-customize-clear {
   background: transparent;
   border: 0;
   color: var(--color-text-tertiary);
@@ -503,18 +503,18 @@
   border-radius: 6px;
 }
 
-.fishbones-practice-customize-clear:hover {
+.libre-practice-customize-clear:hover {
   color: var(--color-text-primary);
   background: var(--color-bg-tertiary, var(--color-bg-inset, rgba(255, 255, 255, 0.04)));
 }
 
-.fishbones-practice-customize-pills {
+.libre-practice-customize-pills {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-.fishbones-practice-pill {
+.libre-practice-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -529,18 +529,18 @@
   transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
 }
 
-.fishbones-practice-pill:hover {
+.libre-practice-pill:hover {
   background: var(--color-bg-tertiary, var(--color-bg-inset, rgba(255, 255, 255, 0.04)));
   color: var(--color-text-primary);
 }
 
-.fishbones-practice-pill.is-active {
+.libre-practice-pill.is-active {
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
   border-color: var(--color-text-primary);
 }
 
-.fishbones-practice-pill-count {
+.libre-practice-pill-count {
   font-size: 10.5px;
   padding: 1px 6px;
   border-radius: var(--fb-radius-pill, 999px);
@@ -549,21 +549,21 @@
   font-weight: 700;
 }
 
-.fishbones-practice-pill.is-active .fishbones-practice-pill-count {
+.libre-practice-pill.is-active .libre-practice-pill-count {
   background: rgba(255, 255, 255, 0.2);
   color: inherit;
 }
 
 /* ---- Empty state -------------------------------------------------- */
 
-.fishbones-practice-inner--empty {
+.libre-practice-inner--empty {
   align-items: center;
   text-align: center;
   padding-top: 96px;
   gap: 16px;
 }
 
-.fishbones-practice-empty-icon {
+.libre-practice-empty-icon {
   width: 76px;
   height: 76px;
   border-radius: 50%;
@@ -574,7 +574,7 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones-practice-empty-blurb {
+.libre-practice-empty-blurb {
   margin: 0;
   font-size: 14.5px;
   line-height: 1.55;
@@ -582,7 +582,7 @@
   max-width: 520px;
 }
 
-.fishbones-practice-empty-hint {
+.libre-practice-empty-hint {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -599,41 +599,41 @@
 /* ---- Responsiveness ----------------------------------------------- */
 
 @media (max-width: 720px) {
-  .fishbones-practice {
+  .libre-practice {
     margin: 0;
   }
-  .fishbones-practice-inner {
+  .libre-practice-inner {
     padding: 24px 16px 96px;
     gap: 22px;
   }
-  .fishbones-practice-hero {
+  .libre-practice-hero {
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  .fishbones-practice-ring {
+  .libre-practice-ring {
     width: 156px;
     height: 156px;
     padding: 28px;
     justify-self: center;
   }
-  .fishbones-practice-ring-svg {
+  .libre-practice-ring-svg {
     inset: 28px;
     width: calc(100% - 56px);
     height: calc(100% - 56px);
   }
-  .fishbones-practice-cta {
+  .libre-practice-cta {
     grid-template-columns: 1fr;
     gap: 12px;
     padding: 18px;
   }
-  .fishbones-practice-cta-button {
+  .libre-practice-cta-button {
     width: 100%;
     justify-content: center;
   }
-  .fishbones-practice-hero-title {
+  .libre-practice-hero-title {
     font-size: 26px;
   }
-  .fishbones-practice-stat-value {
+  .libre-practice-stat-value {
     font-size: 22px;
   }
 }

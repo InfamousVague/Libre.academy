@@ -1,6 +1,6 @@
 /* Backdrop chrome lives in `Shared/ModalBackdrop.css`. */
 
-.fishbones-settings-panel {
+.libre-settings-panel {
   /* Wider to fit the sidebar, capped at 85vh so long sections scroll inside
      rather than growing the dialog off-screen. Column flex so the header +
      columns row + footer stack with the columns taking the remaining space
@@ -17,14 +17,14 @@
 }
 
 /* Two-column interior: left nav rail + right content pane. */
-.fishbones-settings-columns {
+.libre-settings-columns {
   display: flex;
   flex: 1;
   min-height: 0;
   overflow: hidden;
 }
 
-.fishbones-settings-nav {
+.libre-settings-nav {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -34,12 +34,12 @@
   border-right: 1px solid var(--color-border-default);
   /* Match the panel background so hover/active (bg-tertiary) contrasts
      clearly. On the primary surface the tertiary-only lift was only a few
-     lightness steps in Fishbones Dark and effectively invisible. */
+     lightness steps in Libre Dark and effectively invisible. */
   background: var(--color-bg-secondary);
   overflow-y: auto;
 }
 
-.fishbones-settings-nav-item {
+.libre-settings-nav-item {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -56,16 +56,16 @@
   transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy);
 }
 
-.fishbones-settings-nav-item:hover {
+.libre-settings-nav-item:hover {
   /* Uses white-alpha instead of bg-tertiary so the lift is visible on every
-     theme — Fishbones Dark's bg-tertiary is only ~10 lightness above secondary,
+     theme — Libre Dark's bg-tertiary is only ~10 lightness above secondary,
      while a translucent white reads clearly regardless of base. */
   background: rgba(255, 255, 255, 0.06);
   color: var(--color-text-primary);
 }
 
-.fishbones-settings-nav-item--active,
-.fishbones-settings-nav-item--active:hover {
+.libre-settings-nav-item--active,
+.libre-settings-nav-item--active:hover {
   background: rgba(255, 255, 255, 0.1);
   color: var(--color-text-primary);
 }
@@ -73,7 +73,7 @@
 /* Left accent stripe on the active tab — color-agnostic (uses text-primary
    which always contrasts the bg), so the active state is unmistakable
    regardless of how close the hover/active bg alphas are to the panel. */
-.fishbones-settings-nav-item--active::before {
+.libre-settings-nav-item--active::before {
   content: "";
   position: absolute;
   left: 0;
@@ -85,27 +85,27 @@
 }
 
 /* Light themes invert the alpha so we don't get a washed-out lift. */
-[data-theme="light"] .fishbones-settings-nav-item:hover {
+[data-theme="light"] .libre-settings-nav-item:hover {
   background: rgba(0, 0, 0, 0.05);
 }
 
-[data-theme="light"] .fishbones-settings-nav-item--active,
-[data-theme="light"] .fishbones-settings-nav-item--active:hover {
+[data-theme="light"] .libre-settings-nav-item--active,
+[data-theme="light"] .libre-settings-nav-item--active:hover {
   background: rgba(0, 0, 0, 0.08);
 }
 
-.fishbones-settings-nav-label {
+.libre-settings-nav-label {
   font-size: 13px;
   font-weight: 600;
 }
 
-.fishbones-settings-nav-hint {
+.libre-settings-nav-hint {
   font-size: 10.5px;
   color: var(--color-text-tertiary);
   letter-spacing: 0.2px;
 }
 
-.fishbones-settings-footer {
+.libre-settings-footer {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -116,13 +116,13 @@
   flex-shrink: 0;
 }
 
-.fishbones-settings-footer-hint {
+.libre-settings-footer-hint {
   font-size: 11.5px;
   color: var(--color-text-tertiary);
   font-style: italic;
 }
 
-.fishbones-settings-header {
+.libre-settings-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -130,13 +130,13 @@
   border-bottom: 1px solid var(--color-border-default);
 }
 
-.fishbones-settings-title {
+.libre-settings-title {
   font-size: 14px;
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
-.fishbones-settings-close {
+.libre-settings-close {
   background: none;
   border: 0;
   color: var(--color-text-tertiary);
@@ -146,11 +146,11 @@
   padding: 4px 8px;
 }
 
-.fishbones-settings-close:hover {
+.libre-settings-close:hover {
   color: var(--color-text-primary);
 }
 
-.fishbones-settings-body {
+.libre-settings-body {
   flex: 1;
   min-height: 0;
   min-width: 0;
@@ -161,7 +161,7 @@
   gap: 18px;
 }
 
-.fishbones-settings-section {
+.libre-settings-section {
   margin: 0 0 6px;
   font-size: 12px;
   font-weight: 600;
@@ -174,26 +174,26 @@
    cover-art block below the primary Anthropic block) without starting a
    whole new <section>. Extra top margin + a subtle divider replace what
    a section boundary would otherwise provide. */
-.fishbones-settings-section--sub {
+.libre-settings-section--sub {
   margin-top: 28px;
   padding-top: 18px;
   border-top: 1px solid var(--color-border-default);
 }
 
-.fishbones-settings-blurb {
+.libre-settings-blurb {
   margin: 0 0 10px;
   font-size: 13px;
   line-height: 1.55;
   color: var(--color-text-secondary);
 }
 
-.fishbones-settings-field {
+.libre-settings-field {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.fishbones-settings-label {
+.libre-settings-label {
   font-size: 10.5px;
   font-weight: 600;
   text-transform: uppercase;
@@ -201,7 +201,7 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones-settings-input {
+.libre-settings-input {
   padding: 8px 10px;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
@@ -211,7 +211,7 @@
   font-size: 12.5px;
 }
 
-.fishbones-settings-input:focus {
+.libre-settings-input:focus {
   outline: none;
   border-color: rgba(255, 255, 255, 0.4);
 }
@@ -220,18 +220,18 @@
    to clipboard"). The input flexes to fill, the button stays at a
    fixed square. They sit on the same baseline so the row reads as a
    single control rather than two separate widgets. */
-.fishbones-settings-input-row {
+.libre-settings-input-row {
   display: flex;
   align-items: stretch;
   gap: 6px;
 }
 
-.fishbones-settings-input-row > .fishbones-settings-input {
+.libre-settings-input-row > .libre-settings-input {
   flex: 1;
   min-width: 0;
 }
 
-.fishbones-settings-input-copy {
+.libre-settings-input-copy {
   flex-shrink: 0;
   width: 34px;
   display: inline-flex;
@@ -248,34 +248,34 @@
     background-color 120ms ease;
 }
 
-.fishbones-settings-input-copy:hover:not(:disabled) {
+.libre-settings-input-copy:hover:not(:disabled) {
   color: var(--color-text-primary);
   border-color: rgba(255, 255, 255, 0.4);
 }
 
-.fishbones-settings-input-copy:active:not(:disabled) {
+.libre-settings-input-copy:active:not(:disabled) {
   background: var(--color-bg-secondary);
 }
 
-.fishbones-settings-input-copy:disabled {
+.libre-settings-input-copy:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.fishbones-settings-input-copy:focus-visible {
+.libre-settings-input-copy:focus-visible {
   outline: none;
   border-color: rgba(255, 255, 255, 0.55);
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18);
 }
 
-.fishbones-settings-note {
+.libre-settings-note {
   margin: 6px 0 0;
   font-size: 11.5px;
   color: var(--color-text-tertiary);
   line-height: 1.5;
 }
 
-.fishbones-settings-note code {
+.libre-settings-note code {
   font-family: "SF Mono", ui-monospace, Menlo, monospace;
   font-size: 10.5px;
   background: var(--color-bg-tertiary);
@@ -283,7 +283,7 @@
   border-radius: 3px;
 }
 
-.fishbones-settings-saved {
+.libre-settings-saved {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -292,7 +292,7 @@
   font-weight: 500;
 }
 
-.fishbones-settings-primary {
+.libre-settings-primary {
   padding: 8px 16px;
   background: #ffffff;
   color: #000000;
@@ -303,16 +303,16 @@
   cursor: pointer;
 }
 
-.fishbones-settings-primary:hover:not(:disabled) {
+.libre-settings-primary:hover:not(:disabled) {
   opacity: 0.92;
 }
 
-.fishbones-settings-primary:disabled {
+.libre-settings-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.fishbones-settings-model-group {
+.libre-settings-model-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -322,13 +322,13 @@
    entries. Bounds the section's height so long lists don't force the whole
    settings body to scroll, and adds a bit of padding on the right so the
    scrollbar doesn't overlap the card borders. */
-.fishbones-settings-model-group--scroll {
+.libre-settings-model-group--scroll {
   max-height: 420px;
   overflow-y: auto;
   padding-right: 4px;
 }
 
-.fishbones-settings-model {
+.libre-settings-model {
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -339,29 +339,29 @@
   cursor: pointer;
 }
 
-.fishbones-settings-model.is-active {
+.libre-settings-model.is-active {
   border-color: rgba(255, 255, 255, 0.4);
   background: var(--color-bg-tertiary);
 }
 
-.fishbones-settings-model input[type="radio"] {
+.libre-settings-model input[type="radio"] {
   margin-top: 3px;
 }
 
-.fishbones-settings-model-label {
+.libre-settings-model-label {
   font-size: 12.5px;
   font-weight: 500;
   color: var(--color-text-primary);
 }
 
-.fishbones-settings-model-hint {
+.libre-settings-model-hint {
   margin-top: 2px;
   font-size: 11px;
   color: var(--color-text-tertiary);
   line-height: 1.45;
 }
 
-.fishbones-settings-data-row {
+.libre-settings-data-row {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -370,17 +370,17 @@
   border-bottom: 1px solid var(--color-border-default);
 }
 
-.fishbones-settings-data-row:last-child {
+.libre-settings-data-row:last-child {
   border-bottom: 0;
 }
 
-.fishbones-settings-data-label {
+.libre-settings-data-label {
   font-size: 12.5px;
   font-weight: 500;
   color: var(--color-text-primary);
 }
 
-.fishbones-settings-data-hint {
+.libre-settings-data-hint {
   margin-top: 2px;
   font-size: 11px;
   color: var(--color-text-tertiary);
@@ -391,12 +391,12 @@
 /// Inline success-state span appended to the data-hint after a manual
 /// sync. Picks up the active accent so the result reads as positive
 /// feedback without needing its own row.
-.fishbones-settings-data-success {
+.libre-settings-data-success {
   color: var(--color-accent, #4caf50);
   font-weight: 500;
 }
 
-.fishbones-settings-danger {
+.libre-settings-danger {
   padding: 6px 12px;
   background: transparent;
   color: #ef6f6f;
@@ -409,17 +409,17 @@
   white-space: nowrap;
 }
 
-.fishbones-settings-danger:hover:not(:disabled) {
+.libre-settings-danger:hover:not(:disabled) {
   background: rgba(239, 111, 111, 0.08);
   border-color: rgba(239, 111, 111, 0.8);
 }
 
-.fishbones-settings-danger:disabled {
+.libre-settings-danger:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.fishbones-settings-secondary {
+.libre-settings-secondary {
   padding: 6px 12px;
   background: transparent;
   color: var(--color-text-secondary);
@@ -429,18 +429,18 @@
   cursor: pointer;
 }
 
-.fishbones-settings-secondary:hover {
+.libre-settings-secondary:hover {
   color: var(--color-text-primary);
   background: var(--color-bg-tertiary);
 }
 
-.fishbones-settings-confirm {
+.libre-settings-confirm {
   display: flex;
   gap: 6px;
   flex-shrink: 0;
 }
 
-.fishbones-settings-error {
+.libre-settings-error {
   padding: 10px 12px;
   background: rgba(239, 111, 111, 0.08);
   border: 1px solid rgba(239, 111, 111, 0.35);
@@ -455,7 +455,7 @@
    "Check for updates" row. The release-notes body uses a <pre>
    tag with normalized formatting so a markdown-ish body from the
    GitHub release renders sensibly without us pulling in a parser. */
-.fishbones-settings-update {
+.libre-settings-update {
   margin-top: 10px;
   padding: 14px;
   border-radius: var(--fb-radius-sm);
@@ -463,37 +463,37 @@
   background: color-mix(in srgb, var(--color-text-primary) 4%, transparent);
 }
 
-.fishbones-settings-update-head {
+.libre-settings-update-head {
   display: flex;
   align-items: flex-start;
   gap: 12px;
 }
 
-.fishbones-settings-update-head > div:nth-child(2) {
+.libre-settings-update-head > div:nth-child(2) {
   flex: 1;
   min-width: 0;
 }
 
-.fishbones-settings-update-title {
+.libre-settings-update-title {
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text-primary);
   margin-bottom: 2px;
 }
 
-.fishbones-settings-update-sub {
+.libre-settings-update-sub {
   font-size: 11.5px;
   color: var(--color-text-tertiary);
   line-height: 1.4;
 }
 
-.fishbones-settings-update-notes {
+.libre-settings-update-notes {
   margin-top: 14px;
   padding-top: 12px;
   border-top: 1px solid var(--color-border-default);
 }
 
-.fishbones-settings-update-notes-label {
+.libre-settings-update-notes-label {
   font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -502,7 +502,7 @@
   margin-bottom: 6px;
 }
 
-.fishbones-settings-update-notes-body {
+.libre-settings-update-notes-body {
   margin: 0;
   padding: 10px 12px;
   max-height: 220px;
@@ -519,7 +519,7 @@
 /* Account section — identity card. Avatar + display name + email +
    provider label, laid out in a quiet single-row card that matches the
    visual weight of the model picker entries above. */
-.fishbones-settings-account-card {
+.libre-settings-account-card {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -530,7 +530,7 @@
   border-radius: var(--fb-radius-md);
 }
 
-.fishbones-settings-account-avatar {
+.libre-settings-account-avatar {
   flex-shrink: 0;
   width: 40px;
   height: 40px;
@@ -545,14 +545,14 @@
   text-transform: uppercase;
 }
 
-.fishbones-settings-account-meta {
+.libre-settings-account-meta {
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
 }
 
-.fishbones-settings-account-name {
+.libre-settings-account-name {
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text-primary);
@@ -561,7 +561,7 @@
   white-space: nowrap;
 }
 
-.fishbones-settings-account-email {
+.libre-settings-account-email {
   font-size: 11.5px;
   color: var(--color-text-secondary);
   overflow: hidden;
@@ -569,7 +569,7 @@
   white-space: nowrap;
 }
 
-.fishbones-settings-account-provider {
+.libre-settings-account-provider {
   margin-top: 2px;
   font-size: 10.5px;
   color: var(--color-text-tertiary);
@@ -581,11 +581,11 @@
  * label + detail + (on fail) a remedy hint. Categories are bucketed
  * with subtle dividers so the list scans top-down. */
 
-.fishbones-diagnostics-group {
+.libre-diagnostics-group {
   margin-top: 18px;
 }
 
-.fishbones-diagnostics-group-title {
+.libre-diagnostics-group-title {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.6px;
@@ -596,7 +596,7 @@
   border-bottom: 1px solid var(--color-border-default);
 }
 
-.fishbones-diagnostics-list {
+.libre-diagnostics-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -605,7 +605,7 @@
   gap: 4px;
 }
 
-.fishbones-diagnostics-item {
+.libre-diagnostics-item {
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -614,7 +614,7 @@
   border-radius: var(--fb-radius-sm);
 }
 
-.fishbones-diagnostics-dot {
+.libre-diagnostics-dot {
   display: inline-block;
   flex-shrink: 0;
   width: 8px;
@@ -623,16 +623,16 @@
   border-radius: var(--fb-radius-pill);
 }
 
-.fishbones-diagnostics-dot--pass { background: #4ade80; }
-.fishbones-diagnostics-dot--warn { background: #facc15; }
-.fishbones-diagnostics-dot--fail { background: #ef4444; }
+.libre-diagnostics-dot--pass { background: #4ade80; }
+.libre-diagnostics-dot--warn { background: #facc15; }
+.libre-diagnostics-dot--fail { background: #ef4444; }
 
-.fishbones-diagnostics-body {
+.libre-diagnostics-body {
   flex: 1;
   min-width: 0;
 }
 
-.fishbones-diagnostics-label {
+.libre-diagnostics-label {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -645,11 +645,11 @@
 /* Brand-tinted chip beside language-bound resource rows (Rust /
  * Swift / Solidity etc). Same chip the Library uses; the row's
  * flex layout aligns it inline with the label text. */
-.fishbones-diagnostics-langchip {
+.libre-diagnostics-langchip {
   flex: 0 0 auto;
 }
 
-.fishbones-diagnostics-detail {
+.libre-diagnostics-detail {
   margin-top: 2px;
   font-size: 11px;
   color: var(--color-text-secondary);
@@ -657,7 +657,7 @@
   word-break: break-all;
 }
 
-.fishbones-diagnostics-remedy {
+.libre-diagnostics-remedy {
   margin-top: 4px;
   font-size: 11.5px;
   color: var(--color-text-primary);
@@ -667,11 +667,11 @@
 /* Inline install slot for failing toolchain rows. Sits below the
    remedy hint and either shows a compact "Install <Lang>" button
    or expands to the full MissingToolchainBanner once clicked. */
-.fishbones-diagnostics-install-row {
+.libre-diagnostics-install-row {
   margin-top: 8px;
 }
 
-.fishbones-diagnostics-install-loading {
+.libre-diagnostics-install-loading {
   margin-top: 8px;
   padding: 8px 10px;
   font-size: 11.5px;
@@ -685,14 +685,14 @@
    input-copy button so the visual family is intact. Wrap to two
    lines on narrow viewports (phone Settings is < 380px useful
    width). */
-.fishbones-settings-pair {
+.libre-settings-pair {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin: 8px 0 4px;
 }
 
-.fishbones-settings-pair-btn {
+.libre-settings-pair-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -712,14 +712,14 @@
     border-color var(--fb-motion-quick, 120ms ease);
 }
 
-.fishbones-settings-pair-btn:hover:not(:disabled),
-.fishbones-settings-pair-btn:focus-visible {
+.libre-settings-pair-btn:hover:not(:disabled),
+.libre-settings-pair-btn:focus-visible {
   background: var(--color-bg-tertiary, #21262d);
   color: var(--color-text-primary, #f5f5f7);
   border-color: var(--color-border-strong, rgba(255, 255, 255, 0.18));
 }
 
-.fishbones-settings-pair-btn:disabled {
+.libre-settings-pair-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
@@ -728,7 +728,7 @@
    generated QR + the host string underneath so the user can verify
    the encoded value matches what they expected. Click outside to
    dismiss. */
-.fishbones-settings-qr-modal {
+.libre-settings-qr-modal {
   position: fixed;
   inset: 0;
   z-index: 1500;
@@ -745,7 +745,7 @@
   padding: 24px;
 }
 
-.fishbones-settings-qr-card {
+.libre-settings-qr-card {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -759,13 +759,13 @@
   box-shadow: 0 20px 60px -12px rgba(0, 0, 0, 0.6);
 }
 
-.fishbones-settings-qr-title {
+.libre-settings-qr-title {
   font-size: 16px;
   font-weight: 700;
   color: var(--color-text-primary, #f5f5f7);
 }
 
-.fishbones-settings-qr-blurb {
+.libre-settings-qr-blurb {
   font-size: 13px;
   line-height: 1.45;
   color: var(--color-text-secondary, #a4a4ad);
@@ -773,7 +773,7 @@
   margin: 0;
 }
 
-.fishbones-settings-qr-img {
+.libre-settings-qr-img {
   width: 280px;
   height: 280px;
   max-width: 80vw;
@@ -786,7 +786,7 @@
   background: #0a0a0d;
 }
 
-.fishbones-settings-qr-placeholder {
+.libre-settings-qr-placeholder {
   width: 280px;
   height: 280px;
   display: grid;
@@ -798,7 +798,7 @@
   font-size: 13px;
 }
 
-.fishbones-settings-qr-host {
+.libre-settings-qr-host {
   font-family: var(--font-mono, "SF Mono", Menlo, monospace);
   font-size: 11.5px;
   color: var(--color-text-tertiary, #9b9ba7);
@@ -812,7 +812,7 @@
    visually-hidden checkbox + a sliding pill, so screen readers and
    keyboard users get the standard checkbox semantics while sighted
    users see an iOS-style switch. */
-.fishbones-settings-toggle {
+.libre-settings-toggle {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -822,7 +822,7 @@
   margin: 6px 0 14px;
 }
 
-.fishbones-settings-toggle input {
+.libre-settings-toggle input {
   position: absolute;
   opacity: 0;
   width: 0;
@@ -830,7 +830,7 @@
   pointer-events: none;
 }
 
-.fishbones-settings-toggle-slider {
+.libre-settings-toggle-slider {
   position: relative;
   width: 36px;
   height: 22px;
@@ -843,7 +843,7 @@
   flex-shrink: 0;
 }
 
-.fishbones-settings-toggle-slider::after {
+.libre-settings-toggle-slider::after {
   content: "";
   position: absolute;
   top: 2px;
@@ -857,27 +857,27 @@
     background var(--fb-motion-quick, 120ms ease);
 }
 
-.fishbones-settings-toggle input:checked + .fishbones-settings-toggle-slider {
+.libre-settings-toggle input:checked + .libre-settings-toggle-slider {
   background: rgba(214, 185, 105, 0.32);
   border-color: rgba(214, 185, 105, 0.55);
 }
 
-.fishbones-settings-toggle input:checked + .fishbones-settings-toggle-slider::after {
+.libre-settings-toggle input:checked + .libre-settings-toggle-slider::after {
   transform: translateX(14px);
   background: rgba(239, 226, 179, 1);
 }
 
-.fishbones-settings-toggle input:focus-visible + .fishbones-settings-toggle-slider {
+.libre-settings-toggle input:focus-visible + .libre-settings-toggle-slider {
   outline: 2px solid rgba(212, 197, 161, 0.65);
   outline-offset: 2px;
 }
 
-.fishbones-settings-toggle-label {
+.libre-settings-toggle-label {
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text-secondary, #a4a4ad);
 }
 
-.fishbones-settings-toggle input:checked ~ .fishbones-settings-toggle-label {
+.libre-settings-toggle input:checked ~ .libre-settings-toggle-label {
   color: var(--color-text-primary, #f5f5f7);
 }

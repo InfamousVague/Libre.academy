@@ -12,7 +12,7 @@
   border-radius: var(--fb-radius-lg, 14px);
   /* Margins match the chain docks exactly (.chain-dock uses
    * `margin: 8px 8px 6px 0`). The 8px right is the important
-   * one: the lesson pane below has `.fishbones__lesson` with
+   * one: the lesson pane below has `.libre__lesson` with
    * `margin: 10px 10px 10px 0` (10px right), and the chain
    * docks line their right edge up with the lesson body via
    * the same right margin. Without this, the dock bleeds to

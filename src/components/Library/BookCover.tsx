@@ -10,7 +10,7 @@ import "@base/primitives/icon/icon.css";
 import type { Course, LanguageId } from "../../data/types";
 import { isChallengePack } from "../../data/types";
 import { useCourseCover } from "../../hooks/useCourseCover";
-import FishbonesLoader from "../Shared/FishbonesLoader";
+import LibreLoader from "../Shared/LibreLoader";
 import { languageMeta } from "../../lib/languages";
 import "./BookCover.css";
 
@@ -41,7 +41,7 @@ interface Props {
   /// Optional right-click affordance. Grid view's menu shows Export /
   /// Delete / Course settings — the shelf gets the same treatment.
   onContextMenu?: (e: React.MouseEvent) => void;
-  /// When true, dim the cover and render a FishbonesLoader overlay —
+  /// When true, dim the cover and render a LibreLoader overlay —
   /// used while the course's full body is still hydrating from disk
   /// after the initial lightweight summary pull.
   loading?: boolean;
@@ -117,7 +117,7 @@ function BookCoverImpl({
   //
   // Both installed and placeholder tiles route through useCourseCover.
   // The desktop IPC (`load_course_cover`) falls back to extracting
-  // cover.png from the bundled `.fishbones` archive when the course
+  // cover.png from the bundled `.libre` archive when the course
   // isn't installed yet, so a Discover placeholder gets the same
   // cover its installed twin would. Web hosts skip the IPC and use
   // the catalog-supplied URL directly via `placeholderCoverUrl`.
@@ -232,12 +232,12 @@ function BookCoverImpl({
     <button
       type="button"
       style={style}
-      className={`fishbones-book ${
-        hasCover ? "fishbones-book--has-cover" : "fishbones-book--no-cover"
-      } fishbones-book--lang-${course.language} ${
-        loading ? "fishbones-book--loading" : ""
-      } ${placeholder ? "fishbones-book--placeholder" : ""} ${
-        installing ? "fishbones-book--installing" : ""
+      className={`libre-book ${
+        hasCover ? "libre-book--has-cover" : "libre-book--no-cover"
+      } libre-book--lang-${course.language} ${
+        loading ? "libre-book--loading" : ""
+      } ${placeholder ? "libre-book--placeholder" : ""} ${
+        installing ? "libre-book--installing" : ""
       }`}
       onClick={handleClick}
       onContextMenu={onContextMenu}
@@ -262,8 +262,8 @@ function BookCoverImpl({
       {hasCover && (
         <img
           ref={imgRef}
-          className={`fishbones-book-cover ${
-            imageLoaded ? "fishbones-book-cover--loaded" : "fishbones-book-cover--loading"
+          className={`libre-book-cover ${
+            imageLoaded ? "libre-book-cover--loaded" : "libre-book-cover--loading"
           }`}
           src={coverUrl}
           alt={`${course.title} cover`}
@@ -283,13 +283,13 @@ function BookCoverImpl({
           when there's no cover image (a CSS class swap handles the
           transition if coverUrl arrives after the first render). */}
       {!hasCover && (
-        <div className="fishbones-book-fallback">
-          <div className="fishbones-book-fallback-lang" aria-hidden>
+        <div className="libre-book-fallback">
+          <div className="libre-book-fallback-lang" aria-hidden>
             {langGlyph(course.language)}
           </div>
-          <div className="fishbones-book-fallback-title">{course.title}</div>
+          <div className="libre-book-fallback-title">{course.title}</div>
           {course.author && (
-            <div className="fishbones-book-fallback-author">
+            <div className="libre-book-fallback-author">
               by {course.author}
             </div>
           )}
@@ -302,11 +302,11 @@ function BookCoverImpl({
           their title baked into the flat design. */}
       {hasCover && (
         <>
-          <div className="fishbones-book-shadow" aria-hidden />
-          <div className="fishbones-book-label">
-            <div className="fishbones-book-title">{course.title}</div>
+          <div className="libre-book-shadow" aria-hidden />
+          <div className="libre-book-label">
+            <div className="libre-book-title">{course.title}</div>
             {course.author && (
-              <div className="fishbones-book-author">{course.author}</div>
+              <div className="libre-book-author">{course.author}</div>
             )}
           </div>
         </>
@@ -317,7 +317,7 @@ function BookCoverImpl({
           pixels from the card edge so it reads as a tag, not a sticker
           falling off. */}
       <span
-        className="fishbones-book-langbadge"
+        className="libre-book-langbadge"
         style={{ ["--book-langbadge-color" as string]: langMeta.color }}
         title={langMeta.label}
         aria-hidden
@@ -331,16 +331,16 @@ function BookCoverImpl({
           per tier \u2014 pencil for ALPHA (drafting), flask for BETA
           (testing), rocket for PRE-RELEASE (launching). */}
       <span
-        className={`fishbones-book-status fishbones-book-status--${releaseStatus.toLowerCase()}`}
+        className={`libre-book-status libre-book-status--${releaseStatus.toLowerCase()}`}
         title={`${releaseStatus} \u2014 editorial tier`}
       >
         <Icon
           icon={releaseStatusIcon(releaseStatus)}
           size="xs"
           color="currentColor"
-          className="fishbones-book-status-icon"
+          className="libre-book-status-icon"
         />
-        <span className="fishbones-book-status-label">{releaseStatus}</span>
+        <span className="libre-book-status-label">{releaseStatus}</span>
       </span>
 
       {/* Challenge-pack tag \u2014 sits below the release-status pill and
@@ -352,16 +352,16 @@ function BookCoverImpl({
           who's seen one card recognises the family on a different one. */}
       {isChallenges && (
         <span
-          className="fishbones-book-kind fishbones-book-kind--challenges"
+          className="libre-book-kind libre-book-kind--challenges"
           title="Challenge pack \u2014 exercises only, no readings"
         >
           <Icon
             icon={swords}
             size="xs"
             color="currentColor"
-            className="fishbones-book-kind-icon"
+            className="libre-book-kind-icon"
           />
-          <span className="fishbones-book-kind-label">Challenges</span>
+          <span className="libre-book-kind-label">Challenges</span>
         </span>
       )}
 
@@ -369,21 +369,21 @@ function BookCoverImpl({
           affordance for "how far you've read". Hidden entirely when
           progress is 0 so untouched books don't show a strip. */}
       {progress > 0 && (
-        <div className="fishbones-book-progress" aria-hidden>
+        <div className="libre-book-progress" aria-hidden>
           <div
-            className="fishbones-book-progress-fill"
+            className="libre-book-progress-fill"
             style={{ width: `${Math.round(progress * 100)}%` }}
           />
         </div>
       )}
 
-      {/* Dimmed-cover overlay with the shared Fishbones spinner. Rendered
+      {/* Dimmed-cover overlay with the shared Libre spinner. Rendered
           while the course's full body is still hydrating — gives the
           learner per-book feedback rather than a single vague app
           spinner. */}
       {loading && (
-        <div className="fishbones-book-loading" aria-hidden>
-          <FishbonesLoader size="sm" />
+        <div className="libre-book-loading" aria-hidden>
+          <LibreLoader size="sm" />
         </div>
       )}
 
@@ -392,15 +392,15 @@ function BookCoverImpl({
           archive-size hint so the user knows what they're about
           to download. Installing state swaps to a spinner. */}
       {placeholder && (
-        <div className="fishbones-book-install" aria-hidden>
+        <div className="libre-book-install" aria-hidden>
           {installing ? (
             <Icon icon={loader} size="sm" color="currentColor" />
           ) : (
             <>
               <Icon icon={arrowDownToLine} size="sm" color="currentColor" />
-              <span className="fishbones-book-install-label">install</span>
+              <span className="libre-book-install-label">install</span>
               {typeof course.archiveSize === "number" && (
-                <span className="fishbones-book-install-size">
+                <span className="libre-book-install-size">
                   {(course.archiveSize / 1024 / 1024).toFixed(1)} MB
                 </span>
               )}
@@ -423,12 +423,12 @@ function BookCoverImpl({
            there's no cover-level alternative once the menu has
            dismissed. */
         <span
-          className="fishbones-book-update fishbones-book-update--working"
+          className="libre-book-update libre-book-update--working"
           aria-busy="true"
           aria-label={`Updating ${course.title}`}
         >
           <Icon icon={loader} size="xs" color="currentColor" />
-          <span className="fishbones-book-update-label">updating…</span>
+          <span className="libre-book-update-label">updating…</span>
         </span>
       )}
     </button>

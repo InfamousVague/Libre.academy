@@ -65,15 +65,15 @@ export function ProgressRing({
   const checkSize = Math.max(size * 0.55, stroke * 3);
   return (
     <span
-      className={`fishbones__progress-ring ${
-        isComplete ? "fishbones__progress-ring--complete" : ""
+      className={`libre__progress-ring ${
+        isComplete ? "libre__progress-ring--complete" : ""
       }`}
       style={{ width: size, height: size }}
       aria-hidden
     >
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         <circle
-          className="fishbones__progress-ring-track"
+          className="libre__progress-ring-track"
           cx={size / 2}
           cy={size / 2}
           r={radius}
@@ -81,7 +81,7 @@ export function ProgressRing({
           strokeWidth={stroke}
         />
         <circle
-          className="fishbones__progress-ring-fill"
+          className="libre__progress-ring-fill"
           cx={size / 2}
           cy={size / 2}
           r={radius}
@@ -100,7 +100,7 @@ export function ProgressRing({
           // 24x24 reference glyph stretched into `checkSize` via the
           // outer transform.
           <g
-            className="fishbones__progress-ring-check"
+            className="libre__progress-ring-check"
             transform={`translate(${(size - checkSize) / 2}, ${
               (size - checkSize) / 2
             }) scale(${checkSize / 24})`}
@@ -118,13 +118,13 @@ export function ProgressRing({
       </svg>
       {!isComplete && (
         <span
-          className="fishbones__progress-ring-label"
+          className="libre__progress-ring-label"
           style={{ fontSize: `${labelFontPx}px` }}
         >
           {label}
           {sublabel && (
             <span
-              className="fishbones__progress-ring-sublabel"
+              className="libre__progress-ring-sublabel"
               style={
                 labelScale && labelScale !== 1
                   ? { fontSize: `${baseSublabelFontPx}px` }

@@ -18,7 +18,7 @@
 
 import { stringify } from "./helpers";
 
-const ANY_MARK = Symbol.for("fishbones.expect.any");
+const ANY_MARK = Symbol.for("libre.expect.any");
 
 interface AnyMarker {
   [ANY_MARK]: unknown;

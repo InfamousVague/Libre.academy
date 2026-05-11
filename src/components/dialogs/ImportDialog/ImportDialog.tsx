@@ -264,22 +264,22 @@ export default function ImportDialog({
 
   return (
     <ModalBackdrop onDismiss={onDismiss}>
-      <div className="fishbones-import-panel">
-        <div className="fishbones-import-header">
-          <span className="fishbones-import-title">Import course from book</span>
-          <button className="fishbones-import-close" onClick={onDismiss}>×</button>
+      <div className="libre-import-panel">
+        <div className="libre-import-header">
+          <span className="libre-import-title">Import course from book</span>
+          <button className="libre-import-close" onClick={onDismiss}>×</button>
         </div>
 
-        <div className="fishbones-import-body">
+        <div className="libre-import-body">
           {step === "pick" && (
             <>
-              <p className="fishbones-import-blurb">
+              <p className="libre-import-blurb">
                 Pick a PDF or EPUB. We'll extract the text, detect the book's
                 title, author, and programming language, and — if you've got
                 an Anthropic key in Settings — let Claude structure it into
                 a real Codecademy-style course with exercises and quizzes.
               </p>
-              <button className="fishbones-import-primary" onClick={pickFile}>
+              <button className="libre-import-primary" onClick={pickFile}>
                 Choose book…
               </button>
             </>
@@ -288,17 +288,17 @@ export default function ImportDialog({
           {step === "meta" && (
             <>
               <Field label={/\.epub$/i.test(pdfPath ?? "") ? "EPUB" : "PDF"}>
-                <code className="fishbones-import-path">{pdfPath}</code>
+                <code className="libre-import-path">{pdfPath}</code>
               </Field>
 
               {detecting && (
-                <div className="fishbones-import-detecting">
-                  <span className="fishbones-import-detecting-spinner" aria-hidden />
+                <div className="libre-import-detecting">
+                  <span className="libre-import-detecting-spinner" aria-hidden />
                   Detecting book metadata…
                 </div>
               )}
               {detectionError && !detecting && (
-                <div className="fishbones-import-detecting fishbones-import-detecting--error">
+                <div className="libre-import-detecting libre-import-detecting--error">
                   Couldn't auto-detect metadata — fill fields by hand.
                   {detectionError.includes("api_key") ||
                   detectionError.includes("401") ? (
@@ -309,7 +309,7 @@ export default function ImportDialog({
 
               <Field label="Title">
                 <input
-                  className="fishbones-import-input"
+                  className="libre-import-input"
                   value={title}
                   onChange={(e) => {
                     titleEditedRef.current = true;
@@ -320,7 +320,7 @@ export default function ImportDialog({
               </Field>
               <Field label="Author">
                 <input
-                  className="fishbones-import-input"
+                  className="libre-import-input"
                   value={author}
                   onChange={(e) => {
                     authorEditedRef.current = true;
@@ -331,7 +331,7 @@ export default function ImportDialog({
               </Field>
               <Field label="Course id">
                 <input
-                  className="fishbones-import-input"
+                  className="libre-import-input"
                   value={courseId}
                   onChange={(e) => {
                     courseIdEditedRef.current = true;
@@ -341,7 +341,7 @@ export default function ImportDialog({
                 />
               </Field>
 
-              <label className="fishbones-import-checkbox">
+              <label className="libre-import-checkbox">
                 <input
                   type="checkbox"
                   checked={useAi}
@@ -349,7 +349,7 @@ export default function ImportDialog({
                 />
                 <div>
                   <div>Use Claude to structure into lessons</div>
-                  <div className="fishbones-import-hint">
+                  <div className="libre-import-hint">
                     Requires an Anthropic key in Settings. Runs in the background — a
                     floating panel shows progress and each lesson saves to disk as
                     it's generated, so you can keep using the app and never lose
@@ -358,16 +358,16 @@ export default function ImportDialog({
                 </div>
               </label>
 
-              <div className="fishbones-import-actions">
+              <div className="libre-import-actions">
                 <button
-                  className="fishbones-import-secondary"
+                  className="libre-import-secondary"
                   onClick={() => setStep("pick")}
                   disabled={running}
                 >
                   Back
                 </button>
                 <button
-                  className="fishbones-import-primary"
+                  className="libre-import-primary"
                   onClick={runImport}
                   disabled={!title || !courseId || running}
                 >
@@ -377,7 +377,7 @@ export default function ImportDialog({
             </>
           )}
 
-          {error && <div className="fishbones-import-error">{error}</div>}
+          {error && <div className="libre-import-error">{error}</div>}
         </div>
       </div>
     </ModalBackdrop>
@@ -386,8 +386,8 @@ export default function ImportDialog({
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="fishbones-import-field">
-      <span className="fishbones-import-label">{label}</span>
+    <label className="libre-import-field">
+      <span className="libre-import-label">{label}</span>
       {children}
     </label>
   );

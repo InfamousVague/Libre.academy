@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /// Vendor every CDN-loaded browser runtime into shipped resources so
-/// Fishbones runs fully offline.
+/// Libre runs fully offline.
 ///
 /// Inputs (npm-installed locally; see package.json):
 ///   - @babel/standalone  → babel.min.js

@@ -255,8 +255,8 @@ export default function OutputPane({
   };
 
   return (
-    <div className="fishbones-output">
-      <div className="fishbones-output-header">
+    <div className="libre-output">
+      <div className="libre-output-header">
         {/* Header left side: tabs when this is a multi-pane output
             (Console + Tests), otherwise the static label. The
             tabs-in-header treatment matches editors / browser
@@ -264,7 +264,7 @@ export default function OutputPane({
             element rather than tucked under a generic "output" word. */}
         {showTabs && !previewUrl ? (
           <div
-            className="fishbones-output-tabs"
+            className="libre-output-tabs"
             role="tablist"
             aria-label="Output"
           >
@@ -272,14 +272,14 @@ export default function OutputPane({
               type="button"
               role="tab"
               aria-selected={activeTab === "console"}
-              className={`fishbones-output-tab ${
-                activeTab === "console" ? "fishbones-output-tab--active" : ""
+              className={`libre-output-tab ${
+                activeTab === "console" ? "libre-output-tab--active" : ""
               }`}
               onClick={() => setActiveTab("console")}
             >
               <span>Console</span>
               {hasLogs && (
-                <span className="fishbones-output-tab-badge">
+                <span className="libre-output-tab-badge">
                   {result?.logs?.length ?? 0}
                 </span>
               )}
@@ -288,11 +288,11 @@ export default function OutputPane({
               type="button"
               role="tab"
               aria-selected={activeTab === "tests"}
-              className={`fishbones-output-tab ${
-                activeTab === "tests" ? "fishbones-output-tab--active" : ""
+              className={`libre-output-tab ${
+                activeTab === "tests" ? "libre-output-tab--active" : ""
               } ${
                 failingCount > 0
-                  ? "fishbones-output-tab--has-failures"
+                  ? "libre-output-tab--has-failures"
                   : ""
               }`}
               onClick={() => setActiveTab("tests")}
@@ -300,10 +300,10 @@ export default function OutputPane({
               <span>Tests</span>
               {hasTests && (
                 <span
-                  className={`fishbones-output-tab-badge ${
+                  className={`libre-output-tab-badge ${
                     failingCount > 0
-                      ? "fishbones-output-tab-badge--fail"
-                      : "fishbones-output-tab-badge--pass"
+                      ? "libre-output-tab-badge--fail"
+                      : "libre-output-tab-badge--pass"
                   }`}
                 >
                   {passedCount}/{totalTests}
@@ -312,62 +312,62 @@ export default function OutputPane({
             </button>
           </div>
         ) : (
-          <span className="fishbones-output-label">
+          <span className="libre-output-label">
             {previewUrl ? "preview" : "console"}
           </span>
         )}
-        <div className="fishbones-output-header-right">
+        <div className="libre-output-header-right">
           {result && !running && (
-            <span className="fishbones-output-duration">{result.durationMs.toFixed(0)}ms</span>
+            <span className="libre-output-duration">{result.durationMs.toFixed(0)}ms</span>
           )}
           {running && (
-            <span className="fishbones-output-running-pill">
-              <span className="fishbones-output-running-pill-dot" aria-hidden />
+            <span className="libre-output-running-pill">
+              <span className="libre-output-running-pill-dot" aria-hidden />
               {currentPhase.label}
             </span>
           )}
         </div>
       </div>
 
-      <div className="fishbones-output-body">
+      <div className="libre-output-body">
         {!result && !running && (
-          <div className="fishbones-output-empty">run your code to see output here</div>
+          <div className="libre-output-empty">run your code to see output here</div>
         )}
 
         {running && (
-          // Big centered spinner with the Fishbones fish-bone inside. The ring
-          // spins via CSS `@keyframes fishbones-output-spin`; the fish itself is
+          // Big centered spinner with the Libre fish-bone inside. The ring
+          // spins via CSS `@keyframes libre-output-spin`; the fish itself is
           // theme-tinted (white on dark themes, black on light) via a
           // background-color + mask trick so we can keep one asset.
-          <div className="fishbones-output-running" aria-live="polite">
-            <div className="fishbones-output-running-stack" aria-hidden>
-              <div className="fishbones-output-running-ring" />
-              <div className="fishbones-output-running-logo" />
+          <div className="libre-output-running" aria-live="polite">
+            <div className="libre-output-running-stack" aria-hidden>
+              <div className="libre-output-running-ring" />
+              <div className="libre-output-running-logo" />
             </div>
-            <div className="fishbones-output-running-label">{currentPhase.label}</div>
+            <div className="libre-output-running-label">{currentPhase.label}</div>
           </div>
         )}
 
         {/* Web-runtime preview. Two parts stacked: an in-app iframe
             window so the learner sees their render without leaving
-            Fishbones, plus a URL card with "Open in browser" for when
+            Libre, plus a URL card with "Open in browser" for when
             they want real DevTools. Both point at the same local
             tiny_http URL — the iframe just embeds it. */}
         {previewUrl && (
-          <div className="fishbones-output-preview" role="status">
+          <div className="libre-output-preview" role="status">
             <div
-              className={`fishbones-output-preview-frame ${
+              className={`libre-output-preview-frame ${
                 previewKind === "reactnative"
-                  ? "fishbones-output-preview-frame--rn"
+                  ? "libre-output-preview-frame--rn"
                   : ""
               }`}
             >
               <iframe
                 ref={iframeRef}
                 key={`${previewUrl}#${reloadTick}`}
-                className={`fishbones-output-preview-iframe ${
+                className={`libre-output-preview-iframe ${
                   previewKind === "reactnative"
-                    ? "fishbones-output-preview-iframe--rn"
+                    ? "libre-output-preview-iframe--rn"
                     : ""
                 }`}
                 title="Rendered preview"
@@ -375,10 +375,10 @@ export default function OutputPane({
                 sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
               />
             </div>
-            <div className="fishbones-output-preview-head">
-              <span className="fishbones-output-preview-label">Preview URL</span>
+            <div className="libre-output-preview-head">
+              <span className="libre-output-preview-label">Preview URL</span>
               <a
-                className="fishbones-output-preview-link"
+                className="libre-output-preview-link"
                 href={previewUrl}
                 onClick={(e) => {
                   e.preventDefault();
@@ -389,10 +389,10 @@ export default function OutputPane({
                 {previewUrl}
               </a>
             </div>
-            <div className="fishbones-output-preview-actions">
+            <div className="libre-output-preview-actions">
               <button
                 type="button"
-                className="fishbones-output-preview-btn fishbones-output-preview-btn--primary"
+                className="libre-output-preview-btn libre-output-preview-btn--primary"
                 onClick={openInBrowser}
               >
                 <Icon icon={externalLink} size="xs" color="currentColor" />
@@ -400,7 +400,7 @@ export default function OutputPane({
               </button>
               <button
                 type="button"
-                className="fishbones-output-preview-btn"
+                className="libre-output-preview-btn"
                 onClick={copyLink}
               >
                 <Icon
@@ -412,7 +412,7 @@ export default function OutputPane({
               </button>
               <button
                 type="button"
-                className="fishbones-output-preview-btn"
+                className="libre-output-preview-btn"
                 onClick={() => setReloadTick((n) => n + 1)}
                 title="Reload the in-app preview iframe"
               >
@@ -432,21 +432,21 @@ export default function OutputPane({
               empty, so they can confirm "no output" rather than
               wondering whether the section is hiding. */}
         {((!showTabs && hasLogs) || (showTabs && activeTab === "console")) && (
-          <div className="fishbones-output-console">
+          <div className="libre-output-console">
             {hasLogs ? (
               (result?.logs ?? []).map((line, i) => (
                 <div
                   key={`log-${i}`}
-                  className={`fishbones-output-line fishbones-output-line--${line.level}`}
+                  className={`libre-output-line libre-output-line--${line.level}`}
                 >
                   {line.text}
                 </div>
               ))
             ) : (
-              <div className="fishbones-output-pane-empty">
+              <div className="libre-output-pane-empty">
                 No console output. Add{" "}
                 <code>std.debug.print(...)</code>{" "}
-                <span className="fishbones-output-pane-empty-hint">
+                <span className="libre-output-pane-empty-hint">
                   (or your language's print) inside your code to see
                   output here.
                 </span>
@@ -460,14 +460,14 @@ export default function OutputPane({
             (e.g. a lesson where the runner returned no results) so
             the tab isn't a dead end. */}
         {((!showTabs && hasTests) || (showTabs && activeTab === "tests")) && (
-          <div className="fishbones-output-tests">
+          <div className="libre-output-tests">
             {hasTests ? (
               result!.tests!.map((t, i) => (
                 <div
                   key={`t-${i}`}
-                  className={`fishbones-output-test fishbones-output-test--${t.passed ? "pass" : "fail"}`}
+                  className={`libre-output-test libre-output-test--${t.passed ? "pass" : "fail"}`}
                 >
-                  <span className="fishbones-output-test-glyph">
+                  <span className="libre-output-test-glyph">
                     <Icon
                       icon={t.passed ? check : xIcon}
                       size="xs"
@@ -475,14 +475,14 @@ export default function OutputPane({
                       weight="bold"
                     />
                   </span>
-                  <span className="fishbones-output-test-name">{t.name}</span>
+                  <span className="libre-output-test-name">{t.name}</span>
                   {!t.passed && t.error && (
-                    <pre className="fishbones-output-test-error">{t.error}</pre>
+                    <pre className="libre-output-test-error">{t.error}</pre>
                   )}
                 </div>
               ))
             ) : (
-              <div className="fishbones-output-pane-empty">
+              <div className="libre-output-pane-empty">
                 {testsExpected
                   ? "Run your code — test results will appear here."
                   : "This lesson doesn't have automated tests."}
@@ -525,8 +525,8 @@ export default function OutputPane({
         )}
 
         {result?.error && !showToolchainBanner && !(suppressToolchainBanner && missingLang) && (
-          <div className="fishbones-output-error">
-            <div className="fishbones-output-error-title">error</div>
+          <div className="libre-output-error">
+            <div className="libre-output-error-title">error</div>
             <pre>{result.error}</pre>
           </div>
         )}

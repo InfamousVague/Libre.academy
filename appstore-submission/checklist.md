@@ -15,7 +15,7 @@ Punch list for actually clicking through App Store Connect. Each item links to t
 ## Build & upload
 
 - [ ] `cd src-tauri/gen/apple && xcodegen generate`
-- [ ] `open fishbones.xcodeproj`
+- [ ] `open libre.xcodeproj`
 - [ ] Select **Generic iOS Device** as the destination.
 - [ ] **Product → Archive**.
 - [ ] In Organizer: **Distribute App → App Store Connect → Upload**.

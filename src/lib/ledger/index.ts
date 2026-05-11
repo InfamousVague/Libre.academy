@@ -110,7 +110,7 @@ export const ledger: LedgerTransport & {
 /// instructive error explaining the limitation.
 class UnsupportedTransport implements LedgerTransport {
   private readonly message =
-    "Hardware wallets aren't supported in this browser. Use the Fishbones desktop app, or open this lesson in Chrome / Edge / Opera.";
+    "Hardware wallets aren't supported in this browser. Use the Libre desktop app, or open this lesson in Chrome / Edge / Opera.";
 
   async listDevices() {
     return [];

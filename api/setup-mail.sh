@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Self-hosted outbound SMTP for Fishbones.
+# Self-hosted outbound SMTP for Libre.
 #
 # Installs Postfix + OpenDKIM on the VPS and configures them as a
 # loopback-only submission server (the API binary connects to
@@ -262,7 +262,7 @@ echo "password reset against an email you control and check inbox + spam:"
 echo
 echo "   curl -s -X POST -H 'Content-Type: application/json' \\"
 echo "     -d '{\"email\":\"YOUR_REAL_EMAIL\"}' \\"
-echo "     https://api.mattssoftware.com/fishbones/auth/password-reset/request"
+echo "     https://api.mattssoftware.com/libre/auth/password-reset/request"
 echo
 echo "If the message lands in spam, run it through https://www.mail-tester.com"
 echo "and follow whichever score-reducer it points at."

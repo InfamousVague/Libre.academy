@@ -125,14 +125,14 @@ export default function VerifyCourseOverlay({ session, onCancel, onClose }: Prop
 
   return (
     <div
-      className="fishbones-verify-overlay"
+      className="libre-verify-overlay"
       role="region"
       aria-label="Course verification"
     >
-      <div className="fishbones-verify-header">
-        <div className="fishbones-verify-title-block">
-          <div className="fishbones-verify-title">{session.label}</div>
-          <div className="fishbones-verify-subtitle">
+      <div className="libre-verify-header">
+        <div className="libre-verify-title-block">
+          <div className="libre-verify-title">{session.label}</div>
+          <div className="libre-verify-subtitle">
             {session.done
               ? `Done · ${session.total} lesson${session.total === 1 ? "" : "s"}`
               : session.current
@@ -141,7 +141,7 @@ export default function VerifyCourseOverlay({ session, onCancel, onClose }: Prop
           </div>
         </div>
         <button
-          className="fishbones-verify-icon-btn"
+          className="libre-verify-icon-btn"
           onClick={session.done ? onClose : onCancel}
           aria-label={session.done ? "Close" : "Cancel verification"}
           title={session.done ? "Close" : "Cancel"}
@@ -150,36 +150,36 @@ export default function VerifyCourseOverlay({ session, onCancel, onClose }: Prop
         </button>
       </div>
 
-      <div className="fishbones-verify-progress">
-        <div className="fishbones-verify-progress-bar" aria-hidden="true">
+      <div className="libre-verify-progress">
+        <div className="libre-verify-progress-bar" aria-hidden="true">
           <div
-            className="fishbones-verify-progress-fill"
+            className="libre-verify-progress-fill"
             style={{ width: `${pct}%` }}
           />
         </div>
-        <div className="fishbones-verify-progress-text">
+        <div className="libre-verify-progress-text">
           {session.index} / {session.total}
         </div>
       </div>
 
-      <div className="fishbones-verify-tally">
-        <span className="fishbones-verify-pill fishbones-verify-pill--pass">
+      <div className="libre-verify-tally">
+        <span className="libre-verify-pill libre-verify-pill--pass">
           <Icon icon={circleCheck} />
           {t.passed}
         </span>
-        <span className="fishbones-verify-pill fishbones-verify-pill--fail">
+        <span className="libre-verify-pill libre-verify-pill--fail">
           <Icon icon={circleX} />
           {t.failed}
         </span>
-        <span className="fishbones-verify-pill fishbones-verify-pill--skip">
+        <span className="libre-verify-pill libre-verify-pill--skip">
           <Icon icon={circleSlash} />
           {t.skipped}
         </span>
       </div>
 
-      <div className="fishbones-verify-list" role="list">
+      <div className="libre-verify-list" role="list">
         {session.results.length === 0 && !session.done && (
-          <div className="fishbones-verify-empty">
+          <div className="libre-verify-empty">
             <Icon icon={loader} />
             <span>Waiting for the first lesson…</span>
           </div>
@@ -196,45 +196,45 @@ export default function VerifyCourseOverlay({ session, onCancel, onClose }: Prop
           return (
             <div
               key={id}
-              className={`fishbones-verify-row fishbones-verify-row--${status}`}
+              className={`libre-verify-row libre-verify-row--${status}`}
               role="listitem"
             >
               <button
-                className="fishbones-verify-row-summary"
+                className="libre-verify-row-summary"
                 onClick={() => status === "fail" && toggleExpanded(id)}
                 aria-expanded={isExpanded}
                 aria-disabled={status !== "fail"}
               >
-                <span className="fishbones-verify-row-icon" aria-hidden="true">
+                <span className="libre-verify-row-icon" aria-hidden="true">
                   {status === "pass" && <Icon icon={circleCheck} />}
                   {status === "fail" && <Icon icon={circleX} />}
                   {status === "skip" && <Icon icon={circleSlash} />}
                 </span>
                 <span
-                  className="fishbones-verify-row-kind"
+                  className="libre-verify-row-kind"
                   aria-label={r.target.kind}
                   title={r.target.kind}
                 >
                   <Icon icon={kindIcon} />
                 </span>
-                <span className="fishbones-verify-row-title">
+                <span className="libre-verify-row-title">
                   {r.target.lesson.title}
                 </span>
-                <span className="fishbones-verify-row-meta">
+                <span className="libre-verify-row-meta">
                   {r.skipped
                     ? r.skipReason ?? "skipped"
                     : `${(r.durationMs / 1000).toFixed(2)}s`}
                 </span>
               </button>
               {isExpanded && status === "fail" && (
-                <div className="fishbones-verify-row-detail">
+                <div className="libre-verify-row-detail">
                   {r.result?.error && (
-                    <div className="fishbones-verify-row-error">
+                    <div className="libre-verify-row-error">
                       <strong>Error:</strong> {r.result.error}
                     </div>
                   )}
                   {(r.result?.tests ?? []).filter((t) => !t.passed).map((t, i) => (
-                    <div className="fishbones-verify-row-error" key={i}>
+                    <div className="libre-verify-row-error" key={i}>
                       <strong>{t.name}:</strong> {t.error}
                     </div>
                   ))}
@@ -242,7 +242,7 @@ export default function VerifyCourseOverlay({ session, onCancel, onClose }: Prop
                     .filter((l) => l.level === "error")
                     .slice(0, 5)
                     .map((l, i) => (
-                      <pre className="fishbones-verify-row-log" key={i}>
+                      <pre className="libre-verify-row-log" key={i}>
                         {l.text}
                       </pre>
                     ))}
@@ -254,9 +254,9 @@ export default function VerifyCourseOverlay({ session, onCancel, onClose }: Prop
       </div>
 
       {session.done && (
-        <div className="fishbones-verify-footer">
+        <div className="libre-verify-footer">
           <button
-            className="fishbones-verify-btn fishbones-verify-btn--primary"
+            className="libre-verify-btn libre-verify-btn--primary"
             onClick={copyAsPrompt}
             title="Copy a Markdown 'fix-me' prompt for Claude / ChatGPT"
           >
@@ -264,7 +264,7 @@ export default function VerifyCourseOverlay({ session, onCancel, onClose }: Prop
             <span>{flash?.key === "prompt" ? flash.label : "Copy fix prompt"}</span>
           </button>
           <button
-            className="fishbones-verify-btn"
+            className="libre-verify-btn"
             onClick={copyAsJson}
             title="Copy results as JSON"
           >
@@ -272,15 +272,15 @@ export default function VerifyCourseOverlay({ session, onCancel, onClose }: Prop
             <span>{flash?.key === "json" ? flash.label : "JSON"}</span>
           </button>
           <button
-            className="fishbones-verify-btn"
+            className="libre-verify-btn"
             onClick={downloadReport}
             title="Download the Markdown report as a file"
           >
             <Icon icon={flash?.key === "download" ? check : download} />
             <span>{flash?.key === "download" ? flash.label : "Save"}</span>
           </button>
-          <span className="fishbones-verify-footer-spacer" />
-          <button className="fishbones-verify-btn" onClick={onClose}>
+          <span className="libre-verify-footer-spacer" />
+          <button className="libre-verify-btn" onClick={onClose}>
             Close
           </button>
         </div>

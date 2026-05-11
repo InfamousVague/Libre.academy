@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /// Remove the legacy `puzzle` / `cloze` / `micropuzzle` lesson kinds
-/// from every staged starter course AND the bundled `.fishbones`
+/// from every staged starter course AND the bundled `.libre`
 /// archives. These three kinds were the pre-blocks-mode mobile-first
 /// drill formats; they've been superseded by the unified blocks
 /// render mode that lives ON the existing `exercise` / `mixed`
@@ -61,13 +61,13 @@ async function main() {
     console.log(`[scrub] (no staged starter courses at ${STAGED}; skipping)`);
   }
 
-  // 2) Bundled course archives (`.academy` + legacy `.fishbones`).
+  // 2) Bundled course archives (`.academy` + legacy `.libre`).
   //    Re-zip after patching the inner course.json. Skipping when
   //    the pack didn't contain any legacy kinds keeps re-runs cheap.
   if (existsSync(BUNDLED)) {
     console.log(`\n[scrub] bundled packs → ${BUNDLED}`);
     for (const file of await readdir(BUNDLED)) {
-      const ext = [".academy", ".fishbones"].find((e) => file.endsWith(e));
+      const ext = [".academy", ".libre"].find((e) => file.endsWith(e));
       if (!ext) continue;
       const courseId = file.slice(0, -ext.length);
       if (args.course && args.course !== courseId) continue;
@@ -154,11 +154,11 @@ async function scrubBundledPack(packPath) {
     // Determine the file list in the original archive so we re-zip
     // the same set of side-files (cover.jpg / etc.) that came in.
     const innerFiles = await readdir(tmp);
-    const tmpZip = join(tmp, "out.fishbones");
+    const tmpZip = join(tmp, "out.libre");
     const cwd = process.cwd();
     process.chdir(tmp);
     try {
-      execFileSync("zip", ["-q", "-X", tmpZip, ...innerFiles.filter((f) => f !== "out.fishbones")], {
+      execFileSync("zip", ["-q", "-X", tmpZip, ...innerFiles.filter((f) => f !== "out.libre")], {
         stdio: ["ignore", "ignore", "inherit"],
       });
     } finally {

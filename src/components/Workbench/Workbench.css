@@ -9,7 +9,7 @@
    (see `workbenchPct`), so the user can drag the left edge to resize the
    whole card. The 48% fallback below covers the first render before
    state initializes. */
-.fishbones-workbench {
+.libre-workbench {
   position: relative; /* anchor for the left-edge width handle */
   display: flex;
   flex-direction: column;
@@ -21,7 +21,7 @@
      in Workbench.tsx; whichever is larger on the current window wins. */
   min-width: 240px;
   max-width: 75%;
-  /* Only a left margin — the parent `.fishbones__lesson` supplies the top/bottom
+  /* Only a left margin — the parent `.libre__lesson` supplies the top/bottom
      10px so our top/bottom edges line up with the sidebar card. Doubling
      the vertical margins made the workbench float lower than the sidebar
      by 10px. */
@@ -44,7 +44,7 @@
    the EditorPane collapsing to its intrinsic content height in some
    browsers — the editor showed as a ~5px strip. Explicit column
    direction + `flex: 1` makes the height math unambiguous. */
-.fishbones-workbench-pane {
+.libre-workbench-pane {
   min-height: 0;
   min-width: 0;
   overflow: hidden;
@@ -52,18 +52,18 @@
   flex-direction: column;
 }
 
-.fishbones-workbench-pane--editor {
+.libre-workbench-pane--editor {
   border-bottom: 0; /* divider provides its own border */
 }
 
-.fishbones-workbench-pane .fishbones-editor,
-.fishbones-workbench-pane .fishbones-output {
+.libre-workbench-pane .libre-editor,
+.libre-workbench-pane .libre-output {
   flex: 1;
   min-height: 0;
   width: 100%;
 }
 
-.fishbones-workbench-divider {
+.libre-workbench-divider {
   flex: 0 0 6px;
   cursor: row-resize;
   background: var(--color-bg-primary);
@@ -77,20 +77,20 @@
   -webkit-user-select: none;
 }
 
-.fishbones-workbench-divider:hover,
-.fishbones-workbench-divider:active {
+.libre-workbench-divider:hover,
+.libre-workbench-divider:active {
   background: var(--color-bg-tertiary);
 }
 
-.fishbones-workbench-divider-grip {
+.libre-workbench-divider-grip {
   width: 28px;
   height: 2px;
   background: var(--color-border-default);
   border-radius: 2px;
 }
 
-.fishbones-workbench-divider:hover .fishbones-workbench-divider-grip,
-.fishbones-workbench-divider:active .fishbones-workbench-divider-grip {
+.libre-workbench-divider:hover .libre-workbench-divider-grip,
+.libre-workbench-divider:active .libre-workbench-divider-grip {
   background: var(--color-text-tertiary);
 }
 
@@ -99,7 +99,7 @@
    absolutely positioned so it doesn't reflow the flex column inside.
    Transparent until hover — we don't want a visible seam against the
    reader prose, just a discoverable hit target. */
-.fishbones-workbench-width-handle {
+.libre-workbench-width-handle {
   position: absolute;
   top: 0;
   left: -4px; /* overlap the border so the hit target feels intuitive */
@@ -114,7 +114,7 @@
   touch-action: none;
 }
 
-.fishbones-workbench-width-handle::after {
+.libre-workbench-width-handle::after {
   /* Thin vertical marker line that lights up on hover. Gives a visible
      cue where the handle is without painting a seam across the card. */
   content: "";
@@ -129,26 +129,26 @@
   transition: background var(--fb-motion-snappy);
 }
 
-.fishbones-workbench-width-handle:hover::after,
-.fishbones-workbench-width-handle:active::after {
+.libre-workbench-width-handle:hover::after,
+.libre-workbench-width-handle:active::after {
   background: var(--color-text-tertiary);
 }
 
-.fishbones-workbench-width-handle:hover,
-.fishbones-workbench-width-handle:active {
+.libre-workbench-width-handle:hover,
+.libre-workbench-width-handle:active {
   background: rgba(255, 255, 255, 0.04);
 }
 
 /* Light themes want a dark-on-light hover fill instead of the rgba-white
    tint used in dark themes. */
-[data-theme="light"] .fishbones-workbench-width-handle:hover,
-[data-theme="light"] .fishbones-workbench-width-handle:active,
-[data-theme-name="ayu-light"] .fishbones-workbench-width-handle:hover,
-[data-theme-name="ayu-light"] .fishbones-workbench-width-handle:active,
-[data-theme-name="ayu-light"] .fishbones-workbench-width-handle:hover,
-[data-theme-name="ayu-light"] .fishbones-workbench-width-handle:active,
-[data-theme-name="catppuccin-latte"] .fishbones-workbench-width-handle:hover,
-[data-theme-name="catppuccin-latte"] .fishbones-workbench-width-handle:active {
+[data-theme="light"] .libre-workbench-width-handle:hover,
+[data-theme="light"] .libre-workbench-width-handle:active,
+[data-theme-name="ayu-light"] .libre-workbench-width-handle:hover,
+[data-theme-name="ayu-light"] .libre-workbench-width-handle:active,
+[data-theme-name="ayu-light"] .libre-workbench-width-handle:hover,
+[data-theme-name="ayu-light"] .libre-workbench-width-handle:active,
+[data-theme-name="catppuccin-latte"] .libre-workbench-width-handle:hover,
+[data-theme-name="catppuccin-latte"] .libre-workbench-width-handle:active {
   background: rgba(0, 0, 0, 0.04);
 }
 
@@ -157,7 +157,7 @@
    max-width cap that make sense beside a reader, and remove min-width
    so the card can shrink on narrow windows without clipping. The width
    handle is hidden by the component itself (conditional render). */
-.fishbones-workbench--fill {
+.libre-workbench--fill {
   width: 100% !important; /* beats the inline style the non-fill branch sets */
   min-width: 0;
   max-width: 100%;
@@ -167,7 +167,7 @@
 /* When the workbench is rendered inside the popped-out window it occupies
    the full viewport instead of a floating card — reset card styling so it
    fills edge-to-edge. */
-.fishbones-workbench--standalone {
+.libre-workbench--standalone {
   width: 100%;
   min-width: 0;
   height: 100vh;
@@ -179,7 +179,7 @@
 
 /* Layout for the popped-out browser/webview window. Full viewport with a
    thin title strip so the learner can see which lesson they're editing. */
-.fishbones-workbench-standalone-host {
+.libre-workbench-standalone-host {
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -187,7 +187,7 @@
   background: var(--color-bg-primary);
 }
 
-.fishbones-workbench-standalone-title {
+.libre-workbench-standalone-title {
   padding: 8px 14px;
   font-size: 12px;
   font-weight: 600;
@@ -196,13 +196,13 @@
   border-bottom: 1px solid var(--color-border-default);
 }
 
-.fishbones-workbench-standalone-title span {
+.libre-workbench-standalone-title span {
   color: var(--color-text-tertiary);
   font-weight: 400;
   margin-left: 4px;
 }
 
-.fishbones-workbench-standalone-host > .fishbones-workbench {
+.libre-workbench-standalone-host > .libre-workbench {
   flex: 1;
   width: 100%;
   min-width: 0;
@@ -224,7 +224,7 @@
    The width-handle gets hidden too because dragging horizontal width
    on a phone doesn't make sense (no second pane next to us). */
 @media (max-width: 767px) {
-  .fishbones-workbench {
+  .libre-workbench {
     background: transparent;
     border: 0;
     border-radius: 0;
@@ -240,7 +240,7 @@
     max-width: none;
   }
 
-  .fishbones-workbench-width-handle {
+  .libre-workbench-width-handle {
     display: none;
   }
 }

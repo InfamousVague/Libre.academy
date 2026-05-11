@@ -99,7 +99,7 @@ function existingChallengeLanguages() {
   return out;
 }
 
-const SYSTEM_PROMPT = `You author ONE stand-alone kata-style coding challenge for the Fishbones app. Given a language, a difficulty tier, and a topic, return a single JSON object:
+const SYSTEM_PROMPT = `You author ONE stand-alone kata-style coding challenge for the Libre app. Given a language, a difficulty tier, and a topic, return a single JSON object:
 
   {
     "title": "short descriptive title (≤ 60 chars)",
@@ -360,7 +360,7 @@ function loadOrCreateCourse(language) {
   const course = {
     id: packId,
     title: `${language[0].toUpperCase() + language.slice(1)} Challenges`,
-    author: "Fishbones",
+    author: "Libre",
     language,
     packType: "challenges",
     releaseStatus: "BETA",

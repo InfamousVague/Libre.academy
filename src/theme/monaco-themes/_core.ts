@@ -8,20 +8,20 @@ import type { ThemeName } from "../themes";
 export type MonacoThemeName =
   | "vs"
   | "vs-dark"
-  | "fishbones-dark"
-  | "fishbones-synthwave"
-  | "fishbones-claude-code-dark"
-  | "fishbones-ayu-mirage"
-  | "fishbones-ayu-dark"
-  | "fishbones-catppuccin-frappe"
-  | "fishbones-catppuccin-macchiato"
-  | "fishbones-catppuccin-mocha"
-  | "fishbones-tokyo-night"
-  | "fishbones-rose-pine"
-  | "fishbones-ubuntu-dark"
-  | "fishbones-absent-contrast"
-  | "fishbones-vesper"
-  | "fishbones-word";
+  | "libre-dark"
+  | "libre-synthwave"
+  | "libre-claude-code-dark"
+  | "libre-ayu-mirage"
+  | "libre-ayu-dark"
+  | "libre-catppuccin-frappe"
+  | "libre-catppuccin-macchiato"
+  | "libre-catppuccin-mocha"
+  | "libre-tokyo-night"
+  | "libre-rose-pine"
+  | "libre-ubuntu-dark"
+  | "libre-absent-contrast"
+  | "libre-vesper"
+  | "libre-word";
 
 /// Map each app theme to the Monaco theme name we want the editor to load.
 /// The light app themes (ayu-light, catppuccin-latte) intentionally pair
@@ -29,20 +29,20 @@ export type MonacoThemeName =
 /// out next to the app's chrome, while a dark editor frames the code as a
 /// distinct surface. See the matching note on `monacoTheme` in themes.ts.
 export const MONACO_THEME_BY_APP_THEME: Record<ThemeName, MonacoThemeName> = {
-  "default-dark": "fishbones-dark",
-  synthwave: "fishbones-synthwave",
-  "claude-code-dark": "fishbones-claude-code-dark",
-  "ayu-light": "fishbones-dark",
-  "ayu-mirage": "fishbones-ayu-mirage",
-  "ayu-dark": "fishbones-ayu-dark",
-  "catppuccin-latte": "fishbones-dark",
-  "catppuccin-frappe": "fishbones-catppuccin-frappe",
-  "catppuccin-macchiato": "fishbones-catppuccin-macchiato",
-  "catppuccin-mocha": "fishbones-catppuccin-mocha",
-  "tokyo-night": "fishbones-tokyo-night",
-  "rose-pine": "fishbones-rose-pine",
-  "ubuntu-dark": "fishbones-ubuntu-dark",
-  "absent-contrast": "fishbones-absent-contrast",
-  vesper: "fishbones-vesper",
-  word: "fishbones-word",
+  "default-dark": "libre-dark",
+  synthwave: "libre-synthwave",
+  "claude-code-dark": "libre-claude-code-dark",
+  "ayu-light": "libre-dark",
+  "ayu-mirage": "libre-ayu-mirage",
+  "ayu-dark": "libre-ayu-dark",
+  "catppuccin-latte": "libre-dark",
+  "catppuccin-frappe": "libre-catppuccin-frappe",
+  "catppuccin-macchiato": "libre-catppuccin-macchiato",
+  "catppuccin-mocha": "libre-catppuccin-mocha",
+  "tokyo-night": "libre-tokyo-night",
+  "rose-pine": "libre-rose-pine",
+  "ubuntu-dark": "libre-ubuntu-dark",
+  "absent-contrast": "libre-absent-contrast",
+  vesper: "libre-vesper",
+  word: "libre-word",
 };

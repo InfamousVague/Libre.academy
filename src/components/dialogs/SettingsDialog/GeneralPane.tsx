@@ -120,16 +120,16 @@ export default function GeneralPane() {
 
   return (
     <section>
-      <h3 className="fishbones-settings-section">General</h3>
-      <p className="fishbones-settings-blurb">
+      <h3 className="libre-settings-section">General</h3>
+      <p className="libre-settings-blurb">
         About this build, and where to grab the next one.
       </p>
 
       {/* ── Updates sub-panel ─────────────────────────────────── */}
-      <div className="fishbones-settings-data-row">
+      <div className="libre-settings-data-row">
         <div>
-          <div className="fishbones-settings-data-label">App version</div>
-          <div className="fishbones-settings-data-hint">
+          <div className="libre-settings-data-label">App version</div>
+          <div className="libre-settings-data-hint">
             {version ? (
               <>
                 You're running <strong>v{version}</strong>.
@@ -138,14 +138,14 @@ export default function GeneralPane() {
               <>Reading version…</>
             )}
             {state.kind === "uptodate" && (
-              <span className="fishbones-settings-data-success">
+              <span className="libre-settings-data-success">
                 {" · "}You're up to date.
               </span>
             )}
           </div>
         </div>
         <button
-          className="fishbones-settings-secondary"
+          className="libre-settings-secondary"
           onClick={checkForUpdates}
           disabled={state.kind === "checking" || state.kind === "downloading"}
         >
@@ -154,19 +154,19 @@ export default function GeneralPane() {
       </div>
 
       {state.kind === "available" && (
-        <div className="fishbones-settings-update">
-          <div className="fishbones-settings-update-head">
+        <div className="libre-settings-update">
+          <div className="libre-settings-update-head">
             <Icon icon={rocket} size="sm" color="currentColor" />
             <div>
-              <div className="fishbones-settings-update-title">
-                Fishbones v{state.version} is available
+              <div className="libre-settings-update-title">
+                Libre v{state.version} is available
               </div>
-              <div className="fishbones-settings-update-sub">
+              <div className="libre-settings-update-sub">
                 Download + install from inside the app — no reinstall needed.
               </div>
             </div>
             <button
-              className="fishbones-settings-primary"
+              className="libre-settings-primary"
               onClick={downloadAndInstall}
             >
               <Icon icon={arrowDownToLine} size="xs" color="currentColor" />
@@ -174,11 +174,11 @@ export default function GeneralPane() {
             </button>
           </div>
           {state.notes.trim().length > 0 && (
-            <div className="fishbones-settings-update-notes">
-              <div className="fishbones-settings-update-notes-label">
+            <div className="libre-settings-update-notes">
+              <div className="libre-settings-update-notes-label">
                 What's new
               </div>
-              <pre className="fishbones-settings-update-notes-body">
+              <pre className="libre-settings-update-notes-body">
                 {state.notes}
               </pre>
             </div>
@@ -187,14 +187,14 @@ export default function GeneralPane() {
       )}
 
       {state.kind === "downloading" && (
-        <div className="fishbones-settings-update">
-          <div className="fishbones-settings-update-head">
+        <div className="libre-settings-update">
+          <div className="libre-settings-update-head">
             <Icon icon={arrowDownToLine} size="sm" color="currentColor" />
             <div>
-              <div className="fishbones-settings-update-title">
+              <div className="libre-settings-update-title">
                 Downloading update…
               </div>
-              <div className="fishbones-settings-update-sub">
+              <div className="libre-settings-update-sub">
                 {state.total
                   ? `${(state.progress / 1024 / 1024).toFixed(1)} / ${(
                       state.total / 1024 / 1024
@@ -207,14 +207,14 @@ export default function GeneralPane() {
       )}
 
       {state.kind === "ready" && (
-        <div className="fishbones-settings-update">
-          <div className="fishbones-settings-update-head">
+        <div className="libre-settings-update">
+          <div className="libre-settings-update-head">
             <Icon icon={checkIcon} size="sm" color="currentColor" />
             <div>
-              <div className="fishbones-settings-update-title">
+              <div className="libre-settings-update-title">
                 Update installed
               </div>
-              <div className="fishbones-settings-update-sub">
+              <div className="libre-settings-update-sub">
                 Restart the app to switch to the new version.
               </div>
             </div>
@@ -223,7 +223,7 @@ export default function GeneralPane() {
       )}
 
       {state.kind === "error" && (
-        <div className="fishbones-settings-error">
+        <div className="libre-settings-error">
           Couldn't check for updates: {state.message}
         </div>
       )}

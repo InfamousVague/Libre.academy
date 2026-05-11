@@ -46,7 +46,7 @@ import cssWorker from "monaco-editor/esm/vs/language/css/css.worker?worker";
 import htmlWorker from "monaco-editor/esm/vs/language/html/html.worker?worker";
 import tsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
 
-/// Eagerly register every basic-language Monarch tokenizer Fishbones
+/// Eagerly register every basic-language Monarch tokenizer Libre
 /// uses. By default `monaco-editor`'s editor.main.js wires these up
 /// behind dynamic imports (so a JS-only lesson doesn't pay the bundle
 /// cost of Kotlin/Rust/etc), but the Tauri production webview hits a
@@ -67,7 +67,7 @@ import "monaco-editor/esm/vs/language/json/monaco.contribution";
 import "monaco-editor/esm/vs/language/css/monaco.contribution";
 import "monaco-editor/esm/vs/language/html/monaco.contribution";
 
-/// Direct imports of every Monarch tokenizer Fishbones uses. The
+/// Direct imports of every Monarch tokenizer Libre uses. The
 /// `<lang>.contribution` imports above only register the LANGUAGE
 /// EXISTS — the actual Monarch grammar lives behind `loader: () =>
 /// import("./<lang>")` inside Monaco. In Tauri's production webview

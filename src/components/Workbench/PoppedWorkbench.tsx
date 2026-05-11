@@ -147,8 +147,8 @@ export default function PoppedWorkbench() {
   }
 
   return (
-    <div className="fishbones-workbench-standalone-host">
-      <div className="fishbones-workbench-standalone-title">
+    <div className="libre-workbench-standalone-host">
+      <div className="libre-workbench-standalone-title">
         {lesson.title} · <span>popped workbench</span>
       </div>
       {/* `fillWidth` is the right knob for the popped window: the
@@ -156,7 +156,7 @@ export default function PoppedWorkbench() {
           half-width default that makes sense beside a reader leaves
           the right ~half of the window empty. Without this prop, the
           Workbench writes an inline `width: 48%` style that beats the
-          `.fishbones-workbench-standalone-host > .fishbones-workbench
+          `.libre-workbench-standalone-host > .libre-workbench
           { width: 100% }` rule on specificity. `fillWidth` skips the
           inline style entirely AND hides the drag handle (no second
           pane to resize against). */}

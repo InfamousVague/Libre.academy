@@ -22,7 +22,7 @@ use std::time::Instant;
 use serde::{Deserialize, Serialize};
 
 /// Result of a `probe_language_toolchain` call. `installed: true` means
-/// Fishbones can run code in this language right now; `installed: false`
+/// Libre can run code in this language right now; `installed: false`
 /// with a populated `install_hint` means we know how to fix that and
 /// the UI can offer a one-click install.
 #[derive(Debug, Serialize)]

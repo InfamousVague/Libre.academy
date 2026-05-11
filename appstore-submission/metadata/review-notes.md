@@ -62,7 +62,7 @@ Add an optional sentence or two if a recent rejection touched something specific
 
 - **"Why fetch from external playgrounds?"** — `Lessons in languages without a browser-native runtime (Rust, Go, Haskell, Scala, Cairo, Move, Sway, Dart) post the user's code to the language's official playground (play.rust-lang.org, play.golang.org, etc.) and display the result. Submission is on user click only — no auto-runs, no network during reading.`
 
-- **"Why does the app POST to api.mattssoftware.com?"** — `Only when the user signs in. The relay holds the user's progress timestamps for cross-device sync. Code: src/hooks/useFishbonesCloud.ts. The relay is operated by the same entity that publishes the app.`
+- **"Why does the app POST to api.mattssoftware.com?"** — `Only when the user signs in. The relay holds the user's progress timestamps for cross-device sync. Code: src/hooks/useLibreCloud.ts. The relay is operated by the same entity that publishes the app.`
 
 ## Attachments
 

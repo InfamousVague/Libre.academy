@@ -40,26 +40,26 @@ export default function TrackCard({
   return (
     <button
       type="button"
-      className="fishbones-trees__card fishbones-trees__track-card"
+      className="libre-trees__card libre-trees__track-card"
       style={{ "--tree-accent": track.accent } as React.CSSProperties}
       onClick={onOpen}
     >
-      <div className="fishbones-trees__card-head">
-        <span className="fishbones-trees__track-card-tag">
+      <div className="libre-trees__card-head">
+        <span className="libre-trees__track-card-tag">
           <span
-            className="fishbones-trees__track-card-icon"
+            className="libre-trees__track-card-icon"
             aria-hidden
           >
             <Icon icon={trainTrack} size="xs" color="currentColor" weight="bold" />
           </span>
           <span>{track.short}</span>
         </span>
-        <span className="fishbones-trees__card-pct">{pct}%</span>
+        <span className="libre-trees__card-pct">{pct}%</span>
       </div>
-      <div className="fishbones-trees__card-title">{track.title}</div>
-      <div className="fishbones-trees__track-card-outcome">{track.outcome}</div>
-      <div className="fishbones-trees__card-blurb">{track.description}</div>
-      <div className="fishbones-trees__card-meta">
+      <div className="libre-trees__card-title">{track.title}</div>
+      <div className="libre-trees__track-card-outcome">{track.outcome}</div>
+      <div className="libre-trees__card-blurb">{track.description}</div>
+      <div className="libre-trees__card-meta">
         <span>
           {stepCount} step{stepCount === 1 ? "" : "s"}
           {track.estimatedHours ? ` · ~${track.estimatedHours}h` : ""}
@@ -68,11 +68,11 @@ export default function TrackCard({
         </span>
       </div>
       <div
-        className="fishbones-trees__card-bar"
+        className="libre-trees__card-bar"
         aria-label={`${pct} percent complete`}
       >
         <div
-          className="fishbones-trees__card-bar-fill"
+          className="libre-trees__card-bar-fill"
           style={{ width: `${pct}%` }}
         />
       </div>

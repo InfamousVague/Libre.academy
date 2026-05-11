@@ -62,10 +62,10 @@ export default function TracksView({
   }
 
   return (
-    <div className="fishbones-trees">
-      <header className="fishbones-trees__header">
-        <h1 className="fishbones-trees__title">Tracks</h1>
-        <p className="fishbones-trees__blurb">
+    <div className="libre-trees">
+      <header className="libre-trees__header">
+        <h1 className="libre-trees__title">Tracks</h1>
+        <p className="libre-trees__blurb">
           Curated step-by-step paths. Pick the outcome you want and
           follow the sequence — each step lands on a real lesson in
           one of your installed books, with progress carried back
@@ -78,9 +78,9 @@ export default function TracksView({
           content instead of a row above the tree grid. The
           `--tracks` modifier carries the train-track accent. */}
       {TRACKS.length > 0 ? (
-        <section className="fishbones-trees__section fishbones-trees__section--tracks">
-          <div className="fishbones-trees__section-label fishbones-trees__section-label--tracks">
-            <span className="fishbones-trees__section-icon" aria-hidden>
+        <section className="libre-trees__section libre-trees__section--tracks">
+          <div className="libre-trees__section-label libre-trees__section-label--tracks">
+            <span className="libre-trees__section-icon" aria-hidden>
               <Icon
                 icon={trainTrack}
                 size="xs"
@@ -89,11 +89,11 @@ export default function TracksView({
               />
             </span>
             <span>All tracks</span>
-            <span className="fishbones-trees__section-sublabel">
+            <span className="libre-trees__section-sublabel">
               · {TRACKS.length} curated path{TRACKS.length === 1 ? "" : "s"}
             </span>
           </div>
-          <div className="fishbones-trees__grid fishbones-trees__grid--tracks">
+          <div className="libre-trees__grid libre-trees__grid--tracks">
             {TRACKS.map((t) => (
               <TrackCard
                 key={t.id}
@@ -106,8 +106,8 @@ export default function TracksView({
           </div>
         </section>
       ) : (
-        <section className="fishbones-trees__section">
-          <p className="fishbones-trees__blurb">
+        <section className="libre-trees__section">
+          <p className="libre-trees__blurb">
             No tracks defined yet. Tracks live in
             <code> src/data/tracks/</code> — author your own by
             picking a sequence of skill nodes from the existing

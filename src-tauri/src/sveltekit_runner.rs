@@ -592,7 +592,7 @@ fn resolve_node_paths(app: &AppHandle) -> NodePaths {
 // ---- Scaffold templates -------------------------------------------------
 
 const SCAFFOLD_PACKAGE_JSON: &str = r#"{
-  "name": "fishbones-sveltekit-lesson",
+  "name": "libre-sveltekit-lesson",
   "private": true,
   "version": "0.0.1",
   "type": "module",

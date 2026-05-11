@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { describeAuthProvider } from "./helpers";
 import { resetAccount } from "../../../lib/resetAccount";
-import type { UseFishbonesCloud } from "../../../hooks/useFishbonesCloud";
+import type { UseLibreCloud } from "../../../hooks/useLibreCloud";
 
 interface AccountSectionProps {
   user: {
@@ -23,7 +23,7 @@ interface AccountSectionProps {
   /// learner's progress rows on the relay (best-effort — falls back
   /// to local-only when the relay route 404s or the device is
   /// offline).
-  cloud: UseFishbonesCloud;
+  cloud: UseLibreCloud;
 }
 
 /// Account/Profile section. Rendered only when signed in. Surfaces the
@@ -66,39 +66,39 @@ export default function AccountSection({
 
   return (
     <section>
-      <h3 className="fishbones-settings-section">Account</h3>
-      <p className="fishbones-settings-blurb">
-        Your Fishbones cloud account. Lesson progress syncs across
+      <h3 className="libre-settings-section">Account</h3>
+      <p className="libre-settings-blurb">
+        Your Libre cloud account. Lesson progress syncs across
         devices when signed in; nothing is uploaded otherwise.
       </p>
 
-      <div className="fishbones-settings-account-card">
-        <div className="fishbones-settings-account-avatar" aria-hidden>
+      <div className="libre-settings-account-card">
+        <div className="libre-settings-account-avatar" aria-hidden>
           {initial}
         </div>
-        <div className="fishbones-settings-account-meta">
-          <div className="fishbones-settings-account-name">
+        <div className="libre-settings-account-meta">
+          <div className="libre-settings-account-name">
             {displayName || user.email || "Signed in"}
           </div>
           {user.email && displayName && (
-            <div className="fishbones-settings-account-email">{user.email}</div>
+            <div className="libre-settings-account-email">{user.email}</div>
           )}
-          <div className="fishbones-settings-account-provider">
+          <div className="libre-settings-account-provider">
             {providerLabel}
           </div>
         </div>
       </div>
 
-      <div className="fishbones-settings-data-row">
+      <div className="libre-settings-data-row">
         <div>
-          <div className="fishbones-settings-data-label">Sign out</div>
-          <div className="fishbones-settings-data-hint">
+          <div className="libre-settings-data-label">Sign out</div>
+          <div className="libre-settings-data-hint">
             Removes the cloud token from this device. Your local courses
             and progress stay; you can sign back in any time.
           </div>
         </div>
         <button
-          className="fishbones-settings-secondary"
+          className="libre-settings-secondary"
           onClick={onSignOut}
           disabled={signingOut || deletingAccount}
         >
@@ -121,10 +121,10 @@ export default function AccountSection({
           preferences survive. Window reloads after success so the
           freshly-emptied state seeds cleanly on next mount.
       */}
-      <div className="fishbones-settings-data-row">
+      <div className="libre-settings-data-row">
         <div>
-          <div className="fishbones-settings-data-label">Start fresh</div>
-          <div className="fishbones-settings-data-hint">
+          <div className="libre-settings-data-label">Start fresh</div>
+          <div className="libre-settings-data-hint">
             {freshArmed
               ? "Tap Confirm within 5 s to wipe every course, completion, achievement, streak, and cached progress on this device, plus the matching cloud rows. The page will reload with a freshly-seeded library."
               : freshBusy
@@ -135,7 +135,7 @@ export default function AccountSection({
           </div>
         </div>
         <button
-          className="fishbones-settings-danger"
+          className="libre-settings-danger"
           disabled={freshBusy || signingOut || deletingAccount}
           onClick={async () => {
             if (!freshArmed) {
@@ -169,26 +169,26 @@ export default function AccountSection({
         </button>
       </div>
 
-      <div className="fishbones-settings-data-row">
+      <div className="libre-settings-data-row">
         <div>
-          <div className="fishbones-settings-data-label">Delete account</div>
-          <div className="fishbones-settings-data-hint">
-            Permanently deletes your Fishbones cloud account, all synced
+          <div className="libre-settings-data-label">Delete account</div>
+          <div className="libre-settings-data-hint">
+            Permanently deletes your Libre cloud account, all synced
             progress, and any uploaded courses. Local files on this
             device are not affected. Cannot be undone.
           </div>
         </div>
         {confirmDeleteAccount ? (
-          <div className="fishbones-settings-confirm">
+          <div className="libre-settings-confirm">
             <button
-              className="fishbones-settings-secondary"
+              className="libre-settings-secondary"
               onClick={onCancelDelete}
               disabled={deletingAccount}
             >
               Cancel
             </button>
             <button
-              className="fishbones-settings-danger"
+              className="libre-settings-danger"
               onClick={onConfirmDelete}
               disabled={deletingAccount}
             >
@@ -197,7 +197,7 @@ export default function AccountSection({
           </div>
         ) : (
           <button
-            className="fishbones-settings-danger"
+            className="libre-settings-danger"
             onClick={onRequestDeleteConfirm}
             disabled={signingOut}
           >

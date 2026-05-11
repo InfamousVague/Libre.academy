@@ -48,7 +48,7 @@ const md = new MarkdownIt({
 });
 
 // Render code blocks with a data attribute + escaped raw so we can find them
-// post-render and re-emit with Shiki. Using `data-fishbones-lang` so Shiki's own
+// post-render and re-emit with Shiki. Using `data-libre-lang` so Shiki's own
 // output class doesn't collide if we ever swap the theme at runtime.
 //
 // When the info string contains the word `playground` (e.g. ```rust playground),
@@ -69,13 +69,13 @@ md.renderer.rules.fence = (tokens, idx) => {
   // LessonReader hydrates the marker into a <DeviceAction> React
   // component that knows how to talk to the singleton ledger
   // transport. The base64 wrapper keeps the JSON HTML-safe through
-  // the `data-fishbones-config` attribute.
+  // the `data-libre-config` attribute.
   if (lang === "device-action") {
     const raw = (token.content || "").trim();
     const b64 = typeof btoa === "function"
       ? btoa(unescape(encodeURIComponent(raw)))
       : Buffer.from(raw, "utf-8").toString("base64");
-    return `<div class="fishbones-device-action" data-fishbones-config="${b64}"></div>`;
+    return `<div class="libre-device-action" data-libre-config="${b64}"></div>`;
   }
   // Tutorial filename convention — Svelte's tutorial markdown (and a
   // few others we've imported) prefixes every code fence with a
@@ -92,12 +92,12 @@ md.renderer.rules.fence = (tokens, idx) => {
     ? btoa(unescape(encodeURIComponent(raw)))
     : Buffer.from(raw, "utf-8").toString("base64");
   if (isPlayground) {
-    return `<div class="fishbones-inline-sandbox" data-fishbones-lang="${escapeAttr(lang)}" data-fishbones-src="${b64}"></div>`;
+    return `<div class="libre-inline-sandbox" data-libre-lang="${escapeAttr(lang)}" data-libre-src="${b64}"></div>`;
   }
   const filenameAttr = filename
-    ? ` data-fishbones-filename="${escapeAttr(filename)}"`
+    ? ` data-libre-filename="${escapeAttr(filename)}"`
     : "";
-  return `<pre class="fishbones-code-pending" data-fishbones-lang="${escapeAttr(lang)}" data-fishbones-src="${b64}"${filenameAttr}></pre>`;
+  return `<pre class="libre-code-pending" data-libre-lang="${escapeAttr(lang)}" data-libre-src="${b64}"${filenameAttr}></pre>`;
 };
 
 /// Detect a leading `/// file: <path>` header line on a code-fence
@@ -212,7 +212,7 @@ function annotateTtsBlocks(html: string): string {
 ///   > optional body lines...
 ///
 /// and replace the block with a sentinel marker. The sentinel looks like
-/// a paragraph of only the marker text (`__FISHBONES_CALLOUT_N__`) so
+/// a paragraph of only the marker text (`__LIBRE_CALLOUT_N__`) so
 /// markdown-it leaves it alone. After render we restore the marker with
 /// the styled callout HTML, which includes the ORIGINAL inner body run
 /// back through a mini markdown render so inline code / links / emphasis
@@ -250,12 +250,12 @@ function transformCallouts(src: string): {
     stash.push({ kind, bodyHtml });
     // Emit a sentinel that markdown-it preserves as a literal paragraph.
     // IMPORTANT: do NOT wrap the token in `__...__` — CommonMark parses
-    // that as bold emphasis (`<strong>FISHBONES_CALLOUT_0</strong>`), so
+    // that as bold emphasis (`<strong>LIBRE_CALLOUT_0</strong>`), so
     // the restore regex never matches and the literal token leaks visibly
     // into the rendered HTML. Bare letters + digits + a single-letter
     // boundary at each end survive markdown processing untouched.
     out.push("");
-    out.push(`FISHBONESCALLOUTX${stash.length - 1}X`);
+    out.push(`LIBRECALLOUTX${stash.length - 1}X`);
     out.push("");
   }
 
@@ -263,7 +263,7 @@ function transformCallouts(src: string): {
     md: out.join("\n"),
     restore: (html: string) => {
       return html.replace(
-        /<p>FISHBONESCALLOUTX(\d+)X<\/p>/g,
+        /<p>LIBRECALLOUTX(\d+)X<\/p>/g,
         (_m, n: string) => {
           const entry = stash[parseInt(n, 10)];
           if (!entry) return "";
@@ -306,12 +306,12 @@ function wrapIconSvg(inner: string): string {
 function renderCalloutBlock(kind: CalloutKind, bodyHtml: string): string {
   const label = CALLOUT_LABELS[kind];
   return (
-    `<div class="fishbones-callout fishbones-callout--${kind}">` +
-    `<div class="fishbones-callout-head">` +
-    `<span class="fishbones-callout-glyph" aria-hidden="true">${CALLOUT_GLYPH_SVG[kind]}</span>` +
-    `<span class="fishbones-callout-label">${escapeHtml(label)}</span>` +
+    `<div class="libre-callout libre-callout--${kind}">` +
+    `<div class="libre-callout-head">` +
+    `<span class="libre-callout-glyph" aria-hidden="true">${CALLOUT_GLYPH_SVG[kind]}</span>` +
+    `<span class="libre-callout-label">${escapeHtml(label)}</span>` +
     `</div>` +
-    `<div class="fishbones-callout-body">${bodyHtml}</div>` +
+    `<div class="libre-callout-body">${bodyHtml}</div>` +
     `</div>`
   );
 }
@@ -320,12 +320,12 @@ function renderCalloutBlock(kind: CalloutKind, bodyHtml: string): string {
 
 async function replaceCodeFencePlaceholders(html: string): Promise<string> {
   // Filename attr is optional — the regex makes the whole `data-
-  // fishbones-filename="…"` group optional with a `?`. Without that
+  // libre-filename="…"` group optional with a `?`. Without that
   // optionality, fences without a `/// file:` header would skip the
   // placeholder pass entirely and render as raw `<pre>` with the
   // pending class.
   const placeholderRe =
-    /<pre class="fishbones-code-pending" data-fishbones-lang="([^"]*)" data-fishbones-src="([^"]*)"(?: data-fishbones-filename="([^"]*)")?><\/pre>/g;
+    /<pre class="libre-code-pending" data-libre-lang="([^"]*)" data-libre-src="([^"]*)"(?: data-libre-filename="([^"]*)")?><\/pre>/g;
 
   const chunks: string[] = [];
   let lastIndex = 0;
@@ -340,14 +340,14 @@ async function replaceCodeFencePlaceholders(html: string): Promise<string> {
     const filename = match[3] ? decodeAttr(match[3]) : undefined;
     const code = decodeB64(b64);
     jobs.push(highlightCode(code, lang, filename));
-    chunks.push(`__FISHBONES_CODE_${jobs.length - 1}__`);
+    chunks.push(`__LIBRE_CODE_${jobs.length - 1}__`);
   }
   chunks.push(html.slice(lastIndex));
 
   const highlighted = await Promise.all(jobs);
   let joined = chunks.join("");
   for (let i = 0; i < highlighted.length; i++) {
-    joined = joined.replace(`__FISHBONES_CODE_${i}__`, highlighted[i]);
+    joined = joined.replace(`__LIBRE_CODE_${i}__`, highlighted[i]);
   }
   return joined;
 }
@@ -358,7 +358,7 @@ async function highlightCode(
   filename?: string,
 ): Promise<string> {
   const trimmed = normalizeCodeBlock(code);
-  // The "Ask Fishbones" badge dispatches a `fishbones:ask-ai` custom
+  // The "Ask Libre" badge dispatches a `libre:ask-ai` custom
   // event when clicked — the AiAssistant root listener picks it up,
   // opens the panel, and sends a pre-formed prompt referencing this
   // exact snippet. Source is base64-encoded so it survives HTML
@@ -366,22 +366,22 @@ async function highlightCode(
   const b64 = typeof btoa === "function"
     ? btoa(unescape(encodeURIComponent(trimmed)))
     : Buffer.from(trimmed, "utf-8").toString("base64");
-  const askBadge = `<button class="fishbones-code-block-ask" type="button" data-fishbones-ask-code="${escapeAttr(b64)}" data-fishbones-ask-lang="${escapeAttr(lang)}" title="Discuss this code with the local assistant" aria-label="Ask Fishbones about this code">?</button>`;
+  const askBadge = `<button class="libre-code-block-ask" type="button" data-libre-ask-code="${escapeAttr(b64)}" data-libre-ask-lang="${escapeAttr(lang)}" title="Discuss this code with the local assistant" aria-label="Ask Libre about this code">?</button>`;
   // Filename strip — small chrome above the code that surfaces the
   // tutorial's `/// file: NAME` header without polluting the syntax-
   // highlighted body. We also tag the wrapper div with
   // `--with-filename` so CSS can adjust the inner radius / spacing.
   const filenameStrip = filename
-    ? `<div class="fishbones-code-filename"><span>${escapeHtml(filename)}</span></div>`
+    ? `<div class="libre-code-filename"><span>${escapeHtml(filename)}</span></div>`
     : "";
   const wrapperClass = filename
-    ? "fishbones-code-block fishbones-code-block--with-filename"
-    : "fishbones-code-block";
+    ? "libre-code-block libre-code-block--with-filename"
+    : "libre-code-block";
   try {
     const inner = await codeToHtml(trimmed, { lang: shikiLang(lang), theme: SHIKI_THEME });
     return `<div class="${wrapperClass}">${filenameStrip}${askBadge}${inner}</div>`;
   } catch {
-    return `<div class="${wrapperClass}">${filenameStrip}${askBadge}<pre class="fishbones-code-plain">${escapeHtml(trimmed)}</pre></div>`;
+    return `<div class="${wrapperClass}">${filenameStrip}${askBadge}<pre class="libre-code-plain">${escapeHtml(trimmed)}</pre></div>`;
   }
 }
 
@@ -476,14 +476,14 @@ function wrapSymbols(html: string, symbols: SymbolEntry[]): string {
     (full, inner: string) => {
       // Keep the existing <code> element when no symbol matches — the
       // prose rendering of inline code (mono font, tertiary bg) still
-      // happens via the CSS rule on .fishbones-reader-body code.
+      // happens via the CSS rule on .libre-reader-body code.
       const sym = bySymbolText.get(inner);
       if (!sym) return full;
       if (seen.has(inner)) return full; // first-occurrence-only
       seen.add(inner);
       const pattern = escapeAttr(inner);
       return (
-        `<code class="fishbones-inline-symbol" data-pattern="${pattern}">${escapeHtml(inner)}</code>`
+        `<code class="libre-inline-symbol" data-pattern="${pattern}">${escapeHtml(inner)}</code>`
       );
     },
   );
@@ -491,7 +491,7 @@ function wrapSymbols(html: string, symbols: SymbolEntry[]): string {
 
 /// Wrap the first occurrence of each glossary term in the rendered HTML
 /// with a dotted-underline span. Skips any text inside <code>, <pre>,
-/// or existing fishbones-* spans so we never annotate already-annotated
+/// or existing libre-* spans so we never annotate already-annotated
 /// content. Case-sensitive (matches how the LLM is told to emit terms
 /// exactly as they appear).
 function wrapGlossaryTerms(html: string, glossary: GlossaryEntry[]): string {
@@ -508,7 +508,7 @@ function wrapGlossaryTerms(html: string, glossary: GlossaryEntry[]): string {
   let inSkipTag = 0; // depth counter for <code>, <pre>, <a>, and annotated spans
   const skipOpenRe = /^<(code|pre|a)(\s|>)/i;
   const skipCloseRe = /^<\/(code|pre|a)>/i;
-  const skipAnnotatedOpenRe = /^<(code|span) class="fishbones-(inline-symbol|inline-term)/i;
+  const skipAnnotatedOpenRe = /^<(code|span) class="libre-(inline-symbol|inline-term)/i;
   const skipAnnotatedCloseRe = /^<\/(code|span)>/i;
 
   while (i < html.length) {
@@ -562,7 +562,7 @@ function rewriteTextForTerms(
     const end = start + match[0].length;
     out =
       out.slice(0, start) +
-      `<span class="fishbones-inline-term" data-term="${escapeAttr(t.term)}">${escapeHtml(match[0])}</span>` +
+      `<span class="libre-inline-term" data-term="${escapeAttr(t.term)}">${escapeHtml(match[0])}</span>` +
       out.slice(end);
     seen.add(t.term);
   }

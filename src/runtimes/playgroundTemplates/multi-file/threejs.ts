@@ -6,7 +6,7 @@
 import type { WorkbenchFile } from "../../../data/types";
 
 /// Three.js starter — importmap points at a CDN build, a rotating cube
-/// sits on a transparent canvas so it pops against the Fishbones dark
+/// sits on a transparent canvas so it pops against the Libre dark
 /// palette. Educational intent: "scene + camera + renderer, add mesh,
 /// animate in a requestAnimationFrame loop."
 export const THREEJS_TEMPLATE_FILES: WorkbenchFile[] = [

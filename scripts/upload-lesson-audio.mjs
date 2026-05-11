@@ -1,19 +1,19 @@
 #!/usr/bin/env node
-/// Upload `dist/audio/` to the Fishbones Vultr VPS so the MP3s live
+/// Upload `dist/audio/` to the Libre Vultr VPS so the MP3s live
 /// at `https://libre.academy/audio/<courseId>/<lessonId>.<sha>.mp3`.
 ///
 /// Mirrors the academy site's deploy pattern (sshpass + rsync) so
 /// auth flows through the same `api/.env`'s `VPS_PASSWORD`. The
 /// remote target sits inside the academy webroot:
 ///
-///   /var/www/fishbones-academy/audio/
+///   /var/www/libre-academy/audio/
 ///
 /// Important nginx note: the academy's own deploy.mjs uses
-/// `rsync --delete` against /var/www/fishbones-academy/, which would
+/// `rsync --delete` against /var/www/libre-academy/, which would
 /// wipe the audio dir on every site deploy. The companion patch in
 /// this same change adds `--exclude=audio/` to that rsync so a site
 /// deploy leaves the audio alone. (See
-/// `~/Development/Web/fishbones-academy/scripts/deploy.mjs`.)
+/// `~/Development/Web/libre-academy/scripts/deploy.mjs`.)
 ///
 /// USAGE:
 ///   node scripts/upload-lesson-audio.mjs                 # full sync
@@ -40,7 +40,7 @@ const VPS_HOST = process.env.VPS_HOST ?? "149.28.120.197";
 const VPS_USER = process.env.VPS_USER ?? "root";
 const VPS_PORT = process.env.VPS_PORT ?? "22";
 const VPS_TARGET_DIR =
-  process.env.VPS_AUDIO_TARGET_DIR ?? "/var/www/fishbones-academy/audio";
+  process.env.VPS_AUDIO_TARGET_DIR ?? "/var/www/libre-academy/audio";
 
 const args = process.argv.slice(2);
 const flag = (name) => {

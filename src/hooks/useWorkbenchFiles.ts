@@ -31,7 +31,7 @@ function storageKey(courseId: string, lessonId: string): string {
 /// course's progress only cleared completion checkmarks — the
 /// learner's last solution stayed in localStorage and re-hydrated
 /// the editor on next visit, defeating the reset.
-const WORKBENCH_RESET_EVENT = "fishbones:workbench-reset";
+const WORKBENCH_RESET_EVENT = "libre:workbench-reset";
 interface WorkbenchResetDetail {
   /// Match scope. Exactly one of these is set:
   /// - `lessonId` set → reset that specific lesson under courseId
@@ -217,7 +217,7 @@ export function useWorkbenchFiles(
       // sink) without re-wiring the hook signature.
       try {
         window.dispatchEvent(
-          new CustomEvent("fishbones:workbench-persisted", {
+          new CustomEvent("libre:workbench-persisted", {
             detail: {
               courseId,
               lessonId: lesson.id,
@@ -306,12 +306,12 @@ export function useWorkbenchFiles(
       setFiles(starter);
     };
     window.addEventListener(
-      "fishbones:workbench-reset",
+      "libre:workbench-reset",
       onReset as EventListener,
     );
     return () => {
       window.removeEventListener(
-        "fishbones:workbench-reset",
+        "libre:workbench-reset",
         onReset as EventListener,
       );
     };

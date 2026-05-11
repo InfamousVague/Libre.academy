@@ -43,12 +43,12 @@ interface Props {
 export default function TopBarSearch({ onOpenFullSearch }: Props) {
   return (
     <div
-      className="fishbones__tbsearch"
+      className="libre__tbsearch"
       data-tauri-drag-region={false}
     >
       <button
         type="button"
-        className="fishbones__tbsearch-input-row"
+        className="libre__tbsearch-input-row"
         onClick={() => onOpenFullSearch?.()}
         aria-label="Open command palette"
         title="Search lessons, courses, and actions (⌘K)"
@@ -57,13 +57,13 @@ export default function TopBarSearch({ onOpenFullSearch }: Props) {
           icon={searchIcon}
           size="xs"
           color="currentColor"
-          className="fishbones__tbsearch-icon"
+          className="libre__tbsearch-icon"
         />
-        <span className="fishbones__tbsearch-placeholder">
+        <span className="libre__tbsearch-placeholder">
           Search lessons…
         </span>
         <span
-          className="fishbones__tbsearch-kbd"
+          className="libre__tbsearch-kbd"
           aria-hidden="true"
         >
           ⌘K

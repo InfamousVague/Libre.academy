@@ -1,4 +1,4 @@
-/// Multi-language translation support for Fishbones-authored courses.
+/// Multi-language translation support for Libre-authored courses.
 ///
 /// Translations are stored INLINE on each course / chapter / lesson under
 /// a `translations` field keyed by locale. The reader merges the active
@@ -8,11 +8,11 @@
 ///
 /// Why inline (vs sidecar `*.ru.json` files):
 ///   - Course bundles ship as a single JSON; one file per locale would
-///     mean fanning out the storage layer and the .fishbones archive
+///     mean fanning out the storage layer and the .libre archive
 ///     format. Inline keeps every persistence path unchanged.
 ///   - The translation surface per lesson is small (a few hundred chars
 ///     of prose). Five extra locales roughly 6× the body weight, but
-///     the largest Fishbones-authored course (HelloTrade, ~96 KB EN)
+///     the largest Libre-authored course (HelloTrade, ~96 KB EN)
 ///     stays under 600 KB even fully translated.
 ///   - Code, identifiers, and starter/test bodies are NEVER duplicated
 ///     into translations — only natural-language fields are.
@@ -22,7 +22,7 @@
 /// and add the country flag to `LOCALE_FLAGS`.
 
 /// Set of all locales the app can switch to. `en` is the source of truth
-/// (every Fishbones-authored lesson is authored in English first); the
+/// (every Libre-authored lesson is authored in English first); the
 /// rest are translation overlays. Adding a locale here without also
 /// running the translation pipeline just shows the language in the
 /// dropdown and falls back to English everywhere — graceful degradation.
@@ -129,7 +129,7 @@ export type TranslationOverlay<T> = Partial<Record<Exclude<Locale, "en">, T>>;
 /// one of the supported locales. Strips region (`en-GB` → `en`),
 /// normalises Korean (`ko` → `kr` to match our locale slug), and
 /// Japanese (`ja` → `jp`). Falls back to English when the language
-/// has no Fishbones translation yet.
+/// has no Libre translation yet.
 export function detectLocale(): Locale {
   if (typeof navigator === "undefined") return "en";
   const raw = (navigator.language || "en").toLowerCase().split("-")[0];
@@ -150,9 +150,9 @@ export function detectLocale(): Locale {
 }
 
 /// Persistence key shared by the React `useLocale` hook + the cloud
-/// `useFishbonesCloud.pushSettings` channel. Keep both touch points
+/// `useLibreCloud.pushSettings` channel. Keep both touch points
 /// using this constant so a rename only happens in one place.
-export const LOCALE_STORAGE_KEY = "fishbones:locale";
+export const LOCALE_STORAGE_KEY = "libre:locale";
 
 /// Whether `value` is one of the supported locales. Used to validate
 /// inbound cloud-sync payloads + previously-persisted localStorage

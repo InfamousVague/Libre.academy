@@ -95,7 +95,7 @@ async fn fetch_jwks(cache: &Mutex<JwksCache>, url: &str) -> anyhow::Result<JwkSe
 
 /// Verify an Apple `id_token`. Audience is the Service ID configured
 /// in the relay's environment as `APPLE_CLIENT_ID` (e.g.
-/// `com.mattssoftware.fishbones.signin`).
+/// `com.mattssoftware.libre.signin`).
 pub async fn verify_apple(token: &str, audience: &str) -> anyhow::Result<OauthIdentity> {
     let header = decode_header(token)?;
     let kid = header

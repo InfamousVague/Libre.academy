@@ -59,8 +59,8 @@ export type VerifierEvent =
     }
   | { type: "lessonComplete"; courseId: string; lessonId: string };
 
-const COMMAND_EVENT = "fishbones:verifier:command";
-const EVENT_EVENT = "fishbones:verifier:event";
+const COMMAND_EVENT = "libre:verifier:command";
+const EVENT_EVENT = "libre:verifier:event";
 
 export function dispatchCommand(cmd: VerifierCommand): void {
   if (typeof window === "undefined") return;

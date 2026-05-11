@@ -43,7 +43,7 @@ import CourseLibrary from "./components/Library/CourseLibrary";
 import ArchiveDropOverlay from "./components/Library/ArchiveDropOverlay";
 import { useArchiveDrop } from "./hooks/useArchiveDrop";
 import { DeferredMount, LoadingPane } from "./components/Shared/DeferredMount";
-import FishbonesLoader from "./components/Shared/FishbonesLoader";
+import LibreLoader from "./components/Shared/LibreLoader";
 import { prefetchCovers } from "./hooks/useCourseCover";
 import {
   REMOTE_CATALOG_FALLBACK,
@@ -83,7 +83,7 @@ import {
 } from "./lib/verify/bus";
 import { useProgress } from "./hooks/useProgress";
 import { useChainActivity } from "./hooks/useChainActivity";
-import { useFishbonesCloud } from "./hooks/useFishbonesCloud";
+import { useLibreCloud } from "./hooks/useLibreCloud";
 import { useRealtimeSync } from "./hooks/useRealtimeSync";
 import FirstLaunchPrompt from "./components/dialogs/SignInDialog/FirstLaunchPrompt";
 import SignInDialog from "./components/dialogs/SignInDialog/SignInDialog";
@@ -138,7 +138,7 @@ export default function App() {
   } = useCourses();
 
   /// Silently warm the cover cache once the course list has loaded.
-  /// Doesn't gate any UI surface — the static `.fishbones__bootloader`
+  /// Doesn't gate any UI surface — the static `.libre__bootloader`
   /// already covers the boot-to-mount window — but the warmup means
   /// per-card BookCover hooks read out of a hot module cache the
   /// instant they mount, so the Library shelf paints cleanly without
@@ -148,7 +148,7 @@ export default function App() {
   ///   1. Local covers via the Rust IPC (`prefetchCovers`) — populates
   ///      the in-memory data-URL map shared by every BookCover hook.
   ///   2. Remote placeholder covers (the books in
-  ///      REMOTE_CATALOG_FALLBACK whose `.fishbones` archive hasn't
+  ///      REMOTE_CATALOG_FALLBACK whose `.libre` archive hasn't
   ///      been authored yet). Their cover JPGs live on the libre.academy
   ///      CDN, so a parallel `new Image()` per id warms the browser
   ///      image cache before BookCover renders them.
@@ -233,7 +233,7 @@ export default function App() {
     string | null
   >(null);
   const [importOpen, setImportOpen] = useState(false);
-  // Catalog browser modal — discovery surface for the Fishbones
+  // Catalog browser modal — discovery surface for the Libre
   // library. Default seed only ships TRPL + Mastering Ethereum +
   // challenges; users add anything else from here.
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
@@ -264,13 +264,13 @@ export default function App() {
     clearCourseCompletions,
   } = useProgress();
 
-  /// Optional Fishbones cloud account — bound at the app level so the
+  /// Optional Libre cloud account — bound at the app level so the
   /// first-launch prompt, the Settings → Account section, and the
   /// markCompleted-side-effect sync all share the same hook instance.
-  const cloud = useFishbonesCloud();
+  const cloud = useLibreCloud();
 
   /// Listen for the browser-OAuth callback. The relay redirects to
-  /// `fishbones://oauth/done?session=...&status=ok&token=fb_...` (or
+  /// `libre://oauth/done?session=...&status=ok&token=fb_...` (or
   /// `status=error&error=...&message=...`); the deep-link plugin
   /// surfaces those URLs to us as a stream of strings. We parse the
   /// query params, hand the token to the cloud hook, and let it run
@@ -302,11 +302,11 @@ export default function App() {
           const url = new URL(raw);
           // Defensive guard — the listener fires for any registered
           // scheme, and we only know how to handle our own.
-          if (url.protocol !== "fishbones:") continue;
+          if (url.protocol !== "libre:") continue;
 
-          // Route on the URL host (the segment after `fishbones://`):
-          //   fishbones://oauth/done?status=ok&token=…   → cloud sign-in
-          //   fishbones://open?courseId=…&lessonId=…     → land on lesson
+          // Route on the URL host (the segment after `libre://`):
+          //   libre://oauth/done?status=ok&token=…   → cloud sign-in
+          //   libre://open?courseId=…&lessonId=…     → land on lesson
           //
           // Unknown hosts are logged + ignored so a future scheme
           // addition doesn't crash older clients that haven't been
@@ -317,19 +317,19 @@ export default function App() {
             const status = url.searchParams.get("status");
             const token = url.searchParams.get("token");
             if (status === "ok" && token) {
-              console.log("[fishbones] oauth callback: success");
+              console.log("[libre] oauth callback: success");
               void cloudRef.current.applyOAuthToken(token);
             } else if (status === "error") {
               console.error(
-                `[fishbones] oauth callback: error ${url.searchParams.get("error")} — ${url.searchParams.get("message")}`,
+                `[libre] oauth callback: error ${url.searchParams.get("error")} — ${url.searchParams.get("message")}`,
               );
             } else {
               console.warn(
-                `[fishbones] oauth callback: unrecognised payload ${raw}`,
+                `[libre] oauth callback: unrecognised payload ${raw}`,
               );
             }
           } else if (host === "open") {
-            // "Open in Fishbones" handoff from libre.academy. The
+            // "Open in Libre" handoff from libre.academy. The
             // courseId is required; lessonId is optional (we fall
             // through to the course's first lesson if it's missing or
             // doesn't match anything in the course). We only stash a
@@ -341,14 +341,14 @@ export default function App() {
               setPendingOpen({ courseId, lessonId });
             } else {
               console.warn(
-                `[fishbones] open deep-link missing courseId: ${raw}`,
+                `[libre] open deep-link missing courseId: ${raw}`,
               );
             }
           } else {
-            console.warn(`[fishbones] unrecognised deep link host=${host}: ${raw}`);
+            console.warn(`[libre] unrecognised deep link host=${host}: ${raw}`);
           }
         } catch (e) {
-          console.error("[fishbones] deep-link: parse failed", e);
+          console.error("[libre] deep-link: parse failed", e);
         }
       }
     };
@@ -362,11 +362,11 @@ export default function App() {
         // getCurrent returns a rejection on web preview / unsupported
         // hosts. Not fatal; the warm-path listener still works in
         // the desktop bundle.
-        console.debug("[fishbones] deep-link getCurrent unavailable:", e);
+        console.debug("[libre] deep-link getCurrent unavailable:", e);
       });
     // Warm-path listener. Returns an unlisten fn we call on unmount.
     const unlistenPromise = onOpenUrl(handleUrls).catch((e) => {
-      console.debug("[fishbones] deep-link onOpenUrl unavailable:", e);
+      console.debug("[libre] deep-link onOpenUrl unavailable:", e);
       return undefined;
     });
     return () => {
@@ -383,7 +383,7 @@ export default function App() {
   /// Real-time cross-device sync. Handles three jobs in one place:
   ///   1. Initial full-pull on sign-in for progress / solutions /
   ///      settings — replaces the older one-shot localStorage-gated
-  ///      pull (`fishbones:cloud:pulled-<uid>`) since the WS bus
+  ///      pull (`libre:cloud:pulled-<uid>`) since the WS bus
   ///      will keep the device live anyway, and re-pulling on every
   ///      reconnect is cheap (a few hundred rows).
   ///   2. WebSocket subscription so a completion / save / setting
@@ -520,9 +520,9 @@ export default function App() {
         updated_at: new Date(detail.savedAt ?? Date.now()).toISOString(),
       });
     };
-    window.addEventListener("fishbones:workbench-persisted", handler);
+    window.addEventListener("libre:workbench-persisted", handler);
     return () => {
-      window.removeEventListener("fishbones:workbench-persisted", handler);
+      window.removeEventListener("libre:workbench-persisted", handler);
     };
   }, [realtime]);
 
@@ -590,7 +590,7 @@ export default function App() {
   const lastPushedMarkersRef = useRef<string | null>(
     (() => {
       try {
-        return localStorage.getItem("fishbones.library.markersPushed.v1");
+        return localStorage.getItem("libre.library.markersPushed.v1");
       } catch {
         return null;
       }
@@ -619,7 +619,7 @@ export default function App() {
       .then(() => {
         try {
           localStorage.setItem(
-            "fishbones.library.markersPushed.v1",
+            "libre.library.markersPushed.v1",
             serialized,
           );
         } catch {
@@ -880,14 +880,14 @@ export default function App() {
   /// Cmd+\\ (matches VS Code's muscle memory).
   ///
   /// One-shot migration of the legacy `kata:sidebarCollapsed` key to
-  /// the modern `fishbones:` namespace. Runs once at mount; if the new
+  /// the modern `libre:` namespace. Runs once at mount; if the new
   /// key already has a value the legacy key just gets removed.
   useEffect(() => {
     try {
       const legacy = localStorage.getItem("kata:sidebarCollapsed");
       if (legacy != null) {
-        if (localStorage.getItem("fishbones:sidebarCollapsed") == null) {
-          localStorage.setItem("fishbones:sidebarCollapsed", legacy);
+        if (localStorage.getItem("libre:sidebarCollapsed") == null) {
+          localStorage.setItem("libre:sidebarCollapsed", legacy);
         }
         localStorage.removeItem("kata:sidebarCollapsed");
       }
@@ -896,7 +896,7 @@ export default function App() {
     }
   }, []);
   const [sidebarCollapsed, setSidebarCollapsed] = useLocalStorageState<boolean>(
-    "fishbones:sidebarCollapsed",
+    "libre:sidebarCollapsed",
     false,
     {
       // Stored as "0" / "1" rather than JSON booleans so legacy
@@ -933,8 +933,8 @@ export default function App() {
     let alreadyPrompted = false;
     try {
       alreadyPrompted =
-        localStorage.getItem("fishbones:tour-prompted") === "true" ||
-        localStorage.getItem("fishbones:tour-completed") === "true";
+        localStorage.getItem("libre:tour-prompted") === "true" ||
+        localStorage.getItem("libre:tour-completed") === "true";
     } catch {
       alreadyPrompted = true; // private mode — never pester
     }
@@ -955,7 +955,7 @@ export default function App() {
   }, []);
   const markTourPrompted = useCallback(() => {
     try {
-      localStorage.setItem("fishbones:tour-prompted", "true");
+      localStorage.setItem("libre:tour-prompted", "true");
     } catch {
       /* private-mode — drop the flag silently */
     }
@@ -982,7 +982,7 @@ export default function App() {
     setTourActive(false);
     stopTourAudio();
     try {
-      localStorage.setItem("fishbones:tour-completed", "true");
+      localStorage.setItem("libre:tour-completed", "true");
     } catch {
       /* private-mode — drop the flag silently */
     }
@@ -1010,7 +1010,7 @@ export default function App() {
 
   // Hand off from index.html's inline preloader to our React loader.
   // Runs in a layout-effect (post-DOM-mutate, pre-paint) so the inline
-  // preloader fades exactly when `.fishbones__bootloader` is on screen
+  // preloader fades exactly when `.libre__bootloader` is on screen
   // — no black gap on cold-start. Safe to run once; the safety
   // timeout in main.tsx is a no-op if we got here first.
   useLayoutEffect(() => {
@@ -1038,8 +1038,8 @@ export default function App() {
   // sourced from either:
   //   - the web build's URL params (`?courseId=…&lessonId=…`) — set when
   //     libre.academy hands the learner over via "Start in browser"
-  //     or "Open in Fishbones".
-  //   - a desktop `fishbones://open?courseId=…&lessonId=…` deep link,
+  //     or "Open in Libre".
+  //   - a desktop `libre://open?courseId=…&lessonId=…` deep link,
   //     handled by the listener above (which calls setPendingOpen).
   //
   // The state survives the initial render so the auto-open effect below
@@ -1316,7 +1316,7 @@ export default function App() {
   /// so the save sheet starts on a useful name.
   ///
   /// `.academy` is the canonical extension post-rebrand; the picker also
-  /// lists `.fishbones` (the previous name) so a user re-saving over an
+  /// lists `.libre` (the previous name) so a user re-saving over an
   /// older export still sees their existing files.
   async function exportCourse(courseId: string, courseTitle: string) {
     try {
@@ -1324,7 +1324,7 @@ export default function App() {
       const destination = await save({
         defaultPath: defaultName,
         filters: [
-          { name: "Libre course", extensions: ["academy", "fishbones", "kata"] },
+          { name: "Libre course", extensions: ["academy", "libre", "kata"] },
         ],
         title: `Export "${courseTitle}"`,
       });
@@ -1413,18 +1413,18 @@ export default function App() {
     try {
       await invoke("delete_course", { courseId });
       await invoke("cache_clear", { bookId: courseId }).catch((e) => {
-        console.warn("[fishbones] cache_clear after delete failed:", e);
+        console.warn("[libre] cache_clear after delete failed:", e);
       });
       setOpenTabs((prev) => prev.filter((t) => t.courseId !== courseId));
       await refreshCourses();
     } catch (e) {
-      console.error("[fishbones] delete_course failed:", e);
+      console.error("[libre] delete_course failed:", e);
     } finally {
       setPendingDelete(null);
     }
   }
 
-  /// Import a previously-exported `.fishbones` (or legacy `.kata`) archive.
+  /// Import a previously-exported `.libre` (or legacy `.kata`) archive.
   /// Shared importer used by BOTH the file-picker path and the
   /// drag-drop path. Hands `archivePath` (an absolute fs path on
   /// disk) to the Rust `import_course` command which unzips into
@@ -1457,7 +1457,7 @@ export default function App() {
   }
 
   /// Opens the native file picker filtered to all accepted course-
-  /// archive extensions (`.academy` + the legacy `.fishbones` /
+  /// archive extensions (`.academy` + the legacy `.libre` /
   /// `.kata`), then imports the chosen path. Wraps
   /// `importArchiveAtPath` with the picker + error reporting.
   async function importCourseArchive() {
@@ -1465,13 +1465,13 @@ export default function App() {
       const picked = await openDialog({
         multiple: false,
         filters: [
-          { name: "Libre course", extensions: ["academy", "fishbones", "kata"] },
+          { name: "Libre course", extensions: ["academy", "libre", "kata"] },
         ],
       });
       if (typeof picked !== "string") return; // user cancelled
       await importArchiveAtPath(picked);
     } catch (e) {
-      console.error("[fishbones] import_course failed:", e);
+      console.error("[libre] import_course failed:", e);
       alert(
         `Couldn't import course archive: ${e instanceof Error ? e.message : String(e)}`,
       );
@@ -1491,7 +1491,7 @@ export default function App() {
       try {
         await importArchiveAtPath(archivePath, isLastInBatch);
       } catch (e) {
-        console.error("[fishbones] dropped import failed:", e);
+        console.error("[libre] dropped import failed:", e);
         // Don't alert mid-batch — too noisy if a user dropped 10
         // files and 2 had bad zips. The console error is enough; the
         // overlay already conveys progress.
@@ -1621,8 +1621,8 @@ export default function App() {
 
   return (
     <div
-      className={`fishbones ${
-        sidebarCollapsed ? "fishbones--sidebar-collapsed" : ""
+      className={`libre ${
+        sidebarCollapsed ? "libre--sidebar-collapsed" : ""
       }`}
     >
       {/* Static bootloader — black surface + the spinning ribbon-
@@ -1633,16 +1633,16 @@ export default function App() {
           asset before React mounts, so the handoff between the
           two layers is seamless on cold start. */}
       <div
-        className={`fishbones__bootloader ${
-          coursesLoaded ? "fishbones__bootloader--hidden" : ""
+        className={`libre__bootloader ${
+          coursesLoaded ? "libre__bootloader--hidden" : ""
         }`}
         aria-hidden={coursesLoaded}
       >
-        <FishbonesLoader label="loading Libre…" />
+        <LibreLoader label="loading Libre…" />
       </div>
 
       {/* Drag-and-drop import overlay. Listens at the app level via
-          `useArchiveDrop` so .fishbones / .kata files can be dropped
+          `useArchiveDrop` so .libre / .kata files can be dropped
           anywhere on the window — the OS-level Tauri webview drop
           handler fires regardless of where in the React tree the
           cursor is. The overlay is purely visual feedback. */}
@@ -1735,7 +1735,7 @@ export default function App() {
         // Both desktop and web ship the auth chip now. The web variant
         // routes OAuth through a popup window that postMessages the
         // token back via /oauth/done (see SignInDialog `startOAuth`)
-        // instead of the desktop's `fishbones://` deep-link callback.
+        // instead of the desktop's `libre://` deep-link callback.
         // While `cloud.user === null` (booting) we still render
         // `undefined` so the TopBar stays in its skeleton state and
         // doesn't flash a "Sign in" CTA before we know the persisted
@@ -1765,7 +1765,7 @@ export default function App() {
         onOpenLesson={selectLesson}
       />
 
-      <div className="fishbones__body">
+      <div className="libre__body">
         <NavigationRail
           activeView={view}
           onLibrary={() => setView("library")}
@@ -1797,7 +1797,7 @@ export default function App() {
           onResetCourse={clearCourseCompletions}
         />
 
-        <main className="fishbones__main">
+        <main className="libre__main">
           {view === "profile" ? (
             <ProfileView
               courses={courses}
@@ -1875,7 +1875,7 @@ export default function App() {
             // render takes a beat.
             <div
               className={
-                "fishbones-view-pane" +
+                "libre-view-pane" +
                 (isViewPending ? " is-view-pending" : "")
               }
             >
@@ -1924,32 +1924,32 @@ export default function App() {
             // tile with intent copy + the right CTA per build target
             // (web → desktop-app download split-button; desktop →
             // import-a-PDF + open-settings).
-            <div className="fishbones__welcome">
-              <div className="fishbones__welcome-inner">
-                <div className="fishbones__welcome-glyph" aria-hidden>
+            <div className="libre__welcome">
+              <div className="libre__welcome-inner">
+                <div className="libre__welcome-glyph" aria-hidden>
                   <Icon icon={libraryBig} size="2xl" color="currentColor" weight="light" />
                 </div>
-                <h1 className="fishbones__welcome-title">Welcome to Libre</h1>
-                <p className="fishbones__welcome-blurb">
+                <h1 className="libre__welcome-title">Welcome to Libre</h1>
+                <p className="libre__welcome-blurb">
                   {isWeb
                     ? "A browser-native preview. Try the bundled lessons in JavaScript, Python, or Svelte — your progress saves locally and syncs to the cloud once you sign in."
                     : "Turn any technical book into an interactive course. Pick a PDF to import, and Libre will split it into lessons, generate exercises, and let you code along chapter by chapter."}
                 </p>
-                <div className="fishbones__welcome-actions">
+                <div className="libre__welcome-actions">
                   {isWeb ? (
-                    <DownloadButton className="fishbones-download--hero" />
+                    <DownloadButton className="libre-download--hero" />
                   ) : (
                     <>
                       <button
                         type="button"
-                        className="fishbones__welcome-primary"
+                        className="libre__welcome-primary"
                         onClick={() => setImportOpen(true)}
                       >
                         Import a PDF
                       </button>
                       <button
                         type="button"
-                        className="fishbones__welcome-secondary"
+                        className="libre__welcome-secondary"
                         onClick={() => setSettingsOpen(true)}
                       >
                         Open Settings
@@ -1957,7 +1957,7 @@ export default function App() {
                     </>
                   )}
                 </div>
-                <p className="fishbones__welcome-hint">
+                <p className="libre__welcome-hint">
                   {isWeb
                     ? "Want to import your own PDFs, run C / C++ / Java / Swift, or use the offline AI? Grab the desktop app — it ships every runtime."
                     : "You'll need an Anthropic API key in Settings for the AI-assisted structuring pipeline. Without one, imports fall back to simple section splits."}
@@ -2061,7 +2061,7 @@ export default function App() {
             />
             </>
           ) : (
-            <div className="fishbones__empty">
+            <div className="libre__empty">
               <p>Pick a lesson from the sidebar to get started.</p>
             </div>
           )}
@@ -2157,7 +2157,7 @@ export default function App() {
                 });
                 await refreshCourses();
               } catch (e) {
-                console.error("[fishbones] cover save failed:", e);
+                console.error("[libre] cover save failed:", e);
               }
             }}
             onChangeLanguage={async (language) => {
@@ -2324,7 +2324,7 @@ export default function App() {
           Web build: enabled. SignInDialog branches on `isWeb` to
           route OAuth through a popup window that postMessages the
           minted token back to the parent (instead of the desktop's
-          `fishbones://` deep-link callback). Email + password worked
+          `libre://` deep-link callback). Email + password worked
           unchanged on web all along — the dialog just wasn't being
           rendered. */}
       <FirstLaunchPrompt cloud={cloud} />
@@ -2362,7 +2362,7 @@ export default function App() {
           // learner can type their own question.
           askAi: () => {
             window.dispatchEvent(
-              new CustomEvent("fishbones:ask-ai", {
+              new CustomEvent("libre:ask-ai", {
                 detail: { kind: "open" },
               }),
             );
@@ -2529,7 +2529,7 @@ export default function App() {
   }
 
   /// Install a course from the catalog by downloading its
-  /// .fishbones archive (desktop) or its course JSON (web), then
+  /// .libre archive (desktop) or its course JSON (web), then
   /// persisting it via the same path bundled-pack seed uses. After
   /// the write lands, refresh the in-memory course list + hydrate
   /// the new course so the placeholder tile in the Library flips
@@ -2543,7 +2543,7 @@ export default function App() {
     title: string;
   }) {
     // Aspirational fallback tiles in Discover (the
-    // remoteCatalogFallback list) point at .json files / .fishbones
+    // remoteCatalogFallback list) point at .json files / .libre
     // archives that haven't been authored yet — clicking install
     // 404s and surfaces a confusing "string did not match the
     // expected pattern" / "HTTP 404" alert. Detect them up-front and
@@ -2569,7 +2569,7 @@ export default function App() {
         const { storage } = await import("./lib/storage");
         await storage.saveCourse(entry.id, course);
       } else if (entry.localPath) {
-        // Desktop bundled catalog: the .fishbones archive ships
+        // Desktop bundled catalog: the .libre archive ships
         // inside the binary at `entry.localPath`. Just unzip it
         // into the courses dir — no network round-trip, no remote
         // hosting required for the catalog to work.
@@ -2579,7 +2579,7 @@ export default function App() {
         });
       } else {
         // Desktop remote download: lazy-import the Tauri invoke
-        // helper. The native command fetches the .fishbones archive
+        // helper. The native command fetches the .libre archive
         // over HTTPS, writes to a temp file, and unzips into the
         // courses dir. Used when the catalog source is a remote
         // manifest (e.g. for over-the-air content updates) rather
@@ -2592,7 +2592,7 @@ export default function App() {
       await refreshCourses();
       await hydrateCourse(entry.id);
     } catch (e) {
-      console.error("[fishbones] install catalog entry failed:", e);
+      console.error("[libre] install catalog entry failed:", e);
       alert(
         `Couldn't install ${entry.title}: ${e instanceof Error ? e.message : String(e)}`,
       );
@@ -2632,7 +2632,7 @@ export default function App() {
     }
     if (missing.length > 0) {
       console.warn(
-        "[fishbones] path install: catalog has no entry for",
+        "[libre] path install: catalog has no entry for",
         missing,
       );
     }
@@ -2642,7 +2642,7 @@ export default function App() {
   /// import buttons (Book / Bulk books / Docs site / Archive) with
   /// a single OS file picker that sniffs each chosen file and
   /// dispatches to the right pipeline:
-  ///   * `.academy` / `.fishbones` / `.kata` / `.zip` →
+  ///   * `.academy` / `.libre` / `.kata` / `.zip` →
   ///                                       `importArchiveAtPath`
   ///   * `.pdf` / `.epub` (single)       → ImportDialog with
   ///                                       `preselectedPath`
@@ -2658,7 +2658,7 @@ export default function App() {
         filters: [
           {
             name: "Course files",
-            extensions: ["pdf", "epub", "academy", "fishbones", "kata", "zip"],
+            extensions: ["pdf", "epub", "academy", "libre", "kata", "zip"],
           },
         ],
       });
@@ -2671,7 +2671,7 @@ export default function App() {
         if (ext === "pdf" || ext === "epub") pdfs.push(p);
         else if (
           ext === "academy" ||
-          ext === "fishbones" ||
+          ext === "libre" ||
           ext === "kata" ||
           ext === "zip"
         )
@@ -2711,7 +2711,7 @@ export default function App() {
         setBulkImportOpen(true);
       }
     } catch (e) {
-      console.error("[fishbones] add course failed:", e);
+      console.error("[libre] add course failed:", e);
       alert(
         `Couldn't open the file picker: ${e instanceof Error ? e.message : String(e)}`,
       );
@@ -2732,7 +2732,7 @@ export default function App() {
       await refreshCourses();
       await hydrateCourse(courseId);
     } catch (e) {
-      console.error("[fishbones] reapply bundled starter failed:", e);
+      console.error("[libre] reapply bundled starter failed:", e);
     }
   }
 }

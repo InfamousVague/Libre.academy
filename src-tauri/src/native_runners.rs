@@ -16,7 +16,7 @@
 //!     Java / Assembly) so a compile failure reads clearly in stderr
 //!     instead of manifesting as "Java said nothing and exited 1".
 //!   - Temp files live in `std::env::temp_dir()` under a
-//!     `fishbones-<lang>-run.<ext>` prefix. Each run overwrites, which
+//!     `libre-<lang>-run.<ext>` prefix. Each run overwrites, which
 //!     is fine because we don't parallelise runs per language.
 //!
 //! Nothing here knows about lessons or courses — these are thin wrappers
@@ -32,12 +32,12 @@ use crate::SubprocessResult;
 
 // ---- Shared helpers --------------------------------------------------
 
-/// Write `code` to a temp file named `fishbones-<prefix>-run.<ext>` and
+/// Write `code` to a temp file named `libre-<prefix>-run.<ext>` and
 /// hand back the path. Returns a `SubprocessResult::launch_error` on
 /// IO failure so the caller can early-return without duplicating the
 /// error-shape assembly.
 fn write_temp(prefix: &str, ext: &str, code: &str) -> Result<PathBuf, SubprocessResult> {
-    let path = std::env::temp_dir().join(format!("fishbones-{prefix}-run.{ext}"));
+    let path = std::env::temp_dir().join(format!("libre-{prefix}-run.{ext}"));
     match std::fs::File::create(&path).and_then(|mut f| f.write_all(code.as_bytes())) {
         Ok(()) => Ok(path),
         Err(e) => Err(SubprocessResult {
@@ -245,7 +245,7 @@ pub async fn run_java(code: String) -> SubprocessResult {
 
     // Java is picky about filename-vs-classname, so we write under a
     // per-run temp directory to keep the flat `/tmp` namespace clean.
-    let dir = std::env::temp_dir().join("fishbones-java-run");
+    let dir = std::env::temp_dir().join("libre-java-run");
     let _ = std::fs::remove_dir_all(&dir); // best-effort: drop the previous build
     if let Err(e) = std::fs::create_dir_all(&dir) {
         return SubprocessResult {
@@ -321,7 +321,7 @@ pub async fn run_kotlin(code: String) -> SubprocessResult {
     let start = Instant::now();
     // Dedicated dir so the jar + source don't clutter /tmp. Best-effort
     // cleanup of the previous run — same pattern as `run_java`.
-    let dir = std::env::temp_dir().join("fishbones-kotlin-run");
+    let dir = std::env::temp_dir().join("libre-kotlin-run");
     let _ = std::fs::remove_dir_all(&dir);
     if let Err(e) = std::fs::create_dir_all(&dir) {
         return SubprocessResult {

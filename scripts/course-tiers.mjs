@@ -1,4 +1,4 @@
-/// Single source of truth for which bundled `.fishbones` archives ship
+/// Single source of truth for which bundled `.libre` archives ship
 /// inline with the app vs which appear as downloadable placeholders.
 ///
 /// **Core** = bundled with the desktop installer and inlined into
@@ -13,16 +13,16 @@
 /// launch (Rust + Go + every challenge pack so kata-style learners
 /// can start immediately in any language).
 ///
-/// Adding a new core book: drop the .fishbones into
+/// Adding a new core book: drop the .libre into
 /// `src-tauri/resources/bundled-packs/`, add the id here, add the
 /// matching path entry to `tauri.conf.json` `resources`. Adding a
-/// new remote book: drop the .fishbones into `bundled-packs/` and
+/// new remote book: drop the .libre into `bundled-packs/` and
 /// add the id to ALL_PACK_IDS only — the build script + catalog
 /// take care of the rest.
 
 export const CORE_PACK_IDS = [
   // ── In-house "A to <lang>" tutorial books ──────────────────────
-  // Flagship Fishbones-authored courses that walk a beginner from
+  // Flagship Libre-authored courses that walk a beginner from
   // zero to fluency in a single language. Bundled in core so every
   // install opens with two opinionated, end-to-end tutorials.
   "a-to-zig",
@@ -35,7 +35,7 @@ export const CORE_PACK_IDS = [
   "the-rust-programming-language",
   "learning-go",
   // (`learning-zig` was retired here — A to Zig is the in-house
-  // replacement and is shipped above as its own bundled .fishbones.)
+  // replacement and is shipped above as its own bundled .libre.)
 
   // All challenge packs — kata-style learners are likely to bounce
   // through several languages, and the per-pack size is small
@@ -82,7 +82,7 @@ export const CORE_PACK_IDS = [
 export const ALL_PACK_IDS = [
   // ── In-house "A to <lang>" tutorial books ──────────────────────
   // Listed first so they top the catalog — these are the flagship
-  // beginner-friendly tutorials Fishbones authors directly.
+  // beginner-friendly tutorials Libre authors directly.
   "a-to-zig",
   "a-to-ts",
   // Hardware-wallet course — uses the new Ledger transport (Rust
@@ -188,7 +188,7 @@ export function tierFor(packId) {
 ///
 /// Net effect: a hidden course is fully installed + ready, but only
 /// reachable via a direct lesson URL (`?course=<id>&lesson=<id>`) or
-/// a manual `.fishbones` import. Useful for partner / preview content
+/// a manual `.libre` import. Useful for partner / preview content
 /// we want the URL of without exposing in the public shelf.
 export const HIDDEN_PACK_IDS = new Set([
   // (empty — hellotrade graduated to Discover with the public BETA
@@ -200,15 +200,15 @@ export function isHiddenPack(packId) {
   return HIDDEN_PACK_IDS.has(packId);
 }
 
-/// Default base URL where the remote `.fishbones` archives are
+/// Default base URL where the remote `.libre` archives are
 /// hosted. The catalog includes per-course archive URLs derived from
-/// this — change here OR set FISHBONES_CATALOG_BASE_URL at build time
+/// this — change here OR set LIBRE_CATALOG_BASE_URL at build time
 /// to point at your own hosting.
 export const REMOTE_ARCHIVE_BASE =
-  process.env.FISHBONES_CATALOG_BASE_URL ??
-  "https://mattssoftware.com/fishbones/courses";
+  process.env.LIBRE_CATALOG_BASE_URL ??
+  "https://mattssoftware.com/libre/courses";
 
-/// Editorial-tier overrides keyed by **pack id** (the .fishbones
+/// Editorial-tier overrides keyed by **pack id** (the .libre
 /// filename minus extension). Applied by the extract script AFTER
 /// reading each course.json so we can bump a book's tier without
 /// repacking the archive.

@@ -1,6 +1,6 @@
 /// Two-state overlay paired with `useArchiveDrop`:
 ///
-///   - When a `.academy` (or legacy `.fishbones` / `.kata`) is being
+///   - When a `.academy` (or legacy `.libre` / `.kata`) is being
 ///     dragged over the app window, render a full-window drop target
 ///     ("Drop courses here") so the user gets unambiguous feedback
 ///     that the OS-level drag is being recognised by the right
@@ -43,21 +43,21 @@ export default function ArchiveDropOverlay({
           the OS-level drag passes straight through to Tauri's
           webview drop handler. */}
       <div
-        className={`fishbones-archive-drop ${
-          isDragging ? "fishbones-archive-drop--active" : ""
+        className={`libre-archive-drop ${
+          isDragging ? "libre-archive-drop--active" : ""
         }`}
         aria-hidden={!isDragging}
       >
-        <div className="fishbones-archive-drop__panel">
-          <div className="fishbones-archive-drop__icon" aria-hidden>
+        <div className="libre-archive-drop__panel">
+          <div className="libre-archive-drop__icon" aria-hidden>
             <Icon icon={upload} size="xl" color="currentColor" />
           </div>
-          <div className="fishbones-archive-drop__title">
+          <div className="libre-archive-drop__title">
             Drop to add to your library
           </div>
-          <div className="fishbones-archive-drop__sub">
+          <div className="libre-archive-drop__sub">
             Accepts <code>.academy</code> archives (and legacy{" "}
-            <code>.fishbones</code> / <code>.kata</code> exports).
+            <code>.libre</code> / <code>.kata</code> exports).
           </div>
         </div>
       </div>
@@ -66,17 +66,17 @@ export default function ArchiveDropOverlay({
           so a fast drop → import sequence can show progress without
           waiting for the dragging overlay to finish fading. */}
       {isImporting && progress && (
-        <div className="fishbones-archive-toast" role="status" aria-live="polite">
-          <span className="fishbones-archive-toast__icon" aria-hidden>
+        <div className="libre-archive-toast" role="status" aria-live="polite">
+          <span className="libre-archive-toast__icon" aria-hidden>
             <Icon icon={bookOpen} size="sm" color="currentColor" />
           </span>
-          <span className="fishbones-archive-toast__label">
+          <span className="libre-archive-toast__label">
             {progress.total === 1
               ? "Importing course…"
               : `Importing ${progress.current} of ${progress.total}…`}
           </span>
           <span
-            className="fishbones-archive-toast__bar"
+            className="libre-archive-toast__bar"
             aria-hidden
             style={{
               ["--p" as string]: `${(progress.current / progress.total) * 100}%`,

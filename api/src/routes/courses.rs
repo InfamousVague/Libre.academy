@@ -1,6 +1,6 @@
 //! Course-archive upload + share endpoints.
 //!
-//! The client sends a `.fishbones` zip as a base64 string in JSON —
+//! The client sends a `.libre` zip as a base64 string in JSON —
 //! simpler than multipart because the existing CORS / rate-limit
 //! middleware just works, and the archives are small enough (<50 MB)
 //! that the encoding overhead doesn't matter. Visibility is one of
@@ -30,7 +30,7 @@ pub struct UploadRequest {
     pub description: Option<String>,
     pub language: Option<String>,
     pub visibility: Option<String>, // "private" | "unlisted" | "public"
-    /// Base64-encoded `.fishbones` zip.
+    /// Base64-encoded `.libre` zip.
     pub archive_b64: String,
 }
 
@@ -95,7 +95,7 @@ pub async fn list_public(
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
 }
 
-/// Stream the raw `.fishbones` zip back. Owner-private courses gate on
+/// Stream the raw `.libre` zip back. Owner-private courses gate on
 /// the requester's user id; public/unlisted courses go through to
 /// anyone with the id.
 pub async fn download(
@@ -108,7 +108,7 @@ pub async fn download(
         .get_course(&id, Some(&user_id))
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
         .ok_or(StatusCode::NOT_FOUND)?;
-    let filename = format!("{}.fishbones", meta.course_slug);
+    let filename = format!("{}.libre", meta.course_slug);
     Ok((
         [
             (header::CONTENT_TYPE, "application/zip".to_string()),

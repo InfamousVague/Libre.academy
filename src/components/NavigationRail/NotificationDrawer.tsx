@@ -6,7 +6,7 @@
 /// What it surfaces today:
 ///   - The most recent achievement unlocks, newest first, capped at 8
 ///   - Unread count = unlocks newer than the last-seen timestamp
-///     persisted under `fishbones:notifications:last-seen-at`
+///     persisted under `libre:notifications:last-seen-at`
 ///
 /// Designed so additional notification sources slot in cheaply later
 /// (course-update available, sync issue, app update). Each source
@@ -32,7 +32,7 @@ interface UnlockedRecord {
 }
 
 const ACH_KEY = "fb:achievements:unlocked";
-const SEEN_KEY = "fishbones:notifications:last-seen-at";
+const SEEN_KEY = "libre:notifications:last-seen-at";
 const MAX_VISIBLE = 8;
 
 interface NotificationItem {

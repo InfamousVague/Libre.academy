@@ -1,4 +1,4 @@
-.fishbones-quiz {
+.libre-quiz {
   max-width: 860px;
   margin: 24px auto;
   padding: 0 16px 40px;
@@ -7,14 +7,14 @@
   gap: 14px;
 }
 
-.fishbones-quiz-progress {
+.libre-quiz-progress {
   display: flex;
   align-items: center;
   gap: 6px;
   margin-bottom: 8px;
 }
 
-.fishbones-quiz-pip {
+.libre-quiz-pip {
   width: 10px;
   height: 10px;
   border-radius: 50%;
@@ -23,24 +23,24 @@
   transition: background 0.2s ease, border-color 0.2s ease;
 }
 
-.fishbones-quiz-pip--correct {
+.libre-quiz-pip--correct {
   background: #7cd97c;
   border-color: #7cd97c;
 }
 
-.fishbones-quiz-pip--wrong {
+.libre-quiz-pip--wrong {
   background: #ef6f6f;
   border-color: #ef6f6f;
 }
 
-.fishbones-quiz-progress-label {
+.libre-quiz-progress-label {
   margin-left: 8px;
   font-size: 11px;
   font-variant-numeric: tabular-nums;
   color: var(--color-text-tertiary);
 }
 
-.fishbones-quiz-card {
+.libre-quiz-card {
   display: grid;
   grid-template-columns: 28px 1fr;
   gap: 12px;
@@ -50,17 +50,17 @@
   border-radius: 10px;
 }
 
-.fishbones-quiz-card--correct {
+.libre-quiz-card--correct {
   border-color: rgba(124, 217, 124, 0.45);
   background: rgba(124, 217, 124, 0.04);
 }
 
-.fishbones-quiz-card--wrong {
+.libre-quiz-card--wrong {
   border-color: rgba(239, 111, 111, 0.45);
   background: rgba(239, 111, 111, 0.04);
 }
 
-.fishbones-quiz-num {
+.libre-quiz-num {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -74,14 +74,14 @@
   font-variant-numeric: tabular-nums;
 }
 
-.fishbones-quiz-q-body {
+.libre-quiz-q-body {
   display: flex;
   flex-direction: column;
   gap: 10px;
   min-width: 0;
 }
 
-.fishbones-quiz-prompt {
+.libre-quiz-prompt {
   font-size: 14px;
   line-height: 1.5;
   color: var(--color-text-primary);
@@ -92,7 +92,7 @@
 /* Row that holds the prompt + the "ask AI" badge. Display:flex so
    the badge sits at the top-right of the prompt regardless of
    prompt length. */
-.fishbones-quiz-prompt-row {
+.libre-quiz-prompt-row {
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -100,9 +100,9 @@
 
 /* `?` badge that opens the AI panel pre-loaded with a hint prompt
    for this question. Small, subtle, becomes more visible on hover.
-   Same visual vocabulary as `.fishbones-code-block-ask` so users
+   Same visual vocabulary as `.libre-code-block-ask` so users
    recognize the affordance across prose + quizzes. */
-.fishbones-quiz-ask {
+.libre-quiz-ask {
   flex-shrink: 0;
   width: 22px;
   height: 22px;
@@ -126,20 +126,20 @@
     transform 0.12s;
 }
 
-.fishbones-quiz-ask:hover {
+.libre-quiz-ask:hover {
   color: var(--color-text-primary);
   border-color: var(--color-border-strong);
   background: var(--color-bg-tertiary);
   transform: scale(1.08);
 }
 
-.fishbones-quiz-options {
+.libre-quiz-options {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.fishbones-quiz-option {
+.libre-quiz-option {
   display: grid;
   grid-template-columns: 22px 1fr;
   align-items: center;
@@ -156,26 +156,26 @@
   transition: background var(--fb-motion-snappy), border-color var(--fb-motion-snappy);
 }
 
-.fishbones-quiz-option:hover:not(:disabled) {
+.libre-quiz-option:hover:not(:disabled) {
   background: var(--color-bg-tertiary);
 }
 
-.fishbones-quiz-option:disabled {
+.libre-quiz-option:disabled {
   cursor: default;
 }
 
-.fishbones-quiz-option--correct {
+.libre-quiz-option--correct {
   border-color: rgba(124, 217, 124, 0.6);
   background: rgba(124, 217, 124, 0.08) !important;
   color: var(--color-text-primary);
 }
 
-.fishbones-quiz-option--wrong {
+.libre-quiz-option--wrong {
   border-color: rgba(239, 111, 111, 0.6);
   background: rgba(239, 111, 111, 0.1) !important;
 }
 
-.fishbones-quiz-option-letter {
+.libre-quiz-option-letter {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -188,12 +188,12 @@
   font-weight: 700;
 }
 
-.fishbones-quiz-short {
+.libre-quiz-short {
   display: flex;
   gap: 8px;
 }
 
-.fishbones-quiz-short-input {
+.libre-quiz-short-input {
   flex: 1;
   padding: 8px 10px;
   background: var(--color-bg-secondary);
@@ -204,12 +204,12 @@
   font-size: 13px;
 }
 
-.fishbones-quiz-short-input:focus {
+.libre-quiz-short-input:focus {
   outline: none;
   border-color: rgba(255, 255, 255, 0.4);
 }
 
-.fishbones-quiz-short-submit {
+.libre-quiz-short-submit {
   padding: 0 14px;
   background: var(--color-text-primary, #ffffff);
   color: var(--color-bg-primary, #000000);
@@ -220,12 +220,12 @@
   cursor: pointer;
 }
 
-.fishbones-quiz-short-submit:disabled {
+.libre-quiz-short-submit:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.fishbones-quiz-explanation {
+.libre-quiz-explanation {
   padding: 9px 12px;
   background: var(--color-bg-tertiary);
   border-radius: var(--fb-radius-sm);
@@ -234,7 +234,7 @@
   line-height: 1.55;
 }
 
-.fishbones-quiz-done {
+.libre-quiz-done {
   margin-top: 6px;
   padding: 10px 14px;
   background: rgba(124, 217, 124, 0.08);

@@ -11,7 +11,7 @@
  * component (so the chip inherits the language's brand colour).
  * Everything else is theme/size-agnostic. */
 
-.fishbones-langchip {
+.libre-langchip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -36,35 +36,35 @@
 
 /* ── Sizes ─────────────────────────────────────────────────────── */
 
-.fishbones-langchip--xs {
+.libre-langchip--xs {
   height: 16px;
   padding: 0 6px;
   font-size: 9.5px;
   gap: 4px;
 }
-.fishbones-langchip--xs .fishbones-langchip-icon svg {
+.libre-langchip--xs .libre-langchip-icon svg {
   width: 13px;
   height: 13px;
 }
 
-.fishbones-langchip--sm {
+.libre-langchip--sm {
   height: 22px;
   padding: 0 8px;
   font-size: 11px;
   gap: 5px;
 }
-.fishbones-langchip--sm .fishbones-langchip-icon svg {
+.libre-langchip--sm .libre-langchip-icon svg {
   width: 15px;
   height: 15px;
 }
 
-.fishbones-langchip--md {
+.libre-langchip--md {
   height: 28px;
   padding: 0 10px;
   font-size: 13px;
   gap: 6px;
 }
-.fishbones-langchip--md .fishbones-langchip-icon svg {
+.libre-langchip--md .libre-langchip-icon svg {
   width: 18px;
   height: 18px;
 }
@@ -73,21 +73,21 @@
 
 /* Square the chip when there's no label so the icon sits centred
    in a circle instead of an oblong pill. */
-.fishbones-langchip--icon-only {
+.libre-langchip--icon-only {
   padding: 0;
   width: 22px;
   justify-content: center;
 }
-.fishbones-langchip--xs.fishbones-langchip--icon-only {
+.libre-langchip--xs.libre-langchip--icon-only {
   width: 16px;
 }
-.fishbones-langchip--md.fishbones-langchip--icon-only {
+.libre-langchip--md.libre-langchip--icon-only {
   width: 28px;
 }
 
 /* ── Internal layout ───────────────────────────────────────────── */
 
-.fishbones-langchip-icon {
+.libre-langchip-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -99,7 +99,7 @@
   margin-top: -0.5px;
 }
 
-.fishbones-langchip-label {
+.libre-langchip-label {
   /* Tighter line-height than default — keeps a single-line label
      vertically centred even when the parent uses a larger leading. */
   line-height: 1;

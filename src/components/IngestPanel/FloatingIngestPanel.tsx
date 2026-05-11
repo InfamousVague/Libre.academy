@@ -56,12 +56,12 @@ export default function FloatingIngestPanel({
   if (collapsed) {
     return (
       <button
-        className={`fishbones-floating-pill fishbones-floating-pill--${run.status}`}
+        className={`libre-floating-pill libre-floating-pill--${run.status}`}
         onClick={() => setCollapsed(false)}
         title="Expand ingest progress"
       >
-        <span className="fishbones-floating-pill-dot" aria-hidden />
-        <span className="fishbones-floating-pill-text">
+        <span className="libre-floating-pill-dot" aria-hidden />
+        <span className="libre-floating-pill-text">
           {run.queue && run.queue.total > 1 ? (
             <>
               Queue {Math.min(run.queue.currentIndex + 1, run.queue.total)}/
@@ -90,12 +90,12 @@ export default function FloatingIngestPanel({
   }
 
   return (
-    <div className={`fishbones-floating-panel fishbones-floating-panel--${run.status}`}>
-      <div className="fishbones-floating-header">
-        <div className="fishbones-floating-titleblock">
-          <span className={`fishbones-floating-status-dot fishbones-floating-status-dot--${run.status}`} aria-hidden />
-          <span className="fishbones-floating-title">{run.title || "Ingest"}</span>
-          <span className="fishbones-floating-substatus">
+    <div className={`libre-floating-panel libre-floating-panel--${run.status}`}>
+      <div className="libre-floating-header">
+        <div className="libre-floating-titleblock">
+          <span className={`libre-floating-status-dot libre-floating-status-dot--${run.status}`} aria-hidden />
+          <span className="libre-floating-title">{run.title || "Ingest"}</span>
+          <span className="libre-floating-substatus">
             {run.status === "running" && "running"}
             {run.status === "success" && (
               <>
@@ -113,21 +113,21 @@ export default function FloatingIngestPanel({
           </span>
         </div>
         {run.queue && run.queue.total > 1 && (
-          <div className="fishbones-floating-queue" title="Bulk queue progress">
-            <span className="fishbones-floating-queue-label">Queue</span>
-            <span className="fishbones-floating-queue-counter">
+          <div className="libre-floating-queue" title="Bulk queue progress">
+            <span className="libre-floating-queue-label">Queue</span>
+            <span className="libre-floating-queue-counter">
               {Math.min(run.queue.currentIndex + 1, run.queue.total)} / {run.queue.total}
             </span>
             {(run.queue.succeeded > 0 || run.queue.failed > 0) && (
-              <span className="fishbones-floating-queue-stats">
+              <span className="libre-floating-queue-stats">
                 {run.queue.succeeded > 0 && (
-                  <span className="fishbones-floating-queue-ok">
+                  <span className="libre-floating-queue-ok">
                     {run.queue.succeeded}
                     <Icon icon={checkIcon} size="xs" color="currentColor" />
                   </span>
                 )}
                 {run.queue.failed > 0 && (
-                  <span className="fishbones-floating-queue-fail">
+                  <span className="libre-floating-queue-fail">
                     {run.queue.failed}
                     <Icon icon={xIcon} size="xs" color="currentColor" />
                   </span>
@@ -136,9 +136,9 @@ export default function FloatingIngestPanel({
             )}
           </div>
         )}
-        <div className="fishbones-floating-header-actions">
+        <div className="libre-floating-header-actions">
           <button
-            className="fishbones-floating-iconbtn"
+            className="libre-floating-iconbtn"
             onClick={() => setCollapsed(true)}
             title="Minimize"
             aria-label="Minimize"
@@ -147,7 +147,7 @@ export default function FloatingIngestPanel({
           </button>
           {isTerminal && (
             <button
-              className="fishbones-floating-iconbtn"
+              className="libre-floating-iconbtn"
               onClick={onDismiss}
               title="Dismiss"
               aria-label="Dismiss"
@@ -160,17 +160,17 @@ export default function FloatingIngestPanel({
 
       <StatsBar stats={run.stats} />
 
-      <div className="fishbones-floating-stage">
+      <div className="libre-floating-stage">
         {run.status === "running" && (
-          <div className="fishbones-floating-spinner" aria-hidden />
+          <div className="libre-floating-spinner" aria-hidden />
         )}
-        <div className="fishbones-floating-stagebody">
-          <div className="fishbones-floating-stagetext">{run.stage || "Preparing…"}</div>
+        <div className="libre-floating-stagebody">
+          <div className="libre-floating-stagetext">{run.stage || "Preparing…"}</div>
           {run.detail && (
-            <div className="fishbones-floating-stagedetail">{run.detail}</div>
+            <div className="libre-floating-stagedetail">{run.detail}</div>
           )}
           {waitingSeconds >= 3 && run.status === "running" && (
-            <div className="fishbones-floating-waiting">
+            <div className="libre-floating-waiting">
               still working · {waitingSeconds}s since last event
             </div>
           )}
@@ -178,18 +178,18 @@ export default function FloatingIngestPanel({
       </div>
 
       {run.status === "error" && run.error && (
-        <div className="fishbones-floating-error">
-          <div className="fishbones-floating-error-title">Ingest stopped with an error</div>
-          <pre className="fishbones-floating-error-body">{run.error}</pre>
-          <p className="fishbones-floating-error-hint">
+        <div className="libre-floating-error">
+          <div className="libre-floating-error-title">Ingest stopped with an error</div>
+          <pre className="libre-floating-error-body">{run.error}</pre>
+          <p className="libre-floating-error-hint">
             Per-lesson saves committed your progress up to the crash point. The
             partial course is already in your Library.
           </p>
         </div>
       )}
 
-      <div className="fishbones-floating-controls">
-        <label className="fishbones-floating-verbose">
+      <div className="libre-floating-controls">
+        <label className="libre-floating-verbose">
           <input
             type="checkbox"
             checked={verbose}
@@ -197,15 +197,15 @@ export default function FloatingIngestPanel({
           />
           <span>Verbose log</span>
         </label>
-        <div className="fishbones-floating-actions">
+        <div className="libre-floating-actions">
           {run.status === "running" && (
-            <button className="fishbones-floating-btn" onClick={onCancel}>
+            <button className="libre-floating-btn" onClick={onCancel}>
               Cancel
             </button>
           )}
           {run.status === "success" && (
             <button
-              className="fishbones-floating-btn fishbones-floating-btn--primary"
+              className="libre-floating-btn libre-floating-btn--primary"
               onClick={() => onOpen(run.bookId)}
             >
               Open course
@@ -213,7 +213,7 @@ export default function FloatingIngestPanel({
           )}
           {(run.status === "error" || run.status === "aborted") && (
             <button
-              className="fishbones-floating-btn"
+              className="libre-floating-btn"
               onClick={() => onOpen(run.bookId)}
               title="Open whatever was saved before the pipeline stopped"
             >
@@ -224,23 +224,23 @@ export default function FloatingIngestPanel({
       </div>
 
       {verbose && (
-        <div className="fishbones-floating-log">
+        <div className="libre-floating-log">
           {run.events.length === 0 ? (
-            <div className="fishbones-floating-log-empty">waiting for events…</div>
+            <div className="libre-floating-log-empty">waiting for events…</div>
           ) : (
             run.events.map((e, i) => (
               <div
                 key={i}
-                className={`fishbones-floating-log-line fishbones-floating-log-line--${e.level}`}
+                className={`libre-floating-log-line libre-floating-log-line--${e.level}`}
               >
-                <span className="fishbones-floating-log-stage">{e.stage}</span>
+                <span className="libre-floating-log-stage">{e.stage}</span>
                 {e.chapter !== undefined && (
-                  <span className="fishbones-floating-log-loc">ch{e.chapter}</span>
+                  <span className="libre-floating-log-loc">ch{e.chapter}</span>
                 )}
                 {e.lesson && (
-                  <span className="fishbones-floating-log-loc">{e.lesson}</span>
+                  <span className="libre-floating-log-loc">{e.lesson}</span>
                 )}
-                <span className="fishbones-floating-log-msg">{e.message}</span>
+                <span className="libre-floating-log-msg">{e.message}</span>
               </div>
             ))
           )}

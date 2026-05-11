@@ -45,8 +45,8 @@
   border: none;
 }
 
-/* ---- top-level header strip (matches .fishbones-editor-header /
- *      .fishbones-output-header exactly) ---- */
+/* ---- top-level header strip (matches .libre-editor-header /
+ *      .libre-output-header exactly) ---- */
 
 .chain-dock__header {
   display: flex;
@@ -68,7 +68,7 @@
 }
 
 /* The "LOCAL CHAIN" wordmark itself uses the same shape as the
- * editor's language label (.fishbones-editor-language) so the dock
+ * editor's language label (.libre-editor-language) so the dock
  * reads as a sibling pane. */
 .chain-dock__chip {
   font-size: 10px;
@@ -203,7 +203,7 @@
   min-height: 0;
 }
 
-/* Sub-panel header strip — same shape as .fishbones-editor-header
+/* Sub-panel header strip — same shape as .libre-editor-header
  * but slightly tighter padding so the panel headers feel like sub-
  * sections rather than top-level chrome. */
 .chain-dock__panel-header {

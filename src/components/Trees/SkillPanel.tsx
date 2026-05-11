@@ -79,36 +79,36 @@ export default function SkillPanel({
   const [installError, setInstallError] = useState<string | null>(null);
 
   return (
-    <aside className="fishbones-trees__panel" role="complementary">
-      <header className="fishbones-trees__panel-head">
-        <div className="fishbones-trees__panel-pre">
+    <aside className="libre-trees__panel" role="complementary">
+      <header className="libre-trees__panel-head">
+        <div className="libre-trees__panel-pre">
           {isNext && !completedHere && (
-            <span className="fishbones-trees__panel-flag">Next up</span>
+            <span className="libre-trees__panel-flag">Next up</span>
           )}
           {completedHere && (
-            <span className="fishbones-trees__panel-flag fishbones-trees__panel-flag--done">
+            <span className="libre-trees__panel-flag libre-trees__panel-flag--done">
               Complete
             </span>
           )}
           {!unlocked && (
-            <span className="fishbones-trees__panel-flag fishbones-trees__panel-flag--locked">
+            <span className="libre-trees__panel-flag libre-trees__panel-flag--locked">
               Locked
             </span>
           )}
           {isGap && (
-            <span className="fishbones-trees__panel-flag fishbones-trees__panel-flag--gap">
+            <span className="libre-trees__panel-flag libre-trees__panel-flag--gap">
               Coming soon
             </span>
           )}
           {isTrackGoal && (
-            <span className="fishbones-trees__panel-flag fishbones-trees__panel-flag--goal">
+            <span className="libre-trees__panel-flag libre-trees__panel-flag--goal">
               Goal
             </span>
           )}
         </div>
         <button
           type="button"
-          className="fishbones-trees__panel-close"
+          className="libre-trees__panel-close"
           onClick={onClose}
           aria-label="Close skill"
         >
@@ -120,8 +120,8 @@ export default function SkillPanel({
           />
         </button>
       </header>
-      <h2 className="fishbones-trees__panel-title">{node.label}</h2>
-      <p className="fishbones-trees__panel-summary">{node.summary}</p>
+      <h2 className="libre-trees__panel-title">{node.label}</h2>
+      <p className="libre-trees__panel-summary">{node.summary}</p>
 
       {/* Goal toggle. Clicking marks this skill as the learner's
           target — the prereq chain lights up on the tree and the
@@ -129,8 +129,8 @@ export default function SkillPanel({
           second click clears the goal. */}
       <button
         type="button"
-        className={`fishbones-trees__panel-track ${
-          isTrackGoal ? "fishbones-trees__panel-track--active" : ""
+        className={`libre-trees__panel-track ${
+          isTrackGoal ? "libre-trees__panel-track--active" : ""
         }`}
         onClick={onSetTrack}
       >
@@ -148,10 +148,10 @@ export default function SkillPanel({
       {isTrackGoal &&
         onInstallMissingCourses &&
         missingCourseIds.length > 0 && (
-          <div className="fishbones-trees__panel-install">
+          <div className="libre-trees__panel-install">
             <button
               type="button"
-              className="fishbones-trees__panel-install-btn"
+              className="libre-trees__panel-install-btn"
               disabled={installing}
               onClick={async () => {
                 setInstalling(true);
@@ -175,12 +175,12 @@ export default function SkillPanel({
                     missingCourseIds.length === 1 ? "book" : "books"
                   } on this path`}
             </button>
-            <p className="fishbones-trees__panel-install-hint">
+            <p className="libre-trees__panel-install-hint">
               The path needs lessons from books you don't have yet.
               We'll fetch them from the catalog so you can keep going.
             </p>
             {installError && (
-              <p className="fishbones-trees__panel-install-error">
+              <p className="libre-trees__panel-install-error">
                 Install failed: {installError}
               </p>
             )}
@@ -188,8 +188,8 @@ export default function SkillPanel({
         )}
 
       {isTrackGoal && trackOrdered.length > 0 && (
-        <div className="fishbones-trees__panel-track-list">
-          <div className="fishbones-trees__panel-lessons-label">
+        <div className="libre-trees__panel-track-list">
+          <div className="libre-trees__panel-lessons-label">
             Path to goal
           </div>
           <ol>
@@ -200,14 +200,14 @@ export default function SkillPanel({
                 <li
                   key={n.id}
                   className={[
-                    "fishbones-trees__panel-track-step",
-                    done && "fishbones-trees__panel-track-step--done",
-                    isThis && "fishbones-trees__panel-track-step--goal",
+                    "libre-trees__panel-track-step",
+                    done && "libre-trees__panel-track-step--done",
+                    isThis && "libre-trees__panel-track-step--goal",
                   ]
                     .filter(Boolean)
                     .join(" ")}
                 >
-                  <span className="fishbones-trees__panel-track-step-tick" aria-hidden>
+                  <span className="libre-trees__panel-track-step-tick" aria-hidden>
                     {done ? (
                       <svg
                         viewBox="0 0 24 24"
@@ -226,7 +226,7 @@ export default function SkillPanel({
       )}
 
       {!unlocked && (
-        <div className="fishbones-trees__panel-locked">
+        <div className="libre-trees__panel-locked">
           Finish these first:
           <ul>
             {node.prereqs.map((p) => (
@@ -237,15 +237,15 @@ export default function SkillPanel({
       )}
 
       {isGap && unlocked && (
-        <div className="fishbones-trees__panel-gap">
+        <div className="libre-trees__panel-gap">
           <strong>No lesson yet.</strong>{" "}
           {node.gapNote ?? "Content for this skill is on the roadmap."}
         </div>
       )}
 
       {!isGap && (
-        <div className="fishbones-trees__panel-lessons">
-          <div className="fishbones-trees__panel-lessons-label">Lessons</div>
+        <div className="libre-trees__panel-lessons">
+          <div className="libre-trees__panel-lessons-label">Lessons</div>
           {node.matches.map((m) => {
             const resolved = resolveSkillMatch(m, courses);
             const key = `${m.courseId}:${m.lessonId}`;
@@ -254,10 +254,10 @@ export default function SkillPanel({
               <button
                 key={key}
                 type="button"
-                className={`fishbones-trees__panel-lesson ${
-                  done ? "fishbones-trees__panel-lesson--done" : ""
+                className={`libre-trees__panel-lesson ${
+                  done ? "libre-trees__panel-lesson--done" : ""
                 } ${
-                  !unlocked ? "fishbones-trees__panel-lesson--locked" : ""
+                  !unlocked ? "libre-trees__panel-lesson--locked" : ""
                 }`}
                 disabled={!unlocked || !resolved}
                 onClick={() => {
@@ -266,15 +266,15 @@ export default function SkillPanel({
                   }
                 }}
               >
-                <div className="fishbones-trees__panel-lesson-title">
+                <div className="libre-trees__panel-lesson-title">
                   {resolved?.lessonTitle ?? m.lessonId}
                 </div>
-                <div className="fishbones-trees__panel-lesson-course">
+                <div className="libre-trees__panel-lesson-course">
                   {resolved?.course.title ?? m.courseId}
                   {!resolved && " (not installed)"}
                 </div>
                 {done && (
-                  <span className="fishbones-trees__panel-lesson-check" aria-hidden>
+                  <span className="libre-trees__panel-lesson-check" aria-hidden>
                     <svg
                       viewBox="0 0 24 24"
                       width="14"

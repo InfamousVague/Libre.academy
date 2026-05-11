@@ -9,13 +9,13 @@
  * the highlighted Next Up node.
  */
 
-.fishbones-trees {
+.libre-trees {
   height: 100%;
   display: flex;
   flex-direction: column;
   /* The shelf view (TreesView's card grid) needs its own scroll;
    * the detail view (single tree DAG) handles navigation via
-   * drag-pan inside `.fishbones-trees__web-scroll` and so the outer
+   * drag-pan inside `.libre-trees__web-scroll` and so the outer
    * shouldn't scroll. The detail variant overrides this below. */
   overflow: auto;
   padding: 24px 28px 32px;
@@ -29,24 +29,24 @@
   min-height: 0;
 }
 
-.fishbones-trees--detail {
+.libre-trees--detail {
   /* Detail view: outer container holds the header + the pan
    * viewport. Both fit on screen, no outer scroll. */
   overflow: hidden;
 }
 
-.fishbones-trees__header {
+.libre-trees__header {
   margin-bottom: 24px;
 }
 
-.fishbones-trees__title {
+.libre-trees__title {
   font-size: 22px;
   font-weight: 700;
   margin: 0 0 6px;
   letter-spacing: -0.01em;
 }
 
-.fishbones-trees__blurb {
+.libre-trees__blurb {
   font-size: 13px;
   color: var(--color-text-secondary);
   margin: 0;
@@ -54,11 +54,11 @@
   line-height: 1.45;
 }
 
-.fishbones-trees__section {
+.libre-trees__section {
   margin-top: 16px;
 }
 
-.fishbones-trees__section-label {
+.libre-trees__section-label {
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
@@ -72,14 +72,14 @@
  * sublabel ("curated career paths") so the row reads as a single
  * unit rather than competing for attention with the tree section
  * headers below. */
-.fishbones-trees__section-label--tracks {
+.libre-trees__section-label--tracks {
   display: flex;
   align-items: center;
   gap: 6px;
   color: var(--color-text-secondary);
 }
 
-.fishbones-trees__section-icon {
+.libre-trees__section-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -89,7 +89,7 @@
   color: var(--color-text-primary);
 }
 
-.fishbones-trees__section-sublabel {
+.libre-trees__section-sublabel {
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.4px;
@@ -100,14 +100,14 @@
 /* Tracks grid is a touch roomier than the trees grid — track cards
  * carry an extra "outcome" subtitle row, so the wider min-width keeps
  * the title from wrapping awkwardly inside a 240px column. */
-.fishbones-trees__grid--tracks {
+.libre-trees__grid--tracks {
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 }
 
-/* Track card overrides on top of the shared `.fishbones-trees__card`
+/* Track card overrides on top of the shared `.libre-trees__card`
  * base — same border / hover / progress-bar treatment, with the
  * track-specific tag chip + outcome subtitle layered in. */
-.fishbones-trees__track-card-tag {
+.libre-trees__track-card-tag {
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -121,7 +121,7 @@
   border-radius: var(--fb-radius-pill);
 }
 
-.fishbones-trees__track-card-icon {
+.libre-trees__track-card-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -130,7 +130,7 @@
   line-height: 1;
 }
 
-.fishbones-trees__track-card-outcome {
+.libre-trees__track-card-outcome {
   font-size: 12.5px;
   font-weight: 500;
   color: var(--color-text-primary);
@@ -140,13 +140,13 @@
 
 /* ── shelf grid ─────────────────────────────────────────────── */
 
-.fishbones-trees__grid {
+.libre-trees__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 14px;
 }
 
-.fishbones-trees__card {
+.libre-trees__card {
   --tree-accent: #7faaff;
   appearance: none;
   text-align: left;
@@ -166,19 +166,19 @@
   color: var(--color-text-primary);
 }
 
-.fishbones-trees__card:hover {
+.libre-trees__card:hover {
   border-color: var(--tree-accent);
   transform: translateY(-1px);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
 }
 
-.fishbones-trees__card-head {
+.libre-trees__card-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.fishbones-trees__card-tag {
+.libre-trees__card-tag {
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
@@ -189,20 +189,20 @@
   border-radius: var(--fb-radius-xs);
 }
 
-.fishbones-trees__card-pct {
+.libre-trees__card-pct {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   font-size: 13px;
   color: var(--tree-accent);
 }
 
-.fishbones-trees__card-title {
+.libre-trees__card-title {
   font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
 
-.fishbones-trees__card-blurb {
+.libre-trees__card-blurb {
   font-size: 12px;
   color: var(--color-text-secondary);
   line-height: 1.4;
@@ -213,19 +213,19 @@
   overflow: hidden;
 }
 
-.fishbones-trees__card-meta {
+.libre-trees__card-meta {
   font-size: 11px;
   color: var(--color-text-tertiary);
 }
 
-.fishbones-trees__card-bar {
+.libre-trees__card-bar {
   height: 4px;
   background: var(--color-bg-tertiary);
   border-radius: var(--fb-radius-pill);
   overflow: hidden;
 }
 
-.fishbones-trees__card-bar-fill {
+.libre-trees__card-bar-fill {
   height: 100%;
   background: var(--tree-accent);
   transition: width 240ms ease;
@@ -233,11 +233,11 @@
 
 /* ── detail (single tree DAG view) ──────────────────────────── */
 
-.fishbones-trees--detail {
+.libre-trees--detail {
   --tree-accent: #7faaff;
 }
 
-.fishbones-trees__detail-head {
+.libre-trees__detail-head {
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: 16px;
@@ -245,7 +245,7 @@
   margin-bottom: 24px;
 }
 
-.fishbones-trees__back {
+.libre-trees__back {
   appearance: none;
   background: transparent;
   color: var(--color-text-secondary);
@@ -260,7 +260,7 @@
   gap: 6px;
 }
 
-.fishbones-trees__back-icon {
+.libre-trees__back-icon {
   stroke: currentColor;
   stroke-width: 2;
   fill: none;
@@ -268,7 +268,7 @@
   stroke-linejoin: round;
 }
 
-.fishbones-trees__panel-close svg {
+.libre-trees__panel-close svg {
   stroke: currentColor;
   stroke-width: 2;
   fill: none;
@@ -276,7 +276,7 @@
   stroke-linejoin: round;
 }
 
-.fishbones-trees__panel-lesson-check svg {
+.libre-trees__panel-lesson-check svg {
   stroke: currentColor;
   stroke-width: 2.5;
   fill: none;
@@ -284,37 +284,37 @@
   stroke-linejoin: round;
 }
 
-.fishbones-trees__back:hover {
+.libre-trees__back:hover {
   background: var(--color-bg-tertiary);
   color: var(--color-text-primary);
 }
 
-.fishbones-trees__detail-title {
+.libre-trees__detail-title {
   font-size: 20px;
   font-weight: 700;
   margin: 0 0 4px;
   letter-spacing: -0.01em;
 }
 
-.fishbones-trees__detail-blurb {
+.libre-trees__detail-blurb {
   font-size: 12.5px;
   color: var(--color-text-secondary);
   margin: 0;
   line-height: 1.4;
 }
 
-.fishbones-trees__detail-progress {
+.libre-trees__detail-progress {
   text-align: right;
 }
 
-.fishbones-trees__detail-pct {
+.libre-trees__detail-pct {
   font-size: 22px;
   font-weight: 700;
   color: var(--tree-accent);
   font-variant-numeric: tabular-nums;
 }
 
-.fishbones-trees__detail-pct-label {
+.libre-trees__detail-pct-label {
   font-size: 11px;
   color: var(--color-text-tertiary);
 }
@@ -324,7 +324,7 @@
 /* Scroll container. Vertical-scroll-friendly so the learner can
  * browse a tall tree without horizontal nav. The SVG inside grows
  * to its content size; the container clips and scrolls vertically. */
-.fishbones-trees__web-scroll {
+.libre-trees__web-scroll {
   position: relative;
   flex: 1;
   min-height: 0;
@@ -356,11 +356,11 @@
   touch-action: none;
 }
 
-.fishbones-trees__web-scroll:active {
+.libre-trees__web-scroll:active {
   cursor: grabbing;
 }
 
-.fishbones-trees__web {
+.libre-trees__web {
   display: block;
   position: absolute;
   top: 0;
@@ -390,7 +390,7 @@
  * The mask defined in TreesView.tsx still clips paths so they
  * don't bleed into a node's circle — keeping crossings visible
  * only in open space, where they should be. */
-.fishbones-trees__edge {
+.libre-trees__edge {
   stroke: var(--color-text-tertiary);
   stroke-opacity: 0.18;
   stroke-width: 2.5;
@@ -405,7 +405,7 @@
  * so a fully-walked subtree visibly stands out. Opacity-building
  * still applies on top of this — two completed edges crossing
  * stack to ~0.75 alpha. */
-.fishbones-trees__edge--active {
+.libre-trees__edge--active {
   stroke-opacity: 0.5;
   stroke-width: 3;
 }
@@ -416,7 +416,7 @@
  * the unlocked node, and adding another opacity tier here would
  * just muddle the density-map signal. Class preserved on the
  * element so future styling hooks remain wired up. */
-.fishbones-trees__edge--reachable {
+.libre-trees__edge--reachable {
   /* intentionally inherits the default --edge styling */
 }
 
@@ -427,13 +427,13 @@
  * cross-edges as supplementary "this node also depends on..."
  * hints. Same monochrome colour — distinction is via dash + width
  * + alpha, not hue. */
-.fishbones-trees__edge--cross {
+.libre-trees__edge--cross {
   stroke-opacity: 0.14;
   stroke-width: 1.5;
   stroke-dasharray: 5 4;
 }
 
-.fishbones-trees__edge--cross.fishbones-trees__edge--active {
+.libre-trees__edge--cross.libre-trees__edge--active {
   stroke-opacity: 0.35;
   stroke-width: 1.75;
 }
@@ -442,12 +442,12 @@
  * the active goal. Brighter alpha + thicker stroke so the chain of
  * dependencies pops against the surrounding monochrome graph. The
  * monochrome stays — this isn't about hue, just emphasis. */
-.fishbones-trees__edge--in-track {
+.libre-trees__edge--in-track {
   stroke-opacity: 0.85;
   stroke-width: 4;
 }
 
-.fishbones-trees__edge--in-track.fishbones-trees__edge--cross {
+.libre-trees__edge--in-track.libre-trees__edge--cross {
   stroke-opacity: 0.6;
   stroke-width: 2.5;
   /* Solid line for cross-edges that participate in the track —
@@ -459,7 +459,7 @@
 
 /* ── nodes (circle + icon + label below) ─────────────────────── */
 
-.fishbones-trees__node {
+.libre-trees__node {
   cursor: pointer;
 }
 
@@ -468,7 +468,7 @@
  * circle's stroke change keyed on .--selected covers click-state
  * feedback; the tooltip + accent stroke change comes from JS. */
 
-.fishbones-trees__node-circle {
+.libre-trees__node-circle {
   fill: var(--color-bg-secondary);
   stroke: var(--color-border-default);
   stroke-width: 2;
@@ -478,37 +478,37 @@
     stroke-width 200ms ease;
 }
 
-.fishbones-trees__node:hover .fishbones-trees__node-circle {
+.libre-trees__node:hover .libre-trees__node-circle {
   stroke: var(--tree-accent);
   stroke-width: 2.5;
 }
 
-.fishbones-trees__node--complete .fishbones-trees__node-circle {
+.libre-trees__node--complete .libre-trees__node-circle {
   fill: color-mix(in srgb, var(--tree-accent) 22%, var(--color-bg-secondary));
   stroke: var(--tree-accent);
 }
 
-.fishbones-trees__node--locked {
+.libre-trees__node--locked {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.fishbones-trees__node--locked .fishbones-trees__node-circle {
+.libre-trees__node--locked .libre-trees__node-circle {
   stroke-dasharray: 3 3;
 }
 
-.fishbones-trees__node--next .fishbones-trees__node-circle {
+.libre-trees__node--next .libre-trees__node-circle {
   stroke: var(--tree-accent);
   stroke-width: 2.5;
 }
 
-.fishbones-trees__node--gap .fishbones-trees__node-circle {
+.libre-trees__node--gap .libre-trees__node-circle {
   fill: var(--color-bg-tertiary);
   stroke-dasharray: 4 3;
   stroke: var(--color-text-tertiary);
 }
 
-.fishbones-trees__node--selected .fishbones-trees__node-circle {
+.libre-trees__node--selected .libre-trees__node-circle {
   stroke: var(--tree-accent);
   stroke-width: 3;
 }
@@ -516,19 +516,19 @@
 /* In-track skill — sits on the path to the active goal. Brighter
  * stroke and stronger fill so the chain reads as a single coherent
  * highlight against the rest of the monochrome graph. */
-.fishbones-trees__node--in-track .fishbones-trees__node-circle {
+.libre-trees__node--in-track .libre-trees__node-circle {
   stroke: var(--color-text-primary);
   stroke-width: 2.5;
   fill: color-mix(in srgb, var(--color-text-primary) 8%, var(--color-bg-secondary));
 }
 
-.fishbones-trees__node--in-track .fishbones-trees__node-icon {
+.libre-trees__node--in-track .libre-trees__node-icon {
   stroke: var(--color-text-primary);
 }
 
 /* The goal itself gets a thicker ring + brighter fill so it's the
  * obvious destination at the end of the path. */
-.fishbones-trees__node--track-goal .fishbones-trees__node-circle {
+.libre-trees__node--track-goal .libre-trees__node-circle {
   stroke-width: 3.5;
   fill: color-mix(in srgb, var(--color-text-primary) 16%, var(--color-bg-secondary));
 }
@@ -538,19 +538,19 @@
  * headers rather than competing with the actual skill nodes. They
  * also auto-complete (see isSkillComplete in trees.ts) so they
  * never block downstream learning. */
-.fishbones-trees__node--section .fishbones-trees__node-circle {
+.libre-trees__node--section .libre-trees__node-circle {
   fill: var(--color-bg-tertiary);
   stroke: var(--color-text-secondary);
   stroke-width: 2.5;
   stroke-dasharray: none;
 }
 
-.fishbones-trees__node--section .fishbones-trees__node-icon {
+.libre-trees__node--section .libre-trees__node-icon {
   stroke: var(--color-text-primary);
   stroke-width: 2.25;
 }
 
-.fishbones-trees__node--section .fishbones-trees__node-text {
+.libre-trees__node--section .libre-trees__node-text {
   font-weight: 700;
   font-size: 12.5px;
   fill: var(--color-text-primary);
@@ -560,15 +560,15 @@
 
 /* Pulsing ring around the recommended-next node so the learner's
  * eye lands there first. Uses the same accent as the edges. */
-.fishbones-trees__node-pulse {
+.libre-trees__node-pulse {
   stroke: var(--tree-accent);
   stroke-width: 2;
   fill: none;
   opacity: 0.55;
-  animation: fishbones-trees-pulse 1800ms ease-in-out infinite;
+  animation: libre-trees-pulse 1800ms ease-in-out infinite;
 }
 
-@keyframes fishbones-trees-pulse {
+@keyframes libre-trees-pulse {
   0%, 100% {
     transform: scale(1);
     opacity: 0.55;
@@ -582,7 +582,7 @@
 /* Lucide icon inside the circle. Stroke styles inherited from the
  * standard lucide CSS (lucide-static ships path strings; we apply
  * the canonical 24×24 stroke=2 convention here). */
-.fishbones-trees__node-icon {
+.libre-trees__node-icon {
   pointer-events: none;
   stroke: var(--color-text-primary);
   stroke-width: 2;
@@ -591,15 +591,15 @@
   stroke-linejoin: round;
 }
 
-.fishbones-trees__node--complete .fishbones-trees__node-icon {
+.libre-trees__node--complete .libre-trees__node-icon {
   stroke: var(--tree-accent);
 }
 
-.fishbones-trees__node--gap .fishbones-trees__node-icon {
+.libre-trees__node--gap .libre-trees__node-icon {
   stroke: var(--color-text-tertiary);
 }
 
-.fishbones-trees__node-text {
+.libre-trees__node-text {
   font-family: var(--font-sans, system-ui), sans-serif;
   font-size: 11.5px;
   font-weight: 500;
@@ -607,21 +607,21 @@
   pointer-events: none;
 }
 
-.fishbones-trees__node--complete .fishbones-trees__node-text,
-.fishbones-trees__node--next .fishbones-trees__node-text {
+.libre-trees__node--complete .libre-trees__node-text,
+.libre-trees__node--next .libre-trees__node-text {
   fill: var(--color-text-primary);
 }
 
 /* State badge — small circle with a lucide icon inside, sits at
  * the top of the node where the connecting line meets the circle.
  * Lock = locked (line "ends" at the lock); Check = complete. */
-.fishbones-trees__node-badge circle {
+.libre-trees__node-badge circle {
   fill: var(--color-bg-secondary);
   stroke: var(--color-border-default);
   stroke-width: 1.5;
 }
 
-.fishbones-trees__node-badge g {
+.libre-trees__node-badge g {
   pointer-events: none;
   stroke-width: 2.5;
   stroke-linecap: round;
@@ -629,20 +629,20 @@
   fill: none;
 }
 
-.fishbones-trees__node-badge--lock circle {
+.libre-trees__node-badge--lock circle {
   fill: var(--color-bg-tertiary);
 }
 
-.fishbones-trees__node-badge--lock g {
+.libre-trees__node-badge--lock g {
   stroke: var(--color-text-tertiary);
 }
 
-.fishbones-trees__node-badge--check circle {
+.libre-trees__node-badge--check circle {
   fill: var(--tree-accent);
   stroke: var(--tree-accent);
 }
 
-.fishbones-trees__node-badge--check g {
+.libre-trees__node-badge--check g {
   stroke: var(--color-bg-primary);
 }
 
@@ -653,7 +653,7 @@
  * vignette area visually (positioned in the corner where the
  * mask is fully transparent) by virtue of its position, so it
  * doesn't get faded by the canvas's mask-image. */
-.fishbones-trees__zoom {
+.libre-trees__zoom {
   position: absolute;
   left: 16px;
   bottom: 16px;
@@ -674,7 +674,7 @@
   font-family: inherit;
 }
 
-.fishbones-trees__zoom-btn {
+.libre-trees__zoom-btn {
   appearance: none;
   border: 0;
   background: transparent;
@@ -690,12 +690,12 @@
   transition: background 120ms ease, color 120ms ease;
 }
 
-.fishbones-trees__zoom-btn:hover {
+.libre-trees__zoom-btn:hover {
   background: var(--color-glass-rim);
   color: var(--color-text-primary);
 }
 
-.fishbones-trees__zoom-btn--readout {
+.libre-trees__zoom-btn--readout {
   width: 56px;
   font-size: 11px;
   font-variant-numeric: tabular-nums;
@@ -705,7 +705,7 @@
 
 /* ── hover tooltip ───────────────────────────────────────────── */
 
-.fishbones-trees__tooltip {
+.libre-trees__tooltip {
   position: absolute;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
@@ -724,32 +724,32 @@
 /* Flipped variant — tooltip is to the LEFT of the node (we ran out
  * of room on the right). Move the accent border to the right edge
  * so the visual "tail" still points back toward the node. */
-.fishbones-trees__tooltip--flipped {
+.libre-trees__tooltip--flipped {
   border-left: 1px solid var(--color-border-default);
   border-right: 3px solid var(--tree-accent);
 }
 
-.fishbones-trees__tooltip-title {
+.libre-trees__tooltip-title {
   font-weight: 700;
   font-size: 13px;
   letter-spacing: -0.005em;
   margin-bottom: 4px;
 }
 
-.fishbones-trees__tooltip-body {
+.libre-trees__tooltip-body {
   color: var(--color-text-secondary);
   font-size: 11.5px;
   line-height: 1.45;
   margin-bottom: 6px;
 }
 
-.fishbones-trees__tooltip-state {
+.libre-trees__tooltip-state {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
 }
 
-.fishbones-trees__tooltip-flag {
+.libre-trees__tooltip-flag {
   font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
@@ -760,17 +760,17 @@
   border-radius: 3px;
 }
 
-.fishbones-trees__tooltip-flag--done {
+.libre-trees__tooltip-flag--done {
   color: #7fc97f;
   background: rgba(127, 201, 127, 0.14);
 }
 
-.fishbones-trees__tooltip-flag--locked {
+.libre-trees__tooltip-flag--locked {
   color: var(--color-text-tertiary);
   background: var(--color-bg-tertiary);
 }
 
-.fishbones-trees__tooltip-flag--gap {
+.libre-trees__tooltip-flag--gap {
   color: #c89cdf;
   background: rgba(200, 156, 223, 0.14);
 }
@@ -783,14 +783,14 @@
  * The 10px outset on three sides leaves the underlying tree
  * visible behind the panel (especially on a wide tree where the
  * scroll position matters), making the card feel docked but not
- * occluding. Matches `.fishbones__sidebar` in `Sidebar.css` so the
+ * occluding. Matches `.libre__sidebar` in `Sidebar.css` so the
  * two side panels read as siblings of the same UI family.
  *
  * `top: 54px` clears the 44px topbar plus a matching 10px gutter
  * — without it the panel printed underneath the topbar's frosted
  * glass and the "LOCKED / Goal" flags at the top of the panel got
  * occluded. */
-.fishbones-trees__panel {
+.libre-trees__panel {
   position: fixed;
   right: 10px;
   top: 54px;
@@ -815,20 +815,20 @@
   gap: 12px;
 }
 
-.fishbones-trees__panel-head {
+.libre-trees__panel-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
 }
 
-.fishbones-trees__panel-pre {
+.libre-trees__panel-pre {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
 }
 
-.fishbones-trees__panel-flag {
+.libre-trees__panel-flag {
   font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
@@ -839,22 +839,22 @@
   border-radius: var(--fb-radius-xs);
 }
 
-.fishbones-trees__panel-flag--done {
+.libre-trees__panel-flag--done {
   color: #7fc97f;
   background: rgba(127, 201, 127, 0.14);
 }
 
-.fishbones-trees__panel-flag--locked {
+.libre-trees__panel-flag--locked {
   color: var(--color-text-tertiary);
   background: var(--color-bg-tertiary);
 }
 
-.fishbones-trees__panel-flag--gap {
+.libre-trees__panel-flag--gap {
   color: #c89cdf;
   background: rgba(200, 156, 223, 0.14);
 }
 
-.fishbones-trees__panel-flag--goal {
+.libre-trees__panel-flag--goal {
   color: var(--color-text-primary);
   background: color-mix(in srgb, var(--color-text-primary) 14%, transparent);
 }
@@ -863,7 +863,7 @@
  * outline so it reads as an action card rather than a primary
  * button — the primary action on the panel is "open a lesson",
  * and the goal toggle should sit at the same hierarchy level. */
-.fishbones-trees__panel-track {
+.libre-trees__panel-track {
   appearance: none;
   font: inherit;
   text-align: left;
@@ -879,11 +879,11 @@
   transition: border-color 120ms ease, background 120ms ease;
 }
 
-.fishbones-trees__panel-track:hover {
+.libre-trees__panel-track:hover {
   border-color: var(--color-text-primary);
 }
 
-.fishbones-trees__panel-track--active {
+.libre-trees__panel-track--active {
   border-color: var(--color-text-primary);
   background: color-mix(in srgb, var(--color-text-primary) 12%, var(--color-bg-tertiary));
 }
@@ -892,7 +892,7 @@
  * the path checklist; only renders when the active path references
  * books the user hasn't installed yet. The button itself is the
  * primary affordance — solid fill so it reads as "do this next." */
-.fishbones-trees__panel-install {
+.libre-trees__panel-install {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -903,7 +903,7 @@
   background: color-mix(in srgb, var(--color-text-primary) 6%, transparent);
 }
 
-.fishbones-trees__panel-install-btn {
+.libre-trees__panel-install-btn {
   appearance: none;
   font: inherit;
   width: 100%;
@@ -918,23 +918,23 @@
   transition: opacity 120ms ease, transform 120ms ease;
 }
 
-.fishbones-trees__panel-install-btn:hover:not(:disabled) {
+.libre-trees__panel-install-btn:hover:not(:disabled) {
   transform: translateY(-1px);
 }
 
-.fishbones-trees__panel-install-btn:disabled {
+.libre-trees__panel-install-btn:disabled {
   opacity: 0.7;
   cursor: progress;
 }
 
-.fishbones-trees__panel-install-hint {
+.libre-trees__panel-install-hint {
   margin: 0;
   font-size: 11px;
   line-height: 1.45;
   color: var(--color-text-tertiary);
 }
 
-.fishbones-trees__panel-install-error {
+.libre-trees__panel-install-error {
   margin: 0;
   font-size: 11px;
   color: #ef6f6f;
@@ -943,7 +943,7 @@
 /* Path-to-goal checklist. Numbered list (root → goal), with each
  * step showing a tick if the underlying skill is already complete.
  * Renders only when the open panel's skill IS the active goal. */
-.fishbones-trees__panel-track-list ol {
+.libre-trees__panel-track-list ol {
   list-style: none;
   margin: 6px 0 0;
   padding: 0;
@@ -953,7 +953,7 @@
   counter-reset: step;
 }
 
-.fishbones-trees__panel-track-step {
+.libre-trees__panel-track-step {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -963,7 +963,7 @@
   counter-increment: step;
 }
 
-.fishbones-trees__panel-track-step::before {
+.libre-trees__panel-track-step::before {
   content: counter(step);
   font-size: 10px;
   font-weight: 700;
@@ -973,7 +973,7 @@
   text-align: right;
 }
 
-.fishbones-trees__panel-track-step-tick {
+.libre-trees__panel-track-step-tick {
   width: 14px;
   height: 14px;
   border-radius: var(--fb-radius-pill);
@@ -985,7 +985,7 @@
   background: transparent;
 }
 
-.fishbones-trees__panel-track-step-tick svg {
+.libre-trees__panel-track-step-tick svg {
   stroke: currentColor;
   stroke-width: 3;
   fill: none;
@@ -993,22 +993,22 @@
   stroke-linejoin: round;
 }
 
-.fishbones-trees__panel-track-step--done {
+.libre-trees__panel-track-step--done {
   color: var(--color-text-primary);
 }
 
-.fishbones-trees__panel-track-step--done .fishbones-trees__panel-track-step-tick {
+.libre-trees__panel-track-step--done .libre-trees__panel-track-step-tick {
   background: #4ade80;
   border-color: #4ade80;
   color: var(--color-bg-primary);
 }
 
-.fishbones-trees__panel-track-step--goal {
+.libre-trees__panel-track-step--goal {
   color: var(--color-text-primary);
   font-weight: 600;
 }
 
-.fishbones-trees__panel-close {
+.libre-trees__panel-close {
   appearance: none;
   background: transparent;
   border: 0;
@@ -1018,26 +1018,26 @@
   padding: 4px 8px;
 }
 
-.fishbones-trees__panel-close:hover {
+.libre-trees__panel-close:hover {
   color: var(--color-text-primary);
 }
 
-.fishbones-trees__panel-title {
+.libre-trees__panel-title {
   font-size: 18px;
   font-weight: 700;
   margin: 0;
   letter-spacing: -0.01em;
 }
 
-.fishbones-trees__panel-summary {
+.libre-trees__panel-summary {
   font-size: 13px;
   color: var(--color-text-secondary);
   line-height: 1.5;
   margin: 0;
 }
 
-.fishbones-trees__panel-locked,
-.fishbones-trees__panel-gap {
+.libre-trees__panel-locked,
+.libre-trees__panel-gap {
   font-size: 12px;
   background: var(--color-bg-tertiary);
   border: 1px solid var(--color-border-default);
@@ -1047,21 +1047,21 @@
   line-height: 1.4;
 }
 
-.fishbones-trees__panel-locked ul {
+.libre-trees__panel-locked ul {
   margin: 6px 0 0;
   padding-left: 18px;
   font-family: var(--font-mono, ui-monospace), monospace;
   font-size: 11px;
 }
 
-.fishbones-trees__panel-lessons {
+.libre-trees__panel-lessons {
   display: flex;
   flex-direction: column;
   gap: 6px;
   margin-top: 4px;
 }
 
-.fishbones-trees__panel-lessons-label {
+.libre-trees__panel-lessons-label {
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
@@ -1069,7 +1069,7 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones-trees__panel-lesson {
+.libre-trees__panel-lesson {
   position: relative;
   appearance: none;
   text-align: left;
@@ -1083,32 +1083,32 @@
   transition: all 120ms ease;
 }
 
-.fishbones-trees__panel-lesson:hover:not(:disabled) {
+.libre-trees__panel-lesson:hover:not(:disabled) {
   border-color: var(--tree-accent);
 }
 
-.fishbones-trees__panel-lesson:disabled {
+.libre-trees__panel-lesson:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.fishbones-trees__panel-lesson--done {
+.libre-trees__panel-lesson--done {
   border-color: color-mix(in srgb, var(--tree-accent) 50%, transparent);
 }
 
-.fishbones-trees__panel-lesson-title {
+.libre-trees__panel-lesson-title {
   font-size: 13px;
   font-weight: 600;
   letter-spacing: -0.005em;
 }
 
-.fishbones-trees__panel-lesson-course {
+.libre-trees__panel-lesson-course {
   font-size: 11px;
   color: var(--color-text-tertiary);
   margin-top: 2px;
 }
 
-.fishbones-trees__panel-lesson-check {
+.libre-trees__panel-lesson-check {
   position: absolute;
   top: 8px;
   right: 10px;
@@ -1120,13 +1120,13 @@
 
 /* Variant of the detail container — overrides the pan-viewport
  * overflow rules since a track is a vertical scroll, not a pan
- * canvas. Extends the shared `.fishbones-trees--detail` wrapper. */
-.fishbones-trees--track-detail {
+ * canvas. Extends the shared `.libre-trees--detail` wrapper. */
+.libre-trees--track-detail {
   overflow: auto;
   padding: 24px 28px 32px;
 }
 
-.fishbones-trees__track-detail-titleicon {
+.libre-trees__track-detail-titleicon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1140,7 +1140,7 @@
  * border on the left ties it back to the track's colour token and
  * mirrors the panel-tooltip treatment so the visual vocabulary is
  * consistent. */
-.fishbones-trees__track-meta {
+.libre-trees__track-meta {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -1153,14 +1153,14 @@
   margin-bottom: 16px;
 }
 
-.fishbones-trees__track-meta-outcome {
+.libre-trees__track-meta-outcome {
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text-primary);
   flex: 1 1 60%;
 }
 
-.fishbones-trees__track-meta-stats {
+.libre-trees__track-meta-stats {
   font-size: 11.5px;
   color: var(--color-text-secondary);
   text-transform: lowercase;
@@ -1170,7 +1170,7 @@
 /* Continue CTA. Filled with the accent so the learner has one
  * obvious primary click — sits above the step list as a permanent
  * "I just want to keep going" handle. */
-.fishbones-trees__track-continue {
+.libre-trees__track-continue {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1188,12 +1188,12 @@
   transition: background 120ms ease, transform 120ms ease;
 }
 
-.fishbones-trees__track-continue:hover {
+.libre-trees__track-continue:hover {
   background: color-mix(in srgb, var(--tree-accent) 28%, var(--color-bg-secondary));
   transform: translateY(-1px);
 }
 
-.fishbones-trees__track-continue > span:first-child {
+.libre-trees__track-continue > span:first-child {
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.3px;
@@ -1201,7 +1201,7 @@
   color: var(--tree-accent);
 }
 
-.fishbones-trees__track-continue-target {
+.libre-trees__track-continue-target {
   font-size: 12.5px;
   color: var(--color-text-secondary);
   flex: 1;
@@ -1213,7 +1213,7 @@
 /* Numbered step list. Each step is a row with a left rail (number /
  * check + connector line down to the next step) and a body block
  * (label, source-tree crumb, summary, "Open lesson" button). */
-.fishbones-trees__track-list {
+.libre-trees__track-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -1221,7 +1221,7 @@
   flex-direction: column;
 }
 
-.fishbones-trees__track-step {
+.libre-trees__track-step {
   display: grid;
   grid-template-columns: 36px 1fr;
   gap: 12px;
@@ -1231,7 +1231,7 @@
 /* Rail column — the dot anchors the step, the line below stretches
  * down to the next step's dot. The line uses absolute positioning so
  * it only fills the GAP between dots, not the dot itself. */
-.fishbones-trees__track-step-rail {
+.libre-trees__track-step-rail {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -1241,7 +1241,7 @@
   min-height: 56px;
 }
 
-.fishbones-trees__track-step-dot {
+.libre-trees__track-step-dot {
   position: relative;
   z-index: 1;
   display: inline-flex;
@@ -1259,11 +1259,11 @@
   flex-shrink: 0;
 }
 
-.fishbones-trees__track-step-num {
+.libre-trees__track-step-num {
   line-height: 1;
 }
 
-.fishbones-trees__track-step-line {
+.libre-trees__track-step-line {
   flex: 1;
   width: 2px;
   background: var(--color-border-default);
@@ -1273,44 +1273,44 @@
 
 /* Status variants. Done = filled dot + accent line above; pending +
  * gap = neutral; next-up adds a subtle accent ring. */
-.fishbones-trees__track-step--done .fishbones-trees__track-step-dot {
+.libre-trees__track-step--done .libre-trees__track-step-dot {
   background: var(--tree-accent);
   border-color: var(--tree-accent);
   color: var(--color-bg-primary);
 }
 
-.fishbones-trees__track-step--done .fishbones-trees__track-step-line {
+.libre-trees__track-step--done .libre-trees__track-step-line {
   background: var(--tree-accent);
 }
 
-.fishbones-trees__track-step--gap .fishbones-trees__track-step-dot,
-.fishbones-trees__track-step--missing .fishbones-trees__track-step-dot {
+.libre-trees__track-step--gap .libre-trees__track-step-dot,
+.libre-trees__track-step--missing .libre-trees__track-step-dot {
   border-style: dashed;
   color: var(--color-text-tertiary);
 }
 
-.fishbones-trees__track-step--next .fishbones-trees__track-step-dot {
+.libre-trees__track-step--next .libre-trees__track-step-dot {
   border-color: var(--tree-accent);
   color: var(--tree-accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--tree-accent) 24%, transparent);
 }
 
 /* Body column — label + crumb + summary + "Open lesson" CTA. */
-.fishbones-trees__track-step-body {
+.libre-trees__track-step-body {
   display: flex;
   flex-direction: column;
   gap: 4px;
   padding-bottom: 14px;
 }
 
-.fishbones-trees__track-step-head {
+.libre-trees__track-step-head {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 }
 
-.fishbones-trees__track-step-icon {
+.libre-trees__track-step-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1319,24 +1319,24 @@
   color: var(--color-text-secondary);
 }
 
-.fishbones-trees__track-step--done .fishbones-trees__track-step-icon {
+.libre-trees__track-step--done .libre-trees__track-step-icon {
   color: var(--tree-accent);
 }
 
-.fishbones-trees__track-step-label {
+.libre-trees__track-step-label {
   font-size: 14px;
   font-weight: 600;
   color: var(--color-text-primary);
   letter-spacing: -0.005em;
 }
 
-.fishbones-trees__track-step--done .fishbones-trees__track-step-label {
+.libre-trees__track-step--done .libre-trees__track-step-label {
   color: var(--color-text-secondary);
   text-decoration: line-through;
   text-decoration-color: color-mix(in srgb, var(--tree-accent) 60%, transparent);
 }
 
-.fishbones-trees__track-step-flag {
+.libre-trees__track-step-flag {
   font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
@@ -1347,24 +1347,24 @@
   border-radius: var(--fb-radius-xs);
 }
 
-.fishbones-trees__track-step-flag--gap {
+.libre-trees__track-step-flag--gap {
   color: #c89cdf;
   background: rgba(200, 156, 223, 0.14);
 }
 
-.fishbones-trees__track-step-meta {
+.libre-trees__track-step-meta {
   font-size: 11px;
   color: var(--color-text-tertiary);
 }
 
-.fishbones-trees__track-step-summary {
+.libre-trees__track-step-summary {
   font-size: 12px;
   line-height: 1.45;
   color: var(--color-text-secondary);
   margin: 4px 0 0;
 }
 
-.fishbones-trees__track-step-open {
+.libre-trees__track-step-open {
   align-self: flex-start;
   margin-top: 8px;
   appearance: none;
@@ -1380,7 +1380,7 @@
   transition: border-color 120ms ease, background 120ms ease;
 }
 
-.fishbones-trees__track-step-open:hover {
+.libre-trees__track-step-open:hover {
   border-color: var(--tree-accent);
   background: color-mix(in srgb, var(--tree-accent) 10%, var(--color-bg-tertiary));
 }

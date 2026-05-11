@@ -20,7 +20,7 @@ If both are true, the wizard concludes **No non-exempt encryption** and you're d
 
 ### `ITSAppUsesNonExemptEncryption` in Info.plist
 
-To skip this dialog on every upload, add this key to `src-tauri/gen/apple/fishbones_iOS/Info.plist`:
+To skip this dialog on every upload, add this key to `src-tauri/gen/apple/libre_iOS/Info.plist`:
 
 ```xml
 <key>ITSAppUsesNonExemptEncryption</key>

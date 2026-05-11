@@ -1,7 +1,7 @@
 {
   "id": "hellotrade",
   "title": "HelloTrade: Trading the Decentralized Way",
-  "author": "Fishbones \u00b7 scraped from hellotrade.gitbook.io",
+  "author": "Libre \u00b7 scraped from hellotrade.gitbook.io",
   "description": "A guided tour of the HelloTrade decentralized perpetuals exchange. Covers the trading concepts (perps, leverage, liquidation, funding), the cryptographic signature scheme (EIP-191 / EIP-712 / ERC-2612), and the WebSocket + REST APIs you'd use to build your own client. Comes with a Postman-style API tester built in \u2014 every lesson lets you fire real requests at the staging environment from inside the app.",
   "language": "javascript",
   "releaseStatus": "BETA",

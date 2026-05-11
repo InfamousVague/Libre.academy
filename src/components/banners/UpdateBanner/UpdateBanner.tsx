@@ -32,7 +32,7 @@ const RECHECK_INTERVAL_MS = 60 * 60 * 1000;
 /// localStorage key for remembered "user dismissed this version" so
 /// re-mounting the app doesn't re-spam them. We DON'T persist across
 /// versions — once a NEW version ships, the banner reappears.
-const DISMISSED_KEY = "fishbones:update-banner-dismissed-version";
+const DISMISSED_KEY = "libre:update-banner-dismissed-version";
 
 type State =
   | { kind: "idle" }
@@ -185,29 +185,29 @@ export function UpdateBanner(): React.ReactElement | null {
   if (state.kind === "idle") return null;
 
   return (
-    <div className="fishbones-update-banner" role="status" aria-live="polite">
-      <div className="fishbones-update-banner__icon" aria-hidden>
+    <div className="libre-update-banner" role="status" aria-live="polite">
+      <div className="libre-update-banner__icon" aria-hidden>
         <Icon icon={downloadCloud} size="sm" color="currentColor" />
       </div>
-      <div className="fishbones-update-banner__body">
+      <div className="libre-update-banner__body">
         {state.kind === "available" && (
           <>
-            <div className="fishbones-update-banner__title">
-              Fishbones {state.version} is ready to install
+            <div className="libre-update-banner__title">
+              Libre {state.version} is ready to install
             </div>
-            <div className="fishbones-update-banner__sub">
+            <div className="libre-update-banner__sub">
               Click Install to download in the background.
             </div>
           </>
         )}
         {state.kind === "downloading" && (
           <>
-            <div className="fishbones-update-banner__title">
+            <div className="libre-update-banner__title">
               Downloading {state.version}…
             </div>
-            <div className="fishbones-update-banner__progress" aria-hidden>
+            <div className="libre-update-banner__progress" aria-hidden>
               <div
-                className="fishbones-update-banner__progress-bar"
+                className="libre-update-banner__progress-bar"
                 style={{
                   width:
                     state.total > 0
@@ -216,7 +216,7 @@ export function UpdateBanner(): React.ReactElement | null {
                 }}
               />
             </div>
-            <div className="fishbones-update-banner__sub">
+            <div className="libre-update-banner__sub">
               {state.total > 0
                 ? `${formatBytes(state.downloaded)} / ${formatBytes(state.total)}`
                 : `${formatBytes(state.downloaded)} downloaded`}
@@ -225,28 +225,28 @@ export function UpdateBanner(): React.ReactElement | null {
         )}
         {state.kind === "ready" && (
           <>
-            <div className="fishbones-update-banner__title">
+            <div className="libre-update-banner__title">
               {state.version} downloaded — restart to apply
             </div>
-            <div className="fishbones-update-banner__sub">
+            <div className="libre-update-banner__sub">
               Your tabs and progress will be reopened automatically.
             </div>
           </>
         )}
         {state.kind === "error" && (
           <>
-            <div className="fishbones-update-banner__title">
+            <div className="libre-update-banner__title">
               Update failed
             </div>
-            <div className="fishbones-update-banner__sub">{state.message}</div>
+            <div className="libre-update-banner__sub">{state.message}</div>
           </>
         )}
       </div>
-      <div className="fishbones-update-banner__actions">
+      <div className="libre-update-banner__actions">
         {state.kind === "available" && (
           <button
             type="button"
-            className="fishbones-update-banner__btn fishbones-update-banner__btn--primary"
+            className="libre-update-banner__btn libre-update-banner__btn--primary"
             onClick={() => void onDownload()}
           >
             Install
@@ -255,7 +255,7 @@ export function UpdateBanner(): React.ReactElement | null {
         {state.kind === "ready" && (
           <button
             type="button"
-            className="fishbones-update-banner__btn fishbones-update-banner__btn--primary"
+            className="libre-update-banner__btn libre-update-banner__btn--primary"
             onClick={() => void onRestart()}
           >
             Restart now
@@ -263,7 +263,7 @@ export function UpdateBanner(): React.ReactElement | null {
         )}
         <button
           type="button"
-          className="fishbones-update-banner__btn fishbones-update-banner__btn--ghost"
+          className="libre-update-banner__btn libre-update-banner__btn--ghost"
           onClick={onDismiss}
           aria-label="Dismiss"
           title="Dismiss"

@@ -1,5 +1,5 @@
 /* Per-theme overrides of the base kit's CSS custom properties. Everything
-   in the Fishbones UI reads from these variables (--color-bg-primary etc), so
+   in the Libre UI reads from these variables (--color-bg-primary etc), so
    just swapping the values cascades to sidebar, reader, quiz cards, nav,
    workbench, and so on. Monaco's own theme is controlled via the
    `monacoTheme` field in themes.ts.
@@ -30,8 +30,8 @@
   --color-glass-rim: rgba(255, 255, 255, 0.04);
   --color-glass-shadow: rgba(0, 0, 0, 0.35);
 
-  /* Bone palette — mid-tone of the new fishbones wordmark texture.
-     Used by the FishbonesLoader spinner ring and any other surface
+  /* Bone palette — mid-tone of the new libre wordmark texture.
+     Used by the LibreLoader spinner ring and any other surface
      that wants to read as "part of the brand" rather than stark white.
      Three strengths so consumers can pick the right contrast for their
      surface. The amber variant is shifted ~15° toward orange and used
@@ -56,9 +56,9 @@
   --color-glass-shadow: rgba(0, 0, 0, 0.08);
 }
 
-/* ---- Fishbones default dark — bone-tinted whites ----------------------
+/* ---- Libre default dark — bone-tinted whites ----------------------
    Stark `#FAFAFA` (the base kit's default text colour) reads as a
-   slightly cool / clinical white. The new fishbones wordmark is bone-
+   slightly cool / clinical white. The new libre wordmark is bone-
    textured — a warm off-white. We tint the default dark theme's primary
    text (and the secondary/tertiary tones at lower intensities) so the
    whole UI reads as a piece with the brand mark.
@@ -91,26 +91,26 @@
   --color-text-tertiary: #8c7a98;
 }
 
-[data-theme-name="synthwave"] .fishbones-editor-run,
-[data-theme-name="synthwave"] .fishbones-lesson-nav-btn--next:hover:not(:disabled) {
+[data-theme-name="synthwave"] .libre-editor-run,
+[data-theme-name="synthwave"] .libre-lesson-nav-btn--next:hover:not(:disabled) {
   background: #ff7edb !important;
   color: #1a1427 !important;
   border-color: #ff7edb !important;
 }
 
-[data-theme-name="synthwave"] .fishbones__dot--done {
+[data-theme-name="synthwave"] .libre__dot--done {
   border-color: #36f9f6;
   background: #36f9f6;
   color: #1a1427;
 }
 
-[data-theme-name="synthwave"] .fishbones__dot--active {
+[data-theme-name="synthwave"] .libre__dot--active {
   border-color: #ff7edb;
   box-shadow: 0 0 0 3px rgba(255, 126, 219, 0.15);
 }
 
-[data-theme-name="synthwave"] .fishbones-import-primary,
-[data-theme-name="synthwave"] .fishbones-settings-primary {
+[data-theme-name="synthwave"] .libre-import-primary,
+[data-theme-name="synthwave"] .libre-settings-primary {
   background: #ff7edb;
   color: #1a1427;
   border-color: #ff7edb;
@@ -128,26 +128,26 @@
   --color-text-tertiary: #8a7560;
 }
 
-[data-theme-name="claude-code-dark"] .fishbones-editor-run,
-[data-theme-name="claude-code-dark"] .fishbones-lesson-nav-btn--next:hover:not(:disabled) {
+[data-theme-name="claude-code-dark"] .libre-editor-run,
+[data-theme-name="claude-code-dark"] .libre-lesson-nav-btn--next:hover:not(:disabled) {
   background: #d97757 !important;
   color: #14110d !important;
   border-color: #d97757 !important;
 }
 
-[data-theme-name="claude-code-dark"] .fishbones__dot--done {
+[data-theme-name="claude-code-dark"] .libre__dot--done {
   border-color: #d97757;
   background: #d97757;
   color: #14110d;
 }
 
-[data-theme-name="claude-code-dark"] .fishbones__dot--active {
+[data-theme-name="claude-code-dark"] .libre__dot--active {
   border-color: #e6c097;
   box-shadow: 0 0 0 3px rgba(230, 192, 151, 0.15);
 }
 
-[data-theme-name="claude-code-dark"] .fishbones-import-primary,
-[data-theme-name="claude-code-dark"] .fishbones-settings-primary {
+[data-theme-name="claude-code-dark"] .libre-import-primary,
+[data-theme-name="claude-code-dark"] .libre-settings-primary {
   background: #d97757;
   color: #14110d;
   border-color: #d97757;
@@ -171,31 +171,31 @@
   --color-text-tertiary: #5c6773;
 }
 
-[data-theme-name="ayu-mirage"] .fishbones-editor-run,
-[data-theme-name="ayu-mirage"] .fishbones-lesson-nav-btn--next:hover:not(:disabled) {
+[data-theme-name="ayu-mirage"] .libre-editor-run,
+[data-theme-name="ayu-mirage"] .libre-lesson-nav-btn--next:hover:not(:disabled) {
   background: #ffa759 !important;
   color: #1f2430 !important;
   border-color: #ffa759 !important;
 }
 
-[data-theme-name="ayu-mirage"] .fishbones__lesson-status--done {
+[data-theme-name="ayu-mirage"] .libre__lesson-status--done {
   background: #bae67e;
   border-color: #bae67e;
   color: #1f2430;
 }
 
-[data-theme-name="ayu-mirage"] .fishbones__lesson-status--active {
+[data-theme-name="ayu-mirage"] .libre__lesson-status--active {
   border-color: #73d0ff;
   box-shadow: 0 0 0 3px rgba(115, 208, 255, 0.15);
   color: #73d0ff;
 }
 
-[data-theme-name="ayu-mirage"] .fishbones-import-primary,
-[data-theme-name="ayu-mirage"] .fishbones-settings-primary,
-[data-theme-name="ayu-mirage"] .fishbones-library-import,
-[data-theme-name="ayu-mirage"] .fishbones-library-import-seg--primary,
-[data-theme-name="ayu-mirage"] .fishbones-welcome-primary,
-[data-theme-name="ayu-mirage"] .fishbones-library-pill--active {
+[data-theme-name="ayu-mirage"] .libre-import-primary,
+[data-theme-name="ayu-mirage"] .libre-settings-primary,
+[data-theme-name="ayu-mirage"] .libre-library-import,
+[data-theme-name="ayu-mirage"] .libre-library-import-seg--primary,
+[data-theme-name="ayu-mirage"] .libre-welcome-primary,
+[data-theme-name="ayu-mirage"] .libre-library-pill--active {
   background: #ffa759;
   color: #1f2430;
   border-color: #ffa759;
@@ -217,31 +217,31 @@
   --color-text-tertiary: #7f849c; /* overlay1 */
 }
 
-[data-theme-name="catppuccin-mocha"] .fishbones-editor-run,
-[data-theme-name="catppuccin-mocha"] .fishbones-lesson-nav-btn--next:hover:not(:disabled) {
+[data-theme-name="catppuccin-mocha"] .libre-editor-run,
+[data-theme-name="catppuccin-mocha"] .libre-lesson-nav-btn--next:hover:not(:disabled) {
   background: #cba6f7 !important; /* mauve */
   color: #1e1e2e !important;
   border-color: #cba6f7 !important;
 }
 
-[data-theme-name="catppuccin-mocha"] .fishbones__lesson-status--done {
+[data-theme-name="catppuccin-mocha"] .libre__lesson-status--done {
   background: #a6e3a1; /* green */
   border-color: #a6e3a1;
   color: #1e1e2e;
 }
 
-[data-theme-name="catppuccin-mocha"] .fishbones__lesson-status--active {
+[data-theme-name="catppuccin-mocha"] .libre__lesson-status--active {
   border-color: #89b4fa; /* blue */
   box-shadow: 0 0 0 3px rgba(137, 180, 250, 0.18);
   color: #89b4fa;
 }
 
-[data-theme-name="catppuccin-mocha"] .fishbones-import-primary,
-[data-theme-name="catppuccin-mocha"] .fishbones-settings-primary,
-[data-theme-name="catppuccin-mocha"] .fishbones-library-import,
-[data-theme-name="catppuccin-mocha"] .fishbones-library-import-seg--primary,
-[data-theme-name="catppuccin-mocha"] .fishbones-welcome-primary,
-[data-theme-name="catppuccin-mocha"] .fishbones-library-pill--active {
+[data-theme-name="catppuccin-mocha"] .libre-import-primary,
+[data-theme-name="catppuccin-mocha"] .libre-settings-primary,
+[data-theme-name="catppuccin-mocha"] .libre-library-import,
+[data-theme-name="catppuccin-mocha"] .libre-library-import-seg--primary,
+[data-theme-name="catppuccin-mocha"] .libre-welcome-primary,
+[data-theme-name="catppuccin-mocha"] .libre-library-pill--active {
   background: #cba6f7;
   color: #1e1e2e;
   border-color: #cba6f7;
@@ -259,31 +259,31 @@
   --color-text-tertiary: #abb0b6;
 }
 
-[data-theme-name="ayu-light"] .fishbones-editor-run,
-[data-theme-name="ayu-light"] .fishbones-lesson-nav-btn--next:hover:not(:disabled) {
+[data-theme-name="ayu-light"] .libre-editor-run,
+[data-theme-name="ayu-light"] .libre-lesson-nav-btn--next:hover:not(:disabled) {
   background: #fa8d3e !important;
   color: #ffffff !important;
   border-color: #fa8d3e !important;
 }
 
-[data-theme-name="ayu-light"] .fishbones__lesson-status--done {
+[data-theme-name="ayu-light"] .libre__lesson-status--done {
   background: #86b300;
   border-color: #86b300;
   color: #ffffff;
 }
 
-[data-theme-name="ayu-light"] .fishbones__lesson-status--active {
+[data-theme-name="ayu-light"] .libre__lesson-status--active {
   border-color: #399ee6;
   box-shadow: 0 0 0 3px rgba(57, 158, 230, 0.15);
   color: #399ee6;
 }
 
-[data-theme-name="ayu-light"] .fishbones-import-primary,
-[data-theme-name="ayu-light"] .fishbones-settings-primary,
-[data-theme-name="ayu-light"] .fishbones-library-import,
-[data-theme-name="ayu-light"] .fishbones-library-import-seg--primary,
-[data-theme-name="ayu-light"] .fishbones-welcome-primary,
-[data-theme-name="ayu-light"] .fishbones-library-pill--active {
+[data-theme-name="ayu-light"] .libre-import-primary,
+[data-theme-name="ayu-light"] .libre-settings-primary,
+[data-theme-name="ayu-light"] .libre-library-import,
+[data-theme-name="ayu-light"] .libre-library-import-seg--primary,
+[data-theme-name="ayu-light"] .libre-welcome-primary,
+[data-theme-name="ayu-light"] .libre-library-pill--active {
   background: #fa8d3e;
   color: #ffffff;
   border-color: #fa8d3e;
@@ -301,31 +301,31 @@
   --color-text-tertiary: #4d5566;
 }
 
-[data-theme-name="ayu-dark"] .fishbones-editor-run,
-[data-theme-name="ayu-dark"] .fishbones-lesson-nav-btn--next:hover:not(:disabled) {
+[data-theme-name="ayu-dark"] .libre-editor-run,
+[data-theme-name="ayu-dark"] .libre-lesson-nav-btn--next:hover:not(:disabled) {
   background: #ffb454 !important;
   color: #0b0e14 !important;
   border-color: #ffb454 !important;
 }
 
-[data-theme-name="ayu-dark"] .fishbones__lesson-status--done {
+[data-theme-name="ayu-dark"] .libre__lesson-status--done {
   background: #aad94c;
   border-color: #aad94c;
   color: #0b0e14;
 }
 
-[data-theme-name="ayu-dark"] .fishbones__lesson-status--active {
+[data-theme-name="ayu-dark"] .libre__lesson-status--active {
   border-color: #59c2ff;
   box-shadow: 0 0 0 3px rgba(89, 194, 255, 0.15);
   color: #59c2ff;
 }
 
-[data-theme-name="ayu-dark"] .fishbones-import-primary,
-[data-theme-name="ayu-dark"] .fishbones-settings-primary,
-[data-theme-name="ayu-dark"] .fishbones-library-import,
-[data-theme-name="ayu-dark"] .fishbones-library-import-seg--primary,
-[data-theme-name="ayu-dark"] .fishbones-welcome-primary,
-[data-theme-name="ayu-dark"] .fishbones-library-pill--active {
+[data-theme-name="ayu-dark"] .libre-import-primary,
+[data-theme-name="ayu-dark"] .libre-settings-primary,
+[data-theme-name="ayu-dark"] .libre-library-import,
+[data-theme-name="ayu-dark"] .libre-library-import-seg--primary,
+[data-theme-name="ayu-dark"] .libre-welcome-primary,
+[data-theme-name="ayu-dark"] .libre-library-pill--active {
   background: #ffb454;
   color: #0b0e14;
   border-color: #ffb454;
@@ -343,31 +343,31 @@
   --color-text-tertiary: #9ca0b0; /* overlay0 */
 }
 
-[data-theme-name="catppuccin-latte"] .fishbones-editor-run,
-[data-theme-name="catppuccin-latte"] .fishbones-lesson-nav-btn--next:hover:not(:disabled) {
+[data-theme-name="catppuccin-latte"] .libre-editor-run,
+[data-theme-name="catppuccin-latte"] .libre-lesson-nav-btn--next:hover:not(:disabled) {
   background: #8839ef !important; /* mauve */
   color: #eff1f5 !important;
   border-color: #8839ef !important;
 }
 
-[data-theme-name="catppuccin-latte"] .fishbones__lesson-status--done {
+[data-theme-name="catppuccin-latte"] .libre__lesson-status--done {
   background: #40a02b; /* green */
   border-color: #40a02b;
   color: #eff1f5;
 }
 
-[data-theme-name="catppuccin-latte"] .fishbones__lesson-status--active {
+[data-theme-name="catppuccin-latte"] .libre__lesson-status--active {
   border-color: #1e66f5; /* blue */
   box-shadow: 0 0 0 3px rgba(30, 102, 245, 0.18);
   color: #1e66f5;
 }
 
-[data-theme-name="catppuccin-latte"] .fishbones-import-primary,
-[data-theme-name="catppuccin-latte"] .fishbones-settings-primary,
-[data-theme-name="catppuccin-latte"] .fishbones-library-import,
-[data-theme-name="catppuccin-latte"] .fishbones-library-import-seg--primary,
-[data-theme-name="catppuccin-latte"] .fishbones-welcome-primary,
-[data-theme-name="catppuccin-latte"] .fishbones-library-pill--active {
+[data-theme-name="catppuccin-latte"] .libre-import-primary,
+[data-theme-name="catppuccin-latte"] .libre-settings-primary,
+[data-theme-name="catppuccin-latte"] .libre-library-import,
+[data-theme-name="catppuccin-latte"] .libre-library-import-seg--primary,
+[data-theme-name="catppuccin-latte"] .libre-welcome-primary,
+[data-theme-name="catppuccin-latte"] .libre-library-pill--active {
   background: #8839ef;
   color: #eff1f5;
   border-color: #8839ef;
@@ -385,31 +385,31 @@
   --color-text-tertiary: #737994;
 }
 
-[data-theme-name="catppuccin-frappe"] .fishbones-editor-run,
-[data-theme-name="catppuccin-frappe"] .fishbones-lesson-nav-btn--next:hover:not(:disabled) {
+[data-theme-name="catppuccin-frappe"] .libre-editor-run,
+[data-theme-name="catppuccin-frappe"] .libre-lesson-nav-btn--next:hover:not(:disabled) {
   background: #ca9ee6 !important;
   color: #303446 !important;
   border-color: #ca9ee6 !important;
 }
 
-[data-theme-name="catppuccin-frappe"] .fishbones__lesson-status--done {
+[data-theme-name="catppuccin-frappe"] .libre__lesson-status--done {
   background: #a6d189;
   border-color: #a6d189;
   color: #303446;
 }
 
-[data-theme-name="catppuccin-frappe"] .fishbones__lesson-status--active {
+[data-theme-name="catppuccin-frappe"] .libre__lesson-status--active {
   border-color: #8caaee;
   box-shadow: 0 0 0 3px rgba(140, 170, 238, 0.18);
   color: #8caaee;
 }
 
-[data-theme-name="catppuccin-frappe"] .fishbones-import-primary,
-[data-theme-name="catppuccin-frappe"] .fishbones-settings-primary,
-[data-theme-name="catppuccin-frappe"] .fishbones-library-import,
-[data-theme-name="catppuccin-frappe"] .fishbones-library-import-seg--primary,
-[data-theme-name="catppuccin-frappe"] .fishbones-welcome-primary,
-[data-theme-name="catppuccin-frappe"] .fishbones-library-pill--active {
+[data-theme-name="catppuccin-frappe"] .libre-import-primary,
+[data-theme-name="catppuccin-frappe"] .libre-settings-primary,
+[data-theme-name="catppuccin-frappe"] .libre-library-import,
+[data-theme-name="catppuccin-frappe"] .libre-library-import-seg--primary,
+[data-theme-name="catppuccin-frappe"] .libre-welcome-primary,
+[data-theme-name="catppuccin-frappe"] .libre-library-pill--active {
   background: #ca9ee6;
   color: #303446;
   border-color: #ca9ee6;
@@ -427,31 +427,31 @@
   --color-text-tertiary: #6e738d;
 }
 
-[data-theme-name="catppuccin-macchiato"] .fishbones-editor-run,
-[data-theme-name="catppuccin-macchiato"] .fishbones-lesson-nav-btn--next:hover:not(:disabled) {
+[data-theme-name="catppuccin-macchiato"] .libre-editor-run,
+[data-theme-name="catppuccin-macchiato"] .libre-lesson-nav-btn--next:hover:not(:disabled) {
   background: #c6a0f6 !important;
   color: #24273a !important;
   border-color: #c6a0f6 !important;
 }
 
-[data-theme-name="catppuccin-macchiato"] .fishbones__lesson-status--done {
+[data-theme-name="catppuccin-macchiato"] .libre__lesson-status--done {
   background: #a6da95;
   border-color: #a6da95;
   color: #24273a;
 }
 
-[data-theme-name="catppuccin-macchiato"] .fishbones__lesson-status--active {
+[data-theme-name="catppuccin-macchiato"] .libre__lesson-status--active {
   border-color: #8aadf4;
   box-shadow: 0 0 0 3px rgba(138, 173, 244, 0.18);
   color: #8aadf4;
 }
 
-[data-theme-name="catppuccin-macchiato"] .fishbones-import-primary,
-[data-theme-name="catppuccin-macchiato"] .fishbones-settings-primary,
-[data-theme-name="catppuccin-macchiato"] .fishbones-library-import,
-[data-theme-name="catppuccin-macchiato"] .fishbones-library-import-seg--primary,
-[data-theme-name="catppuccin-macchiato"] .fishbones-welcome-primary,
-[data-theme-name="catppuccin-macchiato"] .fishbones-library-pill--active {
+[data-theme-name="catppuccin-macchiato"] .libre-import-primary,
+[data-theme-name="catppuccin-macchiato"] .libre-settings-primary,
+[data-theme-name="catppuccin-macchiato"] .libre-library-import,
+[data-theme-name="catppuccin-macchiato"] .libre-library-import-seg--primary,
+[data-theme-name="catppuccin-macchiato"] .libre-welcome-primary,
+[data-theme-name="catppuccin-macchiato"] .libre-library-pill--active {
   background: #c6a0f6;
   color: #24273a;
   border-color: #c6a0f6;
@@ -473,31 +473,31 @@
   --color-text-tertiary: #565f89;
 }
 
-[data-theme-name="tokyo-night"] .fishbones-editor-run,
-[data-theme-name="tokyo-night"] .fishbones-lesson-nav-btn--next:hover:not(:disabled) {
+[data-theme-name="tokyo-night"] .libre-editor-run,
+[data-theme-name="tokyo-night"] .libre-lesson-nav-btn--next:hover:not(:disabled) {
   background: #7aa2f7 !important;
   color: #1a1b26 !important;
   border-color: #7aa2f7 !important;
 }
 
-[data-theme-name="tokyo-night"] .fishbones__lesson-status--done {
+[data-theme-name="tokyo-night"] .libre__lesson-status--done {
   background: #9ece6a;
   border-color: #9ece6a;
   color: #1a1b26;
 }
 
-[data-theme-name="tokyo-night"] .fishbones__lesson-status--active {
+[data-theme-name="tokyo-night"] .libre__lesson-status--active {
   border-color: #7dcfff;
   box-shadow: 0 0 0 3px rgba(125, 207, 255, 0.18);
   color: #7dcfff;
 }
 
-[data-theme-name="tokyo-night"] .fishbones-import-primary,
-[data-theme-name="tokyo-night"] .fishbones-settings-primary,
-[data-theme-name="tokyo-night"] .fishbones-library-import,
-[data-theme-name="tokyo-night"] .fishbones-library-import-seg--primary,
-[data-theme-name="tokyo-night"] .fishbones-welcome-primary,
-[data-theme-name="tokyo-night"] .fishbones-library-pill--active {
+[data-theme-name="tokyo-night"] .libre-import-primary,
+[data-theme-name="tokyo-night"] .libre-settings-primary,
+[data-theme-name="tokyo-night"] .libre-library-import,
+[data-theme-name="tokyo-night"] .libre-library-import-seg--primary,
+[data-theme-name="tokyo-night"] .libre-welcome-primary,
+[data-theme-name="tokyo-night"] .libre-library-pill--active {
   background: #7aa2f7;
   color: #1a1b26;
   border-color: #7aa2f7;
@@ -523,31 +523,31 @@
   --color-text-tertiary: #6e6a86;
 }
 
-[data-theme-name="rose-pine"] .fishbones-editor-run,
-[data-theme-name="rose-pine"] .fishbones-lesson-nav-btn--next:hover:not(:disabled) {
+[data-theme-name="rose-pine"] .libre-editor-run,
+[data-theme-name="rose-pine"] .libre-lesson-nav-btn--next:hover:not(:disabled) {
   background: #ebbcba !important;
   color: #191724 !important;
   border-color: #ebbcba !important;
 }
 
-[data-theme-name="rose-pine"] .fishbones__lesson-status--done {
+[data-theme-name="rose-pine"] .libre__lesson-status--done {
   background: #9ccfd8;  /* foam */
   border-color: #9ccfd8;
   color: #191724;
 }
 
-[data-theme-name="rose-pine"] .fishbones__lesson-status--active {
+[data-theme-name="rose-pine"] .libre__lesson-status--active {
   border-color: #eb6f92; /* love */
   box-shadow: 0 0 0 3px rgba(235, 111, 146, 0.18);
   color: #eb6f92;
 }
 
-[data-theme-name="rose-pine"] .fishbones-import-primary,
-[data-theme-name="rose-pine"] .fishbones-settings-primary,
-[data-theme-name="rose-pine"] .fishbones-library-import,
-[data-theme-name="rose-pine"] .fishbones-library-import-seg--primary,
-[data-theme-name="rose-pine"] .fishbones-welcome-primary,
-[data-theme-name="rose-pine"] .fishbones-library-pill--active {
+[data-theme-name="rose-pine"] .libre-import-primary,
+[data-theme-name="rose-pine"] .libre-settings-primary,
+[data-theme-name="rose-pine"] .libre-library-import,
+[data-theme-name="rose-pine"] .libre-library-import-seg--primary,
+[data-theme-name="rose-pine"] .libre-welcome-primary,
+[data-theme-name="rose-pine"] .libre-library-pill--active {
   background: #ebbcba;
   color: #191724;
   border-color: #ebbcba;
@@ -571,31 +571,31 @@
   --color-text-tertiary: #876673;
 }
 
-[data-theme-name="ubuntu-dark"] .fishbones-editor-run,
-[data-theme-name="ubuntu-dark"] .fishbones-lesson-nav-btn--next:hover:not(:disabled) {
+[data-theme-name="ubuntu-dark"] .libre-editor-run,
+[data-theme-name="ubuntu-dark"] .libre-lesson-nav-btn--next:hover:not(:disabled) {
   background: #e95420 !important;
   color: #2c001e !important;
   border-color: #e95420 !important;
 }
 
-[data-theme-name="ubuntu-dark"] .fishbones__lesson-status--done {
+[data-theme-name="ubuntu-dark"] .libre__lesson-status--done {
   background: #87a556;
   border-color: #87a556;
   color: #2c001e;
 }
 
-[data-theme-name="ubuntu-dark"] .fishbones__lesson-status--active {
+[data-theme-name="ubuntu-dark"] .libre__lesson-status--active {
   border-color: #e95420;
   box-shadow: 0 0 0 3px rgba(233, 84, 32, 0.2);
   color: #e95420;
 }
 
-[data-theme-name="ubuntu-dark"] .fishbones-import-primary,
-[data-theme-name="ubuntu-dark"] .fishbones-settings-primary,
-[data-theme-name="ubuntu-dark"] .fishbones-library-import,
-[data-theme-name="ubuntu-dark"] .fishbones-library-import-seg--primary,
-[data-theme-name="ubuntu-dark"] .fishbones-welcome-primary,
-[data-theme-name="ubuntu-dark"] .fishbones-library-pill--active {
+[data-theme-name="ubuntu-dark"] .libre-import-primary,
+[data-theme-name="ubuntu-dark"] .libre-settings-primary,
+[data-theme-name="ubuntu-dark"] .libre-library-import,
+[data-theme-name="ubuntu-dark"] .libre-library-import-seg--primary,
+[data-theme-name="ubuntu-dark"] .libre-welcome-primary,
+[data-theme-name="ubuntu-dark"] .libre-library-pill--active {
   background: #e95420;
   color: #2c001e;
   border-color: #e95420;
@@ -620,31 +620,31 @@
   --color-text-tertiary: #62778c;
 }
 
-[data-theme-name="absent-contrast"] .fishbones-editor-run,
-[data-theme-name="absent-contrast"] .fishbones-lesson-nav-btn--next:hover:not(:disabled) {
+[data-theme-name="absent-contrast"] .libre-editor-run,
+[data-theme-name="absent-contrast"] .libre-lesson-nav-btn--next:hover:not(:disabled) {
   background: #228a96 !important;
   color: #0e1114 !important;
   border-color: #228a96 !important;
 }
 
-[data-theme-name="absent-contrast"] .fishbones__lesson-status--done {
+[data-theme-name="absent-contrast"] .libre__lesson-status--done {
   background: #6ba77f;
   border-color: #6ba77f;
   color: #0e1114;
 }
 
-[data-theme-name="absent-contrast"] .fishbones__lesson-status--active {
+[data-theme-name="absent-contrast"] .libre__lesson-status--active {
   border-color: #228a96;
   box-shadow: 0 0 0 3px rgba(34, 138, 150, 0.2);
   color: #228a96;
 }
 
-[data-theme-name="absent-contrast"] .fishbones-import-primary,
-[data-theme-name="absent-contrast"] .fishbones-settings-primary,
-[data-theme-name="absent-contrast"] .fishbones-library-import,
-[data-theme-name="absent-contrast"] .fishbones-library-import-seg--primary,
-[data-theme-name="absent-contrast"] .fishbones-welcome-primary,
-[data-theme-name="absent-contrast"] .fishbones-library-pill--active {
+[data-theme-name="absent-contrast"] .libre-import-primary,
+[data-theme-name="absent-contrast"] .libre-settings-primary,
+[data-theme-name="absent-contrast"] .libre-library-import,
+[data-theme-name="absent-contrast"] .libre-library-import-seg--primary,
+[data-theme-name="absent-contrast"] .libre-welcome-primary,
+[data-theme-name="absent-contrast"] .libre-library-pill--active {
   background: #228a96;
   color: #0e1114;
   border-color: #228a96;
@@ -668,31 +668,31 @@
   --color-text-tertiary: #7e7e7e;
 }
 
-[data-theme-name="vesper"] .fishbones-editor-run,
-[data-theme-name="vesper"] .fishbones-lesson-nav-btn--next:hover:not(:disabled) {
+[data-theme-name="vesper"] .libre-editor-run,
+[data-theme-name="vesper"] .libre-lesson-nav-btn--next:hover:not(:disabled) {
   background: #ffc799 !important;
   color: #000000 !important;
   border-color: #ffc799 !important;
 }
 
-[data-theme-name="vesper"] .fishbones__lesson-status--done {
+[data-theme-name="vesper"] .libre__lesson-status--done {
   background: #99ffe4;
   border-color: #99ffe4;
   color: #101010;
 }
 
-[data-theme-name="vesper"] .fishbones__lesson-status--active {
+[data-theme-name="vesper"] .libre__lesson-status--active {
   border-color: #ffc799;
   box-shadow: 0 0 0 3px rgba(255, 199, 153, 0.2);
   color: #ffc799;
 }
 
-[data-theme-name="vesper"] .fishbones-import-primary,
-[data-theme-name="vesper"] .fishbones-settings-primary,
-[data-theme-name="vesper"] .fishbones-library-import,
-[data-theme-name="vesper"] .fishbones-library-import-seg--primary,
-[data-theme-name="vesper"] .fishbones-welcome-primary,
-[data-theme-name="vesper"] .fishbones-library-pill--active {
+[data-theme-name="vesper"] .libre-import-primary,
+[data-theme-name="vesper"] .libre-settings-primary,
+[data-theme-name="vesper"] .libre-library-import,
+[data-theme-name="vesper"] .libre-library-import-seg--primary,
+[data-theme-name="vesper"] .libre-welcome-primary,
+[data-theme-name="vesper"] .libre-library-pill--active {
   background: #ffc799;
   color: #000000;
   border-color: #ffc799;
@@ -716,31 +716,31 @@
   --color-text-tertiary: #9999d4;
 }
 
-[data-theme-name="word"] .fishbones-editor-run,
-[data-theme-name="word"] .fishbones-lesson-nav-btn--next:hover:not(:disabled) {
+[data-theme-name="word"] .libre-editor-run,
+[data-theme-name="word"] .libre-lesson-nav-btn--next:hover:not(:disabled) {
   background: #ff55ff !important;
   color: #0000aa !important;
   border-color: #ff55ff !important;
 }
 
-[data-theme-name="word"] .fishbones__lesson-status--done {
+[data-theme-name="word"] .libre__lesson-status--done {
   background: #55ffff;
   border-color: #55ffff;
   color: #0000aa;
 }
 
-[data-theme-name="word"] .fishbones__lesson-status--active {
+[data-theme-name="word"] .libre__lesson-status--active {
   border-color: #ff55ff;
   box-shadow: 0 0 0 3px rgba(255, 85, 255, 0.2);
   color: #ff55ff;
 }
 
-[data-theme-name="word"] .fishbones-import-primary,
-[data-theme-name="word"] .fishbones-settings-primary,
-[data-theme-name="word"] .fishbones-library-import,
-[data-theme-name="word"] .fishbones-library-import-seg--primary,
-[data-theme-name="word"] .fishbones-welcome-primary,
-[data-theme-name="word"] .fishbones-library-pill--active {
+[data-theme-name="word"] .libre-import-primary,
+[data-theme-name="word"] .libre-settings-primary,
+[data-theme-name="word"] .libre-library-import,
+[data-theme-name="word"] .libre-library-import-seg--primary,
+[data-theme-name="word"] .libre-welcome-primary,
+[data-theme-name="word"] .libre-library-pill--active {
   background: #ff55ff;
   color: #0000aa;
   border-color: #ff55ff;

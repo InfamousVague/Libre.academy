@@ -14,7 +14,7 @@
 /* Global icon-size bump. The `@base/primitives/icon` library sizes
    icons via CSS custom properties keyed off `--text-*-size`, which
    produces 12 / 14 / 16 / 18 / 20 / 24 px for xs / sm / base / lg /
-   xl / 2xl. The defaults read small inside Fishbones' typography
+   xl / 2xl. The defaults read small inside Libre' typography
    (which leans heavier than the base library's stock sample apps),
    so we layer a +6px bump on top of every tier. Using `calc(... +
    6px)` rather than overriding the underlying `--text-*-size`
@@ -34,7 +34,7 @@
 .icon--2xl  { width: calc(var(--text-2xl-size)  + 6px); height: calc(var(--text-2xl-size)  + 6px); }
 
 /* ─────────────────────────────────────────────────────────────────
- * Fishbones-specific design tokens.
+ * Libre-specific design tokens.
  *
  * These are NOT theme-dependent — they describe the app's motion
  * + corner-radius vocabulary, which is consistent across every
@@ -46,7 +46,7 @@
  * (which use a different set of values + a Tailwind-style scale).
  * The base-kit tokens are still imported above and remain
  * available; the `--fb-*` ones below codify the in-between values
- * Fishbones actually uses across its 67 component stylesheets.
+ * Libre actually uses across its 67 component stylesheets.
  *
  * Migrating to tokens lets us re-tune the entire app's motion or
  * corner radius from one place — and prevents the next "this card
@@ -167,7 +167,7 @@ button {
 /* Root layout: custom top bar (houses tabs + traffic lights) across the top,
    floating sidebar + main content column underneath. The sidebar floats
    inside 10px margins for a card-on-backdrop feel. */
-.fishbones {
+.libre {
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -175,14 +175,14 @@ button {
   background: var(--color-bg-primary);
 }
 
-.fishbones__body {
+.libre__body {
   display: flex;
   flex: 1;
   min-height: 0;
   overflow: hidden;
 }
 
-.fishbones__main {
+.libre__main {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -191,7 +191,7 @@ button {
   margin-left: 10px;
 }
 
-/* Route-swap micro-animation. `.fishbones__main` switches between
+/* Route-swap micro-animation. `.libre__main` switches between
    ProfileView / PlaygroundView / TreesView / CourseLibrary /
    LessonView depending on `view` state. React tears down the old
    component and mounts the new one, which means the direct child
@@ -208,7 +208,7 @@ button {
    element return to its base styles (opacity:1, transform:none)
    after the 180ms cross-fade. Honor reduced-motion via the media
    query below. */
-.fishbones__main > * {
+.libre__main > * {
   animation: fb-route-fade 0.18s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -224,7 +224,7 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fishbones__main > * {
+  .libre__main > * {
     animation: none;
   }
 }
@@ -239,14 +239,14 @@ button {
    feels instant (<150ms) for cached-catalog cases, so the dim is
    imperceptible there; only the cold-catalog or first-paint cases
    get a brief visible cue. */
-.fishbones-view-pane {
+.libre-view-pane {
   width: 100%;
   height: 100%;
   display: contents;
   transition: opacity 120ms ease;
 }
 
-.fishbones-view-pane.is-view-pending {
+.libre-view-pane.is-view-pending {
   /* `display: contents` collapses this wrapper out of the layout
      tree, so opacity won't bind to it directly — switch to block
      during the pending state so the cue actually shows. */
@@ -258,7 +258,7 @@ button {
 /* Mobile body: drop the desktop margin-left and reserve space at the
    top for the iOS status bar / dynamic island, plus bottom padding so
    the MobileTabBar (~70px) doesn't occlude scrollable content. */
-.fishbones__body--mobile .fishbones__main {
+.libre__body--mobile .libre__main {
   margin-left: 0;
   padding-top: env(safe-area-inset-top, 0);
   padding-bottom: calc(env(safe-area-inset-bottom, 0) + 70px);
@@ -267,15 +267,15 @@ button {
 /* Collapsed-sidebar mode: sidebar drops out of flow so the main pane
    reclaims the full width. Toggle via Cmd/Ctrl+\ or the top-bar
    button; state persists in localStorage. */
-.fishbones--sidebar-collapsed .fishbones__sidebar {
+.libre--sidebar-collapsed .libre__sidebar {
   display: none;
 }
 
 /* Boot loader — full-app overlay shown until the initial courses list
-   resolves. The actual spinner is the shared FishbonesLoader component;
+   resolves. The actual spinner is the shared LibreLoader component;
    this just provides the fixed full-viewport backdrop + fade-out that
    dismisses once `coursesLoaded` flips true. */
-.fishbones__bootloader {
+.libre__bootloader {
   position: fixed;
   inset: 0;
   z-index: 1000;
@@ -287,13 +287,13 @@ button {
   transition: opacity 0.3s ease, visibility 0s linear 0.3s;
 }
 
-.fishbones__bootloader--hidden {
+.libre__bootloader--hidden {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
 }
 
-.fishbones--sidebar-collapsed .fishbones__main {
+.libre--sidebar-collapsed .libre__main {
   margin-left: 10px;
 }
 
@@ -303,7 +303,7 @@ button {
    The lesson pane itself is NOT a card — the prose flows on the app's base
    surface so reading feels like reading, not like inspecting a document.
    The workbench picks up its own card treatment in Workbench.css. */
-.fishbones__lesson {
+.libre__lesson {
   flex: 1;
   display: flex;
   flex-direction: row;
@@ -312,7 +312,7 @@ button {
   margin: 10px 10px 10px 0;
 }
 
-.fishbones__lesson .fishbones-reader {
+.libre__lesson .libre-reader {
   flex: 1;
   min-width: 0;
 }
@@ -322,14 +322,14 @@ button {
  * so the reader pane shrinks to a slim explainer column and the
  * workbench claims most of the row. The reader's text wrapping +
  * scroll behaviour stays identical; only the column widths differ. */
-.fishbones__lesson--challenge .fishbones-reader {
+.libre__lesson--challenge .libre-reader {
   flex: 0 0 auto;
   width: 32%;
   min-width: 280px;
   max-width: 420px;
 }
 
-.fishbones__lesson--challenge .fishbones__lesson-workbench-wrap {
+.libre__lesson--challenge .libre__lesson-workbench-wrap {
   flex: 1;
   width: auto;
   min-width: 0;
@@ -342,7 +342,7 @@ button {
    workbench card, still honouring the learner's width-drag handle
    on its left edge. The inner Workbench becomes full-width of this
    column (overridden below) so everything lines up. */
-.fishbones__lesson-workbench-wrap {
+.libre__lesson-workbench-wrap {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -354,7 +354,7 @@ button {
   gap: 10px;
 }
 
-.fishbones__lesson-workbench-wrap > .fishbones-workbench {
+.libre__lesson-workbench-wrap > .libre-workbench {
   width: 100%;
   min-width: 0;
   max-width: none;
@@ -369,7 +369,7 @@ button {
    Segmented-control look: a small inset background, two pill buttons,
    the active one filled. Same warm-gold accent the TTS pill + cursor
    highlight use so the design system stays coherent. */
-.fishbones__lesson-mode-toggle {
+.libre__lesson-mode-toggle {
   display: inline-flex;
   gap: 0;
   align-self: flex-start;
@@ -379,7 +379,7 @@ button {
   border-radius: var(--fb-radius-md);
 }
 
-.fishbones__lesson-mode-btn {
+.libre__lesson-mode-btn {
   padding: 4px 14px;
   font-size: 12px;
   font-weight: 600;
@@ -394,16 +394,16 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
-.fishbones__lesson-mode-btn:hover {
+.libre__lesson-mode-btn:hover {
   color: var(--color-text-primary);
 }
 
-.fishbones__lesson-mode-btn--active {
+.libre__lesson-mode-btn--active {
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
 }
 
-.fishbones__lesson-mode-btn--active:hover {
+.libre__lesson-mode-btn--active:hover {
   color: var(--color-bg-primary);
 }
 
@@ -412,7 +412,7 @@ button {
    output surface). We mimic the Workbench's card chrome (border,
    radius, surface) so swapping into this layout doesn't visually
    demote the editor — same shape, same depth, just one column. */
-.fishbones__lesson-workbench-solo {
+.libre__lesson-workbench-solo {
   flex: 1;
   min-height: 0;
   min-width: 0;
@@ -424,7 +424,7 @@ button {
   overflow: hidden;
 }
 
-.fishbones__lesson-workbench-solo > .fishbones-editor {
+.libre__lesson-workbench-solo > .libre-editor {
   flex: 1;
   min-height: 0;
   min-width: 0;
@@ -437,55 +437,55 @@ button {
    at a comfortable reading measure. The 680px cap keeps quiz questions
    from stretching across the full pane on wide windows while still
    leaving natural negative space on the right. */
-.fishbones__lesson--column .fishbones-reader-inner,
-.fishbones__lesson--column .fishbones-quiz,
-.fishbones__lesson--column .fishbones__lesson-nav-wrap {
+.libre__lesson--column .libre-reader-inner,
+.libre__lesson--column .libre-quiz,
+.libre__lesson--column .libre__lesson-nav-wrap {
   max-width: 680px;
   margin-left: 0;
   margin-right: 0;
 }
 
-.fishbones__lesson--column {
+.libre__lesson--column {
   flex-direction: column;
 }
 
-.fishbones__lesson-scroll {
+.libre__lesson-scroll {
   flex: 1;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
 
-/* In quiz/reading-only column mode the outer `.fishbones__lesson-scroll`
+/* In quiz/reading-only column mode the outer `.libre__lesson-scroll`
    owns scrolling, so the reader's own scroll container + pinned progress
    rail would duplicate chrome. Short quiz intros don't need a "min to
    read" meta row either. Flatten the reader: drop its progress rail
    and meta row, let the body flow inside the outer scroll. */
-.fishbones__lesson-scroll .fishbones-reader {
+.libre__lesson-scroll .libre-reader {
   overflow: visible;
   flex: 0 0 auto;
 }
-.fishbones__lesson-scroll .fishbones-reader-scroll {
+.libre__lesson-scroll .libre-reader-scroll {
   overflow: visible;
   flex: 0 0 auto;
   padding: 32px 16px 0;
 }
-.fishbones__lesson-scroll .fishbones-reader-progress,
-.fishbones__lesson-scroll .fishbones-reader-meta {
+.libre__lesson-scroll .libre-reader-progress,
+.libre__lesson-scroll .libre-reader-meta {
   display: none;
 }
 
-/* Workbench (.fishbones-workbench) is self-styled — see Workbench.css. */
+/* Workbench (.libre-workbench) is self-styled — see Workbench.css. */
 
 /* When the workbench is popped out, the inline editor column goes away
    entirely so the reader can fill the whole pane. A compact pill is
    floated in the top-right corner so the learner has an obvious, out-of-
    the-way way to bring the workbench back. */
-.fishbones__lesson {
+.libre__lesson {
   position: relative; /* anchor for the bring-back pill */
 }
 
-.fishbones__workbench-popped-pill {
+.libre__workbench-popped-pill {
   position: absolute;
   top: 14px;
   right: 14px;
@@ -505,13 +505,13 @@ button {
   transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy), border-color var(--fb-motion-snappy);
 }
 
-.fishbones__workbench-popped-pill:hover {
+.libre__workbench-popped-pill:hover {
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
   border-color: var(--color-text-primary);
 }
 
-.fishbones__workbench-popped-pill-icon {
+.libre__workbench-popped-pill-icon {
   display: inline-flex;
   align-items: center;
   line-height: 1;
@@ -520,7 +520,7 @@ button {
 /* Wraps the Prev/Next nav when it's rendered inside the quiz's shared scroll
    column (LessonReader already centers its own inner container, so the nav
    there inherits those bounds — only the quiz path needs this wrapper). */
-.fishbones__lesson-nav-wrap {
+.libre__lesson-nav-wrap {
   width: 100%;
   max-width: 860px;
   margin: 0 auto;
@@ -529,7 +529,7 @@ button {
 
 /* First-run welcome. Shown when the learner has zero courses on disk. We
    center the whole pane and size for readability on larger windows. */
-.fishbones__welcome {
+.libre__welcome {
   flex: 1;
   display: flex;
   align-items: center;
@@ -541,7 +541,7 @@ button {
   border-radius: var(--fb-radius-lg);
 }
 
-.fishbones__welcome-inner {
+.libre__welcome-inner {
   max-width: 480px;
   text-align: center;
   display: flex;
@@ -550,7 +550,7 @@ button {
   gap: 14px;
 }
 
-.fishbones__welcome-glyph {
+.libre__welcome-glyph {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -558,7 +558,7 @@ button {
   color: #e8c46b;
 }
 
-.fishbones__welcome-title {
+.libre__welcome-title {
   margin: 0;
   font-size: 24px;
   font-weight: 600;
@@ -566,20 +566,20 @@ button {
   color: var(--color-text-primary);
 }
 
-.fishbones__welcome-blurb {
+.libre__welcome-blurb {
   margin: 0;
   font-size: 14px;
   line-height: 1.6;
   color: var(--color-text-secondary);
 }
 
-.fishbones__welcome-actions {
+.libre__welcome-actions {
   display: flex;
   gap: 10px;
   margin-top: 8px;
 }
 
-.fishbones__welcome-primary {
+.libre__welcome-primary {
   padding: 10px 18px;
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
@@ -591,11 +591,11 @@ button {
   cursor: pointer;
 }
 
-.fishbones__welcome-primary:hover {
+.libre__welcome-primary:hover {
   opacity: 0.9;
 }
 
-.fishbones__welcome-secondary {
+.libre__welcome-secondary {
   padding: 10px 16px;
   background: transparent;
   color: var(--color-text-secondary);
@@ -606,12 +606,12 @@ button {
   cursor: pointer;
 }
 
-.fishbones__welcome-secondary:hover {
+.libre__welcome-secondary:hover {
   color: var(--color-text-primary);
   background: var(--color-bg-tertiary);
 }
 
-.fishbones__welcome-hint {
+.libre__welcome-hint {
   margin: 6px 0 0;
   font-size: 11.5px;
   color: var(--color-text-tertiary);
@@ -619,7 +619,7 @@ button {
   max-width: 420px;
 }
 
-.fishbones__empty {
+.libre__empty {
   flex: 1;
   display: grid;
   place-items: center;

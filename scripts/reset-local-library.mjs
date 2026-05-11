@@ -2,7 +2,7 @@
 /**
  * reset-local-library.mjs
  *
- * Wipes the developer's local Fishbones state so the next launch
+ * Wipes the developer's local Libre state so the next launch
  * re-seeds clean from `src-tauri/resources/bundled-packs/`. Pair with
  * `promote-library-to-bundle.mjs` to "freeze the current library as
  * the shipped set, then reset."
@@ -159,7 +159,7 @@ function main() {
   }
 
   console.log("");
-  console.log("Done. Next launch of Fishbones will re-seed from bundled-packs/.");
+  console.log("Done. Next launch of Libre will re-seed from bundled-packs/.");
 }
 
 main();

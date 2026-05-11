@@ -8,7 +8,7 @@ interface Props {
   /// equivalent dismiss signals — separating them was always a
   /// footgun (one path closed cleanly, the other left state behind).
   onDismiss: () => void;
-  /// Stacking order. Defaults to `100` (the Fishbones dialog tier).
+  /// Stacking order. Defaults to `100` (the Libre dialog tier).
   /// Override for nested or higher-priority surfaces (the catalog
   /// modal, install banner overlay, etc.).
   zIndex?: number;
@@ -28,7 +28,7 @@ interface Props {
 /// Standard fixed-position backdrop with blur, click-to-dismiss, and
 /// Escape-to-dismiss. Replaces the boilerplate that lived in 9
 /// different dialog components — every one of them did the same thing
-/// (`<div className="fishbones-X-backdrop" onClick={onCancel}>...`)
+/// (`<div className="libre-X-backdrop" onClick={onCancel}>...`)
 /// with subtly different `--X--` slugs.
 ///
 /// Children should be the dialog panel itself. Click events on the

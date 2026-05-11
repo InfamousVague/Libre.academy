@@ -3,9 +3,9 @@
  * promote-library-to-bundle.mjs
  *
  * One-off authoring script. Takes everything currently sitting in the
- * developer's LOCAL Fishbones library (the macOS app_data_dir's
+ * developer's LOCAL Libre library (the macOS app_data_dir's
  * `courses/` folder) and turns it into the canonical set of
- * .fishbones archives we SHIP under
+ * .libre archives we SHIP under
  * `src-tauri/resources/bundled-packs/`.
  *
  * Run order to "promote my library":
@@ -23,10 +23,10 @@
  *     that has a course.json.
  *   - Zips each folder's contents (FLAT — files at the zip root, not
  *     wrapped in a directory) to
- *     `src-tauri/resources/bundled-packs/<course-id>.fishbones`.
+ *     `src-tauri/resources/bundled-packs/<course-id>.libre`.
  *     This matches the layout of the existing bundled archives the
  *     `unzip_to` extractor in courses.rs already accepts.
- *   - PRUNES: any .fishbones archive in bundled-packs/ that DOESN'T
+ *   - PRUNES: any .libre archive in bundled-packs/ that DOESN'T
  *     have a matching local course folder is deleted. The default
  *     posture is "the local library IS the bundled set"; pass
  *     --keep-extra to preserve archives that have no local source.
@@ -74,7 +74,7 @@ function abort(msg) {
 
 function listCourseFolders() {
   if (!existsSync(COURSES_DIR)) {
-    abort(`courses dir not found: ${COURSES_DIR} — open Fishbones at least once first`);
+    abort(`courses dir not found: ${COURSES_DIR} — open Libre at least once first`);
   }
   return readdirSync(COURSES_DIR).filter((name) => {
     const full = join(COURSES_DIR, name);
@@ -87,15 +87,15 @@ function listCourseFolders() {
 }
 
 /// Bundled-pack archive extensions. `.academy` is the canonical
-/// post-rebrand extension; `.fishbones` is the previous name and
+/// post-rebrand extension; `.libre` is the previous name and
 /// remains accepted so promote-runs over a partially-migrated
 /// directory don't lose track of existing packs.
-const ARCHIVE_EXTS_PROMOTE = [".academy", ".fishbones"];
+const ARCHIVE_EXTS_PROMOTE = [".academy", ".libre"];
 
 function listBundledArchives() {
   if (!existsSync(BUNDLE_DIR)) return [];
   // Returns a Map<id, { name, ext }> so we can later rewrite the
-  // archive at its existing path (or upgrade `.fishbones` → `.academy`
+  // archive at its existing path (or upgrade `.libre` → `.academy`
   // by writing the new path + removing the old one).
   const out = new Map();
   for (const name of readdirSync(BUNDLE_DIR)) {
@@ -114,7 +114,7 @@ function listBundledArchives() {
  * Zip a course folder's CONTENTS (not the folder itself) into a flat
  * archive at dest. We `cd` into the source dir and pass `.` so the zip
  * paths are stored as `course.json`, `cover.png`, etc — no enclosing
- * directory. Matches the existing `bun-complete.fishbones` layout.
+ * directory. Matches the existing `bun-complete.libre` layout.
  *
  * `-r` recurses (only matters for any future sub-folders), `-q` keeps
  * stdout clean. `-X` strips extra fields (Spotlight, Finder colours)
@@ -162,14 +162,14 @@ function main() {
   for (const id of localIds) {
     const src = join(COURSES_DIR, id);
     // Always WRITE under `.academy` (the canonical post-rebrand
-    // extension). If a `.fishbones` legacy archive exists for the
+    // extension). If a `.libre` legacy archive exists for the
     // same id, drop it after the new one lands so we don't ship
     // both extensions for the same course.
     const dest = join(BUNDLE_DIR, `${id}.academy`);
     const existing = bundledMap.get(id);
     const wasAlready = bundledIds.has(id);
     const size = zipCourseFolder(src, dest);
-    if (existing && existing.ext === ".fishbones" && !DRY_RUN) {
+    if (existing && existing.ext === ".libre" && !DRY_RUN) {
       const legacyPath = join(BUNDLE_DIR, existing.name);
       if (existsSync(legacyPath)) rmSync(legacyPath);
     }

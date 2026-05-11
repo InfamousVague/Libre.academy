@@ -4,7 +4,7 @@
  * its console + error hooks are installed before main.tsx (the
  * React module bundle) starts evaluating. That's the whole point —
  * we need to see early errors on iPad where Safari Web Inspector
- * isn't an option ("Loading Fishbones…" stuck on the splash).
+ * isn't an option ("Loading Libre…" stuck on the splash).
  *
  * Captures everything that hits the page:
  *   - console.log / info / warn / error / debug
@@ -27,7 +27,7 @@
  * moment the script tag executes.
  *
  * Three ways to surface the panel:
- *   1. localStorage["fishbones:devconsole"] = "1" — persistent
+ *   1. localStorage["libre:devconsole"] = "1" — persistent
  *   2. URL param ?devconsole=1 / =0                — flips the flag
  *      (and ?devconsole=0 explicitly clears it)
  *   3. Five-tap on the top-left 80×80 region in 2.5s — magic gesture.
@@ -35,7 +35,7 @@
  *      without rebuilding.
  *
  * To dismiss: tap the × button on the panel (clears the flag and
- * unmounts) or run `localStorage.removeItem("fishbones:devconsole")`
+ * unmounts) or run `localStorage.removeItem("libre:devconsole")`
  * and reload.
  */
 
@@ -50,7 +50,7 @@
   var STORAGE_KEY_POS = "fb:devconsole:pos-v1";
   var STORAGE_KEY_SIZE = "fb:devconsole:size-v1";
   var STORAGE_KEY_MIN = "fb:devconsole:minimized-v1";
-  var STORAGE_KEY_FLAG = "fishbones:devconsole";
+  var STORAGE_KEY_FLAG = "libre:devconsole";
   var MAX_LOGS = 1000;
 
   // 5-tap gesture: tap the top-left TAP_REGION_PX×TAP_REGION_PX

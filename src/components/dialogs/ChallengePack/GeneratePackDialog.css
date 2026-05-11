@@ -1,6 +1,6 @@
 /* Backdrop chrome lives in `Shared/ModalBackdrop.css`. */
 
-.fishbones-genpack-panel {
+.libre-genpack-panel {
   width: min(520px, 92vw);
   max-height: 86vh;
   background: var(--color-bg-secondary);
@@ -11,7 +11,7 @@
   overflow: hidden;
 }
 
-.fishbones-genpack-header {
+.libre-genpack-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -19,7 +19,7 @@
   border-bottom: 1px solid var(--color-border-default);
 }
 
-.fishbones-genpack-kicker {
+.libre-genpack-kicker {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -27,14 +27,14 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones-genpack-title {
+.libre-genpack-title {
   font-size: 16px;
   font-weight: 700;
   color: var(--color-text-primary);
   margin-top: 2px;
 }
 
-.fishbones-genpack-close {
+.libre-genpack-close {
   background: none;
   border: 0;
   color: var(--color-text-tertiary);
@@ -44,11 +44,11 @@
   padding: 2px 8px;
 }
 
-.fishbones-genpack-close:hover {
+.libre-genpack-close:hover {
   color: var(--color-text-primary);
 }
 
-.fishbones-genpack-body {
+.libre-genpack-body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -58,13 +58,13 @@
   gap: 16px;
 }
 
-.fishbones-genpack-section {
+.libre-genpack-section {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.fishbones-genpack-section-label {
+.libre-genpack-section-label {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -76,7 +76,7 @@
   margin-top: 8px;
 }
 
-.fishbones-genpack-section-value {
+.libre-genpack-section-value {
   font-size: 15px;
   font-weight: 700;
   color: var(--color-text-primary);
@@ -85,7 +85,7 @@
   letter-spacing: 0;
 }
 
-.fishbones-genpack-section-hint {
+.libre-genpack-section-hint {
   font-size: 11px;
   color: var(--color-text-secondary);
   line-height: 1.55;
@@ -93,12 +93,12 @@
 
 /* Language segmented control */
 
-.fishbones-genpack-lang-row {
+.libre-genpack-lang-row {
   display: flex;
   gap: 6px;
 }
 
-.fishbones-genpack-lang-btn {
+.libre-genpack-lang-btn {
   flex: 1;
   padding: 8px 12px;
   background: transparent;
@@ -112,13 +112,13 @@
   transition: background var(--fb-motion-snappy), border-color var(--fb-motion-snappy), color var(--fb-motion-snappy);
 }
 
-.fishbones-genpack-lang-btn:hover:not(:disabled) {
+.libre-genpack-lang-btn:hover:not(:disabled) {
   background: var(--color-bg-tertiary);
   color: var(--color-text-primary);
 }
 
-.fishbones-genpack-lang-btn--active,
-.fishbones-genpack-lang-btn--active:hover {
+.libre-genpack-lang-btn--active,
+.libre-genpack-lang-btn--active:hover {
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
   border-color: var(--color-text-primary);
@@ -126,12 +126,12 @@
 
 /* Count slider */
 
-.fishbones-genpack-slider {
+.libre-genpack-slider {
   width: 100%;
   accent-color: var(--color-text-primary);
 }
 
-.fishbones-genpack-slider-ticks {
+.libre-genpack-slider-ticks {
   display: flex;
   justify-content: space-between;
   font-size: 10.5px;
@@ -141,13 +141,13 @@
 
 /* Model picker */
 
-.fishbones-genpack-model-list {
+.libre-genpack-model-list {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.fishbones-genpack-model {
+.libre-genpack-model {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -162,28 +162,28 @@
   transition: border-color var(--fb-motion-snappy), background var(--fb-motion-snappy);
 }
 
-.fishbones-genpack-model:hover {
+.libre-genpack-model:hover {
   border-color: rgba(255, 255, 255, 0.18);
 }
 
-.fishbones-genpack-model--active {
+.libre-genpack-model--active {
   border-color: var(--color-text-primary);
   background: var(--color-bg-tertiary);
 }
 
-.fishbones-genpack-model-label {
+.libre-genpack-model-label {
   font-size: 13px;
   font-weight: 600;
 }
 
-.fishbones-genpack-model-hint {
+.libre-genpack-model-hint {
   font-size: 11px;
   color: var(--color-text-tertiary);
 }
 
 /* Cost estimate */
 
-.fishbones-genpack-estimate {
+.libre-genpack-estimate {
   padding: 12px 14px;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
@@ -193,7 +193,7 @@
   gap: 4px;
 }
 
-.fishbones-genpack-estimate-label {
+.libre-genpack-estimate-label {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -201,21 +201,21 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones-genpack-estimate-value {
+.libre-genpack-estimate-value {
   font-size: 22px;
   font-weight: 700;
   color: var(--color-text-primary);
   font-variant-numeric: tabular-nums;
 }
 
-.fishbones-genpack-estimate-hint {
+.libre-genpack-estimate-hint {
   font-size: 10.5px;
   color: var(--color-text-secondary);
 }
 
 /* Footer */
 
-.fishbones-genpack-footer {
+.libre-genpack-footer {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
@@ -223,7 +223,7 @@
   border-top: 1px solid var(--color-border-default);
 }
 
-.fishbones-genpack-btn {
+.libre-genpack-btn {
   padding: 7px 14px;
   background: transparent;
   border: 1px solid var(--color-border-default);
@@ -236,13 +236,13 @@
   transition: background var(--fb-motion-snappy), border-color var(--fb-motion-snappy), color var(--fb-motion-snappy);
 }
 
-.fishbones-genpack-btn:hover {
+.libre-genpack-btn:hover {
   background: var(--color-bg-tertiary);
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-.fishbones-genpack-btn--primary,
-.fishbones-genpack-btn--primary:hover {
+.libre-genpack-btn--primary,
+.libre-genpack-btn--primary:hover {
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
   border-color: var(--color-text-primary);

@@ -57,7 +57,7 @@ export function phonePopoutLabel(scope: string): string {
 /// popout window so a stale popout from a different lesson can't
 /// pick up messages meant for the new one.
 function channelName(scope: string): string {
-  return `fishbones:phone-preview:${scope.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+  return `libre:phone-preview:${scope.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 }
 
 /// Build a bus keyed on `scope`. Picks the Tauri event system when
@@ -172,7 +172,7 @@ export async function openPhonePopout(
       // scrollable previews.
       new WebviewWindow(label, {
         url,
-        title: `Fishbones · ${title}`,
+        title: `Libre · ${title}`,
         width: 440,
         height: 860,
         minWidth: 320,
@@ -182,7 +182,7 @@ export async function openPhonePopout(
       return;
     } catch (e) {
       console.warn(
-        "[fishbones] Tauri WebviewWindow failed for phone popout, falling back to window.open:",
+        "[libre] Tauri WebviewWindow failed for phone popout, falling back to window.open:",
         e,
       );
     }
@@ -206,7 +206,7 @@ export async function closePhonePopout(scope: string): Promise<void> {
       return;
     } catch (e) {
       console.warn(
-        "[fishbones] Tauri close failed for phone popout:",
+        "[libre] Tauri close failed for phone popout:",
         e,
       );
     }

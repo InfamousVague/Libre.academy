@@ -19,7 +19,7 @@
 /// Then uploads it to the same release as `latest.json`. Tauri's
 /// updater is configured (in `tauri.conf.json` plugins.updater) to
 /// fetch from
-/// `https://github.com/InfamousVague/Fishbones/releases/latest/download/latest.json`
+/// `https://github.com/InfamousVague/Libre/releases/latest/download/latest.json`
 /// — the `/latest/download/<filename>` redirect resolves to the
 /// most recent release's `latest.json`.
 ///
@@ -48,13 +48,13 @@ if (!tag) {
   process.exit(1);
 }
 
-const REPO = "InfamousVague/Fishbones";
+const REPO = "InfamousVague/Libre";
 
 /// Map a Tauri updater asset filename → (platform key, raw url) pair.
 /// Platform keys follow the conventions Tauri's updater expects, see
 /// https://v2.tauri.app/plugin/updater/#platform-keys
 function classify(name) {
-  // macOS — `.app.tar.gz` / `Fishbones_x_aarch64.app.tar.gz`
+  // macOS — `.app.tar.gz` / `Libre_x_aarch64.app.tar.gz`
   if (name.endsWith(".app.tar.gz")) {
     if (/x86_64|x64/.test(name)) return "darwin-x86_64";
     if (/aarch64|arm64/.test(name)) return "darwin-aarch64";
@@ -146,7 +146,7 @@ if (Object.keys(platforms).length === 0) {
 
 const manifest = {
   version: release.tagName,
-  notes: (release.body || "").trim() || `Fishbones ${release.tagName}`,
+  notes: (release.body || "").trim() || `Libre ${release.tagName}`,
   pub_date: release.publishedAt,
   platforms,
 };
@@ -158,11 +158,11 @@ const manifest = {
 // And the updater endpoint
 //   github.com/.../releases/latest/download/latest.json
 // resolves on filename match, so a mis-named asset breaks OTA
-// silently. (v0.1.12's first run uploaded `fishbones-latest-…json`,
+// silently. (v0.1.12's first run uploaded `libre-latest-…json`,
 // which clients hitting `/latest.json` would 404 on.)
 import { mkdtempSync } from "node:fs";
 
-const stagingDir = mkdtempSync(join(tmpdir(), "fishbones-manifest-"));
+const stagingDir = mkdtempSync(join(tmpdir(), "libre-manifest-"));
 const manifestPath = join(stagingDir, "latest.json");
 writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
 console.log(`\n[updater] manifest written to ${manifestPath}:`);

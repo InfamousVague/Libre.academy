@@ -15,7 +15,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PHONE_CMD="cd '$ROOT' && FB_SKIP_PICK=1 make run-phone; echo; echo '[done — close window or press ⌘W]'"
 WATCH_CMD="cd '$ROOT' && FB_SKIP_PICK=1 make run-watch; echo; echo '[done — close window or press ⌘W]'"
 
-CACHE="$ROOT/.fishbones-devices.cache"
+CACHE="$ROOT/.libre-devices.cache"
 if [[ ! -f "$CACHE" ]]; then
   echo "ERROR: $CACHE missing. Run 'make pick-phone && make pick-watch' first," >&2
   echo "       or use 'make run-split' which calls the pickers up front." >&2

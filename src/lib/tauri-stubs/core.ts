@@ -1,7 +1,7 @@
 /// Web-build stub for `@tauri-apps/api/core`.
 ///
 /// Vite's resolve.alias swaps `@tauri-apps/api/core` for this module
-/// when `FISHBONES_TARGET=web`. Calls throw a recognisable error so
+/// when `LIBRE_TARGET=web`. Calls throw a recognisable error so
 /// any code path that hasn't been gated by `isWeb` fails loudly
 /// rather than silently no-op'ing — easier to spot during the rollout.
 ///

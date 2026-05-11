@@ -583,17 +583,17 @@ export function TreeDetail({
 
   return (
     <div
-      className="fishbones-trees fishbones-trees--detail"
+      className="libre-trees libre-trees--detail"
       style={{ "--tree-accent": tree.accent } as React.CSSProperties}
     >
-      <header className="fishbones-trees__detail-head">
+      <header className="libre-trees__detail-head">
         <button
           type="button"
-          className="fishbones-trees__back"
+          className="libre-trees__back"
           onClick={onBack}
         >
           <svg
-            className="fishbones-trees__back-icon"
+            className="libre-trees__back-icon"
             viewBox="0 0 24 24"
             width="14"
             height="14"
@@ -601,13 +601,13 @@ export function TreeDetail({
           />
           All trees
         </button>
-        <div className="fishbones-trees__detail-meta">
-          <h1 className="fishbones-trees__detail-title">{tree.title}</h1>
-          <p className="fishbones-trees__detail-blurb">{tree.description}</p>
+        <div className="libre-trees__detail-meta">
+          <h1 className="libre-trees__detail-title">{tree.title}</h1>
+          <p className="libre-trees__detail-blurb">{tree.description}</p>
         </div>
-        <div className="fishbones-trees__detail-progress">
-          <div className="fishbones-trees__detail-pct">{pct}%</div>
-          <div className="fishbones-trees__detail-pct-label">
+        <div className="libre-trees__detail-progress">
+          <div className="libre-trees__detail-pct">{pct}%</div>
+          <div className="libre-trees__detail-pct-label">
             {/* Exclude section hubs from both numerator and
                 denominator — they're categorical organizers, not
                 learnable skills, so counting them would
@@ -619,7 +619,7 @@ export function TreeDetail({
       </header>
 
       <div
-        className="fishbones-trees__web-scroll"
+        className="libre-trees__web-scroll"
         ref={containerRef}
         // Drag-pan navigation. Pointer handlers do double duty: they
         // start/finish a pan when the user drags, and they keep
@@ -636,7 +636,7 @@ export function TreeDetail({
         onWheel={onWheel}
       >
         <svg
-          className="fishbones-trees__web"
+          className="libre-trees__web"
           width={Math.max(width, 600)}
           height={height}
           viewBox={`0 0 ${Math.max(width, 600)} ${height}`}
@@ -724,11 +724,11 @@ export function TreeDetail({
                   <path
                     key={`${pid}->${n.id}`}
                     className={[
-                      "fishbones-trees__edge",
-                      !isPrimary && "fishbones-trees__edge--cross",
-                      active && "fishbones-trees__edge--active",
-                      !active && reachable && "fishbones-trees__edge--reachable",
-                      inTrack && "fishbones-trees__edge--in-track",
+                      "libre-trees__edge",
+                      !isPrimary && "libre-trees__edge--cross",
+                      active && "libre-trees__edge--active",
+                      !active && reachable && "libre-trees__edge--reachable",
+                      inTrack && "libre-trees__edge--in-track",
                     ]
                       .filter(Boolean)
                       .join(" ")}
@@ -761,15 +761,15 @@ export function TreeDetail({
               <g
                 key={n.id}
                 className={[
-                  "fishbones-trees__node",
-                  complete && "fishbones-trees__node--complete",
-                  !unlocked && "fishbones-trees__node--locked",
-                  isNext && "fishbones-trees__node--next",
-                  isGap && "fishbones-trees__node--gap",
-                  isSection && "fishbones-trees__node--section",
-                  selectedId === n.id && "fishbones-trees__node--selected",
-                  track.set.has(n.id) && "fishbones-trees__node--in-track",
-                  trackGoalId === n.id && "fishbones-trees__node--track-goal",
+                  "libre-trees__node",
+                  complete && "libre-trees__node--complete",
+                  !unlocked && "libre-trees__node--locked",
+                  isNext && "libre-trees__node--next",
+                  isGap && "libre-trees__node--gap",
+                  isSection && "libre-trees__node--section",
+                  selectedId === n.id && "libre-trees__node--selected",
+                  track.set.has(n.id) && "libre-trees__node--in-track",
+                  trackGoalId === n.id && "libre-trees__node--track-goal",
                 ]
                   .filter(Boolean)
                   .join(" ")}
@@ -788,14 +788,14 @@ export function TreeDetail({
                 }}
               >
                 <circle
-                  className="fishbones-trees__node-circle"
+                  className="libre-trees__node-circle"
                   r={NODE_RADIUS}
                   cx={0}
                   cy={0}
                 />
                 {isNext && !complete && (
                   <circle
-                    className="fishbones-trees__node-pulse"
+                    className="libre-trees__node-pulse"
                     r={NODE_RADIUS + 4}
                     cx={0}
                     cy={0}
@@ -803,12 +803,12 @@ export function TreeDetail({
                   />
                 )}
                 <g
-                  className="fishbones-trees__node-icon"
+                  className="libre-trees__node-icon"
                   transform="translate(-12 -12)"
                   dangerouslySetInnerHTML={{ __html: iconPaths }}
                 />
                 <text
-                  className="fishbones-trees__node-text"
+                  className="libre-trees__node-text"
                   y={NODE_RADIUS + 16}
                   textAnchor="middle"
                 >
@@ -821,7 +821,7 @@ export function TreeDetail({
                     between the connecting line and the circle. */}
                 {!unlocked && (
                   <g
-                    className="fishbones-trees__node-badge fishbones-trees__node-badge--lock"
+                    className="libre-trees__node-badge libre-trees__node-badge--lock"
                     transform={`translate(0 ${-NODE_RADIUS})`}
                   >
                     <circle r={9} cx={0} cy={0} />
@@ -833,7 +833,7 @@ export function TreeDetail({
                 )}
                 {complete && (
                   <g
-                    className="fishbones-trees__node-badge fishbones-trees__node-badge--check"
+                    className="libre-trees__node-badge libre-trees__node-badge--check"
                     transform={`translate(0 ${-NODE_RADIUS})`}
                   >
                     <circle r={9} cx={0} cy={0} />
@@ -894,39 +894,39 @@ export function TreeDetail({
           return (
           <div
             className={[
-              "fishbones-trees__tooltip",
-              wouldOverflowRight && "fishbones-trees__tooltip--flipped",
+              "libre-trees__tooltip",
+              wouldOverflowRight && "libre-trees__tooltip--flipped",
             ]
               .filter(Boolean)
               .join(" ")}
             style={{ left, top }}
             role="tooltip"
           >
-            <div className="fishbones-trees__tooltip-title">
+            <div className="libre-trees__tooltip-title">
               {hovered.label}
             </div>
-            <div className="fishbones-trees__tooltip-body">
+            <div className="libre-trees__tooltip-body">
               {hovered.summary}
             </div>
-            <div className="fishbones-trees__tooltip-state">
+            <div className="libre-trees__tooltip-state">
               {isSkillComplete(hovered, completed) && (
-                <span className="fishbones-trees__tooltip-flag fishbones-trees__tooltip-flag--done">
+                <span className="libre-trees__tooltip-flag libre-trees__tooltip-flag--done">
                   Complete
                 </span>
               )}
               {nextUp?.id === hovered.id && !isSkillComplete(hovered, completed) && (
-                <span className="fishbones-trees__tooltip-flag">
+                <span className="libre-trees__tooltip-flag">
                   Next up
                 </span>
               )}
               {!isSkillUnlocked(hovered, byId, completed) && (
-                <span className="fishbones-trees__tooltip-flag fishbones-trees__tooltip-flag--locked">
+                <span className="libre-trees__tooltip-flag libre-trees__tooltip-flag--locked">
                   Locked — needs {hovered.prereqs.length} prereq
                   {hovered.prereqs.length === 1 ? "" : "s"}
                 </span>
               )}
               {hovered.matches.length === 0 && (
-                <span className="fishbones-trees__tooltip-flag fishbones-trees__tooltip-flag--gap">
+                <span className="libre-trees__tooltip-flag libre-trees__tooltip-flag--gap">
                   Coming soon
                 </span>
               )}
@@ -941,10 +941,10 @@ export function TreeDetail({
             INSIDE the scroll container so the controls track the
             viewport (and stay below the topbar / outside the right
             skill panel). */}
-        <div className="fishbones-trees__zoom" aria-label="Zoom controls">
+        <div className="libre-trees__zoom" aria-label="Zoom controls">
           <button
             type="button"
-            className="fishbones-trees__zoom-btn"
+            className="libre-trees__zoom-btn"
             onClick={() => zoomBy(1 / 1.2)}
             aria-label="Zoom out"
           >
@@ -952,7 +952,7 @@ export function TreeDetail({
           </button>
           <button
             type="button"
-            className="fishbones-trees__zoom-btn fishbones-trees__zoom-btn--readout"
+            className="libre-trees__zoom-btn libre-trees__zoom-btn--readout"
             onClick={zoomReset}
             aria-label="Reset zoom"
           >
@@ -960,7 +960,7 @@ export function TreeDetail({
           </button>
           <button
             type="button"
-            className="fishbones-trees__zoom-btn"
+            className="libre-trees__zoom-btn"
             onClick={() => zoomBy(1.2)}
             aria-label="Zoom in"
           >

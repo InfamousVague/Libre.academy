@@ -96,9 +96,9 @@ export default function PracticeView({
     function refresh() {
       setRecords(loadAllRecords());
     }
-    window.addEventListener("fishbones:practice-graded", refresh);
+    window.addEventListener("libre:practice-graded", refresh);
     return () => {
-      window.removeEventListener("fishbones:practice-graded", refresh);
+      window.removeEventListener("libre:practice-graded", refresh);
     };
   }, []);
 
@@ -196,19 +196,19 @@ export default function PracticeView({
       : `${items.length} card${items.length === 1 ? "" : "s"} in deck · spaced review across your books`;
 
   return (
-    <div className="fishbones-practice">
-      <div className="fishbones-practice-scroll">
-        <div className="fishbones-practice-inner">
+    <div className="libre-practice">
+      <div className="libre-practice-scroll">
+        <div className="libre-practice-inner">
           {/* Hero — title + subtitle + due-counter ring. Same shape
               as ProfileView so a learner moving between the two
               feels they're inside the same app. */}
           <section
-            className="fishbones-practice-hero"
+            className="libre-practice-hero"
             aria-label="Practice overview"
           >
-            <div className="fishbones-practice-hero-text">
-              <h1 className="fishbones-practice-hero-title">Practice</h1>
-              <p className="fishbones-practice-hero-sub">{heroSub}</p>
+            <div className="libre-practice-hero-text">
+              <h1 className="libre-practice-hero-title">Practice</h1>
+              <p className="libre-practice-hero-sub">{heroSub}</p>
             </div>
             <DueRing
               due={stats.dueCount}
@@ -222,10 +222,10 @@ export default function PracticeView({
               IS the page. Customize lives below; default settings
               ("Smart mix · 10 cards") are good enough that most
               sessions never touch the panel. */}
-          <section className="fishbones-practice-cta">
-            <div className="fishbones-practice-cta-meta">
-              <span className="fishbones-practice-cta-label">Up next</span>
-              <span className="fishbones-practice-cta-title">
+          <section className="libre-practice-cta">
+            <div className="libre-practice-cta-meta">
+              <span className="libre-practice-cta-label">Up next</span>
+              <span className="libre-practice-cta-title">
                 {previewQueue.length > 0 ? (
                   <>
                     {previewQueue.length} card
@@ -236,13 +236,13 @@ export default function PracticeView({
                   "Nothing queued in this slice"
                 )}
               </span>
-              <span className="fishbones-practice-cta-hint">
+              <span className="libre-practice-cta-hint">
                 {MODE_BLURBS[mode]}
               </span>
             </div>
             <button
               type="button"
-              className="fishbones-practice-cta-button"
+              className="libre-practice-cta-button"
               onClick={startSession}
               disabled={previewQueue.length === 0}
             >
@@ -252,7 +252,7 @@ export default function PracticeView({
           </section>
 
           {/* Color-toned stat tiles — same vocabulary as Profile. */}
-          <div className="fishbones-practice-stats" role="list">
+          <div className="libre-practice-stats" role="list">
             <StatTile
               icon={layers}
               tone="cards"
@@ -284,37 +284,37 @@ export default function PracticeView({
               when the learner is on a hot streak (no recent
               misses). */}
           {recentMisses.length > 0 && (
-            <section className="fishbones-practice-section">
-              <div className="fishbones-practice-section-head">
-                <h2 className="fishbones-practice-section-title">
+            <section className="libre-practice-section">
+              <div className="libre-practice-section-head">
+                <h2 className="libre-practice-section-title">
                   To revisit
                 </h2>
-                <span className="fishbones-practice-section-sub">
+                <span className="libre-practice-section-sub">
                   Recently missed
                 </span>
               </div>
-              <ul className="fishbones-practice-misses">
+              <ul className="libre-practice-misses">
                 {recentMisses.map(({ item, rec }) => (
                   <li key={item.id}>
                     <button
                       type="button"
-                      className="fishbones-practice-miss-row"
+                      className="libre-practice-miss-row"
                       onClick={() => onOpenLesson?.(item.courseId, item.lessonId)}
                       disabled={!onOpenLesson}
                     >
                       <span
-                        className={`fishbones-practice-miss-kind fishbones-practice-miss-kind--${item.kind}`}
+                        className={`libre-practice-miss-kind libre-practice-miss-kind--${item.kind}`}
                         aria-hidden
                       />
-                      <span className="fishbones-practice-miss-body">
-                        <span className="fishbones-practice-miss-lesson">
+                      <span className="libre-practice-miss-body">
+                        <span className="libre-practice-miss-lesson">
                           {item.lessonTitle}
                         </span>
-                        <span className="fishbones-practice-miss-course">
+                        <span className="libre-practice-miss-course">
                           {item.courseTitle}
                         </span>
                       </span>
-                      <span className="fishbones-practice-miss-meta">
+                      <span className="libre-practice-miss-meta">
                         {rec.correct}/{rec.attempts}
                       </span>
                     </button>
@@ -328,16 +328,16 @@ export default function PracticeView({
               to feel "one tap away from practice" out of the box;
               the panel is for the learner who wants to drill a
               specific course or weak-spots only. */}
-          <section className="fishbones-practice-section">
+          <section className="libre-practice-section">
             <button
               type="button"
-              className="fishbones-practice-customize-toggle"
+              className="libre-practice-customize-toggle"
               onClick={() => setCustomizeOpen((v) => !v)}
               aria-expanded={customizeOpen}
             >
               <Icon icon={sliders} size="sm" color="currentColor" />
               <span>Customize</span>
-              <span className="fishbones-practice-customize-summary">
+              <span className="libre-practice-customize-summary">
                 {summariseFilters(
                   mode,
                   selectedCourses,
@@ -354,14 +354,14 @@ export default function PracticeView({
             </button>
 
             {customizeOpen && (
-              <div className="fishbones-practice-customize">
+              <div className="libre-practice-customize">
                 <CustomizeRow label="Mode">
                   {(Object.keys(MODE_LABELS) as PracticeMode[]).map((m) => (
                     <button
                       key={m}
                       type="button"
                       className={
-                        "fishbones-practice-pill" +
+                        "libre-practice-pill" +
                         (mode === m ? " is-active" : "")
                       }
                       onClick={() => setMode(m)}
@@ -377,7 +377,7 @@ export default function PracticeView({
                       key={n}
                       type="button"
                       className={
-                        "fishbones-practice-pill" +
+                        "libre-practice-pill" +
                         (sessionLength === n ? " is-active" : "")
                       }
                       onClick={() => setSessionLength(n)}
@@ -403,7 +403,7 @@ export default function PracticeView({
                           key={g.courseId}
                           type="button"
                           className={
-                            "fishbones-practice-pill" +
+                            "libre-practice-pill" +
                             (active ? " is-active" : "")
                           }
                           onClick={() => {
@@ -417,7 +417,7 @@ export default function PracticeView({
                           }}
                         >
                           {g.courseTitle}
-                          <span className="fishbones-practice-pill-count">
+                          <span className="libre-practice-pill-count">
                             {g.count}
                           </span>
                         </button>
@@ -445,7 +445,7 @@ export default function PracticeView({
                         key={k}
                         type="button"
                         className={
-                          "fishbones-practice-pill" +
+                          "libre-practice-pill" +
                           (active ? " is-active" : "")
                         }
                         onClick={() => {
@@ -458,7 +458,7 @@ export default function PracticeView({
                         }}
                       >
                         {KIND_LABELS[k]}
-                        <span className="fishbones-practice-pill-count">
+                        <span className="libre-practice-pill-count">
                           {count}
                         </span>
                       </button>
@@ -487,20 +487,20 @@ function CustomizeRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="fishbones-practice-customize-row">
-      <span className="fishbones-practice-customize-row-label">
+    <div className="libre-practice-customize-row">
+      <span className="libre-practice-customize-row-label">
         {label}
         {onClear && (
           <button
             type="button"
-            className="fishbones-practice-customize-clear"
+            className="libre-practice-customize-clear"
             onClick={onClear}
           >
             clear
           </button>
         )}
       </span>
-      <div className="fishbones-practice-customize-pills">{children}</div>
+      <div className="libre-practice-customize-pills">{children}</div>
     </div>
   );
 }
@@ -528,21 +528,21 @@ function DueRing({
   const accuracy =
     attemptsToday > 0 ? Math.round((correctToday / attemptsToday) * 100) : 0;
   return (
-    <div className="fishbones-practice-ring fishbones-practice-ring--due">
+    <div className="libre-practice-ring libre-practice-ring--due">
       <svg
         viewBox="0 0 100 100"
-        className="fishbones-practice-ring-svg"
+        className="libre-practice-ring-svg"
         aria-hidden
       >
         <circle
-          className="fishbones-practice-ring-track"
+          className="libre-practice-ring-track"
           cx="50"
           cy="50"
           r={r}
           fill="none"
         />
         <circle
-          className="fishbones-practice-ring-fill"
+          className="libre-practice-ring-fill"
           cx="50"
           cy="50"
           r={r}
@@ -553,12 +553,12 @@ function DueRing({
           transform="rotate(-90 50 50)"
         />
       </svg>
-      <div className="fishbones-practice-ring-body">
-        <span className="fishbones-practice-ring-icon" aria-hidden>
+      <div className="libre-practice-ring-body">
+        <span className="libre-practice-ring-icon" aria-hidden>
           <Icon icon={dumbbell} size="lg" color="currentColor" />
         </span>
-        <span className="fishbones-practice-ring-value">{due}</span>
-        <span className="fishbones-practice-ring-label">
+        <span className="libre-practice-ring-value">{due}</span>
+        <span className="libre-practice-ring-label">
           {attemptsToday > 0 ? `${accuracy}% today` : "Due"}
         </span>
       </div>
@@ -582,15 +582,15 @@ function StatTile({
 }) {
   return (
     <div
-      className={`fishbones-practice-stat fishbones-practice-stat--${tone}`}
+      className={`libre-practice-stat libre-practice-stat--${tone}`}
       role="listitem"
     >
-      <span className="fishbones-practice-stat-icon" aria-hidden>
+      <span className="libre-practice-stat-icon" aria-hidden>
         <Icon icon={icon} size="base" color="currentColor" />
       </span>
-      <div className="fishbones-practice-stat-text">
-        <span className="fishbones-practice-stat-value">{value}</span>
-        <span className="fishbones-practice-stat-label">{label}</span>
+      <div className="libre-practice-stat-text">
+        <span className="libre-practice-stat-value">{value}</span>
+        <span className="libre-practice-stat-label">{label}</span>
       </div>
     </div>
   );
@@ -602,16 +602,16 @@ function StatTile({
 function EmptyState({ history }: { history?: readonly Completion[] }) {
   const recent = history?.length ?? 0;
   return (
-    <div className="fishbones-practice">
-      <div className="fishbones-practice-scroll">
-        <div className="fishbones-practice-inner fishbones-practice-inner--empty">
-          <div className="fishbones-practice-empty-icon" aria-hidden>
+    <div className="libre-practice">
+      <div className="libre-practice-scroll">
+        <div className="libre-practice-inner libre-practice-inner--empty">
+          <div className="libre-practice-empty-icon" aria-hidden>
             <Icon icon={dumbbell} size="xl" color="currentColor" />
           </div>
-          <h1 className="fishbones-practice-hero-title">
+          <h1 className="libre-practice-hero-title">
             {recent === 0 ? "Open a lesson to start the deck." : "Nothing to practise yet."}
           </h1>
-          <p className="fishbones-practice-empty-blurb">
+          <p className="libre-practice-empty-blurb">
             Every quiz question and code-blocks puzzle you encounter in a
             lesson becomes a card here. Finish one — even just one — and the
             deck starts filling. The scheduler handles the rest: short
@@ -619,7 +619,7 @@ function EmptyState({ history }: { history?: readonly Completion[] }) {
             recently.
           </p>
           {recent === 0 ? (
-            <div className="fishbones-practice-empty-hint">
+            <div className="libre-practice-empty-hint">
               <Icon icon={sparkles} size="xs" color="currentColor" />
               <span>
                 Pick a book from <strong>Library</strong> or browse{" "}
@@ -627,7 +627,7 @@ function EmptyState({ history }: { history?: readonly Completion[] }) {
               </span>
             </div>
           ) : (
-            <div className="fishbones-practice-empty-hint">
+            <div className="libre-practice-empty-hint">
               <Icon icon={historyIcon} size="xs" color="currentColor" />
               <span>
                 You have completions logged but no quiz / blocks puzzles in

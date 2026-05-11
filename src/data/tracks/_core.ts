@@ -60,7 +60,7 @@ export interface LearningTrack {
   /// after finishing the track?
   description: string;
   /// Visual accent — hex string, used for the card chip + progress
-  /// bar + step-indicator dots. Pick from the same Fishbones cover
+  /// bar + step-indicator dots. Pick from the same Libre cover
   /// palette the trees use so tracks blend into the same design
   /// language.
   accent: string;

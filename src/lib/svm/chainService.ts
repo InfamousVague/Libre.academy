@@ -147,7 +147,7 @@ function wireToSnapshot(w: WireSvmSnapshot): SvmChainSnapshot {
 
 const AIRDROP_AMOUNT_LAMPORTS = 100n * 1_000_000_000n; // +100 SOL
 const AIRDROP_COOLDOWN_MS = 5 * 60 * 1000;
-const AIRDROP_KEY_PREFIX = "fishbones:svm-airdrop:";
+const AIRDROP_KEY_PREFIX = "libre:svm-airdrop:";
 
 let currentSnapshot: SvmChainSnapshot = emptySnapshot();
 const listeners = new Set<SvmChainServiceListener>();

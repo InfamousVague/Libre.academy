@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
-# Deploy the Fishbones API to the VPS.
+# Deploy the Libre API to the VPS.
 #
 # Layout on the remote host:
-#   /opt/fishbones-api/fishbones-api      — the binary
-#   /var/lib/fishbones-api/                — sqlite db + state
-#   /etc/fishbones-api/api.env             — env file (read by systemd)
-#   /etc/fishbones-api/AuthKey_*.p8        — uploaded SIWA private key
-#   /etc/fishbones-api/apple-domain-association.txt  — uploaded by hand
+#   /opt/libre-api/libre-api      — the binary
+#   /var/lib/libre-api/                — sqlite db + state
+#   /etc/libre-api/api.env             — env file (read by systemd)
+#   /etc/libre-api/AuthKey_*.p8        — uploaded SIWA private key
+#   /etc/libre-api/apple-domain-association.txt  — uploaded by hand
 #                                            after Apple gives you the
 #                                            verification file.
-#   /etc/systemd/system/fishbones-api.service
+#   /etc/systemd/system/libre-api.service
 #   /etc/caddy/Caddyfile                   — rewritten on every deploy
 #
 # This script is *destructive* to the Caddyfile: it writes a fresh one
-# with just the Tap + Fishbones blocks. The earlier `relay.mattssoftware.com`
+# with just the Tap + Libre blocks. The earlier `relay.mattssoftware.com`
 # block from a prior deploy is dropped on purpose — the migration plan
 # is to retire that domain in favour of `api.mattssoftware.com`.
 
@@ -50,10 +50,10 @@ SSH="sshpass -e ssh -o StrictHostKeyChecking=accept-new -p $VPS_PORT $VPS_USER@$
 SCP="sshpass -e scp -o StrictHostKeyChecking=accept-new -P $VPS_PORT"
 RSYNC_SSH="sshpass -e ssh -o StrictHostKeyChecking=accept-new -p $VPS_PORT"
 
-echo "── Deploying fishbones-api to $VPS_HOST..."
+echo "── Deploying libre-api to $VPS_HOST..."
 
 # Ensure remote dirs exist
-$SSH "mkdir -p /opt/fishbones-api /etc/fishbones-api /var/lib/fishbones-api && chmod 700 /etc/fishbones-api"
+$SSH "mkdir -p /opt/libre-api /etc/libre-api /var/lib/libre-api && chmod 700 /etc/libre-api"
 
 # Upload source and build on VPS. We rebuild on the VPS rather than
 # cross-compiling locally so the resulting binary links against the
@@ -62,23 +62,23 @@ echo "── Uploading source to VPS..."
 rsync -avz --delete \
   -e "$RSYNC_SSH" \
   --exclude target --exclude .git --exclude .env \
-  ./ "$VPS_USER@$VPS_HOST:/opt/fishbones-api/src/"
+  ./ "$VPS_USER@$VPS_HOST:/opt/libre-api/src/"
 
 echo "── Installing build dependencies..."
 $SSH "apt-get update -qq && apt-get install -y -qq build-essential pkg-config libssl-dev"
 
 echo "── Building on VPS (this may take a few minutes on first run)..."
-$SSH "cd /opt/fishbones-api/src && \
+$SSH "cd /opt/libre-api/src && \
   command -v cargo >/dev/null 2>&1 || { curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y; } && \
   . \"\$HOME/.cargo/env\" && \
   cargo build --release && \
-  systemctl stop fishbones-api 2>/dev/null; \
-  cp target/release/fishbones-api /opt/fishbones-api/fishbones-api"
+  systemctl stop libre-api 2>/dev/null; \
+  cp target/release/libre-api /opt/libre-api/libre-api"
 
 # ── Apple SIWA: upload .p8 ────────────────────────────────────────
 #
 # The .p8 only ever needs to be uploaded once per VPS. Subsequent
-# deploys can re-use whatever's already at /etc/fishbones-api/. The
+# deploys can re-use whatever's already at /etc/libre-api/. The
 # local file is often archived (or moved off the laptop entirely
 # once it's in 1Password / a secrets vault), so a missing local
 # file is a normal state — not an error. We skip the upload and
@@ -88,7 +88,7 @@ $SSH "cd /opt/fishbones-api/src && \
 APPLE_REMOTE_KEY_PATH=""
 if [ -n "${APPLE_PRIVATE_KEY_LOCAL:-}" ] && [ -f "$APPLE_PRIVATE_KEY_LOCAL" ]; then
   KEY_BASENAME="$(basename "$APPLE_PRIVATE_KEY_LOCAL")"
-  APPLE_REMOTE_KEY_PATH="/etc/fishbones-api/$KEY_BASENAME"
+  APPLE_REMOTE_KEY_PATH="/etc/libre-api/$KEY_BASENAME"
   echo "── Uploading Apple .p8 → $APPLE_REMOTE_KEY_PATH"
   $SCP "$APPLE_PRIVATE_KEY_LOCAL" "$VPS_USER@$VPS_HOST:$APPLE_REMOTE_KEY_PATH"
   $SSH "chmod 600 $APPLE_REMOTE_KEY_PATH"
@@ -97,7 +97,7 @@ else
   # uploaded on the VPS. If found, point the env file at it and skip
   # the upload step. If none exists, only fail if the user actually
   # wants Apple SIWA (APPLE_CLIENT_ID set).
-  REMOTE_KEY="$($SSH 'ls /etc/fishbones-api/AuthKey_*.p8 2>/dev/null | head -1' || true)"
+  REMOTE_KEY="$($SSH 'ls /etc/libre-api/AuthKey_*.p8 2>/dev/null | head -1' || true)"
   if [ -n "$REMOTE_KEY" ]; then
     APPLE_REMOTE_KEY_PATH="$REMOTE_KEY"
     if [ -n "${APPLE_PRIVATE_KEY_LOCAL:-}" ]; then
@@ -117,12 +117,12 @@ fi
 # ── Env file (systemd EnvironmentFile=) ───────────────────────────
 # Permissions 600 so the Apple Service ID + Google secret aren't
 # world-readable.
-echo "── Writing /etc/fishbones-api/api.env..."
-cat <<EOF | $SSH "cat > /etc/fishbones-api/api.env && chmod 600 /etc/fishbones-api/api.env"
+echo "── Writing /etc/libre-api/api.env..."
+cat <<EOF | $SSH "cat > /etc/libre-api/api.env && chmod 600 /etc/libre-api/api.env"
 # Generated by deploy.sh — do not edit by hand. Re-run \`./deploy.sh\`
 # from your laptop to update.
 PUBLIC_URL=${PUBLIC_URL:-}
-DATABASE_PATH=/var/lib/fishbones-api/api.sqlite
+DATABASE_PATH=/var/lib/libre-api/api.sqlite
 HOST=127.0.0.1
 PORT=${API_PORT:-9443}
 WEB_BASE_URL=${WEB_BASE_URL:-https://libre.academy}
@@ -131,7 +131,7 @@ APPLE_CLIENT_ID=${APPLE_CLIENT_ID:-}
 APPLE_TEAM_ID=${APPLE_TEAM_ID:-}
 APPLE_KEY_ID=${APPLE_KEY_ID:-}
 APPLE_PRIVATE_KEY_FILE=${APPLE_REMOTE_KEY_PATH}
-APPLE_DOMAIN_ASSOCIATION_FILE=/etc/fishbones-api/apple-domain-association.txt
+APPLE_DOMAIN_ASSOCIATION_FILE=/etc/libre-api/apple-domain-association.txt
 
 GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
 GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
@@ -147,7 +147,7 @@ GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
 #   SMTP_PORT=25
 #   SMTP_STARTTLS=false
 #   SMTP_FROM=noreply@libre.academy
-#   SMTP_FROM_NAME=Fishbones
+#   SMTP_FROM_NAME=Libre
 # SMTP (external relay like Mailgun / SES):
 #   SMTP_HOST=smtp.mailgun.org SMTP_PORT=587 SMTP_STARTTLS=true
 #   SMTP_USER=postmaster@... SMTP_PASS=...
@@ -168,19 +168,19 @@ EOF
 
 # ── systemd unit ──────────────────────────────────────────────────
 echo "── Installing systemd service..."
-cat <<EOF | $SSH "cat > /etc/systemd/system/fishbones-api.service"
+cat <<EOF | $SSH "cat > /etc/systemd/system/libre-api.service"
 [Unit]
-Description=Fishbones API
+Description=Libre API
 After=network.target
 
 [Service]
 Type=simple
-ExecStart=/opt/fishbones-api/fishbones-api
-WorkingDirectory=/opt/fishbones-api
-EnvironmentFile=/etc/fishbones-api/api.env
+ExecStart=/opt/libre-api/libre-api
+WorkingDirectory=/opt/libre-api
+EnvironmentFile=/etc/libre-api/api.env
 Restart=always
 RestartSec=5
-Environment=RUST_LOG=fishbones_api=info
+Environment=RUST_LOG=libre_api=info
 
 [Install]
 WantedBy=multi-user.target
@@ -197,7 +197,7 @@ $SSH "command -v caddy >/dev/null 2>&1 || {
   apt-get update -qq && apt-get install -y -qq caddy
 }"
 
-# Write a fresh Caddyfile with just the Tap relay + the new Fishbones
+# Write a fresh Caddyfile with just the Tap relay + the new Libre
 # API. The earlier `relay.mattssoftware.com` block is intentionally
 # dropped — that domain is being retired in favour of api.mattssoftware.com.
 #
@@ -222,7 +222,7 @@ cat <<EOF | $SSH "cat > /etc/caddy/Caddyfile"
 # VPS so the API host's WebSocket endpoint works on every client.
 # Background: WebSockets are an HTTP/1.1 protocol (RFC 6455). When
 # Caddy advertises h2 in ALPN, the iOS WKWebView happily negotiates
-# h2 for wss://api.mattssoftware.com/fishbones/sync/ws, sends a GET
+# h2 for wss://api.mattssoftware.com/libre/sync/ws, sends a GET
 # with Upgrade headers, and Caddy strips those headers before
 # forwarding (RFC 7540 forbids Upgrade in HTTP/2). The backend
 # (axum) only knows how to do RFC 6455 upgrades, sees a plain GET,
@@ -243,15 +243,15 @@ mattssoftware.com, www.mattssoftware.com {
     file_server
 }
 
-# Fishbones marketing + /learn embed. SPA fallback so client-side
+# Libre marketing + /learn embed. SPA fallback so client-side
 # routes serve index.html and the React Router handles them.
 libre.academy, www.libre.academy {
-    root * /var/www/fishbones-academy
+    root * /var/www/libre-academy
     try_files {path} {path}/ /index.html
     file_server
     encode zstd gzip
 
-    # CORS for /audio/*. The Fishbones desktop + iOS Tauri shells
+    # CORS for /audio/*. The Libre desktop + iOS Tauri shells
     # fetch the lesson-narration manifest + MP3 files cross-origin
     # (the WebView's effective origin is \`tauri://localhost\` on
     # iOS/Mac and \`http://tauri.localhost\` on Windows, neither of
@@ -275,7 +275,7 @@ ${TAP_DOMAIN:-tap.mattssoftware.com} {
     reverse_proxy 127.0.0.1:${TAP_RELAY_PORT:-8443}
 }
 
-# Fishbones API. Protocols are inherited from the global servers
+# Libre API. Protocols are inherited from the global servers
 # block above (h1 + h3, no h2) so the WS handshake works.
 ${API_DOMAIN:-api.mattssoftware.com} {
     reverse_proxy 127.0.0.1:${API_PORT:-9443}
@@ -287,22 +287,22 @@ echo "── Starting services..."
 $SSH "systemctl daemon-reload && \
   systemctl enable --now caddy && \
   systemctl restart caddy && \
-  systemctl enable --now fishbones-api && \
-  systemctl restart fishbones-api"
+  systemctl enable --now libre-api && \
+  systemctl restart libre-api"
 
 # Health check. The service binds to 127.0.0.1 so the curl-from-VPS
 # check is the right one — no TLS in the loopback hop.
 echo "── Checking API health..."
 sleep 2
 $SSH "curl -sf http://127.0.0.1:${API_PORT:-9443}/health" \
-  && echo " ✓ Fishbones API is running" \
-  || echo " ✗ Fishbones API not responding yet (check logs: journalctl -u fishbones-api)"
+  && echo " ✓ Libre API is running" \
+  || echo " ✗ Libre API not responding yet (check logs: journalctl -u libre-api)"
 
 echo ""
 echo "── Deploy complete!"
 echo "   Tap:       https://${TAP_DOMAIN:-tap.mattssoftware.com}"
-echo "   Fishbones: https://${API_DOMAIN:-api.mattssoftware.com}"
-echo "   Logs:      ssh $VPS_USER@$VPS_HOST journalctl -u fishbones-api -f"
+echo "   Libre: https://${API_DOMAIN:-api.mattssoftware.com}"
+echo "   Logs:      ssh $VPS_USER@$VPS_HOST journalctl -u libre-api -f"
 
 echo ""
 echo "── Apple domain-verification reminder"
@@ -310,6 +310,6 @@ echo "   Once you save the SIWA Service ID config, Apple gives you a"
 echo "   small text file. Upload it like:"
 echo ""
 echo "     scp ~/Downloads/apple-developer-domain-association.txt \\"
-echo "         $VPS_USER@$VPS_HOST:/etc/fishbones-api/apple-domain-association.txt"
+echo "         $VPS_USER@$VPS_HOST:/etc/libre-api/apple-domain-association.txt"
 echo ""
 echo "   Then click Verify in the Apple Developer portal."

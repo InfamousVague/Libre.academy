@@ -4,7 +4,7 @@
    changes the gradient palette + animation speed; geometry stays
    identical so transitions are cheap. */
 
-.fishbones-ai-character {
+.libre-ai-character {
   position: fixed;
   right: 20px;
   bottom: 20px;
@@ -49,11 +49,11 @@
    visibly works on a reply. The DNA helix inside is already animated
    (and accelerated via the `speed` prop in streaming mood); this
    layered orb-level animation is the secondary signal. */
-.fishbones-ai-character--streaming {
-  animation: fishbones-ai-thinking 1.4s ease-in-out infinite;
+.libre-ai-character--streaming {
+  animation: libre-ai-thinking 1.4s ease-in-out infinite;
 }
 
-.fishbones-ai-character:hover {
+.libre-ai-character:hover {
   /* Scale from the center, no translate — keeps the button anchored
      in the corner so it reads as growing toward the user rather
      than drifting up. No shadow / background change since the orb
@@ -61,16 +61,16 @@
   transform: scale(1.08);
 }
 
-.fishbones-ai-character:active {
+.libre-ai-character:active {
   transform: scale(0.96);
 }
 
-.fishbones-ai-character.is-open {
+.libre-ai-character.is-open {
   /* Pressed-in pose so the button reads as toggle state. */
   transform: scale(0.94);
 }
 
-.fishbones-ai-character:focus-visible {
+.libre-ai-character:focus-visible {
   outline: 2px solid hsl(220, 60%, 60%);
   outline-offset: 4px;
 }
@@ -86,7 +86,7 @@
    inside the helix's own strand-jump animation; the AiCharacter
    passes a slow `speed` value (see Tsx) when in idle mood so the
    helix reads as gently breathing rather than actively working. */
-.fishbones-ai-character-icon {
+.libre-ai-character-icon {
   position: relative;
   z-index: 2;
   font-size: 70px;
@@ -96,7 +96,7 @@
 
 /* ---- Keyframes ------------------------------------------------- */
 
-@keyframes fishbones-ai-thinking {
+@keyframes libre-ai-thinking {
 
   /* Breathing pulse: the orb gently scales while a reply streams,
      so the button visibly leans in. Compounds with the helix's
@@ -119,7 +119,7 @@
    its own reduced-motion handler that flattens the helix to a
    static colourful pattern. */
 @media (prefers-reduced-motion: reduce) {
-  .fishbones-ai-character {
+  .libre-ai-character {
     animation: none !important;
     transition: none !important;
   }
@@ -134,7 +134,7 @@
    gap (`margin-right: 10px`) gives it breathing room. Top is
    centered against the orb so the tip's vertical midline lines up
    with the orb's. */
-.fishbones-ai-character-tip {
+.libre-ai-character-tip {
   position: absolute;
   right: 100%;
   top: 50%;
@@ -165,7 +165,7 @@
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.32);
 }
 
-.fishbones-ai-character:hover .fishbones-ai-character-tip {
+.libre-ai-character:hover .libre-ai-character-tip {
   opacity: 1;
   transform: translate3d(0, -50%, 0);
 }
@@ -173,7 +173,7 @@
 /* Reduced motion — kill the slide transition, keep the opacity
    change so the tip still appears (just instantly) on hover. */
 @media (prefers-reduced-motion: reduce) {
-  .fishbones-ai-character-tip {
+  .libre-ai-character-tip {
     transition: opacity 0s;
     transform: translate3d(0, -50%, 0);
   }
@@ -189,7 +189,7 @@
    gutter on phone widths and a flush-right orb crowds the screen
    edge visually. */
 @media (max-width: 767px) {
-  .fishbones-ai-character {
+  .libre-ai-character {
     right: 12px;
     bottom: calc(env(safe-area-inset-bottom, 0) + 84px);
   }

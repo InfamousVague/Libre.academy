@@ -89,7 +89,7 @@ text are surfaced in-app from each course's settings page. Originals
 are reachable via the "View source" link in each lesson.
 ```
 
-(Adjust this if you bundle anything that doesn't fit — for example, the `hellotrade` course is Fishbones-original content and doesn't need the disclaimer.)
+(Adjust this if you bundle anything that doesn't fit — for example, the `hellotrade` course is Libre-original content and doesn't need the disclaimer.)
 
 ## Routing App Coverage File
 

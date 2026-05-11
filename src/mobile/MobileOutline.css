@@ -180,7 +180,7 @@
   border-radius: 2px;
 }
 
-/* Mirrors the desktop Sidebar `.fishbones__lesson-status` pattern: a
+/* Mirrors the desktop Sidebar `.libre__lesson-status` pattern: a
    small circle that always carries the lesson-kind glyph (book / code /
    help) so completed rows still advertise what they were. The state
    flips background + icon color rather than swapping icons — same cue
@@ -208,7 +208,7 @@
 }
 
 /* Done: inverted — white-filled circle with the kind glyph in black.
-   Matches `.fishbones__lesson-status--done` exactly so the completion
+   Matches `.libre__lesson-status--done` exactly so the completion
    marker reads identically on phone and desktop. */
 .m-outline__bullet--done {
   background: var(--color-text-primary);

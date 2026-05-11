@@ -35,7 +35,7 @@ interface Props {
   /// the Workbench's parent element instead of the Workbench itself, and
   /// the Workbench fills its parent (relying on a CSS rule). LessonView
   /// sets this because it wraps the Workbench in
-  /// `.fishbones__lesson-workbench-wrap` so a missing-toolchain banner
+  /// `.libre__lesson-workbench-wrap` so a missing-toolchain banner
   /// can stack above the card — without this flag the wrap's width and
   /// the Workbench's width would nest (48% × 48% ≈ 23% of lesson pane).
   widthControlsParent?: boolean;
@@ -198,7 +198,7 @@ export default function Workbench({
 
   return (
     <div
-      className={`fishbones-workbench ${fillWidth ? "fishbones-workbench--fill" : ""}`}
+      className={`libre-workbench ${fillWidth ? "libre-workbench--fill" : ""}`}
       ref={containerRef}
       style={fillWidth || widthControlsParent ? undefined : { width: `${workbenchPct}%` }}
     >
@@ -206,7 +206,7 @@ export default function Workbench({
           `fillWidth` is set (nothing useful to resize against). */}
       {!fillWidth && (
         <div
-          className="fishbones-workbench-width-handle"
+          className="libre-workbench-width-handle"
           role="separator"
           aria-orientation="vertical"
           aria-label="Resize workbench width"
@@ -220,13 +220,13 @@ export default function Workbench({
       )}
 
       <div
-        className="fishbones-workbench-pane fishbones-workbench-pane--editor"
+        className="libre-workbench-pane libre-workbench-pane--editor"
         style={{ height: `${editorPct}%` }}
       >
         {editor}
       </div>
       <div
-        className="fishbones-workbench-divider"
+        className="libre-workbench-divider"
         role="separator"
         aria-orientation="horizontal"
         aria-label="Resize editor and console"
@@ -237,10 +237,10 @@ export default function Workbench({
         onDoubleClick={onSplitDoubleClick}
         title="Drag to resize · double-click to reset"
       >
-        <div className="fishbones-workbench-divider-grip" aria-hidden />
+        <div className="libre-workbench-divider-grip" aria-hidden />
       </div>
       <div
-        className="fishbones-workbench-pane fishbones-workbench-pane--output"
+        className="libre-workbench-pane libre-workbench-pane--output"
         style={{ height: `${100 - editorPct}%` }}
       >
         {output}

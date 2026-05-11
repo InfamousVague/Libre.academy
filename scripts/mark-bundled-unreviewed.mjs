@@ -11,7 +11,7 @@
  * Sets `releaseStatus: "UNREVIEWED"` on every shipped book.
  *
  * Targets, in order:
- *   1. Every `.fishbones` archive in `src-tauri/resources/bundled-packs/`
+ *   1. Every `.libre` archive in `src-tauri/resources/bundled-packs/`
  *      (the canonical "shipped" set baked into the binary).
  *   2. Every local course folder under
  *      `<app_data>/courses/<id>/course.json` (so a future
@@ -92,12 +92,12 @@ function applyMarker(json) {
   return { changed: true, before };
 }
 
-// ────────── Bundled (.academy / .fishbones) ──────────
+// ────────── Bundled (.academy / .libre) ──────────
 
 function listBundledArchives() {
   if (!existsSync(BUNDLE_DIR)) return [];
   return readdirSync(BUNDLE_DIR)
-    .filter((n) => n.endsWith(".academy") || n.endsWith(".fishbones"))
+    .filter((n) => n.endsWith(".academy") || n.endsWith(".libre"))
     .map((n) => join(BUNDLE_DIR, n));
 }
 
@@ -110,7 +110,7 @@ function listBundledArchives() {
  * existing bundled archives use.
  */
 function markBundled(path) {
-  const tmp = mkdtempSync(join(tmpdir(), "fishbones-mark-"));
+  const tmp = mkdtempSync(join(tmpdir(), "libre-mark-"));
   try {
     execFileSync("/usr/bin/unzip", ["-q", path, "-d", tmp], {
       stdio: ["ignore", "ignore", "inherit"],
@@ -131,7 +131,7 @@ function markBundled(path) {
     const { before } = result;
     if (DRY_RUN) return { id: json.id, status: "would-mark", from: before };
     writeFileSync(courseJsonPath, JSON.stringify(json, null, 2) + "\n");
-    // Re-zip flat — match the `bun-complete.fishbones`-style layout
+    // Re-zip flat — match the `bun-complete.libre`-style layout
     // the existing extractor expects (course.json + cover.png at root).
     rmSync(path);
     execFileSync("/usr/bin/zip", ["-r", "-q", "-X", path, "."], {

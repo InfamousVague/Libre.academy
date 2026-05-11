@@ -150,7 +150,7 @@ export async function openPoppedWorkbench(
       }
       new WebviewWindow(label, {
         url,
-        title: `Fishbones · ${title}`,
+        title: `Libre · ${title}`,
         width: 960,
         height: 720,
         minWidth: 560,
@@ -159,7 +159,7 @@ export async function openPoppedWorkbench(
       });
       return;
     } catch (e) {
-      console.warn("[fishbones] Tauri WebviewWindow failed, falling back to window.open:", e);
+      console.warn("[libre] Tauri WebviewWindow failed, falling back to window.open:", e);
     }
   }
 
@@ -185,7 +185,7 @@ export async function closePoppedWorkbench(
       if (win) await win.close();
       return;
     } catch (e) {
-      console.warn("[fishbones] Tauri close failed, falling back to bus close-request:", e);
+      console.warn("[libre] Tauri close failed, falling back to bus close-request:", e);
     }
   }
 

@@ -28,10 +28,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Fishbones' package.json declares `@mattmattmattmatt/base` as
+      # Libre' package.json declares `@mattmattmattmatt/base` as
       # a file:../../Libs/base dependency — i.e. it expects a sibling
       # `Libs/base/` two directories above the repo. Locally that's
-      # /Users/matt/Development/{Apps/Fishbones,Libs/base}; in CI we have
+      # /Users/matt/Development/{Apps/Libre,Libs/base}; in CI we have
       # to materialise the same layout. Checkout into _base inside
       # the workspace, then symlink it into place at the absolute
       # path the file: spec resolves to.
@@ -81,7 +81,7 @@ jobs:
 
       - name: Build web variant
         env:
-          FISHBONES_TARGET: web
+          LIBRE_TARGET: web
         run: npm run build:web
 
       - name: Upload web build artefact

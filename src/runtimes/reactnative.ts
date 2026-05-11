@@ -94,12 +94,12 @@ function buildPreviewHtml(
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-  <title>Fishbones — React Native preview</title>
+  <title>Libre — React Native preview</title>
   <style>
     /* Live theme tokens propagated from the parent app. The default
        template references these via 'var(--rn-bg-primary)' etc., and
        react-native-web passes the value through to the rendered
-       stylesheet untouched — so the preview adopts whichever Fishbones
+       stylesheet untouched — so the preview adopts whichever Libre
        theme is active when Run was clicked. */
     :root {
       --rn-bg-primary: ${t.bgPrimary};
@@ -117,7 +117,7 @@ function buildPreviewHtml(
       color: var(--rn-text-primary);
       -webkit-font-smoothing: antialiased;
     }
-    #__fishbones_error {
+    #__libre_error {
       position: fixed; inset: 0;
       padding: 24px;
       background: #1a0b0f;
@@ -131,7 +131,7 @@ function buildPreviewHtml(
   <!-- Babel standalone, served from the local Tauri preview server's
        /vendor route. Same file the CDN used to ship — but bundled
        once at build time and read from the shipped resources dir, so
-       Fishbones works fully offline. -->
+       Libre works fully offline. -->
   <script src="/vendor/babel.min.js"></script>
 </head>
 <body>
@@ -142,7 +142,7 @@ function buildPreviewHtml(
        failure to esm.sh/unpkg, parse error in the user code, etc.).
        If this is gone but the screen is still blank, React mounted but
        produced nothing — usually a styling/layout problem. -->
-  <div id="__fishbones_boot"
+  <div id="__libre_boot"
        style="position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px; color: #6a6a78; font: 12px/1.5 'SF Mono', ui-monospace, Menlo, monospace; text-align: center; pointer-events: none; opacity: 0.7;">
     booting react-native-web preview…
   </div>
@@ -161,7 +161,7 @@ function buildPreviewHtml(
     /// Update the boot marker's text so a stuck pipeline tells us
     /// WHICH stage stalled instead of just "booting…" forever.
     function bootStage(text) {
-      const el = document.getElementById("__fishbones_boot");
+      const el = document.getElementById("__libre_boot");
       if (el) el.textContent = text;
     }
 
@@ -282,7 +282,7 @@ function buildPreviewHtml(
           "  StatusBar, Modal, RefreshControl, PixelRatio, Share, Appearance,",
           "  useColorScheme, useWindowDimensions, processColor,",
           "} = ReactNative;",
-          "return (function __fishbonesUserModule() {",
+          "return (function __libreUserModule() {",
           // CommonJS-shape shim so source that includes a CommonJS
           // export line (module.exports = { Foo }) — e.g. solutions
           // from the logic-test challenge packs that get routed here
@@ -363,13 +363,13 @@ function buildPreviewHtml(
       // moving piece — react-native-web's components handle their own
       // style injection at render time, so we still get correct RN
       // semantics without relying on AppRegistry's mount path.
-      AppRegistry.registerComponent("FishbonesApp", () => App);
+      AppRegistry.registerComponent("LibreApp", () => App);
       const rootEl = document.getElementById("root");
       const root = createRoot(rootEl);
       root.render(React.createElement(App));
       // First commit landed — clear the boot marker so the user
       // sees the rendered UI instead of "booting…" floating over it.
-      const bootEl = document.getElementById("__fishbones_boot");
+      const bootEl = document.getElementById("__libre_boot");
       if (bootEl) bootEl.remove();
     } catch (err) {
       showPhaseError("render", err);
@@ -404,10 +404,10 @@ function buildPreviewHtml(
         // exactly where the parser choked.
         snippet = buildSnippet(sourceHint, err.loc.line, err.loc.column);
       }
-      let pre = document.getElementById("__fishbones_error");
+      let pre = document.getElementById("__libre_error");
       if (!pre) {
         pre = document.createElement("pre");
-        pre.id = "__fishbones_error";
+        pre.id = "__libre_error";
         document.body.appendChild(pre);
       }
       pre.textContent =
@@ -434,11 +434,11 @@ function buildPreviewHtml(
     })().catch((err) => {
       // Last-resort backstop. \`showPhaseError\` lives inside the async
       // function scope and isn't in scope here, so we reuse the
-      // CONSOLE_SHIM's \`__fishbonesShowError\` helper which is defined
+      // CONSOLE_SHIM's \`__libreShowError\` helper which is defined
       // at module top-level. Either way the user gets a visible
       // overlay instead of a silent rejection.
       console.error("[boot]", err);
-      try { __fishbonesShowError(err); } catch (e) { /* shim missing */ }
+      try { __libreShowError(err); } catch (e) { /* shim missing */ }
     });
   </script>
 </body>
@@ -451,21 +451,21 @@ function buildPreviewHtml(
 /// plumbing — RN previews open in a real browser, so the user reads
 /// logs via DevTools rather than the OutputPane.
 ///
-/// ALSO renders the error into the #__fishbones_error overlay (created on
+/// ALSO renders the error into the #__libre_error overlay (created on
 /// demand) so the learner sees WebKit's otherwise-bare stack with an
 /// actual name + message attached. Without this, async errors (a
 /// useEffect callback throwing, a Promise rejecting) produce only a
 /// stack frame like "anonymous@ module code@http://.../:84:26" with
 /// no indication of what went wrong.
 const CONSOLE_SHIM = `
-function __fishbonesShowError(err) {
+function __libreShowError(err) {
   var name = err && err.name ? err.name : "Error";
   var msg = err && err.message ? err.message : (typeof err === "string" ? err : String(err));
   var stack = err && err.stack ? err.stack : "(no stack)";
-  var pre = document.getElementById("__fishbones_error");
+  var pre = document.getElementById("__libre_error");
   if (!pre) {
     pre = document.createElement("pre");
-    pre.id = "__fishbones_error";
+    pre.id = "__libre_error";
     document.body.appendChild(pre);
   }
   pre.textContent = name + ": " + msg + "\\n\\n" + stack;
@@ -473,11 +473,11 @@ function __fishbonesShowError(err) {
 window.addEventListener("error", (e) => {
   var err = e.error || new Error(e.message || "Script error");
   console.error("[preview error]", e.message, "(" + (e.filename || "?") + ":" + (e.lineno || "?") + ")", err);
-  __fishbonesShowError(err);
+  __libreShowError(err);
 });
 window.addEventListener("unhandledrejection", (e) => {
   var err = e.reason instanceof Error ? e.reason : new Error(e.reason && e.reason.message ? e.reason.message : String(e.reason));
   console.error("[preview rejection]", err);
-  __fishbonesShowError(err);
+  __libreShowError(err);
 });
 `.trim();

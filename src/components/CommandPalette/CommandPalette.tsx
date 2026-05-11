@@ -163,7 +163,7 @@ export default function CommandPalette({
       out.push({
         id: "action:ask-ai",
         kind: "action",
-        label: "Ask Fishbones",
+        label: "Ask Libre",
         hint: "Local AI assistant",
         icon: sparkles,
         onSelect: () => {
@@ -362,7 +362,7 @@ export default function CommandPalette({
 
   return (
     <div
-      className="fishbones-cmdpal-backdrop"
+      className="libre-cmdpal-backdrop"
       onMouseDown={(e) => {
         // Click outside the panel closes; click inside (composer /
         // results) shouldn't.
@@ -370,18 +370,18 @@ export default function CommandPalette({
       }}
     >
       <div
-        className="fishbones-cmdpal"
+        className="libre-cmdpal"
         role="dialog"
         aria-label="Command palette"
       >
-        <div className="fishbones-cmdpal-search">
-          <span className="fishbones-cmdpal-search-icon" aria-hidden>
+        <div className="libre-cmdpal-search">
+          <span className="libre-cmdpal-search-icon" aria-hidden>
             <Icon icon={searchIcon} size="sm" color="currentColor" />
           </span>
           <input
             ref={inputRef}
             type="text"
-            className="fishbones-cmdpal-input"
+            className="libre-cmdpal-input"
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
@@ -392,21 +392,21 @@ export default function CommandPalette({
             spellCheck={false}
             autoComplete="off"
           />
-          <span className="fishbones-cmdpal-kbd" aria-hidden>
+          <span className="libre-cmdpal-kbd" aria-hidden>
             <Icon icon={commandIcon} size="xs" color="currentColor" /> K
           </span>
         </div>
 
-        <div className="fishbones-cmdpal-results" ref={listRef}>
+        <div className="libre-cmdpal-results" ref={listRef}>
           {flatRows.length === 0 && (
-            <div className="fishbones-cmdpal-empty">
+            <div className="libre-cmdpal-empty">
               No matches for <strong>"{query}"</strong>. Try a course,
               lesson title, or "open settings".
             </div>
           )}
           {sections.map((section) => (
-            <div key={section.heading} className="fishbones-cmdpal-section">
-              <div className="fishbones-cmdpal-section-heading">
+            <div key={section.heading} className="libre-cmdpal-section">
+              <div className="libre-cmdpal-section-heading">
                 {section.heading}
               </div>
               {section.rows.map((row) => {
@@ -417,22 +417,22 @@ export default function CommandPalette({
                   <button
                     key={row.id}
                     type="button"
-                    className={`fishbones-cmdpal-row ${
+                    className={`libre-cmdpal-row ${
                       isActive ? "is-active" : ""
                     }`}
                     data-cmdpal-idx={localIdx}
                     onMouseEnter={() => setActiveIdx(localIdx)}
                     onClick={row.onSelect}
                   >
-                    <span className="fishbones-cmdpal-row-icon" aria-hidden>
+                    <span className="libre-cmdpal-row-icon" aria-hidden>
                       <Icon icon={row.icon} size="sm" color="currentColor" />
                     </span>
-                    <span className="fishbones-cmdpal-row-body">
-                      <span className="fishbones-cmdpal-row-label">
+                    <span className="libre-cmdpal-row-body">
+                      <span className="libre-cmdpal-row-label">
                         {row.label}
                       </span>
                       {row.hint && (
-                        <span className="fishbones-cmdpal-row-hint">
+                        <span className="libre-cmdpal-row-hint">
                           {row.hint}
                         </span>
                       )}
@@ -444,10 +444,10 @@ export default function CommandPalette({
           ))}
         </div>
 
-        <div className="fishbones-cmdpal-footer">
-          <span className="fishbones-cmdpal-foot-key">↑↓</span> navigate
-          <span className="fishbones-cmdpal-foot-key">↵</span> select
-          <span className="fishbones-cmdpal-foot-key">Esc</span> close
+        <div className="libre-cmdpal-footer">
+          <span className="libre-cmdpal-foot-key">↑↓</span> navigate
+          <span className="libre-cmdpal-foot-key">↵</span> select
+          <span className="libre-cmdpal-foot-key">Esc</span> close
         </div>
       </div>
     </div>

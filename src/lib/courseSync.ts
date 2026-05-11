@@ -110,7 +110,7 @@ function canonicalJson(value: unknown): string {
 /// Resolve the URL the running app should fetch a bundled course
 /// from. Vite serves `public/` at `import.meta.env.BASE_URL`, which
 /// differs between desktop (`/`) and the deployed web build
-/// (`/fishbones/learn/`). The trailing-slash handling matches
+/// (`/libre/learn/`). The trailing-slash handling matches
 /// `webSeedCourses.ts`'s `starterUrl()` helper.
 export function bundledCourseUrl(courseId: string): string {
   const base = (import.meta.env.BASE_URL ?? "/").replace(/\/?$/, "/");
@@ -122,14 +122,14 @@ export function bundledCourseUrl(courseId: string): string {
 /// web, etc.) — callers treat null as "no bundled version, nothing
 /// to update against".
 ///
-/// Desktop: reads the .fishbones archive shipped under
+/// Desktop: reads the .libre archive shipped under
 /// `src-tauri/resources/bundled-packs/` via the Rust
 /// `read_bundled_course` command. This is the SAME source the
 /// desktop seed extracts from on first launch — keeping update
 /// detection on the same source of truth means "freshly seeded"
 /// can never come up as "update available". The earlier desktop
 /// path here read from `public/starter-courses/<id>.json` (the web
-/// extractor's output), which drifts whenever the .fishbones
+/// extractor's output), which drifts whenever the .libre
 /// changes without a manual `npm run starter:web` re-extract,
 /// triggering perpetual update badges.
 ///
@@ -414,7 +414,7 @@ export async function applyFixesToCourse(
 /// (Dev only) Promote the installed course back into the bundled
 /// `public/starter-courses/<id>.json` so the next install picks up
 /// the fixes. Calls a Tauri command that walks up from the binary
-/// looking for the Fishbones repo root + writes there. Returns
+/// looking for the Libre repo root + writes there. Returns
 /// the absolute path written, or throws when:
 ///   * the running build is web (no Tauri to invoke), or
 ///   * the binary is a release build (the Rust command refuses), or

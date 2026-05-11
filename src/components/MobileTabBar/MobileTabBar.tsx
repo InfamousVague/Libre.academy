@@ -65,11 +65,11 @@ export default function MobileTabBar({
           its z-index sits below the pill's `z-index: 100` — the pill
           stays opaque at its own level, the band only blurs the
           space behind. aria-hidden because it's pure visual chrome. */}
-      <div className="fishbones-mtab-blur" aria-hidden />
-      <nav className="fishbones-mtab" aria-label="Primary navigation">
+      <div className="libre-mtab-blur" aria-hidden />
+      <nav className="libre-mtab" aria-label="Primary navigation">
         <button
           type="button"
-          className={`fishbones-mtab__btn${active === "library" ? " fishbones-mtab__btn--active" : ""}`}
+          className={`libre-mtab__btn${active === "library" ? " libre-mtab__btn--active" : ""}`}
           onClick={onLibrary}
         >
           <Icon icon={library} size="lg" />
@@ -78,7 +78,7 @@ export default function MobileTabBar({
         {onPlayground && (
           <button
             type="button"
-            className={`fishbones-mtab__btn${active === "playground" ? " fishbones-mtab__btn--active" : ""}`}
+            className={`libre-mtab__btn${active === "playground" ? " libre-mtab__btn--active" : ""}`}
             onClick={onPlayground}
           >
             <Icon icon={squareTerminal} size="lg" />
@@ -88,7 +88,7 @@ export default function MobileTabBar({
         {onPractice && (
           <button
             type="button"
-            className={`fishbones-mtab__btn${active === "practice" ? " fishbones-mtab__btn--active" : ""}`}
+            className={`libre-mtab__btn${active === "practice" ? " libre-mtab__btn--active" : ""}`}
             onClick={onPractice}
           >
             <Icon icon={dumbbell} size="lg" />
@@ -97,7 +97,7 @@ export default function MobileTabBar({
         )}
         <button
           type="button"
-          className={`fishbones-mtab__btn${active === "profile" ? " fishbones-mtab__btn--active" : ""}`}
+          className={`libre-mtab__btn${active === "profile" ? " libre-mtab__btn--active" : ""}`}
           onClick={onProfile}
         >
           <Icon icon={user} size="lg" />

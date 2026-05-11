@@ -101,30 +101,30 @@ export default function MissingToolchainBanner({
 
   return (
     <div
-      className="fishbones-missing-tc"
+      className="libre-missing-tc"
       role="status"
       aria-live="polite"
     >
-      <div className="fishbones-missing-tc-icon" aria-hidden>
+      <div className="libre-missing-tc-icon" aria-hidden>
         <Icon icon={wrench} size="sm" color="currentColor" weight="regular" />
       </div>
-      <div className="fishbones-missing-tc-body">
-        <div className="fishbones-missing-tc-title">
+      <div className="libre-missing-tc-body">
+        <div className="libre-missing-tc-title">
           {hint.title ?? `${labelLang} isn't installed`}
         </div>
-        <div className="fishbones-missing-tc-desc">{hint.description}</div>
+        <div className="libre-missing-tc-desc">{hint.description}</div>
 
-        <div className="fishbones-missing-tc-cmd" role="note" aria-label="Install command">
+        <div className="libre-missing-tc-cmd" role="note" aria-label="Install command">
           <code>{hint.command}</code>
         </div>
 
         {hint.requires_password && !installing && (
-          <div className="fishbones-missing-tc-pw-row">
-            <label className="fishbones-missing-tc-pw-label">
+          <div className="libre-missing-tc-pw-row">
+            <label className="libre-missing-tc-pw-label">
               Admin password
               <input
                 type="password"
-                className="fishbones-missing-tc-pw-input"
+                className="libre-missing-tc-pw-input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
@@ -132,7 +132,7 @@ export default function MissingToolchainBanner({
                 disabled={installing}
               />
             </label>
-            <div className="fishbones-missing-tc-pw-hint">
+            <div className="libre-missing-tc-pw-hint">
               Stays on your machine — piped directly into <code>sudo</code> and
               never logged or persisted.
             </div>
@@ -140,17 +140,17 @@ export default function MissingToolchainBanner({
         )}
 
         {error && (
-          <pre className="fishbones-missing-tc-error">{error}</pre>
+          <pre className="libre-missing-tc-error">{error}</pre>
         )}
         {output && !error && (
-          <pre className="fishbones-missing-tc-output">{output}</pre>
+          <pre className="libre-missing-tc-output">{output}</pre>
         )}
       </div>
 
-      <div className="fishbones-missing-tc-actions">
+      <div className="libre-missing-tc-actions">
         <button
           type="button"
-          className="fishbones-missing-tc-btn fishbones-missing-tc-btn--primary"
+          className="libre-missing-tc-btn libre-missing-tc-btn--primary"
           onClick={handleInstall}
           disabled={
             installing || (hint.requires_password && !password.trim())
@@ -162,7 +162,7 @@ export default function MissingToolchainBanner({
         {onDismiss && !installing && (
           <button
             type="button"
-            className="fishbones-missing-tc-btn"
+            className="libre-missing-tc-btn"
             onClick={onDismiss}
           >
             Skip for now

@@ -17,7 +17,7 @@ export default function PhoneToggleButton({ onShow }: PhoneToggleButtonProps) {
   return (
     <button
       type="button"
-      className="fishbones-phone-toggle-button"
+      className="libre-phone-toggle-button"
       onClick={onShow}
       aria-label="Show phone simulator"
       title="Show phone simulator"

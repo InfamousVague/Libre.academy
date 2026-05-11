@@ -46,8 +46,8 @@ use tauri::AppHandle;
 
 /// Bundle id of the App Group both the main app + widget extension +
 /// watch app are members of. Must match the entitlements files
-/// (`fishbones_iOS.entitlements`, `fishbones_widgets.entitlements`,
-/// `fishbones_watch.entitlements`) AND the App Group registered on
+/// (`libre_iOS.entitlements`, `libre_widgets.entitlements`,
+/// `libre_watch.entitlements`) AND the App Group registered on
 /// the Apple Developer portal under the same identifier.
 #[cfg(target_os = "ios")]
 const APP_GROUP_ID: &str = "group.com.mattssoftware.kata.shared";
@@ -130,7 +130,7 @@ pub fn publish_widget_snapshot(
 
     // Mirror the snapshot to the paired watch via WatchConnectivity.
     // Implemented in Swift (see WatchConnectivityBridge.swift) and
-    // exposed as a C entry point named `fishbones_watch_push_snapshot`.
+    // exposed as a C entry point named `libre_watch_push_snapshot`.
     // Calling it is safe even with no watch paired — the Swift side
     // gates on `isPaired && isWatchAppInstalled`.
     //
@@ -148,7 +148,7 @@ pub fn publish_widget_snapshot(
 }
 
 /// Push the JSON snapshot to the paired Apple Watch. The Swift side
-/// (`fishbones_watch_push_snapshot`) handles the WatchConnectivity
+/// (`libre_watch_push_snapshot`) handles the WatchConnectivity
 /// session activation + transfer queue.
 ///
 /// We resolve the Swift symbol at RUNTIME via `dlsym` rather than
@@ -157,7 +157,7 @@ pub fn publish_widget_snapshot(
 /// `cdylib`/`staticlib` step, before the iOS app's Swift sources
 /// have been compiled. A link-time `extern "C"` reference would
 /// fail with "Undefined symbols for architecture arm64:
-/// _fishbones_watch_push_snapshot" because the Swift symbol isn't
+/// _libre_watch_push_snapshot" because the Swift symbol isn't
 /// in any object file Cargo can see at that point.
 ///
 /// `dlsym(RTLD_DEFAULT, ...)` looks up the symbol in the running
@@ -179,10 +179,10 @@ fn push_to_watch(json: &str) {
     const RTLD_DEFAULT: *mut c_void = -2isize as *mut c_void;
 
     /// Matches the Swift `@_cdecl` declaration:
-    /// `func fishbones_watch_push_snapshot(_ ptr: UnsafePointer<CChar>?, _ len: Int)`
+    /// `func libre_watch_push_snapshot(_ ptr: UnsafePointer<CChar>?, _ len: Int)`
     type PushFn = unsafe extern "C" fn(ptr: *const c_char, len: usize);
 
-    let symbol_name = b"fishbones_watch_push_snapshot\0";
+    let symbol_name = b"libre_watch_push_snapshot\0";
     // SAFETY: we pass a valid null-terminated C string + the
     // RTLD_DEFAULT pseudo-handle; dlsym returns either a valid
     // function pointer or null. We check before calling.

@@ -5,7 +5,7 @@
    real search surface, and the placeholder + ⌘K hint are just a
    discoverability cue. */
 
-.fishbones__tbsearch {
+.libre__tbsearch {
   position: relative;
   flex-shrink: 0;
   display: inline-flex;
@@ -14,7 +14,7 @@
 
 /* The whole bar is a real <button> styled to look like an input.
    Click anywhere on it to open the command palette. */
-.fishbones__tbsearch-input-row {
+.libre__tbsearch-input-row {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -35,18 +35,18 @@
   transition: background var(--fb-motion-snappy), border-color var(--fb-motion-snappy);
 }
 
-.fishbones__tbsearch-input-row:hover,
-.fishbones__tbsearch-input-row:focus-visible {
+.libre__tbsearch-input-row:hover,
+.libre__tbsearch-input-row:focus-visible {
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.18);
 }
 
-.fishbones__tbsearch-input-row:focus-visible {
+.libre__tbsearch-input-row:focus-visible {
   outline: 2px solid var(--color-text-primary);
   outline-offset: 2px;
 }
 
-.fishbones__tbsearch-icon {
+.libre__tbsearch-icon {
   flex-shrink: 0;
   color: var(--color-text-tertiary);
   opacity: 0.85;
@@ -56,7 +56,7 @@
    really a static span. Doesn't accept caret because the bar is a
    button: clicking it opens the palette where typing actually
    happens. Ellipsizes when the bar is too narrow to fit it. */
-.fishbones__tbsearch-placeholder {
+.libre__tbsearch-placeholder {
   flex: 1 1 auto;
   min-width: 0;
   font-size: 12px;
@@ -69,7 +69,7 @@
 /* Trailing ⌘K hint — purely decorative now (the parent button
    handles the click). Kept as a span (not a nested button) so we
    don't get nested interactive elements. */
-.fishbones__tbsearch-kbd {
+.libre__tbsearch-kbd {
   flex-shrink: 0;
   padding: 0 6px;
   height: 18px;
@@ -88,7 +88,7 @@
   transition: color var(--fb-motion-quick), background var(--fb-motion-quick), border-color var(--fb-motion-quick);
 }
 
-.fishbones__tbsearch-input-row:hover .fishbones__tbsearch-kbd {
+.libre__tbsearch-input-row:hover .libre__tbsearch-kbd {
   color: var(--color-text-primary);
   background: rgba(255, 255, 255, 0.10);
   border-color: rgba(255, 255, 255, 0.20);

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 /// the last time each course was opened / focused. Bumped whenever the
 /// learner selects a lesson in that course; consumed by the sidebar
 /// carousel to sort "recent first".
-const STORAGE_KEY = "fishbones:recent-courses:v1";
+const STORAGE_KEY = "libre:recent-courses:v1";
 
 type RecentsMap = Record<string, number>;
 

@@ -4,7 +4,7 @@ import { useCourseCover } from "../../hooks/useCourseCover";
 import { carouselGlyph, courseProgress } from "./labels";
 
 /// FLIP animation constants. Must stay in sync with
-/// `.fishbones__carousel-item` width (74) and `.fishbones__carousel-scroll`
+/// `.libre__carousel-item` width (74) and `.libre__carousel-scroll`
 /// gap (10) in Sidebar.css. We hardcode rather than measuring at runtime
 /// because the values are stable and per-render DOM reads are wasted work.
 const CAROUSEL_CARD_WIDTH_PX = 74;
@@ -132,8 +132,8 @@ export default function CourseCarousel({
   if (sorted.length < 2) return null;
 
   return (
-    <div className="fishbones__carousel" aria-label="Recent courses">
-      <div className="fishbones__carousel-scroll" ref={scrollRef}>
+    <div className="libre__carousel" aria-label="Recent courses">
+      <div className="libre__carousel-scroll" ref={scrollRef}>
         {sorted.map((c) => (
           <CarouselItem
             key={c.id}
@@ -184,8 +184,8 @@ function CarouselItem({
     <button
       type="button"
       data-course-id={course.id}
-      className={`fishbones__carousel-item fishbones__carousel-item--lang-${course.language} ${
-        hasCover ? "" : "fishbones__carousel-item--no-cover"
+      className={`libre__carousel-item libre__carousel-item--lang-${course.language} ${
+        hasCover ? "" : "libre__carousel-item--no-cover"
       }`}
       onClick={onClick}
       onContextMenu={onContextMenu}
@@ -194,14 +194,14 @@ function CarouselItem({
     >
       {hasCover ? (
         <img
-          className="fishbones__carousel-cover"
+          className="libre__carousel-cover"
           src={coverUrl}
           alt=""
           loading="lazy"
           draggable={false}
         />
       ) : (
-        <span className="fishbones__carousel-glyph" aria-hidden>
+        <span className="libre__carousel-glyph" aria-hidden>
           {carouselGlyph(course.language)}
         </span>
       )}
@@ -212,11 +212,11 @@ function CarouselItem({
           via the language-tinted block itself. */}
       {hasCover && (
         <>
-          <span className="fishbones__carousel-shadow" aria-hidden />
-          <span className="fishbones__carousel-label">
-            <span className="fishbones__carousel-label-title">{course.title}</span>
+          <span className="libre__carousel-shadow" aria-hidden />
+          <span className="libre__carousel-label">
+            <span className="libre__carousel-label-title">{course.title}</span>
             {course.author && (
-              <span className="fishbones__carousel-label-author">
+              <span className="libre__carousel-label-author">
                 {course.author}
               </span>
             )}
@@ -228,9 +228,9 @@ function CarouselItem({
           row of status bars — uniform height keeps the cover row from
           jumping when the learner's first completion lands. */}
       {total > 0 && (
-        <span className="fishbones__carousel-progress" aria-hidden>
+        <span className="libre__carousel-progress" aria-hidden>
           <span
-            className="fishbones__carousel-progress-fill"
+            className="libre__carousel-progress-fill"
             style={{ width: `${Math.round(pct * 100)}%` }}
           />
         </span>

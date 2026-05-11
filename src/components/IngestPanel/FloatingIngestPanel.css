@@ -1,7 +1,7 @@
 /* Bottom-right floating panel. Non-modal — the learner can keep using the
    app while the ingest runs. Collapses to a small pill via the minimize
    button. */
-.fishbones-floating-panel {
+.libre-floating-panel {
   position: fixed;
   bottom: 16px;
   right: 16px;
@@ -14,25 +14,25 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: fishbones-floating-enter 0.22s ease-out;
+  animation: libre-floating-enter 0.22s ease-out;
 }
 
-@keyframes fishbones-floating-enter {
+@keyframes libre-floating-enter {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-.fishbones-floating-panel--success {
+.libre-floating-panel--success {
   border-color: rgba(124, 217, 124, 0.35);
 }
-.fishbones-floating-panel--error {
+.libre-floating-panel--error {
   border-color: rgba(239, 111, 111, 0.4);
 }
-.fishbones-floating-panel--aborted {
+.libre-floating-panel--aborted {
   border-color: rgba(255, 255, 255, 0.15);
 }
 
-.fishbones-floating-header {
+.libre-floating-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -41,7 +41,7 @@
   gap: 8px;
 }
 
-.fishbones-floating-titleblock {
+.libre-floating-titleblock {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -49,28 +49,28 @@
   flex: 1;
 }
 
-.fishbones-floating-status-dot {
+.libre-floating-status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--color-text-tertiary);
   flex-shrink: 0;
 }
-.fishbones-floating-status-dot--running {
+.libre-floating-status-dot--running {
   background: var(--color-text-primary, #fff);
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
-  animation: fishbones-floating-pulse 1.4s ease-in-out infinite;
+  animation: libre-floating-pulse 1.4s ease-in-out infinite;
 }
-.fishbones-floating-status-dot--success { background: #7cd97c; }
-.fishbones-floating-status-dot--error   { background: #ef6f6f; }
-.fishbones-floating-status-dot--aborted { background: #b4b4be; }
+.libre-floating-status-dot--success { background: #7cd97c; }
+.libre-floating-status-dot--error   { background: #ef6f6f; }
+.libre-floating-status-dot--aborted { background: #b4b4be; }
 
-@keyframes fishbones-floating-pulse {
+@keyframes libre-floating-pulse {
   0%, 100% { opacity: 1; }
   50%      { opacity: 0.4; }
 }
 
-.fishbones-floating-title {
+.libre-floating-title {
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text-primary);
@@ -81,7 +81,7 @@
   flex: 1;
 }
 
-.fishbones-floating-substatus {
+.libre-floating-substatus {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -93,7 +93,7 @@
   flex-shrink: 0;
 }
 
-.fishbones-floating-header-actions {
+.libre-floating-header-actions {
   display: flex;
   gap: 2px;
 }
@@ -102,7 +102,7 @@
    run is a multi-book queue (startBulk). Shows "Queue 3/5" with small
    pass/fail tallies beside it so the learner can see overnight progress
    at a glance. */
-.fishbones-floating-queue {
+.libre-floating-queue {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -117,19 +117,19 @@
   color: var(--color-text-secondary);
 }
 
-.fishbones-floating-queue-label {
+.libre-floating-queue-label {
   text-transform: uppercase;
   font-size: 9px;
   letter-spacing: 0.5px;
   color: var(--color-text-tertiary);
 }
 
-.fishbones-floating-queue-counter {
+.libre-floating-queue-counter {
   color: var(--color-text-primary);
   font-variant-numeric: tabular-nums;
 }
 
-.fishbones-floating-queue-stats {
+.libre-floating-queue-stats {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -138,21 +138,21 @@
   font-variant-numeric: tabular-nums;
 }
 
-.fishbones-floating-queue-ok {
+.libre-floating-queue-ok {
   display: inline-flex;
   align-items: center;
   gap: 2px;
   color: #7cd97c;
 }
 
-.fishbones-floating-queue-fail {
+.libre-floating-queue-fail {
   display: inline-flex;
   align-items: center;
   gap: 2px;
   color: #ef6f6f;
 }
 
-.fishbones-floating-iconbtn {
+.libre-floating-iconbtn {
   width: 24px;
   height: 24px;
   display: grid;
@@ -166,7 +166,7 @@
   border-radius: 5px;
 }
 
-.fishbones-floating-iconbtn:hover {
+.libre-floating-iconbtn:hover {
   color: var(--color-text-primary);
   background: var(--color-bg-tertiary);
 }
@@ -175,33 +175,33 @@
    shared component that ships with its own margins; inside the floating
    panel we need breathing room on the sides so it doesn't butt against
    the panel edge. Matches the `padding-x` of the stage/controls rows. */
-.fishbones-floating-panel .fishbones-stats {
+.libre-floating-panel .libre-stats {
   margin: 8px 14px 4px;
 }
 
-.fishbones-floating-stage {
+.libre-floating-stage {
   display: flex;
   align-items: flex-start;
   gap: 10px;
   padding: 10px 14px 6px;
 }
 
-.fishbones-floating-spinner {
+.libre-floating-spinner {
   width: 14px;
   height: 14px;
   border: 1.5px solid rgba(255, 255, 255, 0.15);
   border-top-color: #ffffff;
   border-radius: 50%;
-  animation: fishbones-floating-spin 0.9s linear infinite;
+  animation: libre-floating-spin 0.9s linear infinite;
   flex-shrink: 0;
   margin-top: 2px;
 }
 
-@keyframes fishbones-floating-spin {
+@keyframes libre-floating-spin {
   to { transform: rotate(360deg); }
 }
 
-.fishbones-floating-stagebody {
+.libre-floating-stagebody {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -209,13 +209,13 @@
   flex: 1;
 }
 
-.fishbones-floating-stagetext {
+.libre-floating-stagetext {
   font-size: 12.5px;
   font-weight: 500;
   color: var(--color-text-primary);
 }
 
-.fishbones-floating-stagedetail {
+.libre-floating-stagedetail {
   font-size: 11px;
   color: var(--color-text-tertiary);
   font-family: "SF Mono", ui-monospace, Menlo, monospace;
@@ -224,28 +224,28 @@
   text-overflow: ellipsis;
 }
 
-.fishbones-floating-waiting {
+.libre-floating-waiting {
   margin-top: 2px;
   font-size: 10.5px;
   color: var(--color-text-tertiary);
   font-style: italic;
 }
 
-.fishbones-floating-error {
+.libre-floating-error {
   padding: 10px 14px;
   background: rgba(239, 111, 111, 0.06);
   border-top: 1px solid rgba(239, 111, 111, 0.2);
   border-bottom: 1px solid rgba(239, 111, 111, 0.2);
 }
 
-.fishbones-floating-error-title {
+.libre-floating-error-title {
   font-size: 12px;
   font-weight: 600;
   color: #f1b5b5;
   margin-bottom: 4px;
 }
 
-.fishbones-floating-error-body {
+.libre-floating-error-body {
   font-size: 10.5px;
   line-height: 1.4;
   font-family: "SF Mono", ui-monospace, Menlo, monospace;
@@ -257,13 +257,13 @@
   word-break: break-word;
 }
 
-.fishbones-floating-error-hint {
+.libre-floating-error-hint {
   margin: 0;
   font-size: 11px;
   color: var(--color-text-secondary);
 }
 
-.fishbones-floating-controls {
+.libre-floating-controls {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -271,7 +271,7 @@
   gap: 10px;
 }
 
-.fishbones-floating-verbose {
+.libre-floating-verbose {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -280,12 +280,12 @@
   cursor: pointer;
 }
 
-.fishbones-floating-actions {
+.libre-floating-actions {
   display: flex;
   gap: 6px;
 }
 
-.fishbones-floating-btn {
+.libre-floating-btn {
   padding: 5px 10px;
   background: transparent;
   border: 1px solid var(--color-border-default);
@@ -295,23 +295,23 @@
   font-size: 11.5px;
   cursor: pointer;
 }
-.fishbones-floating-btn:hover {
+.libre-floating-btn:hover {
   color: var(--color-text-primary);
   background: var(--color-bg-tertiary);
 }
-.fishbones-floating-btn--primary {
+.libre-floating-btn--primary {
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
   border-color: var(--color-text-primary);
   font-weight: 600;
 }
-.fishbones-floating-btn--primary:hover {
+.libre-floating-btn--primary:hover {
   opacity: 0.9;
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
 }
 
-.fishbones-floating-log {
+.libre-floating-log {
   max-height: 180px;
   overflow-y: auto;
   padding: 6px 14px 10px;
@@ -323,23 +323,23 @@
   color: var(--color-text-secondary);
 }
 
-.fishbones-floating-log-empty {
+.libre-floating-log-empty {
   color: var(--color-text-tertiary);
   font-style: italic;
 }
 
-.fishbones-floating-log-line {
+.libre-floating-log-line {
   display: grid;
   grid-template-columns: 60px auto auto 1fr;
   gap: 6px;
   padding: 1px 0;
 }
 
-.fishbones-floating-log-line--warn  { color: #d9a800; }
-.fishbones-floating-log-line--error { color: #ef6f6f; }
-.fishbones-floating-log-line--cache { color: #7cc1d9; }
+.libre-floating-log-line--warn  { color: #d9a800; }
+.libre-floating-log-line--error { color: #ef6f6f; }
+.libre-floating-log-line--cache { color: #7cc1d9; }
 
-.fishbones-floating-log-stage {
+.libre-floating-log-stage {
   color: var(--color-text-tertiary);
   text-transform: uppercase;
   font-size: 9px;
@@ -347,19 +347,19 @@
   padding-top: 1px;
 }
 
-.fishbones-floating-log-loc {
+.libre-floating-log-loc {
   color: var(--color-text-tertiary);
   font-size: 10px;
 }
 
-.fishbones-floating-log-msg {
+.libre-floating-log-msg {
   white-space: pre-wrap;
   word-break: break-word;
   min-width: 0;
 }
 
 /* Collapsed pill — tiny chip at the bottom-right. */
-.fishbones-floating-pill {
+.libre-floating-pill {
   position: fixed;
   bottom: 16px;
   right: 16px;
@@ -376,34 +376,34 @@
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  animation: fishbones-floating-enter 0.2s ease-out;
+  animation: libre-floating-enter 0.2s ease-out;
 }
 
-.fishbones-floating-pill:hover {
+.libre-floating-pill:hover {
   background: var(--color-bg-tertiary);
 }
 
-.fishbones-floating-pill-dot {
+.libre-floating-pill-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--color-text-primary);
-  animation: fishbones-floating-pulse 1.4s ease-in-out infinite;
+  animation: libre-floating-pulse 1.4s ease-in-out infinite;
 }
 
-.fishbones-floating-pill--success .fishbones-floating-pill-dot {
+.libre-floating-pill--success .libre-floating-pill-dot {
   background: #7cd97c;
   animation: none;
 }
-.fishbones-floating-pill--error .fishbones-floating-pill-dot {
+.libre-floating-pill--error .libre-floating-pill-dot {
   background: #ef6f6f;
   animation: none;
 }
-.fishbones-floating-pill--aborted .fishbones-floating-pill-dot {
+.libre-floating-pill--aborted .libre-floating-pill-dot {
   background: #b4b4be;
   animation: none;
 }
 
-.fishbones-floating-pill-text {
+.libre-floating-pill-text {
   font-variant-numeric: tabular-nums;
 }

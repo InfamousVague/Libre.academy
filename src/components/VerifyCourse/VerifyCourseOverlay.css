@@ -3,7 +3,7 @@
    exercise. Non-modal, so the workbench stays interactive while the
    verifier runs in the background. */
 
-.fishbones-verify-overlay {
+.libre-verify-overlay {
   position: fixed;
   bottom: 16px;
   right: 16px;
@@ -23,7 +23,7 @@
   overflow: hidden;
 }
 
-.fishbones-verify-header {
+.libre-verify-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -32,11 +32,11 @@
   border-bottom: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.06));
 }
 
-.fishbones-verify-title-block {
+.libre-verify-title-block {
   min-width: 0;
 }
 
-.fishbones-verify-title {
+.libre-verify-title {
   font-weight: 600;
   font-size: 14px;
   white-space: nowrap;
@@ -44,7 +44,7 @@
   text-overflow: ellipsis;
 }
 
-.fishbones-verify-subtitle {
+.libre-verify-subtitle {
   margin-top: 2px;
   color: var(--color-text-secondary, #a4a4ad);
   font-size: 12px;
@@ -53,7 +53,7 @@
   text-overflow: ellipsis;
 }
 
-.fishbones-verify-icon-btn {
+.libre-verify-icon-btn {
   background: transparent;
   border: 0;
   cursor: pointer;
@@ -65,19 +65,19 @@
   justify-content: center;
 }
 
-.fishbones-verify-icon-btn:hover {
+.libre-verify-icon-btn:hover {
   color: var(--color-text-primary, #f5f5f7);
   background: var(--color-bg-tertiary, #1f1f28);
 }
 
-.fishbones-verify-progress {
+.libre-verify-progress {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 10px 14px 6px;
 }
 
-.fishbones-verify-progress-bar {
+.libre-verify-progress-bar {
   flex: 1;
   height: 4px;
   background: var(--color-bg-tertiary, #1f1f28);
@@ -85,7 +85,7 @@
   overflow: hidden;
 }
 
-.fishbones-verify-progress-fill {
+.libre-verify-progress-fill {
   height: 100%;
   background: linear-gradient(
     90deg,
@@ -95,7 +95,7 @@
   transition: width 220ms ease-out;
 }
 
-.fishbones-verify-progress-text {
+.libre-verify-progress-text {
   color: var(--color-text-secondary, #a4a4ad);
   font-variant-numeric: tabular-nums;
   font-size: 12px;
@@ -103,13 +103,13 @@
   text-align: right;
 }
 
-.fishbones-verify-tally {
+.libre-verify-tally {
   display: flex;
   gap: 6px;
   padding: 6px 14px 10px;
 }
 
-.fishbones-verify-pill {
+.libre-verify-pill {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -121,27 +121,27 @@
   border: 1px solid transparent;
 }
 
-.fishbones-verify-pill--pass {
+.libre-verify-pill--pass {
   color: #5fd49d;
   border-color: rgba(95, 212, 157, 0.25);
 }
 
-.fishbones-verify-pill--fail {
+.libre-verify-pill--fail {
   color: #ef6f6f;
   border-color: rgba(239, 111, 111, 0.25);
 }
 
-.fishbones-verify-pill--skip {
+.libre-verify-pill--skip {
   color: var(--color-text-tertiary, #71717a);
   border-color: rgba(113, 113, 122, 0.25);
 }
 
-.fishbones-verify-pill .icon {
+.libre-verify-pill .icon {
   width: 12px;
   height: 12px;
 }
 
-.fishbones-verify-list {
+.libre-verify-list {
   overflow-y: auto;
   padding: 4px 6px 6px;
   flex: 1;
@@ -150,7 +150,7 @@
   gap: 2px;
 }
 
-.fishbones-verify-empty {
+.libre-verify-empty {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -159,26 +159,26 @@
   font-size: 12px;
 }
 
-.fishbones-verify-empty .icon {
+.libre-verify-empty .icon {
   width: 14px;
   height: 14px;
-  animation: fishbones-verify-spin 1s linear infinite;
+  animation: libre-verify-spin 1s linear infinite;
 }
 
-@keyframes fishbones-verify-spin {
+@keyframes libre-verify-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 
-.fishbones-verify-row {
+.libre-verify-row {
   border-radius: var(--fb-radius-sm);
 }
 
-.fishbones-verify-row--fail {
+.libre-verify-row--fail {
   background: rgba(239, 111, 111, 0.06);
 }
 
-.fishbones-verify-row-summary {
+.libre-verify-row-summary {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -193,15 +193,15 @@
   font-size: 12px;
 }
 
-.fishbones-verify-row-summary[aria-disabled="true"] {
+.libre-verify-row-summary[aria-disabled="true"] {
   cursor: default;
 }
 
-.fishbones-verify-row-summary:hover:not([aria-disabled="true"]) {
+.libre-verify-row-summary:hover:not([aria-disabled="true"]) {
   background: var(--color-bg-tertiary, #1f1f28);
 }
 
-.fishbones-verify-row-icon {
+.libre-verify-row-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -210,7 +210,7 @@
   flex-shrink: 0;
 }
 
-.fishbones-verify-row-kind {
+.libre-verify-row-kind {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -220,21 +220,21 @@
   color: var(--color-text-tertiary, #71717a);
 }
 
-.fishbones-verify-row-kind .icon {
+.libre-verify-row-kind .icon {
   width: 12px;
   height: 12px;
 }
 
-.fishbones-verify-row--pass .fishbones-verify-row-icon { color: #5fd49d; }
-.fishbones-verify-row--fail .fishbones-verify-row-icon { color: #ef6f6f; }
-.fishbones-verify-row--skip .fishbones-verify-row-icon { color: var(--color-text-tertiary, #71717a); }
+.libre-verify-row--pass .libre-verify-row-icon { color: #5fd49d; }
+.libre-verify-row--fail .libre-verify-row-icon { color: #ef6f6f; }
+.libre-verify-row--skip .libre-verify-row-icon { color: var(--color-text-tertiary, #71717a); }
 
-.fishbones-verify-row-icon .icon {
+.libre-verify-row-icon .icon {
   width: 14px;
   height: 14px;
 }
 
-.fishbones-verify-row-title {
+.libre-verify-row-title {
   flex: 1;
   min-width: 0;
   white-space: nowrap;
@@ -242,27 +242,27 @@
   text-overflow: ellipsis;
 }
 
-.fishbones-verify-row-meta {
+.libre-verify-row-meta {
   color: var(--color-text-tertiary, #71717a);
   font-size: 11px;
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
 
-.fishbones-verify-row-detail {
+.libre-verify-row-detail {
   padding: 4px 8px 10px 32px;
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.fishbones-verify-row-error {
+.libre-verify-row-error {
   color: #ef6f6f;
   font-size: 12px;
   line-height: 1.4;
 }
 
-.fishbones-verify-row-log {
+.libre-verify-row-log {
   margin: 0;
   padding: 6px 8px;
   background: var(--color-bg-primary, #0b0b10);
@@ -275,7 +275,7 @@
   overflow: auto;
 }
 
-.fishbones-verify-footer {
+.libre-verify-footer {
   padding: 10px 14px;
   border-top: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.06));
   display: flex;
@@ -284,11 +284,11 @@
   flex-wrap: wrap;
 }
 
-.fishbones-verify-footer-spacer {
+.libre-verify-footer-spacer {
   flex: 1;
 }
 
-.fishbones-verify-btn {
+.libre-verify-btn {
   background: var(--color-bg-tertiary, #1f1f28);
   color: var(--color-text-primary, #f5f5f7);
   border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.08));
@@ -301,16 +301,16 @@
   gap: 6px;
 }
 
-.fishbones-verify-btn .icon {
+.libre-verify-btn .icon {
   width: 12px;
   height: 12px;
 }
 
-.fishbones-verify-btn:hover {
+.libre-verify-btn:hover {
   background: var(--color-bg-secondary, #15151c);
 }
 
-.fishbones-verify-btn--primary {
+.libre-verify-btn--primary {
   /* Match the rest of the app's primary-action buttons (Run /
      Next / Submit / Import / AddCourse): bone-white background
      with bg-primary text. Pre-fix this used --color-accent which
@@ -322,7 +322,7 @@
   font-weight: 500;
 }
 
-.fishbones-verify-btn--primary:hover {
+.libre-verify-btn--primary:hover {
   filter: brightness(0.92);
   background: var(--color-text-primary, #f5f5f7);
 }

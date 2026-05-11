@@ -6,12 +6,12 @@
  * it's the primary action on the surfaces it shows up on (welcome
  * screen, install banner). */
 
-.fishbones-download {
+.libre-download {
   position: relative;
   display: inline-flex;
 }
 
-.fishbones-download-split {
+.libre-download-split {
   display: inline-flex;
   border-radius: var(--fb-radius-md);
   overflow: hidden;
@@ -23,8 +23,8 @@
   font-family: inherit;
 }
 
-.fishbones-download-main,
-.fishbones-download-caret {
+.libre-download-main,
+.libre-download-caret {
   background: transparent;
   color: inherit;
   border: 0;
@@ -41,12 +41,12 @@
   transition: filter 120ms ease;
 }
 
-.fishbones-download-main:hover,
-.fishbones-download-caret:hover {
+.libre-download-main:hover,
+.libre-download-caret:hover {
   filter: brightness(0.9);
 }
 
-.fishbones-download-caret {
+.libre-download-caret {
   padding: 8px 10px;
   border-left: 1px solid rgba(0, 0, 0, 0.12);
 }
@@ -55,7 +55,7 @@
  * the two cluster styles match. Offset to the RIGHT-edge of the
  * trigger so the menu doesn't overflow when this sits at the right
  * of a hero / banner. */
-.fishbones-download-menu {
+.libre-download-menu {
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
@@ -72,7 +72,7 @@
   padding: 4px;
 }
 
-.fishbones-download-item {
+.libre-download-item {
   display: grid;
   grid-template-columns: 16px 1fr auto;
   align-items: center;
@@ -88,11 +88,11 @@
   transition: background 100ms ease;
 }
 
-.fishbones-download-item:hover {
+.libre-download-item:hover {
   background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.06));
 }
 
-.fishbones-download-item-body {
+.libre-download-item-body {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -100,19 +100,19 @@
   text-align: left;
 }
 
-.fishbones-download-item-title {
+.libre-download-item-title {
   font-size: 13px;
   font-weight: 600;
   letter-spacing: -0.005em;
   color: var(--color-text-primary);
 }
 
-.fishbones-download-item-hint {
+.libre-download-item-hint {
   font-size: 11px;
   color: var(--color-text-tertiary);
 }
 
-.fishbones-download-item-badge {
+.libre-download-item-badge {
   font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
@@ -126,14 +126,14 @@
 
 /* Larger size variant for the welcome screen — bigger touch
  * target + bigger label so it carries the page like a hero CTA
- * should. The host applies `fishbones-download--hero` next to the
+ * should. The host applies `libre-download--hero` next to the
  * default class. */
-.fishbones-download--hero .fishbones-download-main,
-.fishbones-download--hero .fishbones-download-caret {
+.libre-download--hero .libre-download-main,
+.libre-download--hero .libre-download-caret {
   font-size: 14px;
   padding: 10px 18px;
 }
 
-.fishbones-download--hero .fishbones-download-caret {
+.libre-download--hero .libre-download-caret {
   padding: 10px 12px;
 }

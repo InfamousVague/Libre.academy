@@ -47,10 +47,10 @@ export default function AiAssistant({ lesson, course, celebrateAt }: Props) {
       const target = e.target as Element | null;
       if (!target) return;
       // Click landed inside the AI panel — keep open.
-      if (target.closest(".fishbones-ai-panel")) return;
+      if (target.closest(".libre-ai-panel")) return;
       // Click landed on the orb — its onClick will toggle. Don't
       // race it from here; the toggle handles the close itself.
-      if (target.closest(".fishbones-ai-character")) return;
+      if (target.closest(".libre-ai-character")) return;
       setOpen(false);
     };
     document.addEventListener("mousedown", onPointerDown);
@@ -68,14 +68,14 @@ export default function AiAssistant({ lesson, course, celebrateAt }: Props) {
   const [enabled, setEnabled] = useState<boolean>(() => readAiEnabled());
   useEffect(() => {
     const update = () => setEnabled(readAiEnabled());
-    window.addEventListener("fishbones:ai-host-changed", update);
+    window.addEventListener("libre:ai-host-changed", update);
     // Cross-tab toggles arrive as `storage` events.
     const onStorage = (ev: StorageEvent) => {
-      if (ev.key === "fishbones:ai-assistant-enabled") update();
+      if (ev.key === "libre:ai-assistant-enabled") update();
     };
     window.addEventListener("storage", onStorage);
     return () => {
-      window.removeEventListener("fishbones:ai-host-changed", update);
+      window.removeEventListener("libre:ai-host-changed", update);
       window.removeEventListener("storage", onStorage);
     };
   }, []);
@@ -117,10 +117,10 @@ export default function AiAssistant({ lesson, course, celebrateAt }: Props) {
   //                   → open + auto-send a context-aware prompt
   //   "generate-code" → send WITHOUT auto-opening; when the stream
   //                     finishes we extract the fenced block and fire
-  //                     `fishbones:apply-code` so the playground can
+  //                     `libre:apply-code` so the playground can
   //                     drop the code straight into the editor without
   //                     making the learner copy/paste from chat.
-  //   "open"          → open the panel only (palette's "Ask Fishbones"
+  //   "open"          → open the panel only (palette's "Ask Libre"
   //                     entry — the user types their own question)
   const pendingGenerateRef = useRef<{ language: string | undefined } | null>(null);
   useEffect(() => {
@@ -139,14 +139,14 @@ export default function AiAssistant({ lesson, course, celebrateAt }: Props) {
       const prompt = formatAskPrompt(detail);
       void chat.send(prompt, systemPrompt);
     };
-    window.addEventListener("fishbones:ask-ai", handler);
-    return () => window.removeEventListener("fishbones:ask-ai", handler);
+    window.addEventListener("libre:ask-ai", handler);
+    return () => window.removeEventListener("libre:ask-ai", handler);
   }, [chat, systemPrompt]);
 
   // Watch for the streaming → idle transition that closes a pending
   // generate-code request. On completion, walk the latest assistant
   // message, extract the first fenced code block, and dispatch
-  // `fishbones:apply-code` so the playground (or any future host) can
+  // `libre:apply-code` so the playground (or any future host) can
   // write it into the editor. The model is instructed to return ONLY
   // a fenced block; we still parse defensively in case it adds prose.
   const wasStreamingRef = useRef(false);
@@ -162,7 +162,7 @@ export default function AiAssistant({ lesson, course, celebrateAt }: Props) {
     const code = extractFencedCode(last.content, pending.language);
     if (!code) return;
     window.dispatchEvent(
-      new CustomEvent("fishbones:apply-code", {
+      new CustomEvent("libre:apply-code", {
         detail: { language: pending.language, code },
       }),
     );
@@ -223,7 +223,7 @@ export default function AiAssistant({ lesson, course, celebrateAt }: Props) {
 /// for the conversation + the user's code + the output.
 function buildSystemPrompt(course: Course | null, lesson: Lesson | null): string {
   const header = [
-    "You are the Fishbones tutor, a local coding assistant running on the learner's own machine via Ollama.",
+    "You are the Libre tutor, a local coding assistant running on the learner's own machine via Ollama.",
     "Keep replies tight: 2–4 short paragraphs max, use short code blocks when they help, avoid restating the question.",
     "You have no internet access. Don't claim you can look things up.",
     "When the learner is stuck, prefer a small nudge (one concept, one hint) over a full solution unless they explicitly ask.",
@@ -371,7 +371,7 @@ function languageFenceAliases(language: string): string[] {
   }
 }
 
-/// Payload of `fishbones:ask-ai` custom events. The lesson reader's
+/// Payload of `libre:ask-ai` custom events. The lesson reader's
 /// code-block badges fire `kind: "code"`; the quiz view's question
 /// badges fire `kind: "quiz"`. Each carries enough context to build
 /// a self-contained prompt.
@@ -407,7 +407,7 @@ type AskAiDetail =
     }
   | {
       /// "Just open the panel" trigger, used by the command palette
-      /// when the learner picks "Ask Fishbones" without anything
+      /// when the learner picks "Ask Libre" without anything
       /// specific in mind. No auto-send — they type their own
       /// question.
       kind: "open";

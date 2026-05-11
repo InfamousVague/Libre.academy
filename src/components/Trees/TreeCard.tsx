@@ -13,28 +13,28 @@ export default function TreeCard({ tree, completed, onOpen }: TreeCardProps) {
   return (
     <button
       type="button"
-      className="fishbones-trees__card"
+      className="libre-trees__card"
       style={{ "--tree-accent": tree.accent } as React.CSSProperties}
       onClick={onOpen}
     >
-      <div className="fishbones-trees__card-head">
-        <span className="fishbones-trees__card-tag">{tree.short}</span>
-        <span className="fishbones-trees__card-pct">{pct}%</span>
+      <div className="libre-trees__card-head">
+        <span className="libre-trees__card-tag">{tree.short}</span>
+        <span className="libre-trees__card-pct">{pct}%</span>
       </div>
-      <div className="fishbones-trees__card-title">{tree.title}</div>
-      <div className="fishbones-trees__card-blurb">{tree.description}</div>
-      <div className="fishbones-trees__card-meta">
+      <div className="libre-trees__card-title">{tree.title}</div>
+      <div className="libre-trees__card-blurb">{tree.description}</div>
+      <div className="libre-trees__card-meta">
         <span>
           {totalNodes} skills
           {gaps > 0 && ` · ${gaps} gap${gaps === 1 ? "" : "s"}`}
         </span>
       </div>
       <div
-        className="fishbones-trees__card-bar"
+        className="libre-trees__card-bar"
         aria-label={`${pct} percent complete`}
       >
         <div
-          className="fishbones-trees__card-bar-fill"
+          className="libre-trees__card-bar-fill"
           style={{ width: `${pct}%` }}
         />
       </div>

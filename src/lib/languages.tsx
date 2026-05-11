@@ -1,4 +1,4 @@
-/// Single source of truth for language presentation across Fishbones.
+/// Single source of truth for language presentation across Libre.
 ///
 /// Every surface that shows "this is a Python lesson" / "this is a Rust
 /// course" reads from this file. The shape is `Record<LanguageId, ...>`
@@ -19,7 +19,7 @@
 ///
 /// All icons are inline (~150–400 bytes each) rather than coming from
 /// a remote font / CDN. Keeps the bundle deterministic and works
-/// offline (Fishbones runs locally).
+/// offline (Libre runs locally).
 
 import type { ComponentType, SVGProps } from "react";
 import type { LanguageId } from "../data/types";

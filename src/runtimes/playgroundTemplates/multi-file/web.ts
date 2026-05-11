@@ -16,7 +16,7 @@ export const WEB_TEMPLATE_FILES: WorkbenchFile[] = [
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Fishbones Playground</title>
+  <title>Libre Playground</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>

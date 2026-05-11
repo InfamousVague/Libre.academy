@@ -14,7 +14,7 @@ const AVG_TOKENS_PER_CHALLENGE = {
   output: 6500,
 };
 
-/// Prices as of the start of the Fishbones challenge-pack work. Per-1M-token
+/// Prices as of the start of the Libre challenge-pack work. Per-1M-token
 /// USD. Kept as a literal table so updates are obvious. Haiku is the
 /// cheapest + fastest, Sonnet is the default, Opus is the highest-quality
 /// option — matches the user's "$50-150 ceiling on Opus" decision.
@@ -84,20 +84,20 @@ export default function GeneratePackDialog({ onDismiss, onStart }: Props) {
   return (
     <ModalBackdrop onDismiss={onDismiss} zIndex={120}>
       <div
-        className="fishbones-genpack-panel"
+        className="libre-genpack-panel"
         role="dialog"
-        aria-labelledby="fishbones-genpack-title"
+        aria-labelledby="libre-genpack-title"
       >
-        <div className="fishbones-genpack-header">
+        <div className="libre-genpack-header">
           <div>
-            <div className="fishbones-genpack-kicker">Challenge pack</div>
-            <div className="fishbones-genpack-title" id="fishbones-genpack-title">
+            <div className="libre-genpack-kicker">Challenge pack</div>
+            <div className="libre-genpack-title" id="libre-genpack-title">
               Generate new pack
             </div>
           </div>
           <button
             type="button"
-            className="fishbones-genpack-close"
+            className="libre-genpack-close"
             onClick={onDismiss}
             aria-label="Close"
           >
@@ -105,16 +105,16 @@ export default function GeneratePackDialog({ onDismiss, onStart }: Props) {
           </button>
         </div>
 
-        <div className="fishbones-genpack-body">
-          <section className="fishbones-genpack-section">
-            <label className="fishbones-genpack-section-label">Language</label>
-            <div className="fishbones-genpack-lang-row">
+        <div className="libre-genpack-body">
+          <section className="libre-genpack-section">
+            <label className="libre-genpack-section-label">Language</label>
+            <div className="libre-genpack-lang-row">
               {LANGUAGE_OPTIONS.map((opt) => (
                 <button
                   key={opt.id}
                   type="button"
-                  className={`fishbones-genpack-lang-btn ${
-                    language === opt.id ? "fishbones-genpack-lang-btn--active" : ""
+                  className={`libre-genpack-lang-btn ${
+                    language === opt.id ? "libre-genpack-lang-btn--active" : ""
                   }`}
                   onClick={() => setLanguage(opt.id)}
                 >
@@ -124,25 +124,25 @@ export default function GeneratePackDialog({ onDismiss, onStart }: Props) {
             </div>
           </section>
 
-          <section className="fishbones-genpack-section">
-            <label className="fishbones-genpack-section-label">
+          <section className="libre-genpack-section">
+            <label className="libre-genpack-section-label">
               Count
-              <span className="fishbones-genpack-section-value">{count}</span>
+              <span className="libre-genpack-section-value">{count}</span>
             </label>
             <input
               type="range"
-              className="fishbones-genpack-slider"
+              className="libre-genpack-slider"
               min={MIN_COUNT}
               max={MAX_COUNT}
               step={10}
               value={count}
               onChange={(e) => setCount(parseInt(e.target.value, 10))}
             />
-            <div className="fishbones-genpack-slider-ticks">
+            <div className="libre-genpack-slider-ticks">
               <span>{MIN_COUNT}</span>
               <span>{MAX_COUNT}</span>
             </div>
-            <div className="fishbones-genpack-section-hint">
+            <div className="libre-genpack-section-hint">
               Split roughly 40% easy, 40% medium, 20% hard across topic
               buckets (strings, arrays, iterators, concurrency, etc.).
               Saves incrementally — you can cancel midway and keep what
@@ -150,22 +150,22 @@ export default function GeneratePackDialog({ onDismiss, onStart }: Props) {
             </div>
           </section>
 
-          <section className="fishbones-genpack-section">
-            <label className="fishbones-genpack-section-label">Model</label>
-            <div className="fishbones-genpack-model-list">
+          <section className="libre-genpack-section">
+            <label className="libre-genpack-section-label">Model</label>
+            <div className="libre-genpack-model-list">
               {(Object.keys(MODEL_PRICES) as ModelId[]).map((id) => (
                 <button
                   key={id}
                   type="button"
-                  className={`fishbones-genpack-model ${
-                    model === id ? "fishbones-genpack-model--active" : ""
+                  className={`libre-genpack-model ${
+                    model === id ? "libre-genpack-model--active" : ""
                   }`}
                   onClick={() => setModel(id)}
                 >
-                  <div className="fishbones-genpack-model-label">
+                  <div className="libre-genpack-model-label">
                     {MODEL_PRICES[id].label}
                   </div>
-                  <div className="fishbones-genpack-model-hint">
+                  <div className="libre-genpack-model-hint">
                     {MODEL_PRICES[id].hint}
                   </div>
                 </button>
@@ -173,14 +173,14 @@ export default function GeneratePackDialog({ onDismiss, onStart }: Props) {
             </div>
           </section>
 
-          <section className="fishbones-genpack-estimate">
-            <div className="fishbones-genpack-estimate-label">
+          <section className="libre-genpack-estimate">
+            <div className="libre-genpack-estimate-label">
               Estimated cost
             </div>
-            <div className="fishbones-genpack-estimate-value">
+            <div className="libre-genpack-estimate-value">
               ~${estimatedCostUsd.toFixed(2)}
             </div>
-            <div className="fishbones-genpack-estimate-hint">
+            <div className="libre-genpack-estimate-hint">
               Back-of-envelope: {count} challenges ×{" "}
               {AVG_TOKENS_PER_CHALLENGE.output / 1000}k output tokens ×{" "}
               {MODEL_PRICES[model].label}. Actual usage will vary.
@@ -188,17 +188,17 @@ export default function GeneratePackDialog({ onDismiss, onStart }: Props) {
           </section>
         </div>
 
-        <div className="fishbones-genpack-footer">
+        <div className="libre-genpack-footer">
           <button
             type="button"
-            className="fishbones-genpack-btn"
+            className="libre-genpack-btn"
             onClick={onDismiss}
           >
             Cancel
           </button>
           <button
             type="button"
-            className="fishbones-genpack-btn fishbones-genpack-btn--primary"
+            className="libre-genpack-btn libre-genpack-btn--primary"
             onClick={() => onStart({ language, count, model })}
           >
             Generate {count} challenge{count === 1 ? "" : "s"}

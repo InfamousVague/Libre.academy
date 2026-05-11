@@ -61,7 +61,7 @@ appstore-submission/
    ```bash
    cd src-tauri/gen/apple
    xcodegen generate                    # regenerates the .xcodeproj from project.yml
-   open fishbones.xcodeproj             # then Product → Archive in Xcode
+   open libre.xcodeproj             # then Product → Archive in Xcode
    ```
    Steps inside Xcode:
    - Select the **Generic iOS Device** (or a real device) as the build destination.
@@ -123,8 +123,8 @@ Resolution-Center replies typically get a response in 24 hours.
 | --- | --- |
 | Bundle ID, version | `src-tauri/tauri.conf.json` |
 | Display name, deployment target | `src-tauri/gen/apple/project.yml` |
-| Camera/etc. usage strings | `src-tauri/gen/apple/fishbones_iOS/Info.plist` |
-| App Group entitlement | `src-tauri/gen/apple/fishbones_iOS/fishbones_iOS.entitlements` |
+| Camera/etc. usage strings | `src-tauri/gen/apple/libre_iOS/Info.plist` |
+| App Group entitlement | `src-tauri/gen/apple/libre_iOS/libre_iOS.entitlements` |
 | Icon master | `cover-overrides/`-style — see [`icon/README.md`](./icon/README.md) |
 | Marketing copy | [`metadata/description.md`](./metadata/description.md) |
 | Privacy answers | [`metadata/privacy-labels.md`](./metadata/privacy-labels.md) |

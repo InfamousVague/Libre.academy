@@ -323,23 +323,23 @@ export default function ProfileView({
   const xpToNext = Math.max(0, stats.xpForLevel - stats.xpIntoLevel);
 
   return (
-    <div className="fishbones-profile">
-      <div className="fishbones-profile-scroll">
-        <div className="fishbones-profile-inner">
+    <div className="libre-profile">
+      <div className="libre-profile-scroll">
+        <div className="libre-profile-inner">
           {/* Hero — twin rings (streak target + XP into level) flanked
               by a header. The two rings are the page's emotional
               focal point: "what number am I chasing right now?". */}
-          <section className="fishbones-profile-hero" aria-label="Streak and level">
-            <div className="fishbones-profile-hero-text">
-              <h1 className="fishbones-profile-hero-title">Profile</h1>
-              <p className="fishbones-profile-hero-sub">
+          <section className="libre-profile-hero" aria-label="Streak and level">
+            <div className="libre-profile-hero-text">
+              <h1 className="libre-profile-hero-title">Profile</h1>
+              <p className="libre-profile-hero-sub">
                 Level {stats.level} ·{" "}
                 {xpToNext === 0
                   ? "ready to level up — complete any lesson"
                   : `${xpToNext} XP to level ${stats.level + 1}`}
               </p>
             </div>
-            <div className="fishbones-profile-rings">
+            <div className="libre-profile-rings">
               <RingGauge
                 value={stats.streakDays}
                 target={ringStreakTarget(stats.streakDays)}
@@ -361,7 +361,7 @@ export default function ProfileView({
               flat / numeric — rings for emotional pull, tiles for
               at-a-glance scanning. Desktop arranges them in a single
               row of 4 instead of mobile's 2×2 grid. */}
-          <div className="fishbones-profile-stats" role="list">
+          <div className="libre-profile-stats" role="list">
             <StatTile icon={flame} tone="streak" value={stats.streakDays} label="Day streak" />
             <StatTile icon={bookOpenCheck} tone="lessons" value={stats.lessonsCompleted} label="Lessons" />
             <StatTile icon={zap} tone="xp" value={stats.xp} label="Total XP" />
@@ -381,20 +381,20 @@ export default function ProfileView({
               summary line below tells the learner what time range
               they're looking at and how active they've been in it,
               answering the "is this real data?" question. */}
-          <section className="fishbones-profile-section">
-            <div className="fishbones-profile-section-head">
-              <h2 className="fishbones-profile-section-title">Activity</h2>
-              <span className="fishbones-profile-heatmap-summary">
+          <section className="libre-profile-section">
+            <div className="libre-profile-section-head">
+              <h2 className="libre-profile-section-title">Activity</h2>
+              <span className="libre-profile-heatmap-summary">
                 {heatmap.activeDays === 0
                   ? "No completions yet — open a lesson to start the chart."
                   : `${heatmap.totalCompletions} completion${heatmap.totalCompletions === 1 ? "" : "s"} across ${heatmap.activeDays} active day${heatmap.activeDays === 1 ? "" : "s"} · last ${HEATMAP_WEEKS} weeks`}
               </span>
             </div>
-            <div className="fishbones-profile-heatmap-wrap">
+            <div className="libre-profile-heatmap-wrap">
               {/* Day-of-week labels. Show only Mon / Wed / Fri to
                   avoid clutter — same convention as GitHub's
                   contribution graph. */}
-              <div className="fishbones-profile-heatmap-rowlabels" aria-hidden>
+              <div className="libre-profile-heatmap-rowlabels" aria-hidden>
                 <span />
                 <span>Mon</span>
                 <span />
@@ -405,13 +405,13 @@ export default function ProfileView({
               </div>
               <Heatmap cells={heatmap.cells} peak={heatmap.peak} />
             </div>
-            <div className="fishbones-profile-heatmap-legend" aria-hidden>
+            <div className="libre-profile-heatmap-legend" aria-hidden>
               <span>Less</span>
-              <span className="fishbones-profile-heatmap-cell fishbones-profile-heatmap-cell--lvl-0" />
-              <span className="fishbones-profile-heatmap-cell fishbones-profile-heatmap-cell--lvl-1" />
-              <span className="fishbones-profile-heatmap-cell fishbones-profile-heatmap-cell--lvl-2" />
-              <span className="fishbones-profile-heatmap-cell fishbones-profile-heatmap-cell--lvl-3" />
-              <span className="fishbones-profile-heatmap-cell fishbones-profile-heatmap-cell--lvl-4" />
+              <span className="libre-profile-heatmap-cell libre-profile-heatmap-cell--lvl-0" />
+              <span className="libre-profile-heatmap-cell libre-profile-heatmap-cell--lvl-1" />
+              <span className="libre-profile-heatmap-cell libre-profile-heatmap-cell--lvl-2" />
+              <span className="libre-profile-heatmap-cell libre-profile-heatmap-cell--lvl-3" />
+              <span className="libre-profile-heatmap-cell libre-profile-heatmap-cell--lvl-4" />
               <span>More</span>
             </div>
           </section>
@@ -420,25 +420,25 @@ export default function ProfileView({
               `data-lang` so JS reads yellow, Rust reads oxblood, etc.
               Doubles as a "languages I've touched" surface. */}
           {langChart.rows.length > 0 && (
-            <section className="fishbones-profile-section">
-              <h2 className="fishbones-profile-section-title">XP by language</h2>
-              <ul className="fishbones-profile-lang-chart" role="list">
+            <section className="libre-profile-section">
+              <h2 className="libre-profile-section-title">XP by language</h2>
+              <ul className="libre-profile-lang-chart" role="list">
                 {langChart.rows.map((r) => (
-                  <li key={r.lang} className="fishbones-profile-lang-row">
-                    <span className="fishbones-profile-lang-name" data-lang={r.lang}>
+                  <li key={r.lang} className="libre-profile-lang-row">
+                    <span className="libre-profile-lang-name" data-lang={r.lang}>
                       {LANG_LABELS[r.lang] ?? r.lang}
                     </span>
-                    <div className="fishbones-profile-lang-bar" aria-hidden data-lang={r.lang}>
+                    <div className="libre-profile-lang-bar" aria-hidden data-lang={r.lang}>
                       <div
-                        className="fishbones-profile-lang-bar-fill"
+                        className="libre-profile-lang-bar-fill"
                         style={{ width: `${Math.max(r.pct * 100, 2)}%` }}
                       />
                     </div>
-                    <span className="fishbones-profile-lang-meta">
+                    <span className="libre-profile-lang-meta">
                       {r.lessonsDone}
-                      <span className="fishbones-profile-lang-meta-sub">/{r.lessonsTotal}</span>
+                      <span className="libre-profile-lang-meta-sub">/{r.lessonsTotal}</span>
                     </span>
-                    <span className="fishbones-profile-lang-xp">{r.xp} XP</span>
+                    <span className="libre-profile-lang-xp">{r.xp} XP</span>
                   </li>
                 ))}
               </ul>
@@ -449,17 +449,17 @@ export default function ProfileView({
               dim with a "x / target" hint so the next goal stays
               visible. Six columns × two rows on desktop (vs mobile's
               3×4) — the page has the horizontal room. */}
-          <section className="fishbones-profile-section">
-            <h2 className="fishbones-profile-section-title">Achievements</h2>
-            <ul className="fishbones-profile-badges" role="list">
+          <section className="libre-profile-section">
+            <h2 className="libre-profile-section-title">Achievements</h2>
+            <ul className="libre-profile-badges" role="list">
               {milestones.map((m) => {
                 const unlocked = m.actual >= m.target;
                 return (
                   <li
                     key={m.id}
                     className={
-                      "fishbones-profile-badge" +
-                      (unlocked ? " fishbones-profile-badge--unlocked" : "")
+                      "libre-profile-badge" +
+                      (unlocked ? " libre-profile-badge--unlocked" : "")
                     }
                     title={
                       unlocked
@@ -467,11 +467,11 @@ export default function ProfileView({
                         : `${m.actual}/${m.target} ${m.unit}`
                     }
                   >
-                    <span className="fishbones-profile-badge-icon" aria-hidden>
+                    <span className="libre-profile-badge-icon" aria-hidden>
                       <Icon icon={m.icon} size="sm" color="currentColor" />
                     </span>
-                    <span className="fishbones-profile-badge-label">{m.label}</span>
-                    <span className="fishbones-profile-badge-meta">
+                    <span className="libre-profile-badge-label">{m.label}</span>
+                    <span className="libre-profile-badge-meta">
                       {unlocked ? "Unlocked" : `${m.actual}/${m.target}`}
                     </span>
                   </li>
@@ -484,13 +484,13 @@ export default function ProfileView({
               carry the `topic` tag). Desktop-unique; books don't have
               topics, so a learner who only reads books sees nothing. */}
           {topicStats.length > 0 && (
-            <section className="fishbones-profile-section">
-              <h2 className="fishbones-profile-section-title">Topics practised</h2>
-              <div className="fishbones-profile-topic-grid">
+            <section className="libre-profile-section">
+              <h2 className="libre-profile-section-title">Topics practised</h2>
+              <div className="libre-profile-topic-grid">
                 {topicStats.map((t) => (
-                  <div key={t.topic} className="fishbones-profile-topic-chip">
-                    <span className="fishbones-profile-topic-name">{t.topic}</span>
-                    <span className="fishbones-profile-topic-count">{t.count}</span>
+                  <div key={t.topic} className="libre-profile-topic-chip">
+                    <span className="libre-profile-topic-name">{t.topic}</span>
+                    <span className="libre-profile-topic-count">{t.count}</span>
                   </div>
                 ))}
               </div>
@@ -498,29 +498,29 @@ export default function ProfileView({
           )}
 
           {/* Recent activity timeline. Clicks jump back to the lesson. */}
-          <section className="fishbones-profile-section">
-            <h2 className="fishbones-profile-section-title">Recent activity</h2>
+          <section className="libre-profile-section">
+            <h2 className="libre-profile-section-title">Recent activity</h2>
             {recentActivity.length > 0 ? (
-              <ul className="fishbones-profile-activity">
+              <ul className="libre-profile-activity">
                 {recentActivity.map((r, i) => (
                   <li key={`${r.courseId}:${r.lessonId}:${i}`}>
                     <button
-                      className="fishbones-profile-activity-row"
+                      className="libre-profile-activity-row"
                       onClick={() => onOpenLesson(r.courseId, r.lessonId)}
                     >
                       <span
-                        className={`fishbones-profile-activity-kind fishbones-profile-activity-kind--${r.kind}`}
+                        className={`libre-profile-activity-kind libre-profile-activity-kind--${r.kind}`}
                         aria-hidden
                       />
-                      <span className="fishbones-profile-activity-body">
-                        <span className="fishbones-profile-activity-lesson">
+                      <span className="libre-profile-activity-body">
+                        <span className="libre-profile-activity-lesson">
                           {r.lessonTitle}
                         </span>
-                        <span className="fishbones-profile-activity-course">
+                        <span className="libre-profile-activity-course">
                           {r.courseTitle}
                         </span>
                       </span>
-                      <span className="fishbones-profile-activity-time">
+                      <span className="libre-profile-activity-time">
                         {formatRelative(r.completedAt)}
                       </span>
                     </button>
@@ -528,7 +528,7 @@ export default function ProfileView({
                 ))}
               </ul>
             ) : (
-              <p className="fishbones-profile-empty">
+              <p className="libre-profile-empty">
                 No completed lessons yet. Pick a course in the sidebar to start
                 building your profile.
               </p>
@@ -589,11 +589,11 @@ function RingGauge({
   const c = Math.round(2 * Math.PI * r * 100) / 100;
   const offset = c * (1 - pct);
   return (
-    <div className={`fishbones-profile-ring fishbones-profile-ring--${tone}`}>
-      <svg viewBox="0 0 100 100" className="fishbones-profile-ring-svg" aria-hidden>
-        <circle className="fishbones-profile-ring-track" cx="50" cy="50" r={r} fill="none" />
+    <div className={`libre-profile-ring libre-profile-ring--${tone}`}>
+      <svg viewBox="0 0 100 100" className="libre-profile-ring-svg" aria-hidden>
+        <circle className="libre-profile-ring-track" cx="50" cy="50" r={r} fill="none" />
         <circle
-          className="fishbones-profile-ring-fill"
+          className="libre-profile-ring-fill"
           cx="50"
           cy="50"
           r={r}
@@ -604,12 +604,12 @@ function RingGauge({
           transform="rotate(-90 50 50)"
         />
       </svg>
-      <div className="fishbones-profile-ring-body">
-        <span className="fishbones-profile-ring-icon" aria-hidden>
+      <div className="libre-profile-ring-body">
+        <span className="libre-profile-ring-icon" aria-hidden>
           <Icon icon={icon} size="xl" color="currentColor" />
         </span>
-        <span className="fishbones-profile-ring-value">{value}</span>
-        <span className="fishbones-profile-ring-label">{label}</span>
+        <span className="libre-profile-ring-value">{value}</span>
+        <span className="libre-profile-ring-label">{label}</span>
       </div>
     </div>
   );
@@ -630,15 +630,15 @@ function StatTile({
 }) {
   return (
     <div
-      className={`fishbones-profile-stat fishbones-profile-stat--${tone}`}
+      className={`libre-profile-stat libre-profile-stat--${tone}`}
       role="listitem"
     >
-      <span className="fishbones-profile-stat-icon" aria-hidden>
+      <span className="libre-profile-stat-icon" aria-hidden>
         <Icon icon={icon} size="base" color="currentColor" />
       </span>
-      <div className="fishbones-profile-stat-text">
-        <span className="fishbones-profile-stat-value">{value}</span>
-        <span className="fishbones-profile-stat-label">{label}</span>
+      <div className="libre-profile-stat-text">
+        <span className="libre-profile-stat-value">{value}</span>
+        <span className="libre-profile-stat-label">{label}</span>
       </div>
     </div>
   );
@@ -669,20 +669,20 @@ function Heatmap({
   };
   return (
     <div
-      className="fishbones-profile-heatmap"
+      className="libre-profile-heatmap"
       aria-label={`Activity over the last ${HEATMAP_WEEKS} weeks`}
     >
       {cells.map((c) =>
         c.isPad ? (
           <span
             key={c.key}
-            className="fishbones-profile-heatmap-cell fishbones-profile-heatmap-cell--pad"
+            className="libre-profile-heatmap-cell libre-profile-heatmap-cell--pad"
             aria-hidden
           />
         ) : (
           <span
             key={c.key}
-            className={`fishbones-profile-heatmap-cell fishbones-profile-heatmap-cell--lvl-${level(c.count)}`}
+            className={`libre-profile-heatmap-cell libre-profile-heatmap-cell--lvl-${level(c.count)}`}
             title={c.label}
           />
         ),

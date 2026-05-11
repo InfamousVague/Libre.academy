@@ -11,7 +11,7 @@
    already targets. The image background is transparent, so the
    spinner inherits whatever surface it sits on. */
 
-.fishbones-loader {
+.libre-loader {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
@@ -23,19 +23,19 @@
   color: var(--fb-bone-color, #d4c5a1);
 }
 
-.fishbones-loader-stack {
+.libre-loader-stack {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.fishbones-loader--md .fishbones-loader-stack {
+.libre-loader--md .libre-loader-stack {
   width: 88px;
   height: 88px;
 }
 
-.fishbones-loader--sm .fishbones-loader-stack {
+.libre-loader--sm .libre-loader-stack {
   width: 40px;
   height: 40px;
 }
@@ -44,7 +44,7 @@
    div) but is now invisible — kept as a no-op so the spinning
    ribbon-snake can sit alone in the stack without a layout shift
    if a future tweak wants to bring chrome back. */
-.fishbones-loader-ring {
+.libre-loader-ring {
   display: none;
 }
 
@@ -52,10 +52,10 @@
    continuously rotating. The `transform-origin: center` is the
    default but spelled out so a future asset swap with off-centre
    composition doesn't surprise anyone. */
-.fishbones-loader-logo {
+.libre-loader-logo {
   background: url("/libre_loader.png") no-repeat center / contain;
   transform-origin: center;
-  animation: fishbones-loader-spin 1.6s linear infinite;
+  animation: libre-loader-spin 1.6s linear infinite;
   /* Tasteful warm halo so the ribbon-snake reads as an active
      "loading" element, not a static decoration, even on dark
      surfaces. The drop-shadow tracks the spin via the same
@@ -63,12 +63,12 @@
   filter: drop-shadow(0 0 8px rgba(243, 114, 57, 0.28));
 }
 
-.fishbones-loader--md .fishbones-loader-logo {
+.libre-loader--md .libre-loader-logo {
   width: 88px;
   height: 88px;
 }
 
-.fishbones-loader--sm .fishbones-loader-logo {
+.libre-loader--sm .libre-loader-logo {
   width: 40px;
   height: 40px;
   /* Tighter halo at the small size so it doesn't bloom into
@@ -76,7 +76,7 @@
   filter: drop-shadow(0 0 4px rgba(243, 114, 57, 0.32));
 }
 
-.fishbones-loader-label {
+.libre-loader-label {
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.8px;
@@ -84,13 +84,13 @@
   color: var(--color-text-tertiary);
 }
 
-@keyframes fishbones-loader-spin {
+@keyframes libre-loader-spin {
   to { transform: rotate(360deg); }
 }
 
 /* Light-theme tweak — the warm halo washes out against light
    backgrounds; deepen the colour so the spinner still has presence. */
-[data-theme-name="ayu-light"] .fishbones-loader-logo,
-[data-theme-name="catppuccin-latte"] .fishbones-loader-logo {
+[data-theme-name="ayu-light"] .libre-loader-logo,
+[data-theme-name="catppuccin-latte"] .libre-loader-logo {
   filter: drop-shadow(0 0 6px rgba(232, 149, 74, 0.55));
 }

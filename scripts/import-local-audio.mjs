@@ -71,7 +71,7 @@ if (existsSync(ENV_FILE)) {
 const VOICE_NAME = process.env.ELEVEN_VOICE_NAME || "Verity";
 const MODEL_ID = process.env.ELEVEN_MODEL || "eleven_multilingual_v2";
 /// CDN base — defaults to the academy host because that's where
-/// `upload-lesson-audio.mjs` rsyncs to (`/var/www/fishbones-academy/audio`,
+/// `upload-lesson-audio.mjs` rsyncs to (`/var/www/libre-academy/audio`,
 /// served at `https://libre.academy/audio`). The MP3s live next to
 /// the manifest on that one server, so URLs pointing there are correct
 /// by construction.
@@ -446,7 +446,7 @@ function main() {
 
   console.error("");
   console.error(
-    `Next: node scripts/upload-lesson-audio.mjs    # rsync dist/audio → fishbones-academy VPS`,
+    `Next: node scripts/upload-lesson-audio.mjs    # rsync dist/audio → libre-academy VPS`,
   );
 }
 

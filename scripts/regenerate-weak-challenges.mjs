@@ -38,7 +38,7 @@ const LANG_FILTER = process.env.KATA_LANG ?? null;
 // `src-tauri/src/llm.rs::generate_challenge`. Keeping a verbatim copy
 // here so the script is self-contained — if the Rust prompt is
 // changed and this one drifts, re-run the linter and you'll know.
-const SYSTEM_PROMPT = `You author ONE stand-alone kata-style coding challenge for the Fishbones app. Given a language, a difficulty tier, and a topic, return a single JSON object:
+const SYSTEM_PROMPT = `You author ONE stand-alone kata-style coding challenge for the Libre app. Given a language, a difficulty tier, and a topic, return a single JSON object:
 
   {
     "title": "short descriptive title (≤ 60 chars)",
@@ -227,7 +227,7 @@ function readApiKey() {
   const s = JSON.parse(fs.readFileSync(SETTINGS_PATH, "utf8"));
   if (!s.anthropic_api_key) {
     throw new Error(
-      "no anthropic_api_key in settings.json — open Fishbones → Settings → AI and paste one in",
+      "no anthropic_api_key in settings.json — open Libre → Settings → AI and paste one in",
     );
   }
   return s.anthropic_api_key;

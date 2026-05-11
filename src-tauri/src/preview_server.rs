@@ -88,7 +88,7 @@ fn state(app: &tauri::AppHandle) -> Result<Arc<PreviewState>, String> {
     // user force-quits, the OS reclaims the port.
     let thread_state = state.clone();
     thread::Builder::new()
-        .name("fishbones-preview-server".into())
+        .name("libre-preview-server".into())
         .spawn(move || {
             for request in server.incoming_requests() {
                 handle_request(&thread_state, request);

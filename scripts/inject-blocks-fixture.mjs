@@ -10,8 +10,8 @@
 ///     Support/com.mattssoftware.kata/courses/a-to-zig/course.json`.
 ///     This is what the running app reads, so this is the one that
 ///     makes the toggle appear after a reload.
-///   - The BUNDLED `.fishbones` archive under
-///     `src-tauri/resources/bundled-packs/a-to-zig.fishbones`.
+///   - The BUNDLED `.libre` archive under
+///     `src-tauri/resources/bundled-packs/a-to-zig.libre`.
 ///     Patching the bundle keeps Phase 1 testing reproducible
 ///     across reseeds — bumping SEED_VERSION (or a fresh install)
 ///     will see the blocks data without re-running this script.
@@ -41,7 +41,7 @@ const INSTALLED_COURSE = join(
 const BUNDLED_PACK = join(
   ROOT,
   "src-tauri/resources/bundled-packs",
-  `${COURSE_ID}.fishbones`,
+  `${COURSE_ID}.libre`,
 );
 
 /// The fixture. Template is the canonical solution with four slots
@@ -114,7 +114,7 @@ async function patchBundledPack(packPath) {
     console.warn(`[inject-blocks-fixture] missing: ${packPath} (skipping)`);
     return;
   }
-  // .fishbones is a zip. Extract → patch course.json → re-zip.
+  // .libre is a zip. Extract → patch course.json → re-zip.
   const tmp = await mkdtemp(join(tmpdir(), "inject-blocks-"));
   try {
     execFileSync("unzip", ["-q", packPath, "-d", tmp]);
@@ -128,7 +128,7 @@ async function patchBundledPack(packPath) {
     // Re-zip. Replace the original archive in place. `-j` would flatten,
     // we want to preserve the file at the archive root, which is the
     // existing layout.
-    const tmpZip = join(tmp, "out.fishbones");
+    const tmpZip = join(tmp, "out.libre");
     const cwd = process.cwd();
     process.chdir(tmp);
     try {

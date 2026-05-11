@@ -1,4 +1,4 @@
-//! SQLite database handle for the Fishbones API.
+//! SQLite database handle for the Libre API.
 //!
 //! Single-file SQLite under WAL with foreign keys on. The schema is
 //! deliberately small — four tables (`users`, `tokens`, `progress`,
@@ -25,7 +25,7 @@ pub struct Database {
 impl Database {
     /// Open (or create) the SQLite file at `path`. The parent dir is
     /// created if missing — handy for the default
-    /// `/var/lib/fishbones-api/api.sqlite` location where systemd
+    /// `/var/lib/libre-api/api.sqlite` location where systemd
     /// only owns the dir, not the file.
     pub fn open(path: &Path) -> anyhow::Result<Self> {
         if let Some(parent) = path.parent() {
@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS progress (
     PRIMARY KEY (user_id, course_id, lesson_id)
 );
 
--- Course archives. Stores the `.fishbones` zip blob inline so the
+-- Course archives. Stores the `.libre` zip blob inline so the
 -- API can be a single binary + db file with no separate object
 -- store. Cap enforced at the API layer (~50 MB) to keep the SQLite
 -- page count reasonable.

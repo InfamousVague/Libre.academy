@@ -5,7 +5,7 @@ import {
   type CelebrationEffect,
 } from "../../../lib/celebrate";
 
-const FLAG_KEY = "fishbones:devconsole";
+const FLAG_KEY = "libre:devconsole";
 
 /// Names + short descriptions for the six celebration effects shown
 /// in the achievement-test panel below. Order matches the
@@ -91,8 +91,8 @@ export default function DeveloperPane() {
 
   return (
     <section>
-      <h3 className="fishbones-settings-section">Developer</h3>
-      <p className="fishbones-settings-blurb">
+      <h3 className="libre-settings-section">Developer</h3>
+      <p className="libre-settings-blurb">
         A floating panel that captures every <code>console.log</code>,
         thrown error, and unhandled promise rejection from the moment
         the app loads. Useful for debugging boot stalls, slow
@@ -101,12 +101,12 @@ export default function DeveloperPane() {
         bottom-right corner to resize, "–" to minimise, "×" to close
         and disable.
       </p>
-      <div className="fishbones-settings-data-row">
+      <div className="libre-settings-data-row">
         <div>
-          <div className="fishbones-settings-data-label">
+          <div className="libre-settings-data-label">
             Show dev console
           </div>
-          <div className="fishbones-settings-data-hint">
+          <div className="libre-settings-data-hint">
             {enabled
               ? "Console panel is visible (or about to be). Tap × on the panel header to dismiss."
               : "Console is hidden. Logs are still being captured — toggle on to see them."}
@@ -114,13 +114,13 @@ export default function DeveloperPane() {
         </div>
         <button
           type="button"
-          className="fishbones-settings-secondary"
+          className="libre-settings-secondary"
           onClick={toggle}
         >
           {enabled ? "Hide console" : "Show console"}
         </button>
       </div>
-      <p className="fishbones-settings-blurb" style={{ marginTop: 18 }}>
+      <p className="libre-settings-blurb" style={{ marginTop: 18 }}>
         <strong>Emergency fallback:</strong> if the app freezes before
         you can open Settings (the iPad-stuck-on-preloader case), tap
         the top-left corner of the screen 5 times within 2.5 seconds.
@@ -135,12 +135,12 @@ export default function DeveloperPane() {
           so it doesn't add visible chrome to the user-facing rails.
       */}
       <h3
-        className="fishbones-settings-section"
+        className="libre-settings-section"
         style={{ marginTop: 28 }}
       >
         Achievements (test)
       </h3>
-      <p className="fishbones-settings-blurb">
+      <p className="libre-settings-blurb">
         Sample each celebration effect, fire a random one (the live
         unlock path), or wipe the persisted unlocks so the next
         achievement event re-fires from scratch. The buttons here
@@ -158,14 +158,14 @@ export default function DeveloperPane() {
         }}
       >
         {EFFECT_LABELS.map((eff) => (
-          <div className="fishbones-settings-data-row" key={eff.id}>
+          <div className="libre-settings-data-row" key={eff.id}>
             <div>
-              <div className="fishbones-settings-data-label">{eff.label}</div>
-              <div className="fishbones-settings-data-hint">{eff.hint}</div>
+              <div className="libre-settings-data-label">{eff.label}</div>
+              <div className="libre-settings-data-hint">{eff.hint}</div>
             </div>
             <button
               type="button"
-              className="fishbones-settings-secondary"
+              className="libre-settings-secondary"
               onClick={() =>
                 void celebrateWith(eff.id, "medium", { x: 0.5, y: 0.5 })
               }
@@ -177,14 +177,14 @@ export default function DeveloperPane() {
       </div>
 
       <div
-        className="fishbones-settings-data-row"
+        className="libre-settings-data-row"
         style={{ marginTop: 16 }}
       >
         <div>
-          <div className="fishbones-settings-data-label">
+          <div className="libre-settings-data-label">
             Random celebration
           </div>
-          <div className="fishbones-settings-data-hint">
+          <div className="libre-settings-data-hint">
             Calls the same weighted random pick the achievement
             unlock path uses. Hit it a few times — the effect
             varies on each press.
@@ -192,7 +192,7 @@ export default function DeveloperPane() {
         </div>
         <button
           type="button"
-          className="fishbones-settings-secondary"
+          className="libre-settings-secondary"
           onClick={() => void celebrate("medium", { x: 0.5, y: 0.5 })}
         >
           Fire

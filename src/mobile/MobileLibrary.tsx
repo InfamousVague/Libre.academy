@@ -36,7 +36,7 @@ import { usePullToRefresh } from "./usePullToRefresh";
 import "./MobileLibrary.css";
 
 type ViewMode = "grid" | "covers";
-const VIEW_MODE_KEY = "fishbones.mobile.libraryViewMode";
+const VIEW_MODE_KEY = "libre.mobile.libraryViewMode";
 
 interface Props {
   courses: Course[];

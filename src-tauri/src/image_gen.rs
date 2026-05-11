@@ -207,7 +207,7 @@ pub async fn generate_cover_art(
 
     // Stamp coverFetchedAt into course.json if present. Same behaviour
     // as `extract_pdf_cover` so the field reaches disk consistently and
-    // exported `.fishbones` archives carry the marker.
+    // exported `.libre` archives carry the marker.
     let course_json_path = course_dir.join("course.json");
     if course_json_path.exists() {
         if let Ok(bytes) = std::fs::read(&course_json_path) {

@@ -20,7 +20,7 @@ import "./InstallBanner.css";
 /// On the desktop build this component renders nothing — `isWeb`
 /// gate at the top short-circuits any work.
 
-const STORAGE_KEY = "fishbones:install-banner-dismissed-at";
+const STORAGE_KEY = "libre:install-banner-dismissed-at";
 /// Re-show after a month so return visitors see it again. Keeps the
 /// upsell from going stale or feeling spammy.
 const RESHOW_AFTER_MS = 30 * 24 * 60 * 60 * 1000;
@@ -66,26 +66,26 @@ export function InstallBanner() {
 
   return (
     <aside
-      className="fishbones-install-banner"
+      className="libre-install-banner"
       role="complementary"
       aria-label="Get the Libre desktop app"
     >
       <button
         type="button"
-        className="fishbones-install-banner__close"
+        className="libre-install-banner__close"
         onClick={dismiss}
         aria-label="Dismiss for 30 days"
       >
         <Icon icon={xIcon} size="xs" color="currentColor" />
       </button>
-      <div className="fishbones-install-banner__title">
+      <div className="libre-install-banner__title">
         Get the full Libre
       </div>
-      <div className="fishbones-install-banner__body">
+      <div className="libre-install-banner__body">
         Run Rust, Swift, C, C++, Java, Kotlin, C#, SvelteKit, and
         offline AI. Free + open source.
       </div>
-      <div className="fishbones-install-banner__cta">
+      <div className="libre-install-banner__cta">
         <DownloadButton />
       </div>
     </aside>

@@ -16,7 +16,7 @@
  * the editorial decisions change.
  *
  * Just like the prerelease script, it walks BOTH the bundled
- * `.fishbones` archives and the local on-disk course.json files, so
+ * `.libre` archives and the local on-disk course.json files, so
  * a future promote-library-to-bundle re-zip won't silently revert
  * the editorial state.
  *
@@ -105,12 +105,12 @@ function applyMarker(json) {
 function listBundledArchives() {
   if (!existsSync(BUNDLE_DIR)) return [];
   return readdirSync(BUNDLE_DIR)
-    .filter((n) => n.endsWith(".academy") || n.endsWith(".fishbones"))
+    .filter((n) => n.endsWith(".academy") || n.endsWith(".libre"))
     .map((n) => join(BUNDLE_DIR, n));
 }
 
 function processBundled(path) {
-  const tmp = mkdtempSync(join(tmpdir(), "fishbones-promote-"));
+  const tmp = mkdtempSync(join(tmpdir(), "libre-promote-"));
   try {
     execFileSync("/usr/bin/unzip", ["-q", path, "-d", tmp], {
       stdio: ["ignore", "ignore", "inherit"],

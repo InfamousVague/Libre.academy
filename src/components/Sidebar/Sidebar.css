@@ -1,5 +1,5 @@
 /* Floating sidebar — direct port of Stash's .stash__sidebar styling
-   so Fishbones feels like part of the same family.
+   so Libre feels like part of the same family.
 
    Surface is frosted glass: low-alpha tinted base + a strong
    backdrop-filter blur gives the translucent-vibrancy treatment iOS /
@@ -12,14 +12,14 @@
    without being repeated per-view. Naked image, left-aligned
    inside the rail's content gutter; the frosted-glass sidebar
    surface is the framing. */
-.fishbones__sidebar-brand {
+.libre__sidebar-brand {
   display: flex;
   align-items: center;
   padding: 14px 14px 0 14px;
   margin-bottom: -7px;
   flex-shrink: 0;
 }
-.fishbones__sidebar-brand-img {
+.libre__sidebar-brand-img {
   display: block;
   height: 52px;
   width: auto;
@@ -28,7 +28,7 @@
   -webkit-user-drag: none;
 }
 
-.fishbones__sidebar {
+.libre__sidebar {
   width: 260px;
   margin: 10px 0 10px 10px;
   /* Surface + border + rim/shadow read from --color-glass-* tokens
@@ -52,7 +52,7 @@
     0 12px 28px var(--color-glass-shadow);
 }
 
-.fishbones__nav {
+.libre__nav {
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -62,13 +62,13 @@
   overflow-y: auto;
 }
 
-/* Docs-mode body — replaces .fishbones__nav when the user is on the
+/* Docs-mode body — replaces .libre__nav when the user is on the
    docs route. Same scroll behaviour as the course nav (flex: 1 +
    overflow-y) so the sidebar height budget works the same way; the
    inner section list spaces sections farther apart than the chapter
    tree does, since each section is a flat list of links rather than
    a disclosure-toggle tree. */
-.fishbones__nav-item {
+.libre__nav-item {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -88,17 +88,17 @@
   width: 100%;
 }
 
-.fishbones__nav-item:hover {
+.libre__nav-item:hover {
   color: var(--color-text-primary);
   background: var(--color-bg-tertiary);
 }
 
-.fishbones__nav-item--active {
+.libre__nav-item--active {
   color: var(--color-text-primary);
   background: var(--color-bg-tertiary);
 }
 
-.fishbones__nav-icon {
+.libre__nav-icon {
   display: inline-block;
   width: 14px;
   text-align: center;
@@ -107,23 +107,23 @@
 
 /* Top-level course container. Two treatments depending on whether this
    is the course the learner is actively working in:
-   - `.fishbones__course--active`  → full card + always-expanded tree. One
+   - `.libre__course--active`  → full card + always-expanded tree. One
      dominant chunk per sidebar so the eye lands on it first.
-   - `.fishbones__course--compact` → one-line row matching the top nav-item
+   - `.libre__course--compact` → one-line row matching the top nav-item
      pattern. Collapsed by default, click to peek at chapters inline.
    The contrast (dense card vs. quiet row) is the "which course am I in"
    cue — density answers the question without needing extra chrome.
 */
-.fishbones__course {
+.libre__course {
   display: flex;
   flex-direction: column;
 }
 
-.fishbones__course--active {
+.libre__course--active {
   margin-bottom: 12px;
 }
 
-.fishbones__course--compact {
+.libre__course--compact {
   /* Slightly more breathing room between collapsed cards so the rows
      stop reading as a flat list. The hover tint (below) plus this gap
      gives each course a sense of being its own clickable card without
@@ -134,15 +134,15 @@
 /* Static version of the title strip used only inside the active card.
    We removed the expand button — the active card is ALWAYS expanded —
    so the row is a div now and doesn't need the cursor/hover treatment
-   from the original .fishbones__course-title button. */
-.fishbones__course-title--static {
+   from the original .libre__course-title button. */
+.libre__course-title--static {
   cursor: default;
 }
 
 /* Tiny dot next to the active course's name — the visual equivalent of
    "you are here". Matches the size of the status dots in the lesson
    tree so the whole sidebar shares the same vocabulary. */
-.fishbones__course-active-dot {
+.libre__course-active-dot {
   display: inline-block;
   width: 6px;
   height: 6px;
@@ -152,9 +152,9 @@
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
 }
 
-/* Compact row for inactive courses. Mirrors .fishbones__sidebar-nav-item
+/* Compact row for inactive courses. Mirrors .libre__sidebar-nav-item
    visually so the whole sidebar feels like one consistent list. */
-.fishbones__course-row {
+.libre__course-row {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -172,7 +172,7 @@
   transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy);
 }
 
-.fishbones__course-row:hover {
+.libre__course-row:hover {
   background: var(--color-bg-secondary);
   color: var(--color-text-primary);
 }
@@ -180,13 +180,13 @@
 /* Light themes: bg-secondary IS the sidebar surface, so hovering with
    it produces no contrast. Bump to bg-tertiary on hover for those
    themes so the row still reads as interactive. */
-[data-theme-name="ayu-light"] .fishbones__course-row:hover,
-[data-theme-name="ayu-light"] .fishbones__course-row:hover,
-[data-theme-name="catppuccin-latte"] .fishbones__course-row:hover {
+[data-theme-name="ayu-light"] .libre__course-row:hover,
+[data-theme-name="ayu-light"] .libre__course-row:hover,
+[data-theme-name="catppuccin-latte"] .libre__course-row:hover {
   background: var(--color-bg-tertiary);
 }
 
-.fishbones__course-row-caret {
+.libre__course-row-caret {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -196,7 +196,7 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones__course-row-progress {
+.libre__course-row-progress {
   font-size: 10.5px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
@@ -209,7 +209,7 @@
    the bare "x/y" text — gives a glance-able visual of how far in the
    learner is without dedicating a column for digits. The text variant
    was kept above for any callers still using it. */
-.fishbones__course-row-ring {
+.libre__course-row-ring {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -221,7 +221,7 @@
    title row alongside the language chip + name. The ring shows the
    "x/y" count inside its own centre label, so we don't need a
    separate text element for progress on the active card either. */
-.fishbones__course-ring {
+.libre__course-ring {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -232,7 +232,7 @@
 /* Inside the active card the centre label needs to read smaller than
    the default 11px because we're squeezing "12/45" into a 28px ring.
    Tabular nums + tighter tracking lets the digits not collide. */
-.fishbones__course-ring .fishbones__progress-ring-label {
+.libre__course-ring .libre__progress-ring-label {
   font-size: 8.5px;
   letter-spacing: -0.04em;
 }
@@ -240,7 +240,7 @@
 /* Course header card. Slightly elevated surface with a border so the
    header feels like a distinct module, not just another row in the tree.
    Hover + active state use the next surface up. */
-.fishbones__course-card {
+.libre__course-card {
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
   border-radius: 10px;
@@ -248,19 +248,19 @@
   transition: border-color 0.2s ease, background var(--fb-motion-snappy);
 }
 
-.fishbones__course-card--expanded {
+.libre__course-card--expanded {
   background: var(--color-bg-tertiary);
 }
 
-.fishbones__course-card--active {
+.libre__course-card--active {
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-.fishbones__course-card:hover {
+.libre__course-card:hover {
   border-color: rgba(255, 255, 255, 0.15);
 }
 
-.fishbones__course-title {
+.libre__course-title {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -278,8 +278,8 @@
 }
 
 /* Solid white pill next to course titles, chevron drawn black inside.
-   Sized to match the completion dots (.fishbones__dot) so the tree lines up. */
-.fishbones__course-caret {
+   Sized to match the completion dots (.libre__dot) so the tree lines up. */
+.libre__course-caret {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -292,18 +292,18 @@
   transition: opacity var(--fb-motion-snappy), transform var(--fb-motion-snappy);
 }
 
-.fishbones__course-title:hover .fishbones__course-caret {
+.libre__course-title:hover .libre__course-caret {
   opacity: 0.92;
 }
 
-.fishbones__course-name {
+.libre__course-name {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.fishbones__course-progress {
+.libre__course-progress {
   font-size: 10.5px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
@@ -316,7 +316,7 @@
    edges with a small margin so the card's border-radius doesn't clip the
    bar's ends (previously the bar butted up against the curve and looked
    cropped). Rounding the bar itself keeps the pill shape consistent. */
-.fishbones__course-progress-bar {
+.libre__course-progress-bar {
   height: 3px;
   margin: 0 8px 6px;
   border-radius: 3px;
@@ -324,31 +324,31 @@
   overflow: hidden;
 }
 
-.fishbones__course-card--expanded .fishbones__course-progress-bar {
+.libre__course-card--expanded .libre__course-progress-bar {
   background: rgba(255, 255, 255, 0.14);
 }
 
-/* Fishbones Dark specifically needs more contrast on the bar background — its
+/* Libre Dark specifically needs more contrast on the bar background — its
    bg-tertiary (#19191D) is only a few lightness steps off from the card's
    bg-primary (#09090B) and the bar effectively disappears. A bumped
    rgba-white makes the track visible at any lightness. */
-[data-theme-name="default-dark"] .fishbones__course-progress-bar {
+[data-theme-name="default-dark"] .libre__course-progress-bar {
   background: rgba(255, 255, 255, 0.14);
 }
 
-[data-theme-name="default-dark"] .fishbones__course-card--expanded .fishbones__course-progress-bar {
+[data-theme-name="default-dark"] .libre__course-card--expanded .libre__course-progress-bar {
   background: rgba(255, 255, 255, 0.18);
 }
 
 /* Light themes want a dark-on-light track instead. */
-[data-theme="light"] .fishbones__course-progress-bar,
-[data-theme-name="ayu-light"] .fishbones__course-progress-bar,
-[data-theme-name="ayu-light"] .fishbones__course-progress-bar,
-[data-theme-name="catppuccin-latte"] .fishbones__course-progress-bar {
+[data-theme="light"] .libre__course-progress-bar,
+[data-theme-name="ayu-light"] .libre__course-progress-bar,
+[data-theme-name="ayu-light"] .libre__course-progress-bar,
+[data-theme-name="catppuccin-latte"] .libre__course-progress-bar {
   background: rgba(0, 0, 0, 0.12);
 }
 
-.fishbones__course-progress-fill {
+.libre__course-progress-fill {
   height: 100%;
   background: var(--color-text-primary);
   opacity: 0.85;
@@ -358,7 +358,7 @@
 /* Expanded body: chapter list. Slightly inset from the parent course
    card with a subtle left guide line so the chapters read as
    "belonging to" the course above rather than as siblings of it. */
-.fishbones__course-body {
+.libre__course-body {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -372,14 +372,14 @@
    tier ABOVE chapter so the visual hierarchy reads
    course → section → chapter → lesson when sections are present, and
    collapses cleanly to course → chapter → lesson when they're not. */
-.fishbones__section {
+.libre__section {
   display: flex;
   flex-direction: column;
   gap: 1px;
   padding: 0;
 }
 
-.fishbones__section-title {
+.libre__section-title {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -400,11 +400,11 @@
   transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy);
 }
 
-.fishbones__section-title:hover {
+.libre__section-title:hover {
   background: var(--color-bg-tertiary);
 }
 
-.fishbones__section-caret {
+.libre__section-caret {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -414,14 +414,14 @@
   color: var(--color-text-secondary);
 }
 
-.fishbones__section-title-text {
+.libre__section-title-text {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.fishbones__section-ring {
+.libre__section-ring {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -430,20 +430,20 @@
 }
 
 /* Nested chapter list under an open section. Indented + bordered the
-   same way `.fishbones__course-body` is, so the disclosure-depth
+   same way `.libre__course-body` is, so the disclosure-depth
    metaphor stays consistent: each level slides one notch right and
    gets a soft vertical guide. */
-.fishbones__section-children {
+.libre__section-children {
   display: flex;
   flex-direction: column;
   gap: 1px;
   padding: 2px 0 4px 8px;
   margin-left: 4px;
   border-left: 1px solid var(--color-border-default);
-  animation: fishbones-chapter-open 150ms ease-out;
+  animation: libre-chapter-open 150ms ease-out;
 }
 
-.fishbones__chapter {
+.libre__chapter {
   display: flex;
   flex-direction: column;
   gap: 1px;
@@ -455,7 +455,7 @@
    belongs to: smaller font, slightly muted colour, gentle hover tint
    that signals "this row is interactive" without competing with the
    parent course card. */
-.fishbones__chapter-title {
+.libre__chapter-title {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -474,12 +474,12 @@
   transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy);
 }
 
-.fishbones__chapter-title:hover {
+.libre__chapter-title:hover {
   background: var(--color-bg-tertiary);
   color: var(--color-text-primary);
 }
 
-.fishbones__chapter-caret {
+.libre__chapter-caret {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -489,14 +489,14 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones__chapter-title-text {
+.libre__chapter-title-text {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.fishbones__chapter-ring {
+.libre__chapter-ring {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -507,7 +507,7 @@
 /* Legacy text-progress class — kept around so any older callers still
    render a sensible look even though the chapter header now leads with
    the ring. */
-.fishbones__chapter-progress {
+.libre__chapter-progress {
   font-size: 10px;
   font-variant-numeric: tabular-nums;
   opacity: 0.9;
@@ -520,15 +520,15 @@
    visual hierarchy course → chapter → lesson reads at a glance. The
    short open/close height transition keeps disclosure snappy without
    feeling abrupt. */
-.fishbones__chapter-lessons {
+.libre__chapter-lessons {
   display: flex;
   flex-direction: column;
   gap: 1px;
   padding: 2px 0 4px 8px;
-  animation: fishbones-chapter-open 150ms ease-out;
+  animation: libre-chapter-open 150ms ease-out;
 }
 
-@keyframes fishbones-chapter-open {
+@keyframes libre-chapter-open {
   from {
     opacity: 0;
     transform: translateY(-2px);
@@ -539,14 +539,14 @@
   }
 }
 
-.fishbones__lesson-item {
+.libre__lesson-item {
   padding: 6px 10px 6px 8px;
   font-size: 12.5px;
   font-weight: 500;
   gap: 7px;
 }
 
-.fishbones__lesson-name {
+.libre__lesson-name {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -560,7 +560,7 @@
    stays a touch larger than the icon glyph so the colored ring (especially
    the difficulty tints + the box-shadow halo on `--active`) reads as the
    primary element; the glyph inside is a contextual whisper. */
-.fishbones__lesson-status {
+.libre__lesson-status {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -583,7 +583,7 @@
 /* Same trick the TTSButton uses: hard-clamp the inner SVG to
    override the global `.icon--xs` size. !important because the
    global rule is same-specificity. */
-.fishbones__lesson-status svg {
+.libre__lesson-status svg {
   width: 13px !important;
   height: 13px !important;
 }
@@ -591,20 +591,20 @@
 /* Pending: hollow ring with a barely-there kind icon. The icon color sits
    just above the border color so it registers as a hint rather than a
    focal point — the circle is the main element, the glyph is a whisper. */
-.fishbones__lesson-status--pending {
+.libre__lesson-status--pending {
   border: 1.25px solid var(--color-border-default);
   background: transparent;
   color: var(--color-text-disabled, rgba(255, 255, 255, 0.22));
 }
 
-.fishbones__lesson-item:hover .fishbones__lesson-status--pending {
+.libre__lesson-item:hover .libre__lesson-status--pending {
   border-color: var(--color-text-tertiary);
   color: var(--color-text-tertiary);
 }
 
 /* Active: brighter ring + halo + the icon turns up one notch toward
    visible (but still not the full-contrast treatment that "done" gets). */
-.fishbones__lesson-status--active {
+.libre__lesson-status--active {
   border: 1.25px solid var(--color-text-secondary);
   background: transparent;
   color: var(--color-text-secondary);
@@ -613,7 +613,7 @@
 
 /* Done: filled white circle with a black kind icon inside — inverted
    colors flag completion at a glance without losing the what-kind cue. */
-.fishbones__lesson-status--done {
+.libre__lesson-status--done {
   background: var(--color-text-primary);
   border: 1.25px solid var(--color-text-primary);
   color: var(--color-bg-primary);
@@ -623,41 +623,41 @@
    icon color on pending + active; completed state is intentionally left
    alone — once you've solved it, difficulty is history. Hover gets a
    slightly brighter version via border-opacity. */
-.fishbones__lesson-status--diff-easy.fishbones__lesson-status--pending {
+.libre__lesson-status--diff-easy.libre__lesson-status--pending {
   border-color: rgba(124, 217, 124, 0.55); /* success green */
   color: rgba(124, 217, 124, 0.7);
 }
-.fishbones__lesson-item:hover .fishbones__lesson-status--diff-easy.fishbones__lesson-status--pending {
+.libre__lesson-item:hover .libre__lesson-status--diff-easy.libre__lesson-status--pending {
   border-color: rgba(124, 217, 124, 0.9);
   color: rgba(124, 217, 124, 1);
 }
-.fishbones__lesson-status--diff-easy.fishbones__lesson-status--active {
+.libre__lesson-status--diff-easy.libre__lesson-status--active {
   border-color: #7cd97c;
   color: #7cd97c;
 }
 
-.fishbones__lesson-status--diff-medium.fishbones__lesson-status--pending {
+.libre__lesson-status--diff-medium.libre__lesson-status--pending {
   border-color: rgba(232, 196, 107, 0.55); /* warm gold, matches XP accent */
   color: rgba(232, 196, 107, 0.7);
 }
-.fishbones__lesson-item:hover .fishbones__lesson-status--diff-medium.fishbones__lesson-status--pending {
+.libre__lesson-item:hover .libre__lesson-status--diff-medium.libre__lesson-status--pending {
   border-color: rgba(232, 196, 107, 0.9);
   color: rgba(232, 196, 107, 1);
 }
-.fishbones__lesson-status--diff-medium.fishbones__lesson-status--active {
+.libre__lesson-status--diff-medium.libre__lesson-status--active {
   border-color: #e8c46b;
   color: #e8c46b;
 }
 
-.fishbones__lesson-status--diff-hard.fishbones__lesson-status--pending {
+.libre__lesson-status--diff-hard.libre__lesson-status--pending {
   border-color: rgba(239, 111, 111, 0.55); /* error red */
   color: rgba(239, 111, 111, 0.7);
 }
-.fishbones__lesson-item:hover .fishbones__lesson-status--diff-hard.fishbones__lesson-status--pending {
+.libre__lesson-item:hover .libre__lesson-status--diff-hard.libre__lesson-status--pending {
   border-color: rgba(239, 111, 111, 0.9);
   color: rgba(239, 111, 111, 1);
 }
-.fishbones__lesson-status--diff-hard.fishbones__lesson-status--active {
+.libre__lesson-status--diff-hard.libre__lesson-status--active {
   border-color: #ef6f6f;
   color: #ef6f6f;
 }
@@ -668,7 +668,7 @@
    chips (Profile, Playground) get the --active fill so the learner can
    see which main-pane route is live at a glance. One-shot actions
    (Library, Import, Settings) stay in the neutral hover treatment. */
-.fishbones__sidebar-nav {
+.libre__sidebar-nav {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -677,7 +677,7 @@
   flex-shrink: 0;
 }
 
-.fishbones__sidebar-nav-item {
+.libre__sidebar-nav-item {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -694,29 +694,29 @@
   transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy);
 }
 
-.fishbones__sidebar-nav-item:hover {
+.libre__sidebar-nav-item:hover {
   background: var(--color-bg-tertiary);
   color: var(--color-text-primary);
 }
 
-.fishbones__sidebar-nav-item--active,
-.fishbones__sidebar-nav-item--active:hover {
+.libre__sidebar-nav-item--active,
+.libre__sidebar-nav-item--active:hover {
   background: rgba(255, 255, 255, 0.08);
   color: var(--color-text-primary);
 }
 
 /* Light themes need a darker-on-light active surface since the
    rgba-white pill above disappears against a pale sidebar. */
-[data-theme-name="ayu-light"] .fishbones__sidebar-nav-item--active,
-[data-theme-name="ayu-light"] .fishbones__sidebar-nav-item--active:hover,
-[data-theme-name="ayu-light"] .fishbones__sidebar-nav-item--active,
-[data-theme-name="ayu-light"] .fishbones__sidebar-nav-item--active:hover,
-[data-theme-name="catppuccin-latte"] .fishbones__sidebar-nav-item--active,
-[data-theme-name="catppuccin-latte"] .fishbones__sidebar-nav-item--active:hover {
+[data-theme-name="ayu-light"] .libre__sidebar-nav-item--active,
+[data-theme-name="ayu-light"] .libre__sidebar-nav-item--active:hover,
+[data-theme-name="ayu-light"] .libre__sidebar-nav-item--active,
+[data-theme-name="ayu-light"] .libre__sidebar-nav-item--active:hover,
+[data-theme-name="catppuccin-latte"] .libre__sidebar-nav-item--active,
+[data-theme-name="catppuccin-latte"] .libre__sidebar-nav-item--active:hover {
   background: rgba(0, 0, 0, 0.06);
 }
 
-.fishbones__sidebar-nav-icon {
+.libre__sidebar-nav-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -725,7 +725,7 @@
   flex-shrink: 0;
 }
 
-.fishbones__sidebar-nav-label {
+.libre__sidebar-nav-label {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -736,7 +736,7 @@
    Small uppercase heading, similar weight to the nav dividers elsewhere
    in the app. Only renders when BOTH kinds are present — see Sidebar.tsx.
 */
-.fishbones__nav-section {
+.libre__nav-section {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -748,7 +748,7 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones__nav-section--packs {
+.libre__nav-section--packs {
   color: #c79bff; /* matches the profile "longest streak" accent — both are "you did this" trophies */
 }
 
@@ -756,7 +756,7 @@
    the sidebar's "your bench" framing means an unbaked install would
    otherwise show no list at all. CTA routes them straight to the
    Library where new courses come from. */
-.fishbones__nav-empty {
+.libre__nav-empty {
   margin: 12px 12px 0;
   padding: 16px 14px;
   background: var(--color-bg-secondary);
@@ -765,21 +765,21 @@
   text-align: center;
 }
 
-.fishbones__nav-empty-headline {
+.libre__nav-empty-headline {
   margin: 0 0 4px;
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
-.fishbones__nav-empty-body {
+.libre__nav-empty-body {
   margin: 0 0 12px;
   font-size: 11.5px;
   line-height: 1.4;
   color: var(--color-text-secondary);
 }
 
-.fishbones__nav-empty-cta {
+.libre__nav-empty-cta {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -795,11 +795,11 @@
   cursor: pointer;
   transition: opacity var(--fb-motion-snappy);
 }
-.fishbones__nav-empty-cta:hover {
+.libre__nav-empty-cta:hover {
   opacity: 0.9;
 }
 
-.fishbones__nav-section-icon {
+.libre__nav-section-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -812,7 +812,7 @@
    for the listeners). A small affordance header labels which course the
    menu applies to — handy when you right-click one card and the menu
    opens near another due to screen-edge clamping. */
-.fishbones__context-menu {
+.libre__context-menu {
   position: fixed;
   z-index: 50;
   min-width: 180px;
@@ -825,7 +825,7 @@
   gap: 1px;
 }
 
-.fishbones__context-menu-label {
+.libre__context-menu-label {
   padding: 6px 10px 4px;
   font-size: 10px;
   font-weight: 700;
@@ -838,7 +838,7 @@
   max-width: 240px;
 }
 
-.fishbones__context-menu-item {
+.libre__context-menu-item {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -853,11 +853,11 @@
   cursor: pointer;
 }
 
-.fishbones__context-menu-item:hover {
+.libre__context-menu-item:hover {
   background: rgba(255, 255, 255, 0.08);
 }
 
-.fishbones__context-menu-icon {
+.libre__context-menu-icon {
   width: 14px;
   height: 14px;
   display: inline-flex;
@@ -867,12 +867,12 @@
   flex-shrink: 0;
 }
 
-.fishbones__context-menu-item:hover .fishbones__context-menu-icon {
+.libre__context-menu-item:hover .libre__context-menu-icon {
   color: var(--color-text-primary);
 }
 
 /* Thin separator between benign and destructive actions. */
-.fishbones__context-menu-sep {
+.libre__context-menu-sep {
   height: 1px;
   margin: 3px 4px;
   background: var(--color-border-default);
@@ -881,12 +881,12 @@
 /* Destructive item: red on hover so there's unmistakable feedback before
    the confirm dialog fires. Idle state still matches the normal rows so
    the menu doesn't look alarming by default. */
-.fishbones__context-menu-item--danger:hover {
+.libre__context-menu-item--danger:hover {
   background: rgba(239, 111, 111, 0.12);
   color: #ef6f6f;
 }
 
-.fishbones__context-menu-item--danger:hover .fishbones__context-menu-icon {
+.libre__context-menu-item--danger:hover .libre__context-menu-icon {
   color: #ef6f6f;
 }
 
@@ -897,7 +897,7 @@
    tree. Hidden when there are fewer than 2 courses — the component
    itself short-circuits so there's no empty band.
    --------------------------------------------------------------------- */
-.fishbones__carousel {
+.libre__carousel {
   padding: 4px 0;
   border-bottom: 1px solid var(--color-border-default);
   flex-shrink: 0;
@@ -910,7 +910,7 @@
    14px vertical / 16px horizontal padding leaves breathing room. The
    matching negative margin keeps the scrollable area flush with the
    sidebar edges despite the internal padding. */
-.fishbones__carousel-scroll {
+.libre__carousel-scroll {
   display: flex;
   gap: 10px;
   overflow-x: auto;
@@ -921,7 +921,7 @@
   padding: 14px 16px;
 }
 
-.fishbones__carousel-scroll::-webkit-scrollbar {
+.libre__carousel-scroll::-webkit-scrollbar {
   display: none;
 }
 
@@ -929,7 +929,7 @@
    wide — a 74px thumbnail gives ~3 visible at a time with generous
    gutter, which feels like a shelf rather than a cramped strip. Hover
    lifts + deepens shadow; active course gets a bright ring. */
-.fishbones__carousel-item {
+.libre__carousel-item {
   position: relative;
   flex-shrink: 0;
   width: 74px;
@@ -953,7 +953,7 @@
   transform-origin: center center;
 }
 
-.fishbones__carousel-item:hover {
+.libre__carousel-item:hover {
   /* Zoom on hover — feels like picking up a book. Transform-origin is
      center so the scale radiates in place without shifting neighbors.
      Scale 1.12 is enough to feel like a deliberate magnification while
@@ -968,15 +968,15 @@
 
 /* Cover <img> still needs to respect the card's rounded corners since
    the button itself no longer clips. */
-.fishbones__carousel-cover {
+.libre__carousel-cover {
   border-radius: var(--fb-radius-sm);
 }
 
 /* Dark gradient fading from transparent (top) to near-opaque (bottom)
    so the title + author overlay stays legible on any cover art.
-   Mirrors `.fishbones-book-shadow` from the library shelf, just
+   Mirrors `.libre-book-shadow` from the library shelf, just
    scaled for the 74×111 carousel thumb. */
-.fishbones__carousel-shadow {
+.libre__carousel-shadow {
   position: absolute;
   left: 0;
   right: 0;
@@ -996,7 +996,7 @@
    hierarchy: bold title clamped to 2 lines, thinner author on one
    line with ellipsis. Padding keeps the text off the very edge and
    above the progress strip. */
-.fishbones__carousel-label {
+.libre__carousel-label {
   position: absolute;
   left: 0;
   right: 0;
@@ -1009,7 +1009,7 @@
   gap: 1px;
 }
 
-.fishbones__carousel-label-title {
+.libre__carousel-label-title {
   font-size: 8.5px;
   font-weight: 700;
   letter-spacing: -0.01em;
@@ -1021,7 +1021,7 @@
   text-shadow: 0 1px 1.5px rgba(0, 0, 0, 0.7);
 }
 
-.fishbones__carousel-label-author {
+.libre__carousel-label-author {
   font-size: 7px;
   color: rgba(255, 255, 255, 0.78);
   white-space: nowrap;
@@ -1035,7 +1035,7 @@
    (2px) so it reads as a tick mark rather than a chrome element, with
    the same warm gold fill used on the library shelf progress. The track
    sits below the cover edge but inside the card's rounded clip. */
-.fishbones__carousel-progress {
+.libre__carousel-progress {
   position: absolute;
   left: 0;
   right: 0;
@@ -1045,7 +1045,7 @@
   pointer-events: none;
 }
 
-.fishbones__carousel-progress-fill {
+.libre__carousel-progress-fill {
   display: block;
   height: 100%;
   /* Bone-white (#d4c5a1, --fb-bone-color). The previous hardcoded
@@ -1059,8 +1059,8 @@
 /* Reduced-motion users get the outline + shadow change but no zoom —
    avoids the scale-up that some users find disorienting. */
 @media (prefers-reduced-motion: reduce) {
-  .fishbones__carousel-item,
-  .fishbones__carousel-item:hover {
+  .libre__carousel-item,
+  .libre__carousel-item:hover {
     transform: none;
     transition: outline-color var(--fb-motion-snappy), box-shadow var(--fb-motion-snappy);
   }
@@ -1069,7 +1069,7 @@
 /* Cover image fills the card edge-to-edge. object-fit: cover so non-
    2:3 PDFs (rare but possible — some books render slightly off) don't
    letterbox. */
-.fishbones__carousel-cover {
+.libre__carousel-cover {
   display: block;
   width: 100%;
   height: 100%;
@@ -1080,13 +1080,13 @@
    (see modifier rules below) + a small 2-letter glyph centered.
    Echoes the BookCover fallback so the visual language is consistent
    between the library and the sidebar carousel. */
-.fishbones__carousel-item--no-cover {
+.libre__carousel-item--no-cover {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.fishbones__carousel-glyph {
+.libre__carousel-glyph {
   font-size: 18px;
   font-weight: 700;
   letter-spacing: 0.8px;
@@ -1096,27 +1096,27 @@
 
 /* Language accents for the fallback tiles. Same hue family as the
    library shelf so a JS book reads the same in both views. */
-.fishbones__carousel-item--no-cover.fishbones__carousel-item--lang-javascript {
+.libre__carousel-item--no-cover.libre__carousel-item--lang-javascript {
   background: linear-gradient(135deg, #e6b800 0%, #b38a00 100%);
 }
-.fishbones__carousel-item--no-cover.fishbones__carousel-item--lang-typescript {
+.libre__carousel-item--no-cover.libre__carousel-item--lang-typescript {
   background: linear-gradient(135deg, #3178c6 0%, #215388 100%);
 }
-.fishbones__carousel-item--no-cover.fishbones__carousel-item--lang-python {
+.libre__carousel-item--no-cover.libre__carousel-item--lang-python {
   background: linear-gradient(135deg, #3a7ab8 0%, #f6c23f 100%);
 }
-.fishbones__carousel-item--no-cover.fishbones__carousel-item--lang-rust {
+.libre__carousel-item--no-cover.libre__carousel-item--lang-rust {
   background: linear-gradient(135deg, #d26a3b 0%, #7a3b1f 100%);
 }
-.fishbones__carousel-item--no-cover.fishbones__carousel-item--lang-swift {
+.libre__carousel-item--no-cover.libre__carousel-item--lang-swift {
   background: linear-gradient(135deg, #fa7343 0%, #b74e2c 100%);
 }
-.fishbones__carousel-item--no-cover.fishbones__carousel-item--lang-go {
+.libre__carousel-item--no-cover.libre__carousel-item--lang-go {
   background: linear-gradient(135deg, #00add8 0%, #007a99 100%);
 }
-.fishbones__carousel-item--no-cover.fishbones__carousel-item--lang-web {
+.libre__carousel-item--no-cover.libre__carousel-item--lang-web {
   background: linear-gradient(135deg, #e54c28 0%, #1f7abf 100%);
 }
-.fishbones__carousel-item--no-cover.fishbones__carousel-item--lang-threejs {
+.libre__carousel-item--no-cover.libre__carousel-item--lang-threejs {
   background: linear-gradient(135deg, #2a2a2a 0%, #555 100%);
 }

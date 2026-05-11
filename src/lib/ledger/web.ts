@@ -1,7 +1,7 @@
 /// Web Ledger transport using `navigator.hid` (WebHID).
 ///
 /// Active path for the web build deployed to
-/// `mattssoftware.com/fishbones/learn/`. Chrome / Edge / Opera ship
+/// `mattssoftware.com/libre/learn/`. Chrome / Edge / Opera ship
 /// WebHID; Safari and Firefox don't, so this build is "Connect Ledger
 /// only works in supported browsers" — the unified transport in
 /// `index.ts` falls back to an explanatory error when WebHID is

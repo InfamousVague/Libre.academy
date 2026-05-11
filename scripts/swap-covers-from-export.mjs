@@ -195,7 +195,7 @@ function ensureCmd(cmd) {
 }
 
 function findArchive(id) {
-  for (const ext of [".academy", ".fishbones"]) {
+  for (const ext of [".academy", ".libre"]) {
     const p = path.join(BUNDLE_DIR, `${id}${ext}`);
     if (existsSync(p)) return p;
   }

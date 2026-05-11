@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import FishbonesLoader from "./FishbonesLoader";
+import LibreLoader from "./LibreLoader";
 import "./DeferredMount.css";
 
 /// Two-phase mount: renders `fallback` on first paint, then swaps to
@@ -33,13 +33,13 @@ export function DeferredMount({
 }
 
 /// Centered "Loading <label>…" card. Used as the `fallback` for
-/// DeferredMount on the main pane. Uses the shared FishbonesLoader so
+/// DeferredMount on the main pane. Uses the shared LibreLoader so
 /// this pane speaks the same visual vocabulary as the boot overlay and
 /// the OutputPane's "running…" state.
 export function LoadingPane({ label }: { label: string }) {
   return (
-    <div className="fishbones-loading-pane">
-      <FishbonesLoader label={label} />
+    <div className="libre-loading-pane">
+      <LibreLoader label={label} />
     </div>
   );
 }

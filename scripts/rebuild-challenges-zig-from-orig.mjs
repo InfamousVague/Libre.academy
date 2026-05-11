@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /// Rebuild `challenges-zig-handwritten.json` from the original
 /// LLM-generated source (extracted from git via the `e2083ac` commit's
-/// .fishbones archive into `/tmp/zig-orig/course.json`). Replays the
+/// .libre archive into `/tmp/zig-orig/course.json`). Replays the
 /// fix passes correctly this time:
 ///
 ///   1. **Strip `@import("user.zig").X` re-imports.** Tests pulled
@@ -56,7 +56,7 @@ const OUT_PATH = join(ROOT, "public", "starter-courses", "challenges-zig-handwri
 
 if (!existsSync(ORIG_PATH)) {
   console.error(`missing ${ORIG_PATH} — run:`);
-  console.error("  mkdir -p /tmp/zig-orig && git show e2083ac:src-tauri/resources/bundled-packs/challenges-zig-handwritten.fishbones > /tmp/zig-orig/pack.fishbones && cd /tmp/zig-orig && unzip -o pack.fishbones");
+  console.error("  mkdir -p /tmp/zig-orig && git show e2083ac:src-tauri/resources/bundled-packs/challenges-zig-handwritten.libre > /tmp/zig-orig/pack.libre && cd /tmp/zig-orig && unzip -o pack.libre");
   process.exit(2);
 }
 

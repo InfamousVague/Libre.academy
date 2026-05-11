@@ -144,23 +144,23 @@ export default function DocsImportDialog({ onDismiss, onStart }: Props) {
   return (
     <ModalBackdrop onDismiss={onDismiss} zIndex={120}>
       <div
-        className="fishbones-docs-panel"
+        className="libre-docs-panel"
         role="dialog"
-        aria-labelledby="fishbones-docs-title"
+        aria-labelledby="libre-docs-title"
       >
-        <div className="fishbones-docs-header">
+        <div className="libre-docs-header">
           <div>
-            <div className="fishbones-docs-kicker">New course</div>
+            <div className="libre-docs-kicker">New course</div>
             <div
-              className="fishbones-docs-title"
-              id="fishbones-docs-title"
+              className="libre-docs-title"
+              id="libre-docs-title"
             >
               Import from docs site
             </div>
           </div>
           <button
             type="button"
-            className="fishbones-docs-close"
+            className="libre-docs-close"
             onClick={onDismiss}
             aria-label="Close"
           >
@@ -168,19 +168,19 @@ export default function DocsImportDialog({ onDismiss, onStart }: Props) {
           </button>
         </div>
 
-        <div className="fishbones-docs-body">
-          <section className="fishbones-docs-section">
+        <div className="libre-docs-body">
+          <section className="libre-docs-section">
             <label
-              className="fishbones-docs-section-label"
-              htmlFor="fishbones-docs-url"
+              className="libre-docs-section-label"
+              htmlFor="libre-docs-url"
             >
               Start URL
             </label>
             <input
-              id="fishbones-docs-url"
+              id="libre-docs-url"
               type="url"
-              className={`fishbones-docs-input ${
-                urlError ? "fishbones-docs-input--error" : ""
+              className={`libre-docs-input ${
+                urlError ? "libre-docs-input--error" : ""
               }`}
               placeholder="https://reactnative.dev/docs/getting-started"
               value={url}
@@ -189,26 +189,26 @@ export default function DocsImportDialog({ onDismiss, onStart }: Props) {
               autoComplete="url"
             />
             {urlError && (
-              <div className="fishbones-docs-error">{urlError}</div>
+              <div className="libre-docs-error">{urlError}</div>
             )}
-            <div className="fishbones-docs-section-hint">
+            <div className="libre-docs-section-hint">
               Crawl is scoped to the same origin + path prefix —
               everything under the URL's "directory" gets visited, nothing
               above it or on other hosts.
             </div>
           </section>
 
-          <section className="fishbones-docs-section">
+          <section className="libre-docs-section">
             <label
-              className="fishbones-docs-section-label"
-              htmlFor="fishbones-docs-title-input"
+              className="libre-docs-section-label"
+              htmlFor="libre-docs-title-input"
             >
               Course title
             </label>
             <input
-              id="fishbones-docs-title-input"
+              id="libre-docs-title-input"
               type="text"
-              className="fishbones-docs-input"
+              className="libre-docs-input"
               placeholder="e.g. React Native Docs"
               value={title}
               onChange={(e) => {
@@ -218,15 +218,15 @@ export default function DocsImportDialog({ onDismiss, onStart }: Props) {
             />
           </section>
 
-          <section className="fishbones-docs-section">
-            <label className="fishbones-docs-section-label">Language</label>
-            <div className="fishbones-docs-lang-row">
+          <section className="libre-docs-section">
+            <label className="libre-docs-section-label">Language</label>
+            <div className="libre-docs-lang-row">
               {LANGUAGE_OPTIONS.map((opt) => (
                 <button
                   key={opt.id}
                   type="button"
-                  className={`fishbones-docs-lang-btn ${
-                    language === opt.id ? "fishbones-docs-lang-btn--active" : ""
+                  className={`libre-docs-lang-btn ${
+                    language === opt.id ? "libre-docs-lang-btn--active" : ""
                   }`}
                   onClick={() => setLanguage(opt.id)}
                 >
@@ -234,66 +234,66 @@ export default function DocsImportDialog({ onDismiss, onStart }: Props) {
                 </button>
               ))}
             </div>
-            <div className="fishbones-docs-section-hint">
+            <div className="libre-docs-section-hint">
               Sets the runtime for auto-generated exercises. The crawler
               doesn't inspect code blocks to pick one — you know the
               site better than our heuristic would.
             </div>
           </section>
 
-          <section className="fishbones-docs-section fishbones-docs-section--two-up">
-            <div className="fishbones-docs-slider-group">
-              <label className="fishbones-docs-section-label">
+          <section className="libre-docs-section libre-docs-section--two-up">
+            <div className="libre-docs-slider-group">
+              <label className="libre-docs-section-label">
                 Max pages
-                <span className="fishbones-docs-section-value">{maxPages}</span>
+                <span className="libre-docs-section-value">{maxPages}</span>
               </label>
               <input
                 type="range"
-                className="fishbones-docs-slider"
+                className="libre-docs-slider"
                 min={MIN_MAX_PAGES}
                 max={MAX_MAX_PAGES}
                 step={10}
                 value={maxPages}
                 onChange={(e) => setMaxPages(parseInt(e.target.value, 10))}
               />
-              <div className="fishbones-docs-slider-ticks">
+              <div className="libre-docs-slider-ticks">
                 <span>{MIN_MAX_PAGES}</span>
                 <span>{MAX_MAX_PAGES}</span>
               </div>
             </div>
-            <div className="fishbones-docs-slider-group">
-              <label className="fishbones-docs-section-label">
+            <div className="libre-docs-slider-group">
+              <label className="libre-docs-section-label">
                 Max depth
-                <span className="fishbones-docs-section-value">{maxDepth}</span>
+                <span className="libre-docs-section-value">{maxDepth}</span>
               </label>
               <input
                 type="range"
-                className="fishbones-docs-slider"
+                className="libre-docs-slider"
                 min={1}
                 max={5}
                 step={1}
                 value={maxDepth}
                 onChange={(e) => setMaxDepth(parseInt(e.target.value, 10))}
               />
-              <div className="fishbones-docs-slider-ticks">
+              <div className="libre-docs-slider-ticks">
                 <span>shallow</span>
                 <span>deep</span>
               </div>
             </div>
           </section>
 
-          <section className="fishbones-docs-section">
-            <label className="fishbones-docs-toggle">
+          <section className="libre-docs-section">
+            <label className="libre-docs-toggle">
               <input
                 type="checkbox"
                 checked={embedImages}
                 onChange={(e) => setEmbedImages(e.target.checked)}
               />
-              <span className="fishbones-docs-toggle-label">
+              <span className="libre-docs-toggle-label">
                 Embed images into the course
               </span>
             </label>
-            <div className="fishbones-docs-section-hint">
+            <div className="libre-docs-section-hint">
               Downloads every image referenced on each page and inlines
               it as a data URL so the exported <code>.academy</code>{" "}
               archive is portable. Roughly doubles crawl time for
@@ -301,22 +301,22 @@ export default function DocsImportDialog({ onDismiss, onStart }: Props) {
             </div>
           </section>
 
-          <section className="fishbones-docs-section">
-            <label className="fishbones-docs-section-label">Model</label>
-            <div className="fishbones-docs-model-list">
+          <section className="libre-docs-section">
+            <label className="libre-docs-section-label">Model</label>
+            <div className="libre-docs-model-list">
               {(Object.keys(MODEL_PRICES) as ModelId[]).map((id) => (
                 <button
                   key={id}
                   type="button"
-                  className={`fishbones-docs-model ${
-                    model === id ? "fishbones-docs-model--active" : ""
+                  className={`libre-docs-model ${
+                    model === id ? "libre-docs-model--active" : ""
                   }`}
                   onClick={() => setModel(id)}
                 >
-                  <div className="fishbones-docs-model-label">
+                  <div className="libre-docs-model-label">
                     {MODEL_PRICES[id].label}
                   </div>
-                  <div className="fishbones-docs-model-hint">
+                  <div className="libre-docs-model-hint">
                     {MODEL_PRICES[id].hint}
                   </div>
                 </button>
@@ -324,18 +324,18 @@ export default function DocsImportDialog({ onDismiss, onStart }: Props) {
             </div>
           </section>
 
-          <section className="fishbones-docs-estimate">
-            <div className="fishbones-docs-estimate-label">
+          <section className="libre-docs-estimate">
+            <div className="libre-docs-estimate-label">
               Estimated cost
             </div>
             <div
-              className={`fishbones-docs-estimate-value ${
-                estimatedCostUsd > 20 ? "fishbones-docs-estimate-value--warn" : ""
+              className={`libre-docs-estimate-value ${
+                estimatedCostUsd > 20 ? "libre-docs-estimate-value--warn" : ""
               }`}
             >
               ~${estimatedCostUsd.toFixed(2)}
             </div>
-            <div className="fishbones-docs-estimate-hint">
+            <div className="libre-docs-estimate-hint">
               {maxPages} pages × ~{AVG_TOKENS_PER_PAGE.output / 1000}k
               output tokens × {MODEL_PRICES[model].label}. Short pages
               cost less; API-reference pages cost more. Cancel any time.
@@ -345,17 +345,17 @@ export default function DocsImportDialog({ onDismiss, onStart }: Props) {
           </section>
         </div>
 
-        <div className="fishbones-docs-footer">
+        <div className="libre-docs-footer">
           <button
             type="button"
-            className="fishbones-docs-btn"
+            className="libre-docs-btn"
             onClick={onDismiss}
           >
             Cancel
           </button>
           <button
             type="button"
-            className="fishbones-docs-btn fishbones-docs-btn--primary"
+            className="libre-docs-btn libre-docs-btn--primary"
             onClick={submit}
             disabled={!canSubmit}
           >

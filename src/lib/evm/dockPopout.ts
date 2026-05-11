@@ -35,7 +35,7 @@ function isTauri(): boolean {
 }
 
 const POPOUT_LABEL = "evm-dock";
-const POPOUT_TITLE = "Fishbones — Local Chain";
+const POPOUT_TITLE = "Libre — Local Chain";
 
 type StateListener = (popped: boolean) => void;
 const listeners = new Set<StateListener>();

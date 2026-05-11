@@ -5,7 +5,7 @@
 
 /* Backdrop chrome lives in `Shared/ModalBackdrop.css`. */
 
-.fishbones-docs-panel {
+.libre-docs-panel {
   width: min(620px, 94vw);
   max-height: 88vh;
   background: var(--color-bg-secondary);
@@ -16,7 +16,7 @@
   overflow: hidden;
 }
 
-.fishbones-docs-header {
+.libre-docs-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -24,7 +24,7 @@
   border-bottom: 1px solid var(--color-border-default);
 }
 
-.fishbones-docs-kicker {
+.libre-docs-kicker {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -32,14 +32,14 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones-docs-title {
+.libre-docs-title {
   font-size: 16px;
   font-weight: 700;
   color: var(--color-text-primary);
   margin-top: 2px;
 }
 
-.fishbones-docs-close {
+.libre-docs-close {
   background: none;
   border: 0;
   color: var(--color-text-tertiary);
@@ -49,11 +49,11 @@
   padding: 2px 8px;
 }
 
-.fishbones-docs-close:hover {
+.libre-docs-close:hover {
   color: var(--color-text-primary);
 }
 
-.fishbones-docs-body {
+.libre-docs-body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -63,25 +63,25 @@
   gap: 16px;
 }
 
-.fishbones-docs-section {
+.libre-docs-section {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.fishbones-docs-section--two-up {
+.libre-docs-section--two-up {
   flex-direction: row;
   gap: 20px;
 }
 
-.fishbones-docs-slider-group {
+.libre-docs-slider-group {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.fishbones-docs-section-label {
+.libre-docs-section-label {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -93,7 +93,7 @@
   margin-top: 8px;
 }
 
-.fishbones-docs-section-value {
+.libre-docs-section-value {
   font-size: 15px;
   font-weight: 700;
   color: var(--color-text-primary);
@@ -102,13 +102,13 @@
   letter-spacing: 0;
 }
 
-.fishbones-docs-section-hint {
+.libre-docs-section-hint {
   font-size: 11px;
   color: var(--color-text-secondary);
   line-height: 1.55;
 }
 
-.fishbones-docs-section-hint code {
+.libre-docs-section-hint code {
   background: var(--color-bg-tertiary);
   padding: 1px 5px;
   border-radius: var(--fb-radius-xs);
@@ -116,7 +116,7 @@
 }
 
 /* URL + title text inputs. Share styling so the two rows read as a unit. */
-.fishbones-docs-input {
+.libre-docs-input {
   width: 100%;
   padding: 8px 10px;
   background: var(--color-bg-primary);
@@ -129,29 +129,29 @@
   transition: border-color var(--fb-motion-snappy), box-shadow var(--fb-motion-snappy);
 }
 
-.fishbones-docs-input:focus {
+.libre-docs-input:focus {
   border-color: rgba(255, 255, 255, 0.28);
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.06);
 }
 
-.fishbones-docs-input--error {
+.libre-docs-input--error {
   border-color: #ef6f6f;
 }
 
-.fishbones-docs-error {
+.libre-docs-error {
   font-size: 11px;
   color: #ef6f6f;
 }
 
 /* Language segmented control — same treatment as GeneratePackDialog
    but wraps on narrow widths because we have 6 languages. */
-.fishbones-docs-lang-row {
+.libre-docs-lang-row {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-.fishbones-docs-lang-btn {
+.libre-docs-lang-btn {
   flex: 1 1 auto;
   min-width: 80px;
   padding: 8px 12px;
@@ -166,25 +166,25 @@
   transition: background var(--fb-motion-snappy), border-color var(--fb-motion-snappy), color var(--fb-motion-snappy);
 }
 
-.fishbones-docs-lang-btn:hover:not(:disabled) {
+.libre-docs-lang-btn:hover:not(:disabled) {
   background: var(--color-bg-tertiary);
   color: var(--color-text-primary);
 }
 
-.fishbones-docs-lang-btn--active,
-.fishbones-docs-lang-btn--active:hover {
+.libre-docs-lang-btn--active,
+.libre-docs-lang-btn--active:hover {
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
   border-color: var(--color-text-primary);
 }
 
 /* Slider + ticks */
-.fishbones-docs-slider {
+.libre-docs-slider {
   width: 100%;
   accent-color: var(--color-text-primary);
 }
 
-.fishbones-docs-slider-ticks {
+.libre-docs-slider-ticks {
   display: flex;
   justify-content: space-between;
   font-size: 10.5px;
@@ -193,7 +193,7 @@
 }
 
 /* Image-embed toggle */
-.fishbones-docs-toggle {
+.libre-docs-toggle {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -204,25 +204,25 @@
   cursor: pointer;
 }
 
-.fishbones-docs-toggle input {
+.libre-docs-toggle input {
   accent-color: var(--color-text-primary);
   cursor: pointer;
 }
 
-.fishbones-docs-toggle-label {
+.libre-docs-toggle-label {
   font-size: 13px;
   font-weight: 500;
   color: var(--color-text-primary);
 }
 
 /* Model picker — same look as GeneratePackDialog. */
-.fishbones-docs-model-list {
+.libre-docs-model-list {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.fishbones-docs-model {
+.libre-docs-model {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -237,27 +237,27 @@
   transition: border-color var(--fb-motion-snappy), background var(--fb-motion-snappy);
 }
 
-.fishbones-docs-model:hover {
+.libre-docs-model:hover {
   border-color: rgba(255, 255, 255, 0.18);
 }
 
-.fishbones-docs-model--active {
+.libre-docs-model--active {
   border-color: var(--color-text-primary);
   background: var(--color-bg-tertiary);
 }
 
-.fishbones-docs-model-label {
+.libre-docs-model-label {
   font-size: 13px;
   font-weight: 600;
 }
 
-.fishbones-docs-model-hint {
+.libre-docs-model-hint {
   font-size: 11px;
   color: var(--color-text-tertiary);
 }
 
 /* Cost estimate */
-.fishbones-docs-estimate {
+.libre-docs-estimate {
   padding: 12px 14px;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
@@ -267,7 +267,7 @@
   gap: 4px;
 }
 
-.fishbones-docs-estimate-label {
+.libre-docs-estimate-label {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -275,7 +275,7 @@
   color: var(--color-text-tertiary);
 }
 
-.fishbones-docs-estimate-value {
+.libre-docs-estimate-value {
   font-size: 22px;
   font-weight: 700;
   color: var(--color-text-primary);
@@ -285,17 +285,17 @@
 /* Soft warning when the estimate crosses $20 — matches the copy in the
    hint line so the user doesn't have to read carefully to spot the
    threshold. */
-.fishbones-docs-estimate-value--warn {
+.libre-docs-estimate-value--warn {
   color: #ff9b5e;
 }
 
-.fishbones-docs-estimate-hint {
+.libre-docs-estimate-hint {
   font-size: 10.5px;
   color: var(--color-text-secondary);
 }
 
 /* Footer */
-.fishbones-docs-footer {
+.libre-docs-footer {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
@@ -303,7 +303,7 @@
   border-top: 1px solid var(--color-border-default);
 }
 
-.fishbones-docs-btn {
+.libre-docs-btn {
   padding: 7px 14px;
   background: transparent;
   border: 1px solid var(--color-border-default);
@@ -316,18 +316,18 @@
   transition: background var(--fb-motion-snappy), border-color var(--fb-motion-snappy), color var(--fb-motion-snappy);
 }
 
-.fishbones-docs-btn:hover:not(:disabled) {
+.libre-docs-btn:hover:not(:disabled) {
   background: var(--color-bg-tertiary);
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-.fishbones-docs-btn:disabled {
+.libre-docs-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.fishbones-docs-btn--primary,
-.fishbones-docs-btn--primary:hover:not(:disabled) {
+.libre-docs-btn--primary,
+.libre-docs-btn--primary:hover:not(:disabled) {
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
   border-color: var(--color-text-primary);

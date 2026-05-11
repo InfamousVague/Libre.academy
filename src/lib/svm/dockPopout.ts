@@ -21,7 +21,7 @@ function isTauri(): boolean {
 }
 
 const POPOUT_LABEL = "svm-dock";
-const POPOUT_TITLE = "Fishbones — Local SVM";
+const POPOUT_TITLE = "Libre — Local SVM";
 
 type StateListener = (popped: boolean) => void;
 const listeners = new Set<StateListener>();

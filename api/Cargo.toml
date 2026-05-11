@@ -1,8 +1,8 @@
 [package]
-name = "fishbones-api"
+name = "libre-api"
 version = "0.1.0"
 edition = "2021"
-description = "Fishbones HTTP API — auth, course archives, progress sync"
+description = "Libre HTTP API — auth, course archives, progress sync"
 license = "MIT"
 
 [dependencies]

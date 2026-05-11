@@ -123,7 +123,7 @@ bootLog("createRoot.render scheduled");
 
 // Hand off from the inline index.html preloader to React's in-app
 // bootloader. `is-booted` fades the preloader out via the CSS rule in
-// index.html; App's `.fishbones__bootloader` (or MobileApp's
+// index.html; App's `.libre__bootloader` (or MobileApp's
 // `.m-app__boot`) takes over until the course list resolves.
 //
 // The handoff is now driven by App / MobileApp via a `useLayoutEffect`

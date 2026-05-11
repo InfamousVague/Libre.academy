@@ -88,7 +88,7 @@ const COURSE_PATH = resolveCoursePath(courseArg);
 if (verbose) console.error(`[verify] course: ${COURSE_PATH}`);
 
 // ─── bundle the in-app helpers ───────────────────────────────────
-const BUNDLE_DIR = join(ROOT, "node_modules/.cache/fishbones-native-headless");
+const BUNDLE_DIR = join(ROOT, "node_modules/.cache/libre-native-headless");
 mkdirSync(BUNDLE_DIR, { recursive: true });
 const BUNDLE_PATH = join(BUNDLE_DIR, "helpers.mjs");
 const ENTRY_PATH = join(BUNDLE_DIR, "entry.ts");
@@ -140,7 +140,7 @@ function runGoLesson(solution, tests) {
     return { tests: [], skipReason: "go binary not on PATH (`brew install go`)" };
   }
   const merged = tests ? joinGo(solution, tests) : ensureMain(solution);
-  const dir = mkdtempSync(join(tmpdir(), "fishbones-go-"));
+  const dir = mkdtempSync(join(tmpdir(), "libre-go-"));
   const file = join(dir, "main.go");
   try {
     writeFileSync(file, merged, "utf8");
@@ -173,7 +173,7 @@ function runRustLesson(solution, tests) {
     };
   }
   const merged = tests ? joinRust(solution, tests) : solution;
-  const dir = mkdtempSync(join(tmpdir(), "fishbones-rust-"));
+  const dir = mkdtempSync(join(tmpdir(), "libre-rust-"));
   const file = join(dir, "main.rs");
   const bin = join(dir, "main");
   try {

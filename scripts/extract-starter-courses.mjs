@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/// Extract a curated subset of the bundled .fishbones packs into
+/// Extract a curated subset of the bundled .libre packs into
 /// `public/starter-courses/` so the web build can fetch them at
 /// first-launch and seed IndexedDB.
 ///
@@ -66,7 +66,7 @@ function pickResizeImpl() {
 }
 
 /// Per-language gradient palette for the synthetic-cover fallback.
-/// Mirrors `.fishbones-book--lang-*--no-cover` in BookCover.css so a
+/// Mirrors `.libre-book--lang-*--no-cover` in BookCover.css so a
 /// generated JPEG looks visually consistent with the in-app
 /// language-tinted tiles. Tuple shape: `[topColor, bottomColor]`.
 /// Languages not in this map fall back to a neutral dark gradient.
@@ -175,7 +175,7 @@ function pickFontPath() {
 /// own cover.png. Renders a 320×480 (book-ratio) gradient using the
 /// language palette, with the language abbreviation big in the
 /// upper third and the course title wrapped below. Visual goal:
-/// consistent with the in-app `.fishbones-book--no-cover` fallback
+/// consistent with the in-app `.libre-book--no-cover` fallback
 /// so the library shelf reads as one continuous design language —
 /// real cover artwork blends with synthetic tiles without an
 /// obvious style break.
@@ -305,7 +305,7 @@ const OUT = join(ROOT, "public", "starter-courses");
 /// Manual cover overrides. A PNG at `cover-overrides/<pack-id>.png`
 /// wins over both the in-zip `cover.png` AND the language-tinted
 /// synthesiser. This is how we ship freshly-generated artwork for
-/// packs whose .fishbones zip predates the cover (we don't want to
+/// packs whose .libre zip predates the cover (we don't want to
 /// re-zip every time a designer re-runs the cover gen). Drop the
 /// PNG in, run `node scripts/extract-starter-courses.mjs`, commit
 /// both the override PNG and the resulting JPEG. The override path
@@ -314,16 +314,16 @@ const OUT = join(ROOT, "public", "starter-courses");
 const COVER_OVERRIDES = join(ROOT, "cover-overrides");
 
 /// Course-archive extensions in priority order. `.academy` is the
-/// canonical extension after the rebrand; `.fishbones` is the
+/// canonical extension after the rebrand; `.libre` is the
 /// previous name and remains accepted so packs that haven't been
 /// renamed on disk still work. The first match for `${id}.<ext>`
 /// wins. Mirrors `ARCHIVE_EXTS` in `src-tauri/src/courses.rs`.
-const ARCHIVE_EXTS = ["academy", "fishbones", "kata"];
+const ARCHIVE_EXTS = ["academy", "libre", "kata"];
 
 /// Resolve the on-disk archive path for a pack id. Returns the first
 /// `${id}.<ext>` that exists, or null if nothing matches. Lets the
 /// build script straddle the renaming window — packs that have been
-/// migrated to `.academy` resolve, the ones still on `.fishbones` do
+/// migrated to `.academy` resolve, the ones still on `.libre` do
 /// too.
 function findPackArchive(packsDir, id) {
   for (const ext of ARCHIVE_EXTS) {
@@ -421,7 +421,7 @@ async function main() {
   // JSON + a hand-resized cover, committed to git via a `.gitignore`
   // negation rule). A blanket `rm -rf` would wipe them out before
   // the marketing site's CI build copied `public/` into the deploy
-  // tree, leaving the live URL `/fishbones/learn/?courseId=hellotrade`
+  // tree, leaving the live URL `/libre/learn/?courseId=hellotrade`
   // 404'ing on the on-demand fetch.
   //
   // Strategy: walk the dir, delete only files matching `<id>.json` /
@@ -489,14 +489,14 @@ async function main() {
       // Cover art — four-tier lookup, first match wins:
       //   1. cover-overrides/<pack-id>.png — manual designer drop-in.
       //      Lets us replace stale or missing in-zip covers without
-      //      re-zipping the .fishbones (which often invalidates the
+      //      re-zipping the .libre (which often invalidates the
       //      pack's checksum on disk). Also accepts cover-overrides/
       //      <course-id>.png for callers who keep overrides keyed
       //      to the in-zip course id rather than the pack filename.
-      //   2. cover.jpg inside the .fishbones zip — the modern
+      //   2. cover.jpg inside the .libre zip — the modern
       //      optimised form (480×720 q85, ~50-100 KB) produced by
       //      `optimize-covers.mjs` and the Rust ingest pipeline.
-      //   3. cover.png inside the .fishbones zip — the legacy form
+      //   3. cover.png inside the .libre zip — the legacy form
       //      for archives that haven't been migrated yet.
       //   4. synthesiseCover() — language-tinted gradient + caption.
       //      Last-resort so the library shelf still reads as a
@@ -613,17 +613,17 @@ async function main() {
         file: `${id}.json`,
         cover: coverFile,
         sizeBytes: info.size,
-        // Size of the .fishbones zip — used by the desktop
+        // Size of the .libre zip — used by the desktop
         // downloader's progress UI + by the placeholder tile to show
         // "Y MB" on hover.
         archiveSizeBytes: archiveStat.size,
         // Where the desktop downloader fetches the archive from
         // when the user clicks Install on a remote placeholder.
         // Tracks whichever extension the source bundled-pack
-        // actually carries (`.academy` post-rebrand, `.fishbones`
+        // actually carries (`.academy` post-rebrand, `.libre`
         // for packs that haven't been migrated yet) so the URL
         // matches what the user will upload to
-        // mattssoftware.com/fishbones/courses/. Web build ignores
+        // mattssoftware.com/libre/courses/. Web build ignores
         // this — it fetches the per-course JSON from `file`
         // (same-origin) instead.
         archiveUrl: `${REMOTE_ARCHIVE_BASE.replace(/\/$/, "")}/${id}.${packExt}`,
@@ -656,7 +656,7 @@ async function main() {
   // ── Placeholder-cover sweep ───────────────────────────────────
   // Walk `cover-overrides/` and emit `<id>.jpg` for any cover whose
   // matching id ISN'T already in the manifest. These are the next-up
-  // books we have artwork for but no `.fishbones` archive yet — the
+  // books we have artwork for but no `.libre` archive yet — the
   // desktop catalog merges these in via remoteCatalogFallback so
   // they appear as install-able placeholders in Discover. Without
   // this sweep, the placeholder tiles fall back to the language-

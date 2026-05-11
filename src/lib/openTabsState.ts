@@ -54,10 +54,10 @@ export interface PersistedTabsSnapshot {
   activeIndex: number;
 }
 
-const STORAGE_KEY = "fishbones:open-tabs:v2";
+const STORAGE_KEY = "libre:open-tabs:v2";
 /// Legacy v1 storage key (no `groups`). Migrated on first load to
 /// the v2 shape with `groups: []` — see `loadPersistedTabs`.
-const STORAGE_KEY_V1 = "fishbones:open-tabs:v1";
+const STORAGE_KEY_V1 = "libre:open-tabs:v1";
 
 /// Write the current open-tabs state. Silently no-ops when storage is
 /// unavailable or write fails — losing one update doesn't break the

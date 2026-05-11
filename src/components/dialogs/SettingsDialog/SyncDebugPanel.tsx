@@ -27,8 +27,8 @@ import { cloudDownload } from "@base/primitives/icon/icons/cloud-download";
 import "@base/primitives/icon/icon.css";
 import type {
   ProgressRow,
-  UseFishbonesCloud,
-} from "../../../hooks/useFishbonesCloud";
+  UseLibreCloud,
+} from "../../../hooks/useLibreCloud";
 import type { Completion } from "../../../hooks/useProgress";
 import type { RealtimeSyncHandle } from "../../../hooks/useRealtimeSync";
 import { isoToUnixSeconds, unixSecondsToIso } from "../../../lib/timestamps";
@@ -36,7 +36,7 @@ import { isLibraryMarkerRow } from "../../../lib/librarySync";
 import "./SyncDebugPanel.css";
 
 interface Props {
-  cloud: UseFishbonesCloud;
+  cloud: UseLibreCloud;
   realtime: RealtimeSyncHandle;
   /// Local completion history. Source of truth for the "local"
   /// column of the diff. The host hook (App or MobileApp) already
@@ -53,7 +53,7 @@ interface ServerSnapshot {
   progress: ProgressRow[];
   fetchedAt: number;
   /// Per-endpoint availability. Some relay deployments only ship the
-  /// `/fishbones/progress` route — `solutions` and `settings` 404 on
+  /// `/libre/progress` route — `solutions` and `settings` 404 on
   /// older / staging relays. We track these separately so the panel
   /// can display "Progress: live · Settings: unavailable" rather
   /// than flagging the whole sync as broken.
@@ -176,10 +176,10 @@ export default function SyncDebugPanel({
   };
 
   // Split server rows into (a) real completions and (b) library
-  // markers. Markers ride the `/fishbones/progress` endpoint as
+  // markers. Markers ride the `/libre/progress` endpoint as
   // sentinel rows — they encode "desktop has this course
   // installed" so mobile can converge its visible library list
-  // without a working `/fishbones/settings` endpoint. They're not
+  // without a working `/libre/settings` endpoint. They're not
   // real completions, so they MUST be excluded from the diff /
   // count math (otherwise the in-sync banner says "3293 completions
   // match" when ~11 of those are actually library markers, and
@@ -249,8 +249,8 @@ export default function SyncDebugPanel({
   return (
     <section className="fb-sync-debug">
       <div className="fb-sync-debug__head">
-        <h3 className="fishbones-settings-section">Sync</h3>
-        <p className="fishbones-settings-blurb">
+        <h3 className="libre-settings-section">Sync</h3>
+        <p className="libre-settings-blurb">
           Live status of the cross-device sync bus. Use the actions
           below if your devices look out of sync.
         </p>
@@ -426,14 +426,14 @@ export default function SyncDebugPanel({
 /// "is my library synced?", "are my saved solutions synced?".
 /// We translate route availability into those concepts:
 ///
-///   - **Progress** — driven by `/fishbones/progress`. Always
+///   - **Progress** — driven by `/libre/progress`. Always
 ///     required; if it's down everything else is too.
-///   - **Library** — driven by `/fishbones/progress` (we encode
+///   - **Library** — driven by `/libre/progress` (we encode
 ///     marker rows there to work around 404s on `/settings`). So
 ///     "Library: live" reflects "the relay holds N marker rows".
 ///     "Library: empty" means desktop hasn't published its
 ///     installed list yet (or has zero books).
-///   - **Solutions** — driven by `/fishbones/solutions`, which
+///   - **Solutions** — driven by `/libre/solutions`, which
 ///     several deployments don't have. When unavailable we show
 ///     a quiet "server doesn't support yet" pill rather than a
 ///     scary error, because nothing the user does is blocked by
