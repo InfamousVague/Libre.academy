@@ -30,7 +30,6 @@ import {
   recordUnlocks,
 } from "../lib/achievements";
 import type { ProgressSnapshot, UnlockedRecord } from "../lib/achievements";
-import { celebrate } from "../lib/celebrate";
 import { playSound } from "../lib/sfx";
 import type { Course } from "../data/types";
 import type { Completion } from "../lib/storage";
@@ -159,30 +158,46 @@ export function useAchievements(
       return;
     }
 
-    // Subsequent passes: full celebration treatment.
+    // Subsequent passes: enqueue for visual presentation.
+    //
+    // The celebrate WebM no longer fires from the data layer — it's
+    // now owned by AchievementModal.tsx and fires on the modal's
+    // mount effect. Three reasons that move was load-bearing:
+    //   1. Decoupling the celebrate from the modal led to "coin
+    //      shower with no mask underneath" moments — installing a
+    //      placeholder book legitimately satisfies silver-tier
+    //      achievements like "Library card", which previously ran
+    //      the screen-filling celebrate alongside only a small
+    //      corner toast. The visual cue was untethered from the
+    //      backdrop blur that should accompany it.
+    //   2. Bronze + silver tiers (toast-only) shouldn't ever fire
+    //      the screen-filler — the toast IS the cue. Moving celebrate
+    //      to the modal-only path means toasts stay quiet visually
+    //      while gold/platinum still get the full treatment.
+    //   3. The earlier setup fired the engine's celebrate AND the
+    //      modal's platinum second-burst on different timers, with
+    //      no shared lifecycle — if a fast pageload meant the modal
+    //      mounted late, the burst played in empty space.
+    //
+    // We still play the per-tier audio pip here so the unlock isn't
+    // silent for bronze (toast-only tier has confetti:"none"). For
+    // tiers that DO get a modal celebration, AchievementModal fires
+    // its own audio + video on mount; we skip the pip here so the
+    // cue doesn't double up.
     const merged = recordUnlocks(fresh, Date.now(), unlockedRecords);
     setUnlockedRecords(merged);
     setPendingPresentation((prev) => [...prev, ...fresh]);
-    // Pick the highest-tier unlock to drive the celebration. Multiple
-    // unlocks in the same tick collapse to one cue — playing 5
-    // celebration sounds at once would be cacophony.
     const highest = fresh.reduce<Achievement>(
       (acc, a) => (TIER_RANK[a.tier] > TIER_RANK[acc.tier] ? a : acc),
       fresh[0],
     );
     const meta = TIER_META[highest.tier];
-    if (meta.confetti !== "none") {
-      // The celebrate WebMs carry their own baked-in audio, so we no
-      // longer fire the separate `playSound(meta.sound)` pip — having
-      // both would double-up on the audio cue. The meta.sound entries
-      // remain available for any future surface that wants the silent
-      // pip without the visual (e.g. a Settings preference).
-      void celebrate(meta.confetti);
-    } else {
-      // Tier configured for "no celebration" still gets the audio
-      // pip so the unlock isn't completely silent.
+    if (meta.confetti === "none") {
+      // Toast-only tier (bronze) — small audio cue, no video.
       playSound(meta.sound);
     }
+    // Other tiers: AchievementModal handles celebrate + audio on
+    // mount. Nothing to fire from here.
     // We intentionally do NOT include `unlockedRecords` in the deps
     // — recordUnlocks updates it via setUnlockedRecords, and adding
     // it to deps would cause re-runs on every persistence write
@@ -204,10 +219,15 @@ export function useAchievements(
       // in-session level-ups happen well outside the 2.5 s window.
       if (!withinGrace()) {
         setLevelUp({ from: prev, to: streakAndXp.level });
-        // The celebrate WebM carries its own audio; firing the
-        // separate `level-up` sfx pip here would double up. Drop
-        // the pip and trust the video for the audio cue.
-        void celebrate("medium", { x: 0.5, y: 0.4 });
+        // No celebrate() call here — the level-up UI (whichever
+        // surface consumes `levelUp` from this hook) owns its own
+        // celebrate firing so the video plays alongside whatever
+        // modal / mask is shown for the transition. Firing here
+        // would produce a screen-filling coin shower with nothing
+        // behind it on surfaces that haven't wired up a level-up
+        // modal yet — the same "untethered cue" problem that drove
+        // moving the achievement-unlock celebrate into the modal.
+        playSound("level-up");
       }
     }
     lastLevelRef.current = streakAndXp.level;

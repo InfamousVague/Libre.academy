@@ -26,18 +26,29 @@ interface Props {
 export default function AchievementModal({ achievement, onDismiss }: Props) {
   const meta = TIER_META[achievement.tier];
 
-  // Platinum gets a sustained confetti wash — a burst now and
-  // another after 1.2 s so the field doesn't visibly empty before
-  // the user has read the blurb. Gold fires once on mount (handled
-  // by the engine's main confetti call already) so we don't double-
-  // burst here.
+  // Fire the primary celebrate burst on mount. Previously this fired
+  // from useAchievements when the unlock was detected, but that
+  // decoupling produced "coin shower with no mask underneath" beats —
+  // e.g., installing a placeholder book legitimately satisfies
+  // "Library card" (silver/gold) and the screen-filler played with
+  // only a toast / nothing as the visual anchor. Owning the celebrate
+  // call here ties the video lifecycle to the modal lifecycle:
+  // celebrate only ever plays alongside the backdrop-blurred mask
+  // this component renders, which is exactly the pairing the design
+  // calls for.
+  //
+  // Platinum gets a sustained wash — the primary burst on mount plus
+  // a follow-up at 1.2 s so the field doesn't visibly empty before
+  // the user has read the blurb. Gold + below get a single burst.
   useEffect(() => {
+    if (meta.confetti === "none") return;
+    void celebrate(meta.confetti, { x: 0.5, y: 0.35 });
     if (achievement.tier !== "platinum") return;
     const timer = setTimeout(() => {
       void celebrate("medium", { x: 0.5, y: 0.35 });
     }, 1200);
     return () => clearTimeout(timer);
-  }, [achievement.tier]);
+  }, [achievement.tier, meta.confetti]);
 
   return (
     // z-index 10010 puts the achievement above the celebration video
