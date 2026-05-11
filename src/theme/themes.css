@@ -11,14 +11,21 @@
 
 /* ---- Glass surfaces ----------------------------------------------------
    The translucent / frosted-glass elements (left sidebar, topbar, the
-   floating right skill panel, the zoom controls overlay, etc.) all read
-   their surface + border + rim + shadow colours from these variables.
-   Defaults are dark — appropriate for the majority of themes. Light
-   themes (ayu-light, catppuccin-latte) override below so the glass
-   doesn't print as a dark block on a white workspace. */
+   nav rail, the floating right skill panel, the zoom controls overlay,
+   etc.) all read their surface + border + rim + shadow colours from
+   these variables.
+   The glass-bg tokens DERIVE from `--color-bg-primary` via `color-mix`
+   so each theme's chrome surfaces automatically inherit the theme's
+   base colour. Previously these were hardcoded rgba(20, 20, 28, …) and
+   only overridden by the two light themes, which meant synthwave /
+   claude-code / ayu-mirage / etc. kept the default-dark glass tint on
+   their chrome surfaces — making the sidebar / topbar / rail visually
+   independent of the rest of the theme. With color-mix on the
+   theme-set `--color-bg-primary`, every theme gets matching chrome
+   without needing to declare its own glass tokens. */
 :root {
-  --color-glass-bg: rgba(20, 20, 28, 0.35);
-  --color-glass-bg-strong: rgba(20, 20, 28, 0.55);
+  --color-glass-bg: color-mix(in srgb, var(--color-bg-primary) 70%, transparent);
+  --color-glass-bg-strong: color-mix(in srgb, var(--color-bg-primary) 88%, transparent);
   --color-glass-border: rgba(255, 255, 255, 0.08);
   --color-glass-rim: rgba(255, 255, 255, 0.04);
   --color-glass-shadow: rgba(0, 0, 0, 0.35);
