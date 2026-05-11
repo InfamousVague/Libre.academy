@@ -56,8 +56,15 @@
 }
 
 .fishbones-library-panel--inline .fishbones-library-controls {
-  padding-left: 0;
-  padding-right: 0;
+  /* Negative-margin out of the body's 12 px gutter so the strip's
+     border-bottom spans edge-to-edge instead of stopping short of
+     the panel's left + right edges. Compensating padding keeps the
+     visual content anchor unchanged (the user sees Search + Sort
+     pinned where they were; only the divider line gets longer). */
+  margin-left: -12px;
+  margin-right: -12px;
+  padding-left: 12px;
+  padding-right: 12px;
 }
 
 .fishbones-library-panel--inline .fishbones-library-body {
@@ -755,13 +762,31 @@
 /* Section heading — pill (re-using the BookCover status colours so the
    tier vocabulary is visually consistent with the per-card badge),
    title, count, and a one-line blurb. The blurb wraps onto a second
-   line on narrow viewports; everything else stays on one row. */
+   line on narrow viewports; everything else stays on one row.
+
+   Vertical layout: symmetric 12 px padding above + below the row's
+   content. The earlier `padding: 0 2px 6px` left zero padding on
+   the top edge, so the title / count / blurb / Update-all button
+   were technically centered inside the flex row but the row's own
+   air was lopsided — the eye reads "no top breathing room +
+   6 px bottom breathing room" as "not vertically centred."
+
+   Horizontal: negative margins escape the body's 12 px gutter so
+   the section's border-bottom (which is the divider that runs
+   below the section heading) extends edge-to-edge across the
+   panel instead of stopping short of the panel's left + right
+   edges by 12 px each. The inner `padding-left/right` of 14 px
+   brings the text content back to its previous horizontal
+   anchor (12 body + 2 heading = 14, matching the cards below
+   that get padded only via the body's 12 px).
+*/
 .fishbones-library-section-head {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
-  padding: 0 2px 6px;
+  padding: 12px 14px;
+  margin: 0 -12px;
   border-bottom: 1px solid var(--color-border-default);
   /* Pin every text child to the same line-box height so flex's
      `align-items: center` produces a true visual centre. Without
