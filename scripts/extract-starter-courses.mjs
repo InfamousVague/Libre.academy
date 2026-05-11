@@ -421,7 +421,7 @@ async function main() {
   // JSON + a hand-resized cover, committed to git via a `.gitignore`
   // negation rule). A blanket `rm -rf` would wipe them out before
   // the marketing site's CI build copied `public/` into the deploy
-  // tree, leaving the live URL `/libre/learn/?courseId=hellotrade`
+  // tree, leaving the live URL `/fishbones/learn/?courseId=hellotrade`
   // 404'ing on the on-demand fetch.
   //
   // Strategy: walk the dir, delete only files matching `<id>.json` /
@@ -623,7 +623,7 @@ async function main() {
         // actually carries (`.academy` post-rebrand, `.libre`
         // for packs that haven't been migrated yet) so the URL
         // matches what the user will upload to
-        // mattssoftware.com/libre/courses/. Web build ignores
+        // mattssoftware.com/fishbones/courses/. Web build ignores
         // this — it fetches the per-course JSON from `file`
         // (same-origin) instead.
         archiveUrl: `${REMOTE_ARCHIVE_BASE.replace(/\/$/, "")}/${id}.${packExt}`,

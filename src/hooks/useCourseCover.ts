@@ -28,7 +28,7 @@ function desktopCdnCoverUrl(
 
 /// Web-build cover URL. Resolves against the page's BASE_URL so the
 /// cover loads correctly regardless of whether the app is mounted at
-/// the page root (`/`), a subpath (`/libre/learn/`), or the
+/// the page root (`/`), a subpath (`/fishbones/learn/`), or the
 /// libre.academy `/learn/` embed. Returns null when courseId is
 /// empty so the caller can skip rendering.
 ///

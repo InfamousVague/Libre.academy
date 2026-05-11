@@ -45,8 +45,8 @@
 export const LIBRARY_INSTALLED_IDS_KEY = "libre.library.installedIds";
 
 /// Sentinel lesson id used to piggy-back the installed-library list
-/// on the working `/libre/progress` endpoint. The current relay
-/// deployment 404s on `/libre/settings` (where the library
+/// on the working `/fishbones/progress` endpoint. The current relay
+/// deployment 404s on `/fishbones/settings` (where the library
 /// allowlist would naturally live), so we encode "device X has
 /// course Y installed" as a fake completion row:
 ///

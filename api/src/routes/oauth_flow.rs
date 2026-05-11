@@ -218,7 +218,7 @@ pub async fn google_start(
     let redirect_uri = state
         .public_url
         .as_ref()
-        .map(|u| format!("{}/libre/auth/google/callback", u.trim_end_matches('/')))
+        .map(|u| format!("{}/fishbones/auth/google/callback", u.trim_end_matches('/')))
         .ok_or(StatusCode::SERVICE_UNAVAILABLE)?;
 
     let csrf = random_url_safe(24);
@@ -268,7 +268,7 @@ pub async fn apple_start(
     let redirect_uri = state
         .public_url
         .as_ref()
-        .map(|u| format!("{}/libre/auth/apple/callback", u.trim_end_matches('/')))
+        .map(|u| format!("{}/fishbones/auth/apple/callback", u.trim_end_matches('/')))
         .ok_or(StatusCode::SERVICE_UNAVAILABLE)?;
 
     let csrf = random_url_safe(24);
@@ -354,7 +354,7 @@ pub async fn google_callback(
     };
 
     let redirect_uri = format!(
-        "{}/libre/auth/google/callback",
+        "{}/fishbones/auth/google/callback",
         public_url.trim_end_matches('/')
     );
 
@@ -514,7 +514,7 @@ async fn apple_callback_inner(state: Arc<AppState>, body: AppleCallback) -> Resp
             }
         };
         let redirect_uri = format!(
-            "{}/libre/auth/apple/callback",
+            "{}/fishbones/auth/apple/callback",
             public_url.trim_end_matches('/')
         );
         let form = [

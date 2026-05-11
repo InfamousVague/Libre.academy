@@ -9,7 +9,7 @@
 ///   {
 ///     "version": 2,
 ///     "generatedAt": "2026-04-30T...",
-///     "archiveBaseUrl": "https://mattssoftware.com/libre/courses",
+///     "archiveBaseUrl": "https://mattssoftware.com/fishbones/courses",
 ///     "courses": [
 ///       {
 ///         "id": "the-rust-programming-language",
@@ -99,7 +99,7 @@ function defaultCatalogUrl(): string {
     const base = (import.meta.env.BASE_URL ?? "/").replace(/\/?$/, "/");
     return `${base}starter-courses/manifest.json`;
   }
-  return "https://mattssoftware.com/libre/catalog/manifest.json";
+  return "https://mattssoftware.com/fishbones/catalog/manifest.json";
 }
 
 let cachedPromise: Promise<CatalogEntry[]> | null = null;

@@ -9,6 +9,7 @@
 
 import type { editor } from "monaco-editor";
 import { LIBRE_DARK } from "./libre-dark";
+import { LIBRE_LIGHT } from "./libre-light";
 import { SYNTHWAVE } from "./synthwave";
 import { CLAUDE_CODE_DARK } from "./claude-code-dark";
 import { AYU_MIRAGE } from "./ayu-mirage";
@@ -30,6 +31,7 @@ export { MONACO_THEME_BY_APP_THEME } from "./_core";
 /// multiple times — `defineTheme` replaces by name.
 export function registerMonacoThemes(monaco: typeof import("monaco-editor")) {
   monaco.editor.defineTheme("libre-dark", LIBRE_DARK as editor.IStandaloneThemeData);
+  monaco.editor.defineTheme("libre-light", LIBRE_LIGHT as editor.IStandaloneThemeData);
   monaco.editor.defineTheme("libre-synthwave", SYNTHWAVE as editor.IStandaloneThemeData);
   monaco.editor.defineTheme("libre-claude-code-dark", CLAUDE_CODE_DARK as editor.IStandaloneThemeData);
   monaco.editor.defineTheme("libre-ayu-mirage", AYU_MIRAGE as editor.IStandaloneThemeData);

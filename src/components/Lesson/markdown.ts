@@ -38,7 +38,24 @@ import type {
 /// placeholder class, (2) scan the HTML for those placeholders and replace
 /// their contents with Shiki output.
 
-const SHIKI_THEME = "github-dark";
+/// Shiki dual-theme config. Emits HTML with BOTH theme palettes baked
+/// into inline CSS variables (`--shiki-light` / `--shiki-dark`); the
+/// active palette flips via the CSS rule in LessonReader.css that
+/// scopes the variable per `[data-theme="light"|"dark"]` ancestor.
+/// Without this, syntax highlighting was locked to a single hardcoded
+/// theme (previously `github-dark`) which read as a heavy dark slab
+/// inside the light-app frames.
+///
+/// Tradeoffs:
+///   - Output HTML carries both palettes, so every code block is ~2×
+///     the size on the wire vs single-theme. Acceptable cost — code
+///     blocks are a small fraction of total lesson payload.
+///   - Both palettes use the GitHub set so the syntax mapping
+///     (keyword, string, identifier, etc.) is identical and the only
+///     thing changing is the color values. Picking distinct themes
+///     per side would risk a token highlighted as a keyword in one
+///     mode and as an identifier in the other.
+const SHIKI_THEMES = { light: "github-light", dark: "github-dark" } as const;
 
 const md = new MarkdownIt({
   html: false, // refuse inline HTML — lesson content is trusted but we don't want it
@@ -378,7 +395,14 @@ async function highlightCode(
     ? "libre-code-block libre-code-block--with-filename"
     : "libre-code-block";
   try {
-    const inner = await codeToHtml(trimmed, { lang: shikiLang(lang), theme: SHIKI_THEME });
+    const inner = await codeToHtml(trimmed, {
+      lang: shikiLang(lang),
+      themes: SHIKI_THEMES,
+      // `defaultColor: false` — emit CSS variables for BOTH themes
+      // without picking one as the fallback color. The matching CSS
+      // rule scopes which variable wins via the page's data-theme.
+      defaultColor: false,
+    });
     return `<div class="${wrapperClass}">${filenameStrip}${askBadge}${inner}</div>`;
   } catch {
     return `<div class="${wrapperClass}">${filenameStrip}${askBadge}<pre class="libre-code-plain">${escapeHtml(trimmed)}</pre></div>`;

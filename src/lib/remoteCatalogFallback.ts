@@ -9,7 +9,7 @@
 /// catalog entry would win via `dedupeById` and the placeholder row
 /// would drop out automatically.
 ///
-/// CURRENT STATE: the static CDN at `mattssoftware.com/libre/
+/// CURRENT STATE: the static CDN at `mattssoftware.com/fishbones/
 /// courses/` is gone — every `.libre` URL 404s, including the
 /// books that have local archives shipping in the bundle (those work
 /// via the Tauri `localPath` install path, not the CDN). All ~20
@@ -40,7 +40,7 @@ interface FallbackSeed {
 /// `REMOTE_ARCHIVE_BASE` in `scripts/course-tiers.mjs`. Currently
 /// unused (the seed list is empty) but retained so re-adding a seed
 /// is a one-line change rather than a recompose.
-const REMOTE_ARCHIVE_BASE = "https://mattssoftware.com/libre/courses";
+const REMOTE_ARCHIVE_BASE = "https://mattssoftware.com/fishbones/courses";
 
 const FALLBACK_SEEDS: FallbackSeed[] = [];
 

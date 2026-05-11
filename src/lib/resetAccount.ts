@@ -29,7 +29,7 @@
 ///       libre:practice:today:v1, libre:recent-courses:v1,
 ///       libre:notifications:last-seen-at,
 ///       libre:open-tabs:v2, fb:catalog-cache-v2
-///   - **Cloud progress** — DELETE /libre/progress (best-effort;
+///   - **Cloud progress** — DELETE /fishbones/progress (best-effort;
 ///     falls back to local-only if the relay route 404s)
 ///
 /// What it KEEPS (preferences):

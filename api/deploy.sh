@@ -222,7 +222,7 @@ cat <<EOF | $SSH "cat > /etc/caddy/Caddyfile"
 # VPS so the API host's WebSocket endpoint works on every client.
 # Background: WebSockets are an HTTP/1.1 protocol (RFC 6455). When
 # Caddy advertises h2 in ALPN, the iOS WKWebView happily negotiates
-# h2 for wss://api.mattssoftware.com/libre/sync/ws, sends a GET
+# h2 for wss://api.mattssoftware.com/fishbones/sync/ws, sends a GET
 # with Upgrade headers, and Caddy strips those headers before
 # forwarding (RFC 7540 forbids Upgrade in HTTP/2). The backend
 # (axum) only knows how to do RFC 6455 upgrades, sees a plain GET,

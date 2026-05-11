@@ -133,7 +133,7 @@ const LEGACY_STARTER_IDS: ReadonlyArray<string> = [
 
 /// Resolve a starter-courses path relative to the active build's base
 /// URL. The path is `/starter-courses/*` rooted at the deployed base
-/// (which on the deployed build is `mattssoftware.com/libre/learn/`,
+/// (which on the deployed build is `mattssoftware.com/fishbones/learn/`,
 /// not the page origin). Vite's `import.meta.env.BASE_URL` gives us
 /// the correct prefix in both dev and prod.
 function starterUrl(path: string): string {

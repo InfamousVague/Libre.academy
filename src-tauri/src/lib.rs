@@ -97,7 +97,7 @@ async fn run_swift(code: String) -> SubprocessResult {
     }
 }
 
-/// Open the relay's `/libre/auth/{provider}/start` URL in the
+/// Open the relay's `/fishbones/auth/{provider}/start` URL in the
 /// system browser. The relay redirects through the provider's OAuth
 /// flow and finally back to `libre://oauth/done?...`, which the
 /// deep-link plugin delivers to the frontend `onOpenUrl` listener.
@@ -146,7 +146,7 @@ async fn start_oauth<R: tauri::Runtime>(
         return Err("invalid session id (expected url-safe alphanumeric)".into());
     }
     let url = format!(
-        "https://api.mattssoftware.com/libre/auth/{provider}/start?session={session_id}"
+        "https://api.mattssoftware.com/fishbones/auth/{provider}/start?session={session_id}"
     );
     app.opener()
         .open_url(url, None::<&str>)

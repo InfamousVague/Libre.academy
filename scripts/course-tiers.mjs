@@ -206,7 +206,7 @@ export function isHiddenPack(packId) {
 /// to point at your own hosting.
 export const REMOTE_ARCHIVE_BASE =
   process.env.LIBRE_CATALOG_BASE_URL ??
-  "https://mattssoftware.com/libre/courses";
+  "https://mattssoftware.com/fishbones/courses";
 
 /// Editorial-tier overrides keyed by **pack id** (the .libre
 /// filename minus extension). Applied by the extract script AFTER

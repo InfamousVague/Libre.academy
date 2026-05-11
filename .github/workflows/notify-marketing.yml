@@ -3,7 +3,7 @@ name: Notify mattssoftware to rebuild
 # Cross-repo trigger: when this repo's main branch changes, fire a
 # `repository_dispatch` at InfamousVague/mattssoftware so its deploy
 # workflow re-runs and picks up the new web build. Without this,
-# Libre updates wouldn't show up at mattssoftware.com/libre/learn/
+# Libre updates wouldn't show up at mattssoftware.com/fishbones/learn/
 # until either someone pushed to the marketing repo or the nightly
 # schedule fired.
 #

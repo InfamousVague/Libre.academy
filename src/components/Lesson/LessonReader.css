@@ -662,6 +662,48 @@
   border: 1px solid var(--color-border-default);
 }
 
+/* Shiki dual-theme palette switcher.
+   markdown.ts emits code blocks via shiki with `themes: { light:
+   "github-light", dark: "github-dark" }` and `defaultColor: false`,
+   which bakes BOTH palettes into inline CSS variables on every
+   token (`--shiki-light` + `--shiki-dark`, plus `-bg` / `-font-
+   style` variants). The default Shiki render uses `--shiki-dark`
+   tokens, but with `defaultColor: false` neither is applied
+   automatically — we have to map them ourselves.
+   The rule below picks the right palette per `data-theme` set on
+   <html> by themes.ts:applyTheme(). Light app → light palette,
+   anything else → dark palette. The transition lands instantly on
+   theme switch because the rule changes the `color` resolution
+   target, not the markup itself — no re-render of code blocks
+   needed when the user flips themes mid-session. */
+[data-theme="light"] .libre-code-block .shiki span {
+  color: var(--shiki-light);
+  background-color: var(--shiki-light-bg, transparent);
+  font-style: var(--shiki-light-font-style, normal);
+  font-weight: var(--shiki-light-font-weight, normal);
+  text-decoration: var(--shiki-light-text-decoration, none);
+}
+[data-theme="light"] .libre-code-block .shiki,
+[data-theme="light"] .libre-code-block .shiki code {
+  color: var(--shiki-light);
+  background-color: var(--shiki-light-bg, transparent) !important;
+}
+[data-theme="dark"] .libre-code-block .shiki span,
+.libre-code-block .shiki span {
+  color: var(--shiki-dark);
+  background-color: var(--shiki-dark-bg, transparent);
+  font-style: var(--shiki-dark-font-style, normal);
+  font-weight: var(--shiki-dark-font-weight, normal);
+  text-decoration: var(--shiki-dark-text-decoration, none);
+}
+[data-theme="dark"] .libre-code-block .shiki,
+[data-theme="dark"] .libre-code-block .shiki code,
+.libre-code-block .shiki,
+.libre-code-block .shiki code {
+  color: var(--shiki-dark);
+  background-color: var(--shiki-dark-bg, transparent) !important;
+}
+
 /* GFM tables: subtle borders, tight padding, sticky-free. Markdown-it emits
    a standard <table><thead><tbody> structure that we style directly. */
 .libre-reader-body table {

@@ -53,7 +53,7 @@ interface ServerSnapshot {
   progress: ProgressRow[];
   fetchedAt: number;
   /// Per-endpoint availability. Some relay deployments only ship the
-  /// `/libre/progress` route — `solutions` and `settings` 404 on
+  /// `/fishbones/progress` route — `solutions` and `settings` 404 on
   /// older / staging relays. We track these separately so the panel
   /// can display "Progress: live · Settings: unavailable" rather
   /// than flagging the whole sync as broken.
@@ -176,10 +176,10 @@ export default function SyncDebugPanel({
   };
 
   // Split server rows into (a) real completions and (b) library
-  // markers. Markers ride the `/libre/progress` endpoint as
+  // markers. Markers ride the `/fishbones/progress` endpoint as
   // sentinel rows — they encode "desktop has this course
   // installed" so mobile can converge its visible library list
-  // without a working `/libre/settings` endpoint. They're not
+  // without a working `/fishbones/settings` endpoint. They're not
   // real completions, so they MUST be excluded from the diff /
   // count math (otherwise the in-sync banner says "3293 completions
   // match" when ~11 of those are actually library markers, and
@@ -426,14 +426,14 @@ export default function SyncDebugPanel({
 /// "is my library synced?", "are my saved solutions synced?".
 /// We translate route availability into those concepts:
 ///
-///   - **Progress** — driven by `/libre/progress`. Always
+///   - **Progress** — driven by `/fishbones/progress`. Always
 ///     required; if it's down everything else is too.
-///   - **Library** — driven by `/libre/progress` (we encode
+///   - **Library** — driven by `/fishbones/progress` (we encode
 ///     marker rows there to work around 404s on `/settings`). So
 ///     "Library: live" reflects "the relay holds N marker rows".
 ///     "Library: empty" means desktop hasn't published its
 ///     installed list yet (or has zero books).
-///   - **Solutions** — driven by `/libre/solutions`, which
+///   - **Solutions** — driven by `/fishbones/solutions`, which
 ///     several deployments don't have. When unavailable we show
 ///     a quiet "server doesn't support yet" pill rather than a
 ///     scary error, because nothing the user does is blocked by

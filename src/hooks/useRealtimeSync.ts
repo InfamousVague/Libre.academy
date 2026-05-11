@@ -254,7 +254,7 @@ export function useRealtimeSync(opts: RealtimeSyncOpts): RealtimeSyncHandle {
     void (async () => {
       // CRITICAL: use `allSettled`, NOT `all`. The three pull
       // endpoints are independent — if the relay returns 404 on
-      // one (e.g. `/libre/settings` is unimplemented on a
+      // one (e.g. `/fishbones/settings` is unimplemented on a
       // staging deploy or older relay version), `Promise.all`
       // would reject the whole batch and the progress + solutions
       // pulls — which DID succeed — would silently never apply.

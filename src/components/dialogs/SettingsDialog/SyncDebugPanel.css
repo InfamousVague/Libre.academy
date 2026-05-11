@@ -184,7 +184,7 @@
 
 /* ── Per-endpoint pills ────────────────────────────────────────── */
 /* Each pill represents one relay route's availability. Older relays
- * only ship `/libre/progress`; the auxiliary routes 404. We
+ * only ship `/fishbones/progress`; the auxiliary routes 404. We
  * show that as "unavailable" — it's a deployment fact, not a
  * sync failure. Three states share the pill shape; tone diverges. */
 

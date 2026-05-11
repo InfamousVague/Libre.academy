@@ -86,8 +86,8 @@ export default function MobileApp() {
   /// Library-marker-derived allowlist. Updated by the progress
   /// apply path whenever a marker row arrives from the relay. Lets
   /// desktop's installed-library list propagate even when the
-  /// `/libre/settings` endpoint isn't deployed (the marker
-  /// rows ride the always-available `/libre/progress` endpoint
+  /// `/fishbones/settings` endpoint isn't deployed (the marker
+  /// rows ride the always-available `/fishbones/progress` endpoint
   /// instead). Persisted to localStorage so a cold-start before
   /// the next pull settles still shows the right library.
   const SYNCED_LIBRARY_KEY = "libre.library.markers.v1";
@@ -109,7 +109,7 @@ export default function MobileApp() {
   /// Visible course list. Three signals, in priority order:
   ///
   ///   1. **Library markers** — sentinel rows desktop pushes to
-  ///      `/libre/progress` carrying its installed-course-id
+  ///      `/fishbones/progress` carrying its installed-course-id
   ///      list. AUTHORITATIVE when present: desktop owns the
   ///      library (mobile has no Discover catalog), so seeing
   ///      markers means "show exactly these courses, hide the
@@ -117,7 +117,7 @@ export default function MobileApp() {
   ///      bundled books but desktop has only installed 11 of them.
   ///
   ///   2. **Settings allowlist** — the legacy path, populated by
-  ///      `applySettings` when the relay's `/libre/settings`
+  ///      `applySettings` when the relay's `/fishbones/settings`
   ///      endpoint is deployed. Several relay deployments 404 on
   ///      this; markers (above) cover that gap.
   ///

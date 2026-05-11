@@ -159,11 +159,22 @@ export function loadTheme(): ThemeName {
 
 /// Theme IDs that render as a LIGHT app surface. Used to flip the
 /// legacy `data-theme="light"` attribute the base-UI kit reads, and
-/// to gate any other "is this a light theme?" logic in the app.
+/// to gate any other "is this a light theme?" logic in the app
+/// (Monaco theme picking, Shiki dual-theme variants, image variants).
 const LIGHT_THEMES: ReadonlySet<ThemeName> = new Set([
   "ayu-light",
   "catppuccin-latte",
 ]);
+
+/// Predicate exposed for consumers that need to branch on light vs
+/// dark without re-importing the set. Cheap O(1) lookup. Defaults
+/// to `false` for unknown names — anything not explicitly tagged
+/// light is treated as dark, which is the safer default for code
+/// surfaces (light text on dark background reads OK on a dark
+/// app; the inverse reads as broken).
+export function isLightTheme(name: ThemeName): boolean {
+  return LIGHT_THEMES.has(name);
+}
 
 /// Apply a theme by setting attributes on <html>. We set BOTH the legacy
 /// `data-theme` (light|dark — base kit reads this) and a new

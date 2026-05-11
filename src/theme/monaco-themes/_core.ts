@@ -9,6 +9,7 @@ export type MonacoThemeName =
   | "vs"
   | "vs-dark"
   | "libre-dark"
+  | "libre-light"
   | "libre-synthwave"
   | "libre-claude-code-dark"
   | "libre-ayu-mirage"
@@ -24,18 +25,22 @@ export type MonacoThemeName =
   | "libre-word";
 
 /// Map each app theme to the Monaco theme name we want the editor to load.
-/// The light app themes (ayu-light, catppuccin-latte) intentionally pair
-/// with the DARK Monaco theme — light syntax-highlighting palettes wash
-/// out next to the app's chrome, while a dark editor frames the code as a
-/// distinct surface. See the matching note on `monacoTheme` in themes.ts.
+/// Light app themes pair with the `libre-light` Monaco theme — earlier
+/// versions paired them with `libre-dark` on the theory that a dark
+/// editor frames code as a "distinct surface" but the actual lived
+/// experience was an inverted mismatch (white app chrome + black
+/// editor inside it) that read as broken rather than intentional.
+/// `libre-light` is the inverted-twin of `libre-dark` (same monochrome-
+/// glass + warm amber accent brief on a paper-white surface) so the
+/// editor disappears into the page in both modes.
 export const MONACO_THEME_BY_APP_THEME: Record<ThemeName, MonacoThemeName> = {
   "default-dark": "libre-dark",
   synthwave: "libre-synthwave",
   "claude-code-dark": "libre-claude-code-dark",
-  "ayu-light": "libre-dark",
+  "ayu-light": "libre-light",
   "ayu-mirage": "libre-ayu-mirage",
   "ayu-dark": "libre-ayu-dark",
-  "catppuccin-latte": "libre-dark",
+  "catppuccin-latte": "libre-light",
   "catppuccin-frappe": "libre-catppuccin-frappe",
   "catppuccin-macchiato": "libre-catppuccin-macchiato",
   "catppuccin-mocha": "libre-catppuccin-mocha",

@@ -19,7 +19,7 @@
 ///   1. Drop these into `.env` at the repo root (gitignored):
 ///        ELEVEN_API_KEY=sk_...
 ///        ELEVEN_VOICE_NAME=Verity                # or a custom name
-///        FB_TTS_CDN_BASE=https://cdn.mattssoftware.com/libre/audio
+///        FB_TTS_CDN_BASE=https://cdn.mattssoftware.com/fishbones/audio
 ///   2. Optional flags:
 ///        ELEVEN_MODEL=eleven_multilingual_v2     # default
 ///        ELEVEN_MODEL=eleven_turbo_v2_5          # ~half the chars cost

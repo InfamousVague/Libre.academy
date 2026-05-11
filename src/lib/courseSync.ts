@@ -110,7 +110,7 @@ function canonicalJson(value: unknown): string {
 /// Resolve the URL the running app should fetch a bundled course
 /// from. Vite serves `public/` at `import.meta.env.BASE_URL`, which
 /// differs between desktop (`/`) and the deployed web build
-/// (`/libre/learn/`). The trailing-slash handling matches
+/// (`/fishbones/learn/`). The trailing-slash handling matches
 /// `webSeedCourses.ts`'s `starterUrl()` helper.
 export function bundledCourseUrl(courseId: string): string {
   const base = (import.meta.env.BASE_URL ?? "/").replace(/\/?$/, "/");

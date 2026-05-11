@@ -23,14 +23,14 @@ const isWebBuild = target === "web";
 // Public base path for the web build — where the bundle's assets
 // expect to be served from. Different consumers want different
 // values:
-//   /libre/learn/  ← mattssoftware.com (legacy embed at that path)
+//   /fishbones/learn/  ← mattssoftware.com (legacy embed at that path)
 //   /learn/            ← libre.academy (the new product domain)
 //   /                  ← any other host that mounts the app at root
 //
 // Override at build time with LIBRE_BASE; falls back to the
 // mattssoftware path for backward compatibility (existing
 // build:web invocations don't need to change).
-const webBase = (process.env.LIBRE_BASE || "/libre/learn/").replace(
+const webBase = (process.env.LIBRE_BASE || "/fishbones/learn/").replace(
   /\/?$/,
   "/",
 );
@@ -91,7 +91,7 @@ export default defineConfig(async () => ({
       protocolImports: false,
     }),
   ],
-  // Web build deploys under `mattssoftware.com/libre/learn/`, so
+  // Web build deploys under `mattssoftware.com/fishbones/learn/`, so
   // every emitted asset URL needs that prefix. Desktop ships at the
   // webview's root (`tauri://...`) so an empty base is correct
   // there. Vite's `import.meta.env.BASE_URL` reflects this and is

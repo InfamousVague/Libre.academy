@@ -252,7 +252,7 @@ export default function SignInDialog({
   const startWebOAuth = (provider: "apple" | "google", sessionId: string): boolean => {
     const returnTo = `${window.location.origin}/oauth/done`;
     const url =
-      `${cloud.relayUrl}/libre/auth/${provider}/start` +
+      `${cloud.relayUrl}/fishbones/auth/${provider}/start` +
       `?session=${encodeURIComponent(sessionId)}` +
       `&return_to=${encodeURIComponent(returnTo)}`;
     // Width/height roughly match Google's recommended OAuth popup
