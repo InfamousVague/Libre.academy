@@ -170,6 +170,71 @@ export const PRESETS: Preset[] = [
       2,
     ),
   },
+  // ── Account history (REST) ─────────────────────────────────
+  // These exercise the Transaction History surface the user is
+  // debugging. Adding them as TradeDock presets means the API
+  // tester can fire them in Live mode + show the actual response
+  // time / shape, which is the fastest path to reproing the
+  // "loads forever, sometimes returns empty" issue without
+  // standing up the full HelloTrade web app.
+  //
+  // Endpoint shapes mirror the conventions the rest of the
+  // presets use (signature pair in headers, account scoped via
+  // the address baked into the signed payload). Adjust the query
+  // params on the row that's slow to characterize the bug:
+  //   - drop `limit` → server defaults can be huge
+  //   - swap `status=open` for `status=filled` to compare codepaths
+  //   - add `before=<ts>` to test cursor pagination
+  {
+    kind: "rest",
+    id: "rest.auth.orders",
+    label: "Order history",
+    description:
+      "Every order the account has placed. Slow for old accounts " +
+      "when the orders table lacks a (account_id, created_at DESC) index.",
+    category: "Account",
+    method: "GET",
+    // 100-row page is the typical default. If the server times out
+    // on this, drop to limit=10 to confirm it's a query-cost issue
+    // rather than a transport problem.
+    url: "{{baseUrl}}/api/orders?limit=100",
+    headers: {
+      "X-Signature": "<eip191-sig>",
+      "X-Payload": "<hex-payload>",
+    },
+  },
+  {
+    kind: "rest",
+    id: "rest.auth.ordersOpen",
+    label: "Open orders",
+    description:
+      "Only orders currently resting on the book. Should be a tiny " +
+      "set per account (typically <10). If this returns empty for an " +
+      "account with known-open orders, the status filter is buggy.",
+    category: "Account",
+    method: "GET",
+    url: "{{baseUrl}}/api/orders?status=open&limit=100",
+    headers: {
+      "X-Signature": "<eip191-sig>",
+      "X-Payload": "<hex-payload>",
+    },
+  },
+  {
+    kind: "rest",
+    id: "rest.auth.fills",
+    label: "Trade fills",
+    description:
+      "Per-fill execution log (one row per match, not per order). " +
+      "Cardinality is higher than /orders for any account that " +
+      "places large orders that fill in pieces.",
+    category: "Account",
+    method: "GET",
+    url: "{{baseUrl}}/api/fills?limit=100",
+    headers: {
+      "X-Signature": "<eip191-sig>",
+      "X-Payload": "<hex-payload>",
+    },
+  },
   // ── Reference data ─────────────────────────────────────────
   {
     kind: "rest",
