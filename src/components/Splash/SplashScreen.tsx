@@ -95,6 +95,17 @@ export default function SplashScreen({
   /// onError fires we flip this to false and the component falls
   /// back to freezing on the intro's last frame.
   const [loopAvailable, setLoopAvailable] = useState(true);
+  /// Which video element is currently on-screen. Decoupled from
+  /// `stage` so the intro→loop swap survives the looping→fading
+  /// transition cleanly: once we hand off to the loop, the loop
+  /// stays the active source through the fade-out. Without this
+  /// separation, the active-class predicate derived from `stage`
+  /// would flip back to "intro" the moment `stage` becomes "fading",
+  /// producing a visible jump from the loop's current bounce frame
+  /// to the intro's paused last frame right as the splash dismisses
+  /// — the bug the user reported as "loading splash screen jumps a
+  /// bit when the page is done loading".
+  const [activeVideo, setActiveVideo] = useState<"intro" | "loop">("intro");
   const mountedAtRef = useRef<number>(performance.now());
   const introVideoRef = useRef<HTMLVideoElement>(null);
   const loopVideoRef = useRef<HTMLVideoElement>(null);
@@ -110,6 +121,8 @@ export default function SplashScreen({
       if (prefersReducedMotion() || !loopAvailable) {
         // Hold on the final frame. The browser keeps painting
         // whatever the video was showing on its pause moment.
+        // activeVideo stays "intro" so the freeze-frame remains on
+        // screen through the eventual fade-out.
         try {
           v.pause();
         } catch {
@@ -118,6 +131,7 @@ export default function SplashScreen({
         return;
       }
       setStage("looping");
+      setActiveVideo("loop");
     };
     v.addEventListener("ended", onEnded);
     return () => v.removeEventListener("ended", onEnded);
@@ -178,13 +192,19 @@ export default function SplashScreen({
       aria-live="polite"
       role="status"
     >
-      {/* Intro clip. Visible during the `intro` stage; hidden once
-          we swap to the looping clip. Stays in the DOM so the final
-          frame remains visible in the brief window between the two
-          videos cross-fading. */}
+      {/* Intro clip + boomerang loop. Active-class predicate uses
+          `activeVideo` (sticky) rather than deriving from `stage`
+          directly. Without that, the looping → fading transition
+          would flip the active class back from "loop" to "intro"
+          — the cross-fade would then fight the outer opacity fade
+          and visualise a JUMP from wherever the loop's bounce
+          happened to be back to the intro's paused last frame at
+          the exact moment everything started fading out. `activeVideo`
+          is set once when the loop takes over and stays put through
+          the fade-out. */}
       <video
         ref={introVideoRef}
-        className={`fb-splash__video ${stage !== "looping" ? "fb-splash__video--active" : ""}`}
+        className={`fb-splash__video ${activeVideo === "intro" ? "fb-splash__video--active" : ""}`}
         src={introSrc}
         autoPlay
         muted
@@ -192,14 +212,9 @@ export default function SplashScreen({
         preload="auto"
         aria-hidden
       />
-      {/* Boomerang loop. Preloaded so the swap is seamless. `loop`
-          attribute makes the browser handle the seamless repeat
-          natively — no JS scheduling, no rAF, no decode-on-seek
-          stutter. `onError` (e.g. 404) flips loopAvailable so the
-          fallback path kicks in. */}
       <video
         ref={loopVideoRef}
-        className={`fb-splash__video ${stage === "looping" ? "fb-splash__video--active" : ""}`}
+        className={`fb-splash__video ${activeVideo === "loop" ? "fb-splash__video--active" : ""}`}
         src={loopSrc}
         muted
         playsInline
