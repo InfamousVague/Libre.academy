@@ -238,6 +238,7 @@ pub fn run() {
             courses::save_course,
             courses::save_bundled_starter_course,
             courses::delete_course,
+            courses::reset_seed_marker,
             courses::export_course,
             courses::import_course,
             courses::list_bundled_catalog_entries,

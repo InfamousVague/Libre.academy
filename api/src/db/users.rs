@@ -398,6 +398,19 @@ impl Database {
         Ok(rows)
     }
 
+    /// Wipe every progress row for `user_id`. Used by the "Start
+    /// fresh" Settings action — the matching client call is
+    /// `DELETE /fishbones/progress`. Returns the number of rows
+    /// removed (for logging / response payload).
+    pub fn clear_progress(&self, user_id: &str) -> anyhow::Result<usize> {
+        let conn = self.conn_lock();
+        let n = conn.execute(
+            "DELETE FROM progress WHERE user_id = ?1",
+            params![user_id],
+        )?;
+        Ok(n)
+    }
+
     /// Bulk upsert. Newer `completed_at` wins on conflict so two
     /// devices that finish the same lesson on different days don't
     /// undo each other's progress on sync.

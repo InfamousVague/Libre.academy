@@ -59,3 +59,26 @@ pub async fn upsert(
     }
     Ok(StatusCode::NO_CONTENT)
 }
+
+/// DELETE /fishbones/progress — wipes every completion row for this
+/// user. Triggered by the desktop "Start fresh" Settings action; the
+/// client paired wipe (local SQLite / IDB + cached state) runs in
+/// parallel so the local + remote views converge to empty on this
+/// device. Other devices pick up the empty state on their next GET
+/// pull or full re-sign-in; we DON'T publish a SyncEvent here today
+/// (no `progress_cleared` variant yet) so a connected sibling device
+/// could re-fill the rows via its next bulk push. Adding a fan-out
+/// variant is a follow-up — the user surfaces the limitation via the
+/// "sign out + back in on each device" guidance in the reset toast.
+///
+/// Idempotent: rerunning when there are no rows returns 204 cleanly.
+pub async fn clear(
+    State(state): State<Arc<AppState>>,
+    Extension(UserId(user_id)): Extension<UserId>,
+) -> Result<StatusCode, StatusCode> {
+    state
+        .db
+        .clear_progress(&user_id)
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    Ok(StatusCode::NO_CONTENT)
+}

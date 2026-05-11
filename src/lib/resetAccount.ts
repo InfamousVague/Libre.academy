@@ -130,6 +130,13 @@ export async function resetAccount(
   // 3. Wipe every installed course. Desktop: enumerate then
   // delete_course one-by-one (the IPC has no bulk variant). Web:
   // walk the IDB course store + delete each row.
+  //
+  // Desktop ALSO needs to clear `<app-data>/seeded-packs.json` after
+  // delete_course runs. ensure_seed treats ids in that marker's
+  // seed_ids array as "user explicitly deleted, don't resurrect" —
+  // without wiping the marker, the next-launch reseed walks every
+  // bundled archive and skips them all, leaving the user with an
+  // empty library after Start-fresh.
   try {
     if (!isWeb) {
       const { invoke } = await import("@tauri-apps/api/core");
@@ -142,6 +149,17 @@ export async function resetAccount(
           // eslint-disable-next-line no-console
           console.warn(`[reset] delete_course(${c.id}) failed:`, e);
         }
+      }
+      // Wipe the seed marker so ensure_seed re-imports every bundled
+      // archive on the next launch. Best-effort — if this fails the
+      // user's library stays empty, but the rest of the reset already
+      // succeeded and a future SEED_VERSION bump would still recover.
+      try {
+        await invoke("reset_seed_marker");
+      } catch (e) {
+        coursesCleared = false;
+        // eslint-disable-next-line no-console
+        console.warn("[reset] reset_seed_marker failed:", e);
       }
     } else {
       // Web: storage.deleteCourse for each course in the IDB.

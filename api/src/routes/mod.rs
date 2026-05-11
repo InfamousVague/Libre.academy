@@ -129,7 +129,9 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route("/fishbones/auth/account", delete(auth::delete_account))
         .route(
             "/fishbones/progress",
-            get(progress::list).put(progress::upsert),
+            get(progress::list)
+                .put(progress::upsert)
+                .delete(progress::clear),
         )
         .route(
             "/fishbones/solutions",

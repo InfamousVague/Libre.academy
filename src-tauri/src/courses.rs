@@ -483,6 +483,32 @@ pub struct CourseEntry {
     pub language: String,
 }
 
+/// Wipe `<app-data>/seeded-packs.json` so `ensure_seed` re-imports
+/// every bundled archive on the next launch. Used by the "Start fresh"
+/// Settings action: the JS side calls `delete_course` for every
+/// installed pack, which DOES remove the on-disk dirs — but the
+/// marker file keeps each id in `seed_ids` so `ensure_seed` recognises
+/// "user explicitly deleted this, don't resurrect" and skips re-import.
+/// Without this command, "Start fresh" reset the user to zero courses
+/// AND zero re-seeds the bundled set — the library came up empty.
+///
+/// Deleting the marker is the right granularity: it resets the
+/// "what's been auto-seeded on this machine" tracker without
+/// touching progress.sqlite (a separate file), so a learner who
+/// re-installs after Start-fresh gets the bundled set back with
+/// their progress history intact (already wiped separately by the
+/// JS-side `clearAllCompletions`).
+///
+/// Idempotent: re-running when the marker doesn't exist is a no-op.
+#[tauri::command]
+pub fn reset_seed_marker(app: tauri::AppHandle) -> Result<(), String> {
+    let marker = marker_path(&app).map_err(|e| e.to_string())?;
+    if marker.exists() {
+        fs::remove_file(&marker).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
 /// List every course the app can see. Returns a lightweight manifest entry,
 /// not the full course body — the frontend calls `load_course(id)` to get
 /// the details.
