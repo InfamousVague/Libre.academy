@@ -17,8 +17,24 @@
          leave the layout zoomed in. iOS 10+ ignores user-scalable=no
          in mobile Safari for accessibility, but inside a Tauri
          WKWebView (where we control the host) it's still honored,
-         and the maximum-scale=1.0 alone stops the auto-zoom. -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+         and the maximum-scale=1.0 alone stops the auto-zoom.
+
+         `interactive-widget=resizes-content` (Safari 16.4+, Chrome
+         108+) shrinks the LAYOUT viewport when the soft keyboard
+         appears, rather than the default behaviour of only
+         shrinking the visual viewport. Load-bearing for the
+         Partner Keyboard in the mobile Playground (see
+         src/components/PartnerKeyboard/) — without it, the strip
+         pinned via `position: fixed; bottom: 0` lands at the
+         bottom of the FULL screen (under the keyboard) and we'd
+         have to chase its position with a visualViewport scroll
+         listener that lags the compositor by a frame. With the
+         directive the layout literally shrinks to exclude the
+         keyboard, so `bottom: 0` naturally lands at the keyboard's
+         top edge. The PartnerKeyboard component still keeps the
+         visualViewport math as a fallback for older Safari that
+         ignores this directive. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
     <link rel="icon" type="image/png" href="/libre_app_icon.png" />
     <link rel="apple-touch-icon" href="/libre_app_icon.png" />
     <title>Libre</title>

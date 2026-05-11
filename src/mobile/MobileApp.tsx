@@ -35,6 +35,7 @@ import type { Course, Lesson } from "../data/types";
 import { isoToUnixSeconds } from "../lib/timestamps";
 import MobileLibrary from "./MobileLibrary";
 import MobileLesson from "./MobileLesson";
+import MobilePlayground from "./MobilePlayground";
 import MobileProfile from "./MobileProfile";
 import MobileSettings from "./MobileSettings";
 import PracticeView from "../components/Practice/PracticeView";
@@ -45,7 +46,13 @@ import AiAssistant from "../components/AiAssistant/AiAssistant";
 import FishbonesLoader from "../components/Shared/FishbonesLoader";
 import "./MobileApp.css";
 
-type View = "library" | "lesson" | "practice" | "profile" | "settings";
+type View =
+  | "library"
+  | "lesson"
+  | "playground"
+  | "practice"
+  | "profile"
+  | "settings";
 
 interface ActiveLesson {
   course: Course;
@@ -455,13 +462,15 @@ export default function MobileApp() {
   const activeTab: MobileTab =
     view === "lesson"
       ? "courses"
-      : view === "practice"
-        ? "practice"
-        : view === "profile"
-          ? "profile"
-          : view === "settings"
-            ? "settings"
-            : "library";
+      : view === "playground"
+        ? "playground"
+        : view === "practice"
+          ? "practice"
+          : view === "profile"
+            ? "profile"
+            : view === "settings"
+              ? "settings"
+              : "library";
 
   return (
     <div className="m-app">
@@ -502,6 +511,7 @@ export default function MobileApp() {
             isCompleted={completed.has(`${active.course.id}:${lesson.id}`)}
           />
         )}
+        {view === "playground" && <MobilePlayground />}
         {view === "practice" && (
           <PracticeView
             courses={courses}
@@ -558,6 +568,7 @@ export default function MobileApp() {
         onLesson={() => {
           if (active) setView("lesson");
         }}
+        onPlayground={() => setView("playground")}
         onPractice={() => setView("practice")}
         onProfile={() => setView("profile")}
         onSettings={() => setView("settings")}

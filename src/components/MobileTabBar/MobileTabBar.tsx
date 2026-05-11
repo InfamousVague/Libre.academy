@@ -9,11 +9,13 @@ import { bookOpen } from "@base/primitives/icon/icons/book-open";
 import { dumbbell } from "@base/primitives/icon/icons/dumbbell";
 import { user } from "@base/primitives/icon/icons/user";
 import { settings } from "@base/primitives/icon/icons/settings";
+import { squareTerminal } from "@base/primitives/icon/icons/square-terminal";
 import "./MobileTabBar.css";
 
 export type MobileTab =
   | "library"
   | "courses"
+  | "playground"
   | "practice"
   | "profile"
   | "settings";
@@ -23,6 +25,12 @@ interface Props {
   hasActiveLesson: boolean;
   onLibrary: () => void;
   onLesson: () => void;
+  /// Playground tab handler. Same optional-shape as `onPractice`
+  /// for the same reason — embeddings that don't ship the
+  /// Playground (older builds during rollout, or surfaces where
+  /// the free-form sandbox doesn't belong) can omit the prop and
+  /// the button hides.
+  onPlayground?: () => void;
   /// Practice tab handler. Optional so embeddings without the
   /// Practice surface (legacy mobile builds during rollout) can
   /// still mount the bar; when omitted, the button is hidden.
@@ -36,6 +44,7 @@ export default function MobileTabBar({
   hasActiveLesson,
   onLibrary,
   onLesson,
+  onPlayground,
   onPractice,
   onProfile,
   onSettings,
@@ -67,6 +76,16 @@ export default function MobileTabBar({
         <Icon icon={bookOpen} size="lg" />
         <span>Lesson</span>
       </button>
+      {onPlayground && (
+        <button
+          type="button"
+          className={`fishbones-mtab__btn${active === "playground" ? " fishbones-mtab__btn--active" : ""}`}
+          onClick={onPlayground}
+        >
+          <Icon icon={squareTerminal} size="lg" />
+          <span>Playground</span>
+        </button>
+      )}
       {onPractice && (
         <button
           type="button"
