@@ -14,14 +14,23 @@
 }
 .m-lib__brand-img {
   /* Source asset is libreacademy.png (350×123 ~= 2.85:1 aspect).
-     48 px tall lands at a ~135 px wide visual footprint — small
-     enough to leave the Library title room to breathe, large
-     enough that the "Libre.academy" wordmark is legible at arm's
-     length on a phone. max-width: 70% gives narrower phones a
-     soft cap if the height ever bumps up. */
-  height: 48px;
-  width: auto;
-  max-width: 70%;
+     Render at FULL size — fill the available content width up to
+     the source's natural pixel width so the wordmark renders
+     pixel-perfect on phones whose content column matches or
+     exceeds 350 px. On narrower phones (iPhone SE class, ~343 px
+     content width after the .m-lib 16 px side padding) `width:
+     100%` scales the image down with `height: auto` preserving
+     the aspect ratio. The earlier 48 px height cap kept it small
+     for "breathing room" but the user wanted the brand
+     prominent — this gives the Library page a proper hero band
+     instead of a timid wordmark.
+     `max-width: 100%` over `max-width: 350px` so the image
+     doesn't get upscaled past its source pixels on larger
+     phones / tablets — staying at 350 px when the column is
+     wider keeps the letterforms crisp. */
+  width: 100%;
+  max-width: 350px;
+  height: auto;
   display: block;
   user-select: none;
   -webkit-user-drag: none;
