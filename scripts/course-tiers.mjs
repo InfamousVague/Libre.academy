@@ -98,37 +98,35 @@ export const ALL_PACK_IDS = [
   //   you-don-t-know-js-yet, python-crash-course, learning-zig.
   // The Zig spot is now covered by the in-house "A to Zig" course
   // bundled above, not via these third-party books.
+  // Cleanup pass 2026-05-10: dropped rust-by-example, the-async-book-
+  //   rust, composing-programs — code-only references with no archive
+  //   anywhere (CDN dead, never bundled, never authored). The catalog
+  //   layer was producing Discover tiles whose install button always
+  //   404'd. Re-add when the .academy ships.
   "the-rust-programming-language",
-  "rust-by-example",
-  "the-async-book-rust",
   "the-rustonomicon",
-  "composing-programs",
   "learning-go",
 
   // ── Computer-science fundamentals ──────────────────────────────
   // Removed 2026-05-07: crafting-interpreters-javascript.
-  "algorithms-erickson",
-  "open-data-structures",
-  "pro-git",
+  // Removed 2026-05-10: algorithms-erickson, open-data-structures,
+  //   pro-git — same archive-dead reason as the rust block above.
 
   // ── Frameworks + libraries ─────────────────────────────────────
   // Removed 2026-05-07: learning-react-native, fluent-react,
   //   interactive-web-development-with-three-js-and-a-frame.
-  "learning-svelte",
-  "solidjs-fundamentals",
-  "htmx-fundamentals",
-  "astro-fundamentals",
-  "react-native",
-  "tauri-2-fundamentals",
+  // Removed 2026-05-10: learning-svelte, solidjs-fundamentals,
+  //   htmx-fundamentals, astro-fundamentals, react-native,
+  //   tauri-2-fundamentals — archive-dead.
 
   // ── Smart-contract / web3 / crypto ─────────────────────────────
+  // Removed 2026-05-10: mastering-lightning-network,
+  //   vyper-fundamentals-pythonic-smart-contracts,
+  //   viem-and-ethers-js-talking-to-ethereum-from-typescript,
+  //   cryptography-fundamentals-hashes-to-zk — archive-dead.
   "mastering-bitcoin",
   "mastering-ethereum",
-  "mastering-lightning-network",
-  "vyper-fundamentals-pythonic-smart-contracts",
   "solana-programs-rust-on-the-svm",
-  "viem-and-ethers-js-talking-to-ethereum-from-typescript",
-  "cryptography-fundamentals-hashes-to-zk",
   // HelloTrade — decentralised perp futures exchange. JavaScript-
   // primary; bundles with the in-app TradeDock (Postman-shaped REST
   // + WS client) so every dock-flagged lesson hits a real-or-mock
@@ -239,9 +237,9 @@ export const RELEASE_STATUS_OVERRIDES = {
   "hellotrade": "BETA",
 
   // ── Books bumped to ALPHA ────────────────────────────────────
-  // Vyper went from 0 exercises to a full set after the recent
-  // expansion pass; promoted out of the bottom section.
-  "vyper-fundamentals-pythonic-smart-contracts": "ALPHA",
+  // (Vyper override removed 2026-05-10 alongside the ALL_PACK_IDS
+  // cleanup — no archive shipped, so the override had nothing to
+  // attach to.)
 
   // ── Challenge packs ──────────────────────────────────────────
   // Auto-generated kata sets validated as a class via the recent

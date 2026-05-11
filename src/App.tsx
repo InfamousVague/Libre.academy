@@ -45,7 +45,10 @@ import { useArchiveDrop } from "./hooks/useArchiveDrop";
 import { DeferredMount, LoadingPane } from "./components/Shared/DeferredMount";
 import SplashScreen from "./components/Splash/SplashScreen";
 import { prefetchCovers } from "./hooks/useCourseCover";
-import { REMOTE_CATALOG_FALLBACK } from "./lib/remoteCatalogFallback";
+import {
+  REMOTE_CATALOG_FALLBACK,
+  isRemoteFallbackId,
+} from "./lib/remoteCatalogFallback";
 import ConfirmDialog from "./components/dialogs/ConfirmDialog/ConfirmDialog";
 import CourseSettingsModal from "./components/dialogs/CourseSettings/CourseSettingsModal";
 import FloatingIngestPanel from "./components/IngestPanel/FloatingIngestPanel";
@@ -2597,6 +2600,20 @@ export default function App() {
     localPath?: string;
     title: string;
   }) {
+    // Aspirational fallback tiles in Discover (the
+    // remoteCatalogFallback list) point at .json files / .fishbones
+    // archives that haven't been authored yet — clicking install
+    // 404s and surfaces a confusing "string did not match the
+    // expected pattern" / "HTTP 404" alert. Detect them up-front and
+    // show a friendlier "coming soon" message so the user knows it's
+    // not a bug. The covers stay on the shelf so Discover keeps
+    // reading as aspirational rather than empty.
+    if (isRemoteFallbackId(entry.id)) {
+      alert(
+        `${entry.title} is coming soon — the cover is on Discover so you can see what's queued, but the lesson archive hasn't shipped yet. Check back after the next update.`,
+      );
+      return;
+    }
     try {
       if (isWeb) {
         // Web build: fetch the course JSON from same-origin

@@ -1,4 +1,7 @@
+import { useEffect, useState } from "react";
 import { describeAuthProvider } from "./helpers";
+import { resetAccount } from "../../../lib/resetAccount";
+import type { UseFishbonesCloud } from "../../../hooks/useFishbonesCloud";
 
 interface AccountSectionProps {
   user: {
@@ -16,6 +19,11 @@ interface AccountSectionProps {
   onRequestDeleteConfirm: () => void;
   onCancelDelete: () => void;
   onConfirmDelete: () => void;
+  /// Cloud handle so the Start-fresh button can also wipe the
+  /// learner's progress rows on the relay (best-effort — falls back
+  /// to local-only when the relay route 404s or the device is
+  /// offline).
+  cloud: UseFishbonesCloud;
 }
 
 /// Account/Profile section. Rendered only when signed in. Surfaces the
@@ -31,6 +39,7 @@ export default function AccountSection({
   onRequestDeleteConfirm,
   onCancelDelete,
   onConfirmDelete,
+  cloud,
 }: AccountSectionProps) {
   const displayName = user.display_name?.trim() || null;
   // Avatar initial — first character of the display name, falling back
@@ -39,6 +48,21 @@ export default function AccountSection({
   const initialSource = displayName || user.email || "";
   const initial = initialSource ? initialSource.charAt(0).toUpperCase() : "?";
   const providerLabel = describeAuthProvider(user);
+
+  /// Start-fresh state machine. First click ARMS the button + starts
+  /// a 5 s auto-disarm; second click within that window commits.
+  /// Lots of friction on purpose — this nukes courses, completions,
+  /// achievements, streaks, practice history, AND the cloud-side
+  /// rows in one shot. Reload after the reset so the empty state
+  /// renders against the freshly-seeded course set.
+  const [freshArmed, setFreshArmed] = useState(false);
+  const [freshBusy, setFreshBusy] = useState(false);
+  const [freshMsg, setFreshMsg] = useState<string | null>(null);
+  useEffect(() => {
+    if (!freshArmed) return;
+    const id = window.setTimeout(() => setFreshArmed(false), 5000);
+    return () => window.clearTimeout(id);
+  }, [freshArmed]);
 
   return (
     <section>
@@ -79,6 +103,69 @@ export default function AccountSection({
           disabled={signingOut || deletingAccount}
         >
           {signingOut ? "Signing out…" : "Sign out"}
+        </button>
+      </div>
+
+      {/* ── Start fresh ────────────────────────────────────────
+          The single consolidated reset surface. Replaces the four
+          scattered buttons that used to live across Settings:
+            - Data → Clear cache (ingest)
+            - Data → Clear all courses
+            - Developer → Reset unlocked achievements
+            - Developer → Reset account to default
+          One click here arms the action; a second click within 5 s
+          commits. The reset wipes courses, completions, achievements,
+          streak, shields, practice history, AND the cloud-side
+          progress rows so other signed-in devices see the empty
+          state on their next pull. Sign-in token, theme, and other
+          preferences survive. Window reloads after success so the
+          freshly-emptied state seeds cleanly on next mount.
+      */}
+      <div className="fishbones-settings-data-row">
+        <div>
+          <div className="fishbones-settings-data-label">Start fresh</div>
+          <div className="fishbones-settings-data-hint">
+            {freshArmed
+              ? "Tap Confirm within 5 s to wipe every course, completion, achievement, streak, and cached progress on this device, plus the matching cloud rows. The page will reload with a freshly-seeded library."
+              : freshBusy
+              ? freshMsg ?? "Resetting…"
+              : freshMsg
+              ? freshMsg
+              : "Wipes every course, completion, achievement, streak, and cached progress on this device, plus the matching cloud rows. Sign-in, theme, and preferences stay. Use Delete account below if you want to remove the account entirely."}
+          </div>
+        </div>
+        <button
+          className="fishbones-settings-danger"
+          disabled={freshBusy || signingOut || deletingAccount}
+          onClick={async () => {
+            if (!freshArmed) {
+              setFreshArmed(true);
+              setFreshMsg(null);
+              return;
+            }
+            setFreshArmed(false);
+            setFreshBusy(true);
+            setFreshMsg("Resetting…");
+            try {
+              const report = await resetAccount(cloud);
+              setFreshMsg(report.message + " Reloading…");
+              // Brief delay so the user sees the success line before
+              // the window blanks for the reload. Same pattern the
+              // sync-courses path uses elsewhere.
+              setTimeout(() => window.location.reload(), 700);
+            } catch (e) {
+              setFreshMsg(
+                `Reset failed: ${e instanceof Error ? e.message : String(e)}`,
+              );
+              setFreshBusy(false);
+            }
+          }}
+        >
+          {freshBusy
+            ? "Resetting…"
+            : freshArmed
+            ? "Confirm"
+            : "Start fresh"}
         </button>
       </div>
 

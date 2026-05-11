@@ -4,6 +4,7 @@ import { Icon } from "@base/primitives/icon";
 import { check as checkIcon } from "@base/primitives/icon/icons/check";
 import "@base/primitives/icon/icon.css";
 import { applyTheme, loadTheme, type ThemeName } from "../../../theme/themes";
+import { resetAccount } from "../../../lib/resetAccount";
 import type { UseFishbonesCloud } from "../../../hooks/useFishbonesCloud";
 import type { RealtimeSyncHandle } from "../../../hooks/useRealtimeSync";
 import type { Completion } from "../../../hooks/useProgress";
@@ -105,9 +106,6 @@ export default function SettingsDialog({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [clearingCourses, setClearingCourses] = useState(false);
-  const [clearingCache, setClearingCache] = useState(false);
-  const [confirmClearCourses, setConfirmClearCourses] = useState(false);
   const [syncingCourses, setSyncingCourses] = useState(false);
   /// Last-sync result message. Held for ~4s after a manual sync so the
   /// learner can see the outcome ("1 new course added" / "Already up
@@ -115,8 +113,9 @@ export default function SettingsDialog({
   const [syncResult, setSyncResult] = useState<string | null>(null);
   const [theme, setTheme] = useState<ThemeName>(() => loadTheme());
   // Account-section state. `confirmDeleteAccount` follows the same
-  // click-to-confirm pattern as `confirmClearCourses` above so the
-  // destructive-action UX is consistent across the dialog.
+  // two-tap-confirm pattern that the consolidated "Start fresh"
+  // affordance uses so the destructive-action UX is consistent
+  // across the dialog.
   const [confirmDeleteAccount, setConfirmDeleteAccount] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -189,32 +188,12 @@ export default function SettingsDialog({
     }
   }
 
-  async function clearAllCourses() {
-    setClearingCourses(true);
-    setError(null);
-    try {
-      const entries = await invoke<Array<{ id: string }>>("list_courses");
-      for (const e of entries) {
-        await invoke("delete_course", { courseId: e.id });
-      }
-      window.location.reload();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-      setClearingCourses(false);
-    }
-  }
-
-  async function clearIngestCache() {
-    setClearingCache(true);
-    setError(null);
-    try {
-      await invoke("cache_clear", { bookId: "" });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setClearingCache(false);
-    }
-  }
+  // `clearAllCourses` + `clearIngestCache` were removed 2026-05-10
+  // when the four scattered destructive surfaces (this Data section,
+  // the Developer pane's two reset rows) were folded into the single
+  // "Start fresh" affordance under Settings → Account. See
+  // lib/resetAccount.ts for the consolidated wipe path — it does
+  // both `cache_clear` and per-course `delete_course` itself.
 
   /// Sync newly-bundled course packs into the local install.
   ///
@@ -339,54 +318,16 @@ export default function SettingsDialog({
                     {syncingCourses ? "Syncing…" : "Sync now"}
                   </button>
                 </div>
-                <div className="fishbones-settings-data-row">
-                  <div>
-                    <div className="fishbones-settings-data-label">Ingest cache</div>
-                    <div className="fishbones-settings-data-hint">
-                      Clearing forces the next AI import to re-call Claude for every stage.
-                    </div>
-                  </div>
-                  <button
-                    className="fishbones-settings-danger"
-                    onClick={clearIngestCache}
-                    disabled={clearingCache}
-                  >
-                    {clearingCache ? "…" : "Clear cache"}
-                  </button>
-                </div>
-                <div className="fishbones-settings-data-row">
-                  <div>
-                    <div className="fishbones-settings-data-label">All courses + progress</div>
-                    <div className="fishbones-settings-data-hint">
-                      Deletes every course from disk and resets lesson completion. Cannot be undone.
-                    </div>
-                  </div>
-                  {confirmClearCourses ? (
-                    <div className="fishbones-settings-confirm">
-                      <button
-                        className="fishbones-settings-secondary"
-                        onClick={() => setConfirmClearCourses(false)}
-                        disabled={clearingCourses}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        className="fishbones-settings-danger"
-                        onClick={clearAllCourses}
-                        disabled={clearingCourses}
-                      >
-                        {clearingCourses ? "Clearing…" : "Really clear"}
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      className="fishbones-settings-danger"
-                      onClick={() => setConfirmClearCourses(true)}
-                    >
-                      Clear all courses
-                    </button>
-                  )}
-                </div>
+                {/* "Clear cache" + "Clear all courses" rows used to
+                    live here. Folded into the single "Start fresh"
+                    affordance under Settings → Account on 2026-05-10
+                    (see lib/resetAccount.ts). One button now wipes
+                    courses + ingest cache + completions + every
+                    achievement + the matching cloud rows in one
+                    shot. The Data section now stays scoped to
+                    additive operations (Sync); destructive ones
+                    moved to the natural home next to Sign-out and
+                    Delete-account. */}
               </section>
             )}
 
@@ -418,30 +359,18 @@ export default function SettingsDialog({
 
             {section === "diagnostics" && <DiagnosticsPanel />}
 
-            {section === "developer" && <DeveloperPane cloud={cloud} />}
+            {section === "developer" && <DeveloperPane />}
 
             {section === "account" &&
               onRequestSignIn &&
               !(cloud.signedIn && typeof cloud.user === "object" && cloud.user) && (
-                <section>
-                  <h3 className="fishbones-settings-section">Account</h3>
-                  <p className="fishbones-settings-blurb">
-                    Sign in to sync progress, streaks, and lesson history
-                    between devices, upload your imported books, and share
-                    courses with friends. Fishbones works fully offline
-                    without an account — signing in is purely additive.
-                  </p>
-                  <button
-                    type="button"
-                    className="fishbones-settings-primary"
-                    onClick={() => {
-                      onRequestSignIn();
-                      onDismiss();
-                    }}
-                  >
-                    Sign in
-                  </button>
-                </section>
+                <SignedOutAccountSection
+                  cloud={cloud}
+                  onRequestSignIn={() => {
+                    onRequestSignIn();
+                    onDismiss();
+                  }}
+                />
               )}
 
             {section === "account" && cloud.signedIn && typeof cloud.user === "object" && cloud.user && (
@@ -480,6 +409,7 @@ export default function SettingsDialog({
                     setDeletingAccount(false);
                   }
                 }}
+                cloud={cloud}
               />
             )}
 
@@ -515,5 +445,91 @@ export default function SettingsDialog({
         </div>
       </div>
     </ModalBackdrop>
+  );
+}
+
+/// Signed-out variant of the Account pane. Renders the sign-in CTA
+/// (the original surface) PLUS the same "Start fresh" affordance the
+/// signed-in `<AccountSection>` exposes — local data is wipeable
+/// regardless of cloud auth, and a learner who isn't signed in
+/// shouldn't have to make an account just to reset progress on the
+/// device they're holding. Two-tap confirm UX matches the signed-in
+/// version exactly so the muscle memory transfers either way.
+function SignedOutAccountSection({
+  cloud,
+  onRequestSignIn,
+}: {
+  cloud: UseFishbonesCloud;
+  onRequestSignIn: () => void;
+}) {
+  const [armed, setArmed] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  useEffect(() => {
+    if (!armed) return;
+    const id = window.setTimeout(() => setArmed(false), 5000);
+    return () => window.clearTimeout(id);
+  }, [armed]);
+  return (
+    <section>
+      <h3 className="fishbones-settings-section">Account</h3>
+      <p className="fishbones-settings-blurb">
+        Sign in to sync progress, streaks, and lesson history between
+        devices, upload your imported books, and share courses with
+        friends. Fishbones works fully offline without an account —
+        signing in is purely additive.
+      </p>
+      <button
+        type="button"
+        className="fishbones-settings-primary"
+        onClick={onRequestSignIn}
+      >
+        Sign in
+      </button>
+
+      <div
+        className="fishbones-settings-data-row"
+        style={{ marginTop: 24 }}
+      >
+        <div>
+          <div className="fishbones-settings-data-label">Start fresh</div>
+          <div className="fishbones-settings-data-hint">
+            {armed
+              ? "Tap Confirm within 5 s to wipe every course, completion, achievement, streak, and cached progress on this device. The page will reload with a freshly-seeded library."
+              : busy
+              ? msg ?? "Resetting…"
+              : msg
+              ? msg
+              : "Wipes every course, completion, achievement, streak, and cached progress on this device. Theme, language, and other preferences stay. (Cross-device sync needs a sign-in — without one this only resets the local copy.)"}
+          </div>
+        </div>
+        <button
+          className="fishbones-settings-danger"
+          disabled={busy}
+          onClick={async () => {
+            if (!armed) {
+              setArmed(true);
+              setMsg(null);
+              return;
+            }
+            setArmed(false);
+            setBusy(true);
+            setMsg("Resetting…");
+            try {
+              const report = await resetAccount(cloud);
+              setMsg(report.message + " Reloading…");
+              setTimeout(() => window.location.reload(), 700);
+            } catch (e) {
+              setMsg(
+                `Reset failed: ${e instanceof Error ? e.message : String(e)}`,
+              );
+              setBusy(false);
+            }
+          }}
+        >
+          {busy ? "Resetting…" : armed ? "Confirm" : "Start fresh"}
+        </button>
+      </div>
+    </section>
   );
 }

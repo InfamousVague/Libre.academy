@@ -4,8 +4,6 @@ import {
   celebrateWith,
   type CelebrationEffect,
 } from "../../../lib/celebrate";
-import { resetAccount } from "../../../lib/resetAccount";
-import type { UseFishbonesCloud } from "../../../hooks/useFishbonesCloud";
 
 const FLAG_KEY = "fishbones:devconsole";
 
@@ -40,14 +38,7 @@ const EFFECT_LABELS: Array<{
 /// (DiagnosticsPanel) implies it's a one-time-look thing rather
 /// than a stateful toggle. Its own section makes the boundary
 /// explicit ("you're poking around under the hood now").
-interface Props {
-  /// Cloud handle. Reset-account uses `resetProgress` to wipe the
-  /// relay-side rows alongside the local DB; the rest of the
-  /// developer affordances are local-only and don't touch it.
-  cloud: UseFishbonesCloud;
-}
-
-export default function DeveloperPane({ cloud }: Props) {
+export default function DeveloperPane() {
   const [enabled, setEnabled] = useState<boolean>(() => {
     try {
       return localStorage.getItem(FLAG_KEY) === "1";
@@ -55,20 +46,6 @@ export default function DeveloperPane({ cloud }: Props) {
       return false;
     }
   });
-
-  /// Two-tap confirm state for the destructive "Reset account"
-  /// action. First click flips this to "armed" + starts a 5 s
-  /// auto-disarm timer; second click within that window actually
-  /// runs the reset. Lots of friction on purpose — this is the
-  /// nuke button for every piece of earned progress.
-  const [resetArmed, setResetArmed] = useState(false);
-  const [resetBusy, setResetBusy] = useState(false);
-  const [resetMsg, setResetMsg] = useState<string | null>(null);
-  useEffect(() => {
-    if (!resetArmed) return;
-    const id = window.setTimeout(() => setResetArmed(false), 5000);
-    return () => window.clearTimeout(id);
-  }, [resetArmed]);
 
   // Re-sync if devconsole.js was toggled by another path (the
   // 5-tap fallback gesture, the panel's × button, or a second
@@ -222,122 +199,17 @@ export default function DeveloperPane({ cloud }: Props) {
         </button>
       </div>
 
-      <div className="fishbones-settings-data-row">
-        <div>
-          <div className="fishbones-settings-data-label">
-            Reset unlocked achievements
-          </div>
-          <div className="fishbones-settings-data-hint">
-            Clears <code>localStorage["fb:achievements:unlocked"]</code> so
-            the next progress event treats every persisted milestone as
-            freshly earned. Useful for re-running the unlock flow without
-            hand-editing storage. Streaks, XP, and progress are NOT
-            touched — only the unlocked-record list.
-          </div>
-        </div>
-        <button
-          type="button"
-          className="fishbones-settings-secondary"
-          onClick={() => {
-            try {
-              localStorage.removeItem("fb:achievements:unlocked");
-            } catch {
-              /* private mode / quota — silent fail is fine */
-            }
-            // Storage events don't fire in the writing tab, so nudge
-            // any subscribed UI by dispatching a synthetic one with
-            // the same key. The useAchievements cross-tab listener
-            // re-reads + re-renders.
-            try {
-              window.dispatchEvent(
-                new StorageEvent("storage", {
-                  key: "fb:achievements:unlocked",
-                }),
-              );
-            } catch {
-              /* SSR / older browsers — ignore */
-            }
-          }}
-        >
-          Reset
-        </button>
-      </div>
-
-      {/* ── Reset entire account ────────────────────────────────
-          The big red door. Wipes EVERY piece of earned progress
-          (completions, achievements, streak, shields, practice
-          history, recents, notification markers) on this device
-          AND, when signed in, calls the relay's DELETE so other
-          devices sync the empty state on their next pull. Sign-in
-          token, theme, locale, and other preferences survive — the
-          intent is "fresh learner" not "fresh install". The button
-          arms on first click and only commits on a second click
-          within 5 s, so a stray tap can't nuke a year of progress.
-      */}
-      <h3
-        className="fishbones-settings-section"
-        style={{ marginTop: 28 }}
-      >
-        Account
-      </h3>
-      <p className="fishbones-settings-blurb">
-        Wipe every earned-progress signal back to a fresh-learner
-        state. Completions, achievements, streak, shields, practice
-        history, and recents all go to zero — both on this device
-        and on the relay so every other signed-in device picks up
-        the empty state on its next sync. The account itself stays
-        signed in; preferences (theme, language, view mode) are
-        untouched. Use{" "}
-        <em>Sign out → Delete account</em> in the Account pane if
-        you want to nuke the account itself.
-      </p>
-      <div className="fishbones-settings-data-row">
-        <div>
-          <div className="fishbones-settings-data-label">
-            Reset account to default
-          </div>
-          <div className="fishbones-settings-data-hint">
-            {resetArmed
-              ? "Tap Confirm within 5 s to wipe progress on this device + sync the empty state to your other signed-in devices."
-              : resetMsg
-              ? resetMsg
-              : cloud.signedIn
-              ? "Clears local + relay progress. The empty state will sync to your other devices on their next pull."
-              : "Clears local progress only — sign in first if you also want to wipe the cloud copy across devices."}
-          </div>
-        </div>
-        <button
-          type="button"
-          className="fishbones-settings-secondary"
-          disabled={resetBusy}
-          onClick={async () => {
-            if (!resetArmed) {
-              setResetArmed(true);
-              setResetMsg(null);
-              return;
-            }
-            setResetArmed(false);
-            setResetBusy(true);
-            setResetMsg("Resetting…");
-            try {
-              const report = await resetAccount(cloud);
-              setResetMsg(report.message);
-            } catch (e) {
-              setResetMsg(
-                `Reset failed: ${e instanceof Error ? e.message : String(e)}`,
-              );
-            } finally {
-              setResetBusy(false);
-            }
-          }}
-        >
-          {resetBusy
-            ? "Resetting…"
-            : resetArmed
-            ? "Confirm reset"
-            : "Reset account"}
-        </button>
-      </div>
+      {/* The "Reset unlocked achievements" + "Reset account to
+          default" rows that used to live here were folded into the
+          single "Start fresh" affordance under Settings → Account
+          on 2026-05-10 (see resetAccount.ts). One button now wipes
+          courses + completions + achievements + streak + practice
+          history + cached progress + the matching cloud rows in
+          one shot, replacing the four scattered surfaces that
+          previously did partial overlapping wipes. Developer-pane
+          stays scoped to dev affordances (console toggle, achievement
+          test panel) per the original "you're poking around under
+          the hood" framing. */}
     </section>
   );
 }

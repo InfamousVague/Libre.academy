@@ -221,7 +221,19 @@ function starterUrl(path: string): string {
 /// carries the flag) and overwrites the record with the
 /// undefined-hidden version, surfacing the course in Discover from
 /// the next page load.
-const SEED_VERSION = 12;
+///
+/// V13 — Catalog cleanup. Dropped 16 dead-archive book ids from
+/// ALL_PACK_IDS (rust-by-example, the-async-book-rust, composing-
+/// programs, algorithms-erickson, open-data-structures, pro-git,
+/// learning-svelte, solidjs-fundamentals, htmx-fundamentals,
+/// astro-fundamentals, react-native, tauri-2-fundamentals,
+/// mastering-lightning-network, vyper-fundamentals-pythonic-smart-
+/// contracts, viem-and-ethers-js, cryptography-fundamentals-hashes-
+/// to-zk) plus emptied REMOTE_CATALOG_FALLBACK. Returning visitors
+/// have these IDB-cached from V12 — bumping forces a re-seed pass
+/// whose `currentIds` set excludes the dropped books, and the
+/// existing prune step removes the orphaned IDB rows.
+const SEED_VERSION = 13;
 
 /// Run the web seed if it hasn't run yet OR if the persisted
 /// `SEED_VERSION` is older than the current build's. Idempotent +
