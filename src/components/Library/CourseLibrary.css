@@ -42,17 +42,26 @@
 
 /* Inline variant trims the card's inner padding — the header, controls,
    and body were spaced as if floating inside a card, but on the flat app
-   surface that extra inset reads as dead space. Keep a slim 12px gutter
-   so the content doesn't sit flush against the pane edge, but much less
-   than the card variant's 22px. */
-.fishbones-library-panel--inline .fishbones-library-header,
-.fishbones-library-panel--inline .fishbones-library-controls {
+   surface that extra inset reads as dead space. Keep a slim gutter so
+   the content doesn't sit flush against the pane edge, but tighten
+   versus the card variant's 22px.
+   Controls strip drops to 0 horizontal padding because it lives INSIDE
+   the body (which already contributes the gutter). The earlier
+   `padding-left/right: 12px` here stacked on top of the body's 12px,
+   inset the controls 24px from the panel edge while the cards
+   underneath only inset 12px — the strip read as visually indented. */
+.fishbones-library-panel--inline .fishbones-library-header {
   padding-left: 12px;
   padding-right: 12px;
 }
 
+.fishbones-library-panel--inline .fishbones-library-controls {
+  padding-left: 0;
+  padding-right: 0;
+}
+
 .fishbones-library-panel--inline .fishbones-library-body {
-  padding: 16px 12px 24px;
+  padding: 12px 12px 24px;
 }
 
 .fishbones-library-header {
@@ -791,6 +800,46 @@
   color: var(--color-text-tertiary);
   font-size: 11px;
   font-weight: 600;
+}
+
+/* Update-all button docked into the section header's right edge.
+   Borrows the warm accent from the retired update-banner-btn so
+   the visual identity carries over, but sized to fit on the same
+   line as the title / count / blurb. `margin-left: auto` pushes
+   it flush right inside the flex row regardless of how much room
+   the blurb takes; `flex-shrink: 0` keeps the button's pill shape
+   stable when the row narrows. */
+.fishbones-library-section-update-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--fb-radius-pill);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  background: color-mix(in srgb, var(--color-accent, #6c8cff) 18%, transparent);
+  color: var(--color-accent, #6c8cff);
+  border: 1px solid color-mix(in srgb, var(--color-accent, #6c8cff) 40%, transparent);
+  transition:
+    background 120ms ease,
+    transform 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.fishbones-library-section-update-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-accent, #6c8cff) 28%, transparent);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-accent, #6c8cff) 30%, transparent);
+}
+
+.fishbones-library-section-update-btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
 }
 
 .fishbones-library-section-blurb {

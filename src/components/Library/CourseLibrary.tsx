@@ -532,6 +532,53 @@ export default function CourseLibrary({
     return { books, challenges, all: books + challenges };
   }, [enriched, categoryFilter, chainFilter, langFilter]);
 
+  // "Update all" button — docks into the right edge of the first
+  // section header (Books / count / blurb / [Update all]). Was
+  // previously a standalone row between the controls strip and the
+  // first section's cards, with a redundant "N books have updates
+  // available" text label to the left of the button. The text said
+  // the same thing the button's own label already says ("Update all
+  // (N)"), so this trims to just the button and lifts it onto the
+  // header's row to free up the vertical space.
+  //
+  // Computed here (outside the section maps) so both shelf-mode and
+  // grid-mode rendering can drop the same JSX into their per-section
+  // headers without duplicating the pending-id computation.
+  const pendingUpdateIds = Object.entries(updates)
+    .filter(([id, hasUpdate]) => hasUpdate && !updatingIds.has(id))
+    .map(([id]) => id);
+  const inflightUpdateCount = courses.filter((c) =>
+    updatingIds.has(c.id),
+  ).length;
+  const updateAllBusy =
+    pendingUpdateIds.length === 0 && inflightUpdateCount > 0;
+  const hasAnyUpdates =
+    pendingUpdateIds.length > 0 || inflightUpdateCount > 0;
+  const handleUpdateAll = async () => {
+    // Update sequentially — the per-book sync reads a fresh disk
+    // snapshot for each, and N parallel writes would thrash both
+    // the disk and the React render path.
+    for (const id of pendingUpdateIds) {
+      await handleUpdateClick(id);
+    }
+  };
+  const updateAllButton = hasAnyUpdates ? (
+    <button
+      type="button"
+      className="fishbones-library-section-update-btn"
+      onClick={handleUpdateAll}
+      disabled={updateAllBusy || pendingUpdateIds.length === 0}
+      title="Re-sync each updated book against its bundled source"
+      aria-label={
+        updateAllBusy
+          ? `Updating ${inflightUpdateCount} ${inflightUpdateCount === 1 ? "book" : "books"}`
+          : `Update all ${pendingUpdateIds.length} ${pendingUpdateIds.length === 1 ? "book" : "books"}`
+      }
+    >
+      {updateAllBusy ? "Updating…" : `Update all (${pendingUpdateIds.length})`}
+    </button>
+  ) : null;
+
   // The panel content is identical in both modes; only the wrapper differs:
   // modal wraps with a full-viewport backdrop, inline just renders in place.
   const panel = (
@@ -683,54 +730,13 @@ export default function CourseLibrary({
               onSetViewMode={setViewMode}
             />
           )}
-          {/* Update-all callout. Slim inline row that sits between
-              the controls strip and the cards grid — was previously
-              an `position: absolute` float anchored to the body's
-              top-right, but that put it on the same row as the
-              search + sort + view-toggle controls, which made the
-              header read as a tangle of overlapping chips. Now it
-              flows normally: the controls strip stays clean, the
-              callout owns its own row, and the cards push down by
-              the row's height (acceptable since the callout only
-              renders when there's an actual update to surface). */}
-          {(() => {
-            const pendingIds = Object.entries(updates)
-              .filter(([id, hasUpdate]) => hasUpdate && !updatingIds.has(id))
-              .map(([id]) => id);
-            const inflightCount = courses.filter((c) => updatingIds.has(c.id)).length;
-            if (pendingIds.length === 0 && inflightCount === 0) return null;
-            const allBusy = pendingIds.length === 0 && inflightCount > 0;
-            // Update sequentially so we don't hammer the disk + render
-            // path with N parallel writes; the per-book sync also reads
-            // a fresh disk snapshot which serial cadence keeps simple.
-            const updateAll = async () => {
-              for (const id of pendingIds) {
-                await handleUpdateClick(id);
-              }
-            };
-            return (
-              <div
-                className="fishbones-library-update-banner"
-                role="status"
-                aria-live="polite"
-              >
-                <div className="fishbones-library-update-banner-text">
-                  {allBusy
-                    ? `Updating ${inflightCount} ${inflightCount === 1 ? "book" : "books"}…`
-                    : `${pendingIds.length} ${pendingIds.length === 1 ? "book has" : "books have"} updates available${inflightCount > 0 ? ` · ${inflightCount} in progress` : ""}`}
-                </div>
-                <button
-                  type="button"
-                  className="fishbones-library-update-banner-btn"
-                  onClick={updateAll}
-                  disabled={allBusy || pendingIds.length === 0}
-                  title="Re-sync each updated book against its bundled source"
-                >
-                  {allBusy ? "Updating…" : `Update all (${pendingIds.length})`}
-                </button>
-              </div>
-            );
-          })()}
+          {/* Update-all callout no longer renders as its own row —
+              the button now docks into the section header's right
+              edge (see `updateAllButton` below + the section-head
+              maps for shelf / grid mode). The screen-reader-friendly
+              text label was dropped per the design tweak; the button
+              itself carries the count + busy state so AT users still
+              get the full status via aria-label on the button. */}
 
           {derivedScope === "discover" && !catalogLoaded ? (
             // Catalog fetch in flight. The desktop build hits a Tauri
@@ -797,7 +803,7 @@ export default function CourseLibrary({
             // cover grid; the inner .fishbones-library-shelf keeps its
             // original layout so card sizing is unchanged.
             <div className="fishbones-library-sections">
-              {sections.map((sec) => (
+              {sections.map((sec, secIdx) => (
                 <section
                   key={sec.key}
                   className={`fishbones-library-section fishbones-library-section--${sec.key}`}
@@ -813,6 +819,12 @@ export default function CourseLibrary({
                     <span className="fishbones-library-section-blurb">
                       {sec.blurb}
                     </span>
+                    {/* Update-all button docks into the FIRST section's
+                        header only — the action is global (re-syncs every
+                        pending book regardless of which section it's in)
+                        so showing it once at the top of the page is the
+                        natural single anchor. */}
+                    {secIdx === 0 && updateAllButton}
                   </header>
                   <div className="fishbones-library-shelf">
                     {sec.rows.map((e, idx) => (
@@ -873,7 +885,7 @@ export default function CourseLibrary({
           ) : (
             // Grid mode — same sectioning rule, different inner layout.
             <div className="fishbones-library-sections">
-              {sections.map((sec) => (
+              {sections.map((sec, secIdx) => (
                 <section
                   key={sec.key}
                   className={`fishbones-library-section fishbones-library-section--${sec.key}`}
@@ -889,6 +901,10 @@ export default function CourseLibrary({
                     <span className="fishbones-library-section-blurb">
                       {sec.blurb}
                     </span>
+                    {/* See comment on the shelf-mode map above —
+                        same global single-anchor for the update-all
+                        action. */}
+                    {secIdx === 0 && updateAllButton}
                   </header>
                   <div className="fishbones-library-grid">
                     {sec.rows.map((e, idx) => (
