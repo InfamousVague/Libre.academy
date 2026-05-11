@@ -62,12 +62,33 @@
   color: #1f2330;
   font-size: 10px;
   font-weight: 700;
-  line-height: 16px;
+  /* Flexbox vertical-centring instead of `line-height: 16px`. The
+     line-height trick collapses on Safari + iOS WebKit when the
+     chip's font is a single tabular-nums digit (the glyph baseline
+     ends up sitting below the geometric centre), and grows worse
+     once the chip widens to "9+". inline-flex + center on both
+     axes keeps the digit pinned to the geometric middle on every
+     engine. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
   text-align: center;
   letter-spacing: -0.02em;
   /* Slim glow ring so the chip pops against dark themes without
      bleeding into the bell silhouette. */
   box-shadow: 0 0 0 1.5px var(--color-bg-primary, #0b0c10);
+}
+
+/* Default-dark theme override: the warm-orange chip clashed with
+   the monochrome rest of the rail. Swap to white-on-black so the
+   counter reads as part of the same neutral surface family. The
+   ring stays the bg-primary token so it still draws a clean halo
+   against the rail backdrop. Other themes keep the warm-orange
+   accent — it's part of their identity. */
+[data-theme-name="default-dark"] .fb-notif__badge {
+  background: #ffffff;
+  color: #000000;
 }
 
 /* ─── Popover panel ────────────────────────────────────── */
