@@ -20,8 +20,13 @@
 /// future fresh installs will leak it briefly (between manifest
 /// fetch and the next runtime filter pass — usually invisible, but
 /// worth keeping the two in sync).
-export const HIDDEN_COURSE_IDS: ReadonlySet<string> = new Set([
-  "hellotrade",
+export const HIDDEN_COURSE_IDS: ReadonlySet<string> = new Set<string>([
+  // (empty — hellotrade graduated to Discover with the public BETA.
+  // Add a pack id here AND in `HIDDEN_PACK_IDS` in
+  // `scripts/course-tiers.mjs` AND in `HIDDEN_DESKTOP_PACK_IDS` in
+  // `src/lib/catalog.ts` to fully hide a course from public browse
+  // surfaces — all three sets need to carry the id or the course
+  // leaks back into one of them.)
 ]);
 
 /// Predicate for filtering a Course / CatalogEntry / id-bearing
