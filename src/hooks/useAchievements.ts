@@ -179,11 +179,16 @@ export function useAchievements(
     //      no shared lifecycle — if a fast pageload meant the modal
     //      mounted late, the burst played in empty space.
     //
-    // We still play the per-tier audio pip here so the unlock isn't
-    // silent for bronze (toast-only tier has confetti:"none"). For
-    // tiers that DO get a modal celebration, AchievementModal fires
-    // its own audio + video on mount; we skip the pip here so the
-    // cue doesn't double up.
+    // Per-tier audio pip ALWAYS fires now, regardless of presentation
+    // tier. Reasoning: the original setup skipped the pip when the
+    // modal was about to fire its own audio-bearing coin-shower video
+    // (avoid double-cue). But on iOS / iPadOS the video's autoplay-
+    // with-audio policy can reject `play()` and we fall back to muted
+    // playback (see celebrate.ts) — silent unlock. The pip is short
+    // (~200 ms), distinctive, and overlaps the video chime only
+    // briefly, so doubling up is way better than the silent case.
+    // The user can disable sfx entirely in Settings → Sounds if the
+    // overlap bothers them.
     const merged = recordUnlocks(fresh, Date.now(), unlockedRecords);
     setUnlockedRecords(merged);
     setPendingPresentation((prev) => [...prev, ...fresh]);
@@ -192,12 +197,7 @@ export function useAchievements(
       fresh[0],
     );
     const meta = TIER_META[highest.tier];
-    if (meta.confetti === "none") {
-      // Toast-only tier (bronze) — small audio cue, no video.
-      playSound(meta.sound);
-    }
-    // Other tiers: AchievementModal handles celebrate + audio on
-    // mount. Nothing to fire from here.
+    playSound(meta.sound);
     // We intentionally do NOT include `unlockedRecords` in the deps
     // — recordUnlocks updates it via setUnlockedRecords, and adding
     // it to deps would cause re-runs on every persistence write

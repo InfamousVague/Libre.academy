@@ -31,6 +31,7 @@ import {
   serializeLibraryAllowlist,
 } from "../lib/librarySync";
 import { isHiddenCourse } from "../lib/hiddenCourses";
+import { unlockAudioContext } from "../lib/sfx";
 import type { Course, Lesson } from "../data/types";
 import { isoToUnixSeconds } from "../lib/timestamps";
 import MobileLibrary from "./MobileLibrary";
@@ -380,6 +381,28 @@ export default function MobileApp() {
   // in main.tsx is a no-op if we got here first.
   useLayoutEffect(() => {
     document.body.classList.add("is-booted");
+  }, []);
+
+  // First user gesture: warm the AudioContext so the very first
+  // achievement-unlock / level-up sfx pip plays without the iOS-
+  // Safari silent-first-play wart. Without this the first
+  // `playSound()` call after page load gets a suspended context and
+  // the cue is silent — works for subsequent cues but the first
+  // unlock of a session always missed.
+  //
+  // Mirrors the same effect in App.tsx (desktop). MobileApp was
+  // missing it, which is why on phone the first achievement /
+  // level-up after a fresh launch had no audio while later cues
+  // worked fine. `pointerdown` covers both touch + mouse + pen
+  // without overlapping with React's onClick (which fires later
+  // and is too late to satisfy the autoplay policy).
+  useEffect(() => {
+    const onGesture = () => {
+      void unlockAudioContext();
+      window.removeEventListener("pointerdown", onGesture);
+    };
+    window.addEventListener("pointerdown", onGesture, { passive: true });
+    return () => window.removeEventListener("pointerdown", onGesture);
   }, []);
 
   const lesson: Lesson | null = useMemo(() => {

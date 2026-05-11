@@ -593,6 +593,25 @@
   transform: scale(1.08);
 }
 
+/* Touch devices (iPad / iPhone / Android) — no hover, so the
+   `:hover` reveal above never fires reliably. Without this rule,
+   iOS emulates hover-on-tap and the badge flickers in/out as the
+   user scrolls or taps the code block, which reads as a glitch.
+   Show the badge unconditionally on touch so it's discoverable
+   AND stable. Desktop keeps the hover-reveal behaviour because
+   the badge would otherwise compete with the code itself.
+   `pointer: coarse` is the more precise check than `hover: none`
+   on iPadOS — recent iPads support pointer events from external
+   trackpads / Magic Keyboards, where `hover: none` would
+   incorrectly skip the rule even though the primary input is
+   still touch. */
+@media (pointer: coarse) {
+  .fishbones-code-block-ask {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .fishbones-code-block pre,
 .fishbones-code-plain {
   margin: 0;
