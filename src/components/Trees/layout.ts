@@ -24,7 +24,15 @@ import { layoutTree, type SkillTree, type SkillNode } from "../../data/trees";
 // down instead of panning sideways.
 export const ROW_HEIGHT = 200;
 export const NODE_RADIUS = 28;
-export const COL_SPACING = 78;
+// Horizontal pitch between sibling nodes. Bumped 78 → 120 on
+// 2026-05-11 because labels longer than ~9 chars were running into
+// each other on the rows where smart-contract concepts cluster
+// (e.g. "Checks-Effects-Interactions" colliding with neighbouring
+// "Modifiers" / "CREATE2 Factory" / "EIP-712 Signatures"). 120 px
+// gives each label a comfortable ~9rem of breathing room before
+// the next node's text starts; longer labels still wrap to two
+// lines but no longer overlap their neighbours.
+export const COL_SPACING = 120;
 export const ROOT_SPACING = 130;
 
 export interface PositionedNode extends SkillNode {

@@ -1,14 +1,29 @@
 /// Mobile-only bottom tab bar. Replaces the desktop TopBar + Sidebar
-/// chrome on iOS — three buttons, sticky to the bottom edge with the
-/// iOS home-indicator safe area respected. Renders nothing on
-/// non-mobile (the desktop sidebar is the navigation surface there).
+/// chrome on iOS. Renders four entries: Library / Playground /
+/// Practice / Profile.
+///
+/// What's NOT in the bar (and where it lives instead):
+///   - **Lesson** — there used to be a "Lesson" button that lit up
+///     when there was an active lesson and jumped back to it. Dropped
+///     2026-05-11 because the bar was getting cluttered (six entries
+///     was over the comfortable max for thumb reach) and the same
+///     navigation already happens via the Library tile tap. The
+///     lesson view's own back button covers the reverse direction.
+///   - **Settings** — folded into Profile as a gear button on that
+///     page. Settings is a low-frequency surface; a dedicated tab
+///     for it was wasted bar real estate compared to a one-tap
+///     affordance from the Profile screen.
+///
+/// MobileTab still includes `"courses"` and `"settings"` in the
+/// union because MobileApp's view-to-tab mapping references them
+/// (the lesson view maps to "courses" — no rendered button, but the
+/// type keeps that mapping honest in case we ever bring the buttons
+/// back).
 
 import { Icon } from "@base/primitives/icon";
 import { library } from "@base/primitives/icon/icons/library";
-import { bookOpen } from "@base/primitives/icon/icons/book-open";
 import { dumbbell } from "@base/primitives/icon/icons/dumbbell";
 import { user } from "@base/primitives/icon/icons/user";
-import { settings } from "@base/primitives/icon/icons/settings";
 import { squareTerminal } from "@base/primitives/icon/icons/square-terminal";
 import "./MobileTabBar.css";
 
@@ -22,9 +37,7 @@ export type MobileTab =
 
 interface Props {
   active: MobileTab;
-  hasActiveLesson: boolean;
   onLibrary: () => void;
-  onLesson: () => void;
   /// Playground tab handler. Same optional-shape as `onPractice`
   /// for the same reason — embeddings that don't ship the
   /// Playground (older builds during rollout, or surfaces where
@@ -36,18 +49,14 @@ interface Props {
   /// still mount the bar; when omitted, the button is hidden.
   onPractice?: () => void;
   onProfile: () => void;
-  onSettings: () => void;
 }
 
 export default function MobileTabBar({
   active,
-  hasActiveLesson,
   onLibrary,
-  onLesson,
   onPlayground,
   onPractice,
   onProfile,
-  onSettings,
 }: Props) {
   return (
     <>
@@ -58,60 +67,42 @@ export default function MobileTabBar({
           space behind. aria-hidden because it's pure visual chrome. */}
       <div className="fishbones-mtab-blur" aria-hidden />
       <nav className="fishbones-mtab" aria-label="Primary navigation">
-      <button
-        type="button"
-        className={`fishbones-mtab__btn${active === "library" ? " fishbones-mtab__btn--active" : ""}`}
-        onClick={onLibrary}
-      >
-        <Icon icon={library} size="lg" />
-        <span>Library</span>
-      </button>
-      <button
-        type="button"
-        className={`fishbones-mtab__btn${active === "courses" ? " fishbones-mtab__btn--active" : ""}`}
-        onClick={onLesson}
-        disabled={!hasActiveLesson}
-        aria-disabled={!hasActiveLesson}
-      >
-        <Icon icon={bookOpen} size="lg" />
-        <span>Lesson</span>
-      </button>
-      {onPlayground && (
         <button
           type="button"
-          className={`fishbones-mtab__btn${active === "playground" ? " fishbones-mtab__btn--active" : ""}`}
-          onClick={onPlayground}
+          className={`fishbones-mtab__btn${active === "library" ? " fishbones-mtab__btn--active" : ""}`}
+          onClick={onLibrary}
         >
-          <Icon icon={squareTerminal} size="lg" />
-          <span>Playground</span>
+          <Icon icon={library} size="lg" />
+          <span>Library</span>
         </button>
-      )}
-      {onPractice && (
+        {onPlayground && (
+          <button
+            type="button"
+            className={`fishbones-mtab__btn${active === "playground" ? " fishbones-mtab__btn--active" : ""}`}
+            onClick={onPlayground}
+          >
+            <Icon icon={squareTerminal} size="lg" />
+            <span>Playground</span>
+          </button>
+        )}
+        {onPractice && (
+          <button
+            type="button"
+            className={`fishbones-mtab__btn${active === "practice" ? " fishbones-mtab__btn--active" : ""}`}
+            onClick={onPractice}
+          >
+            <Icon icon={dumbbell} size="lg" />
+            <span>Practice</span>
+          </button>
+        )}
         <button
           type="button"
-          className={`fishbones-mtab__btn${active === "practice" ? " fishbones-mtab__btn--active" : ""}`}
-          onClick={onPractice}
+          className={`fishbones-mtab__btn${active === "profile" ? " fishbones-mtab__btn--active" : ""}`}
+          onClick={onProfile}
         >
-          <Icon icon={dumbbell} size="lg" />
-          <span>Practice</span>
+          <Icon icon={user} size="lg" />
+          <span>Profile</span>
         </button>
-      )}
-      <button
-        type="button"
-        className={`fishbones-mtab__btn${active === "profile" ? " fishbones-mtab__btn--active" : ""}`}
-        onClick={onProfile}
-      >
-        <Icon icon={user} size="lg" />
-        <span>Profile</span>
-      </button>
-      <button
-        type="button"
-        className={`fishbones-mtab__btn${active === "settings" ? " fishbones-mtab__btn--active" : ""}`}
-        onClick={onSettings}
-      >
-        <Icon icon={settings} size="lg" />
-        <span>Settings</span>
-      </button>
       </nav>
     </>
   );

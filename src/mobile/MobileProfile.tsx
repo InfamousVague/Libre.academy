@@ -31,6 +31,7 @@ import type { Completion } from "../hooks/useProgress";
 import type { StreakAndXp } from "../hooks/useStreakAndXp";
 import { Icon } from "@base/primitives/icon";
 import { search as searchIcon } from "@base/primitives/icon/icons/search";
+import { settings as settingsIcon } from "@base/primitives/icon/icons/settings";
 import { flame } from "@base/primitives/icon/icons/flame";
 import { zap } from "@base/primitives/icon/icons/zap";
 import { trophy } from "@base/primitives/icon/icons/trophy";
@@ -59,6 +60,15 @@ interface Props {
   /// MobileLibrary signature so MobileApp can wire the same handler
   /// to both screens.
   onOpenSearch?: () => void;
+  /// Optional — fired when the gear icon in the Profile header is
+  /// tapped. Wired by MobileApp to switch the active view to
+  /// "settings". This replaces the dedicated Settings tab that
+  /// used to live in MobileTabBar; folding it into Profile cut
+  /// the bar from six entries to four, which fits the comfortable
+  /// thumb-reach max. Settings is a low-frequency surface — one
+  /// tap from Profile is a fine cost compared to the alternative
+  /// of a permanent bar slot.
+  onOpenSettings?: () => void;
   /// Optional — pull-to-refresh handler. When provided, dragging
   /// down at the top of the page triggers this callback (typically
   /// `realtime.resync()` so streak / XP / heatmap re-pull from the
@@ -148,6 +158,7 @@ export default function MobileProfile({
   completed,
   onOpenLesson,
   onOpenSearch,
+  onOpenSettings,
   onRefresh,
 }: Props) {
   // Pull-to-refresh — triggers the realtime resync when wired by
@@ -390,16 +401,34 @@ export default function MobileProfile({
       <PullToRefresh pullDistance={pullDistance} isRefreshing={isRefreshing} />
       <header className="m-prof__head">
         <h1 className="m-prof__title">Profile</h1>
-        {onOpenSearch && (
-          <button
-            type="button"
-            className="m-prof__search"
-            onClick={onOpenSearch}
-            aria-label="Search"
-          >
-            <Icon icon={searchIcon} size="sm" color="currentColor" />
-          </button>
-        )}
+        {/* Header action cluster — search + settings, right-aligned.
+            Settings used to live as its own tab in the bottom bar;
+            collapsing it into Profile freed a bar slot for the
+            playground and dropped the bar from 6 entries to 4. The
+            gear has the same visual treatment as the search button
+            so the cluster reads as one row of equal-weight actions. */}
+        <div className="m-prof__head-actions">
+          {onOpenSearch && (
+            <button
+              type="button"
+              className="m-prof__head-btn"
+              onClick={onOpenSearch}
+              aria-label="Search"
+            >
+              <Icon icon={searchIcon} size="sm" color="currentColor" />
+            </button>
+          )}
+          {onOpenSettings && (
+            <button
+              type="button"
+              className="m-prof__head-btn"
+              onClick={onOpenSettings}
+              aria-label="Settings"
+            >
+              <Icon icon={settingsIcon} size="sm" color="currentColor" />
+            </button>
+          )}
+        </div>
       </header>
 
       {/* Twin gauges: streak ring (consecutive days against current

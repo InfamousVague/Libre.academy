@@ -576,6 +576,12 @@ export default function MobileApp() {
             completed={completed}
             onOpenLesson={openLesson}
             onOpenSearch={() => setSearchOpen(true)}
+            // Profile owns the entry point to Settings now that the
+            // tab bar has dropped its dedicated Settings button.
+            // Tapping the gear on Profile flips us to the settings
+            // view — same render path as the old tab-bar button
+            // used.
+            onOpenSettings={() => setView("settings")}
             // Pull-to-refresh → realtime resync. Stats / heatmap
             // re-derive from the freshly-pulled history.
             onRefresh={() => realtime.resync()}
@@ -595,15 +601,10 @@ export default function MobileApp() {
 
       <MobileTabBar
         active={activeTab}
-        hasActiveLesson={active !== null}
         onLibrary={() => setView("library")}
-        onLesson={() => {
-          if (active) setView("lesson");
-        }}
         onPlayground={() => setView("playground")}
         onPractice={() => setView("practice")}
         onProfile={() => setView("profile")}
-        onSettings={() => setView("settings")}
       />
 
       {/* Floating AI assistant. Same component as the desktop, but

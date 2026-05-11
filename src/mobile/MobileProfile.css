@@ -25,9 +25,23 @@
   color: var(--color-text-primary);
 }
 
-/* Compact 28px search affordance — see MobileLibrary.css `.m-lib__search`
-   for the rationale (search is secondary on mobile, the wordmark wins). */
-.m-prof__search {
+/* Header action cluster — search + settings. Settings folded into
+   Profile here when the dedicated Settings tab came out of
+   MobileTabBar (six-tab bar was over the comfortable thumb-reach
+   max). 6 px top margin lines the cluster up with the h1's optical
+   baseline so the row reads as one unit. */
+.m-prof__head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+/* Compact 28 px square buttons. Both the search + settings buttons
+   share this class so they're visually equal-weight in the header —
+   the gear isn't a primary action, just a one-tap discovery affordance
+   for a low-frequency surface. */
+.m-prof__head-btn {
   width: 28px;
   height: 28px;
   flex-shrink: 0;
@@ -41,12 +55,18 @@
   font: inherit;
   -webkit-tap-highlight-color: transparent;
   transition: background var(--fb-motion-quick), color var(--fb-motion-quick);
-  margin-top: 6px;
 }
 
-.m-prof__search:active {
+.m-prof__head-btn:active {
   background: var(--color-bg-secondary);
   color: var(--color-text-primary);
+}
+
+/* Legacy class kept as a no-op alias so any cached older builds
+   that still emit it keep rendering. Drop after the next deploy
+   cycle. */
+.m-prof__search {
+  display: none;
 }
 
 /* --- TWIN RINGS (streak + level) --------------------------------- */
