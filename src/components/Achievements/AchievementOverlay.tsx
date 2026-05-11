@@ -3,17 +3,20 @@
 /// unlocked achievements from `useAchievements.checkAfterCompletion`.
 ///
 /// Behaviour:
-///   - Bronze + silver tiles render as toasts in a stacked column,
-///     top-right of the viewport. Up to 3 toasts visible at once;
-///     overflow waits in the queue and slides in as earlier toasts
-///     dismiss.
-///   - Gold + platinum unlocks render one-at-a-time as full-screen
-///     modals. While a modal is up the toast queue pauses (so the
-///     learner doesn't get a toast peeking in past the modal); once
-///     dismissed, the queue resumes from where it paused.
-///   - Multiple high-tier unlocks coming in the same beat (rare —
-///     usually a streak hit + a level milestone) chain: the first
-///     gold/platinum modal dismisses to reveal the next one.
+///   - Every unlock currently routes through `meta.presentation` ===
+///     "modal" (all four tiers — bronze through platinum — were
+///     promoted on 2026-05-11 so every unlock gets the centred badge
+///     + coin-shower mask treatment that was previously gold/platinum-
+///     only). Modals show one at a time; multiple unlocks coming in
+///     the same beat (rare — usually a streak hit + a level milestone
+///     simultaneously) chain: the first modal dismisses to reveal
+///     the next one.
+///   - The toast path (`presentation === "toast"`, top-right column,
+///     up to 3 visible at once) is retained because it's still a
+///     valid presentation option in the schema — if a future tier
+///     wants the lighter affordance (e.g. low-stakes "you opened
+///     Settings" type unlocks), flipping `presentation: "toast"` in
+///     TIER_META reactivates the column without further wiring.
 ///
 /// The component is purely presentational. The owning hook decides
 /// which achievements to enqueue + when. The renderer handles

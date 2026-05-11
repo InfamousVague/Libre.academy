@@ -603,14 +603,26 @@ export const TIER_META: Record<
     color: "#cd7f32",
     softColor: "rgba(205, 127, 50, 0.18)",
     sound: "chime",
-    presentation: "toast",
-    confetti: "none",
+    // 2026-05-11: bronze + silver promoted from "toast" to "modal" so
+    // every tier gets the centred badge + coin-shower treatment. The
+    // top-right toast was easy to miss (especially while the learner
+    // was scrolling the lesson) and reading the achievement title +
+    // blurb required catching the toast inside its hold window. The
+    // modal sits dead centre with a backdrop-blurred mask underneath,
+    // so the unlock is impossible to miss + the user reads the blurb
+    // at their own pace.
+    presentation: "modal",
+    // Bronze was `confetti: "none"` because the toast didn't carry
+    // a celebration video — bumping to "small" gives it a brief coin
+    // shower that matches its modest tier without competing with
+    // gold/platinum's fuller bursts.
+    confetti: "small",
   },
   silver: {
     color: "#c0c0c0",
     softColor: "rgba(192, 192, 192, 0.18)",
     sound: "success",
-    presentation: "toast",
+    presentation: "modal",
     confetti: "small",
   },
   gold: {
