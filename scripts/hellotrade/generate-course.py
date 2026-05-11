@@ -2390,7 +2390,7 @@ Good luck. You've got the tools.
 COURSE: dict[str, Any] = {
     "id": "hellotrade",
     "title": "HelloTrade: Trading the Decentralized Way",
-    "author": "Fishbones · scraped from hellotrade.gitbook.io",
+    "author": "Libre · scraped from hellotrade.gitbook.io",
     "description": (
         "A guided tour of the HelloTrade decentralized perpetuals "
         "exchange. Covers the trading concepts (perps, leverage, "

@@ -161,7 +161,7 @@ export default function PoppedWorkbench() {
           inline style entirely AND hides the drag handle (no second
           pane to resize against). */}
       <Workbench
-        storageKey="kata:workbench-split:popped"
+        storageKey="libre:workbench-split:popped"
         fillWidth
         editor={
           <EditorPane

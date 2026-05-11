@@ -41,7 +41,7 @@ pub fn open(db_path: PathBuf) -> anyhow::Result<ProgressDb> {
 
 /// Build the path where the SQLite file lives. Uses Tauri's resolved app-data
 /// dir so it ends up in the platform-appropriate location (~/Library/Application
-/// Support/com.mattssoftware.kata on macOS, %APPDATA% on Windows).
+/// Support/com.mattssoftware.libre on macOS, %APPDATA% on Windows).
 pub fn resolve_path(app: &tauri::AppHandle) -> anyhow::Result<PathBuf> {
     let dir = app
         .path()

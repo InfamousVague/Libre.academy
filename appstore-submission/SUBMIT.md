@@ -83,7 +83,7 @@ Apple's median review is 24–48 hours; you'll get an email when status changes.
 ## What to do before submission
 
 - **TestFlight upload first.** The submission flow uploads the binary; before clicking "Add for Review", install the build on a real iPhone via TestFlight and tap through every primary surface. Apple's reviewers will reject for crashes that simulator-only testing missed. (See `make release-phone` for the device-side upload flow.)
-- **App Store Connect record.** If you haven't created the app yet: App Store Connect → My Apps → "+" → New App. Name `Libre`, bundle ID `com.mattssoftware.kata`, SKU `libre-ios-001`, primary lang English (U.S.).
+- **App Store Connect record.** If you haven't created the app yet: App Store Connect → My Apps → "+" → New App. Name `Libre`, bundle ID `com.mattssoftware.libre`, SKU `libre-ios-001`, primary lang English (U.S.).
 - **Apple Developer Program.** `developer.apple.com/account` should show "Active" + agreements current.
 
 ## File map

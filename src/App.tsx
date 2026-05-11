@@ -884,12 +884,12 @@ export default function App() {
   /// key already has a value the legacy key just gets removed.
   useEffect(() => {
     try {
-      const legacy = localStorage.getItem("kata:sidebarCollapsed");
+      const legacy = localStorage.getItem("libre:sidebarCollapsed");
       if (legacy != null) {
         if (localStorage.getItem("libre:sidebarCollapsed") == null) {
           localStorage.setItem("libre:sidebarCollapsed", legacy);
         }
-        localStorage.removeItem("kata:sidebarCollapsed");
+        localStorage.removeItem("libre:sidebarCollapsed");
       }
     } catch {
       /* private mode — fine to drop */

@@ -42,7 +42,7 @@ const JSON_OUT = args.includes("--json");
 
 const APP = join(
   homedir(),
-  "Library/Application Support/com.mattssoftware.kata/courses",
+  "Library/Application Support/com.mattssoftware.libre/courses",
 );
 const COURSE_PATH = join(APP, COURSE_ID, "course.json");
 if (!existsSync(COURSE_PATH)) {

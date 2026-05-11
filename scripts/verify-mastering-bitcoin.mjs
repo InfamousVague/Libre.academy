@@ -21,7 +21,7 @@ import { buildBitcoinChain } from "../src/runtimes/bitcoin/buildChain.ts";
 
 const COURSE = join(
   homedir(),
-  "Library/Application Support/com.mattssoftware.kata"
+  "Library/Application Support/com.mattssoftware.libre"
     + "/courses/mastering-bitcoin/course.json",
 );
 

@@ -36,7 +36,7 @@ const APP_DATA_DIR = join(
   homedir(),
   "Library",
   "Application Support",
-  "com.mattssoftware.kata",
+  "com.mattssoftware.libre",
 );
 const CACHE_DIR = join(APP_DATA_DIR, "ingest-cache");
 

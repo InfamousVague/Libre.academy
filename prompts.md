@@ -241,8 +241,8 @@ Each challenge pack is a tighter, more graphic single-symbol cover so the long r
      done
    }
 
-   # 1) Refresh ~/Library/Application Support/com.mattssoftware.kata/courses/<id>/cover.jpg
-   COURSES_DIR="$HOME/Library/Application Support/com.mattssoftware.kata/courses"
+   # 1) Refresh ~/Library/Application Support/com.mattssoftware.libre/courses/<id>/cover.jpg
+   COURSES_DIR="$HOME/Library/Application Support/com.mattssoftware.libre/courses"
    for dir in "$COURSES_DIR"/*; do
      id=$(basename "$dir")
      src=$(resolve_src "$id")

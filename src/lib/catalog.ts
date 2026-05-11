@@ -110,7 +110,7 @@ const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes (in-memory)
 /// learning-zig, …). The old key still lives in localStorage on returning
 /// installs but is now ignored — it'll be overwritten by the next
 /// successful fetch under v2 and can be GC'd by the browser whenever.
-const PERSIST_KEY = "fb:catalog-cache-v2";
+const PERSIST_KEY = "libre:catalog-cache-v2";
 const PERSIST_TTL_MS = 1000 * 60 * 60 * 24; // 24h (localStorage)
 
 /// Pack ids we've shipped at some point but pulled from the catalog.

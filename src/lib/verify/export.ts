@@ -60,7 +60,7 @@ export function formatFixPrompt(
     "**Apply the fixes directly to the course file.** If you have filesystem tools, edit the live installed copy in place — don't just emit JSON for a human to apply. The course file lives at:",
     "",
     "```",
-    `~/Library/Application Support/com.mattssoftware.kata/courses/${opts.courseId ?? "<course-id>"}/course.json`,
+    `~/Library/Application Support/com.mattssoftware.libre/courses/${opts.courseId ?? "<course-id>"}/course.json`,
     "```",
     "",
     "It's a JSON document with `chapters[].lessons[]`; each lesson has an `id`, a `solution` string (single-file lessons) or a `solutionFiles[]` array (multi-file lessons), and a `tests` string. Walk every chapter, find each failing lesson by id, overwrite only the changed fields, write the file back. After editing, the user can re-run the verifier in the app and the new content takes effect immediately (no rebuild needed).",

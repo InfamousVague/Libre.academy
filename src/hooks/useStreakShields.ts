@@ -29,8 +29,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-const SHIELDS_KEY = "fb:streak-shields:v1";
-const FROZEN_DAYS_KEY = "fb:streak-frozen-days:v1";
+const SHIELDS_KEY = "libre:streak-shields:v1";
+const FROZEN_DAYS_KEY = "libre:streak-frozen-days:v1";
 /// Shields refreshed at the top of every ISO week. Two is Duolingo's
 /// default — enough to cover the common "missed Tuesday and slept
 /// through Thursday" case without making streaks feel free.

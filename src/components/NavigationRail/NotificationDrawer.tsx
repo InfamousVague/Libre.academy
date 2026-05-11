@@ -31,7 +31,7 @@ interface UnlockedRecord {
   unlockedAt: number;
 }
 
-const ACH_KEY = "fb:achievements:unlocked";
+const ACH_KEY = "libre:achievements:unlocked";
 const SEEN_KEY = "libre:notifications:last-seen-at";
 const MAX_VISIBLE = 8;
 

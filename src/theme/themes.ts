@@ -141,7 +141,7 @@ export const THEMES: ThemeMeta[] = [
   },
 ];
 
-const STORAGE_KEY = "kata:theme";
+const STORAGE_KEY = "libre:theme";
 
 /// Read the user's stored theme choice. Falls back to the system preference
 /// between dark (Libre Dark) and light (Ayu Light) so first-run still

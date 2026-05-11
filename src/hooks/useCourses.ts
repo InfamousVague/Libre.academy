@@ -10,7 +10,7 @@ import type { Course } from "../data/types";
 /// SWR-style: render stale, revalidate, swap if changed. Bumping the
 /// `-vN` suffix invalidates every user's cache (use when the
 /// summary's stripped-body shape changes server-side).
-const SUMMARY_CACHE_KEY = "fb:courses-summary-cache-v1";
+const SUMMARY_CACHE_KEY = "libre:courses-summary-cache-v1";
 const SUMMARY_CACHE_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
 interface SummaryCache {
   ts: number;

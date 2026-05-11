@@ -14,7 +14,7 @@
 ///      `optimize-covers.mjs` re-encodes have the right starting
 ///      point.
 ///   6. Mirror into the local-install dir (`~/Library/Application
-///      Support/com.mattssoftware.kata/courses/<id>/cover.jpg`)
+///      Support/com.mattssoftware.libre/courses/<id>/cover.jpg`)
 ///      so the existing dev install picks up the new cover without
 ///      reinstalling.
 ///
@@ -49,7 +49,7 @@ const LOCAL_INSTALL_DIR = path.join(
   homedir(),
   "Library",
   "Application Support",
-  "com.mattssoftware.kata",
+  "com.mattssoftware.libre",
   "courses",
 );
 

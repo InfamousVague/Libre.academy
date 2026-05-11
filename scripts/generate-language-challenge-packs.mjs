@@ -1918,10 +1918,10 @@ async function main() {
   const appData =
     process.env.LIBRE_COURSES_DIR ??
     (process.platform === "darwin"
-      ? join(homedir(), "Library", "Application Support", "com.mattssoftware.kata")
+      ? join(homedir(), "Library", "Application Support", "com.mattssoftware.libre")
       : join(
           process.env.XDG_DATA_HOME ?? join(homedir(), ".local", "share"),
-          "com.mattssoftware.kata",
+          "com.mattssoftware.libre",
         ));
   const coursesRoot = join(appData, "courses");
 

@@ -43,7 +43,7 @@ const CACHE = join(ROOT, ".cache", "blocks");
 const MANUAL = join(ROOT, ".blocks-manual");
 const INSTALLED_DIR = join(
   homedir(),
-  "Library/Application Support/com.mattssoftware.kata/courses",
+  "Library/Application Support/com.mattssoftware.libre/courses",
 );
 
 /// Same model id the LLM script uses. The cache key is computed with

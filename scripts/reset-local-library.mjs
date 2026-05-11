@@ -32,7 +32,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
 
-const BUNDLE_ID = "com.mattssoftware.kata";
+const BUNDLE_ID = "com.mattssoftware.libre";
 const APP_DATA = join(homedir(), "Library", "Application Support", BUNDLE_ID);
 
 const args = new Set(process.argv.slice(2));

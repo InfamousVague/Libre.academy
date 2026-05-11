@@ -55,11 +55,11 @@ import type { UseLibreCloud } from "../hooks/useLibreCloud";
 /// "what counts as progress" list scannable in one place.
 const ACCOUNT_STATE_KEYS: readonly string[] = [
   // Achievements
-  "fb:achievements:unlocked",
-  "fb:achievements:freezes-used",
+  "libre:achievements:unlocked",
+  "libre:achievements:freezes-used",
   // Streak shields + frozen-day registry
-  "fb:streak-shields:v1",
-  "fb:streak-frozen-days:v1",
+  "libre:streak-shields:v1",
+  "libre:streak-frozen-days:v1",
   // Practice history (two key generations — the older flat-history
   // hook + the newer per-record store both persist independently;
   // wipe both so the SRS schedule starts from scratch)
@@ -76,7 +76,7 @@ const ACCOUNT_STATE_KEYS: readonly string[] = [
   // In-memory catalog cache. Without this, the SWR layer would
   // re-paint the just-wiped Discover grid from the cached snapshot
   // before the network refetch completes.
-  "fb:catalog-cache-v2",
+  "libre:catalog-cache-v2",
 ];
 
 /// IDB meta keys to clear so the next page load re-runs the seed.

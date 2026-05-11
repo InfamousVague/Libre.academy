@@ -125,7 +125,7 @@ function loadAllCourses() {
   }
   const liveDir = join(
     homedir(),
-    "Library/Application Support/com.mattssoftware.kata/courses",
+    "Library/Application Support/com.mattssoftware.libre/courses",
   );
   if (existsSync(liveDir)) {
     for (const id of readdirSync(liveDir)) {

@@ -41,7 +41,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, "..");
 const BUNDLE_DIR = join(REPO_ROOT, "src-tauri", "resources", "bundled-packs");
 
-const BUNDLE_ID = "com.mattssoftware.kata";
+const BUNDLE_ID = "com.mattssoftware.libre";
 const APP_DATA = join(homedir(), "Library", "Application Support", BUNDLE_ID);
 const COURSES_DIR = join(APP_DATA, "courses");
 

@@ -29,7 +29,7 @@ appstore-submission/
 | Field | Value |
 | --- | --- |
 | **App Store Name** | Libre |
-| **Bundle ID** | `com.mattssoftware.kata` |
+| **Bundle ID** | `com.mattssoftware.libre` |
 | **Apple Team ID** | `F6ZAL7ANAD` |
 | **Version (CFBundleShortVersionString)** | `0.1.15` |
 | **Build (CFBundleVersion)** | `0.1.15` (bump per upload) |
@@ -53,7 +53,7 @@ appstore-submission/
    - Platform: iOS
    - Name: Libre
    - Primary Language: English (U.S.)
-   - Bundle ID: `com.mattssoftware.kata`
+   - Bundle ID: `com.mattssoftware.libre`
    - SKU: `libre-ios-001` (free-form, never visible publicly)
    - User Access: Full Access
 

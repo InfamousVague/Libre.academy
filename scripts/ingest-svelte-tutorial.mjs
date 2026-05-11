@@ -39,10 +39,10 @@
 /// The checkout argument should point at a sparse clone of the
 /// `sveltejs/svelte.dev` repo (see CLI hint emitted on missing arg).
 /// Output goes to:
-///   ~/Library/Application Support/com.mattssoftware.kata/courses/svelte-tutorial/course.json
-///   ~/Library/Application Support/com.mattssoftware.kata/courses/svelte-tutorial-advanced/course.json
-///   ~/Library/Application Support/com.mattssoftware.kata/courses/sveltekit-tutorial/course.json
-///   ~/Library/Application Support/com.mattssoftware.kata/courses/sveltekit-tutorial-advanced/course.json
+///   ~/Library/Application Support/com.mattssoftware.libre/courses/svelte-tutorial/course.json
+///   ~/Library/Application Support/com.mattssoftware.libre/courses/svelte-tutorial-advanced/course.json
+///   ~/Library/Application Support/com.mattssoftware.libre/courses/sveltekit-tutorial/course.json
+///   ~/Library/Application Support/com.mattssoftware.libre/courses/sveltekit-tutorial-advanced/course.json
 
 import { readdir, readFile, mkdir, writeFile, rm } from "node:fs/promises";
 import { existsSync } from "node:fs";
@@ -51,7 +51,7 @@ import { join, basename } from "node:path";
 
 const APP_SUPPORT = join(
   homedir(),
-  "Library/Application Support/com.mattssoftware.kata/courses",
+  "Library/Application Support/com.mattssoftware.libre/courses",
 );
 
 /// One Libre course covering the entire upstream tutorial. The 4

@@ -35,7 +35,7 @@ import type { Course } from "../data/types";
 import type { Completion } from "../lib/storage";
 import type { StreakAndXp } from "./useStreakAndXp";
 
-const STORAGE_EVENT_KEY = "fb:achievements:unlocked";
+const STORAGE_EVENT_KEY = "libre:achievements:unlocked";
 
 export interface UseAchievementsResult {
   /// Set of unlocked ids — used by AchievementsPage to render the

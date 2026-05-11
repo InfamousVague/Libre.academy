@@ -19,8 +19,8 @@
 /// already that direction (libre.academy is digital, not pastoral).
 ///
 /// Settings:
-///   - `localStorage["fb:sfx:enabled"]`: "1" / "0" — global mute.
-///   - `localStorage["fb:sfx:volume"]`: float 0..1 — master gain.
+///   - `localStorage["libre:sfx:enabled"]`: "1" / "0" — global mute.
+///   - `localStorage["libre:sfx:volume"]`: float 0..1 — master gain.
 ///   Both are read once at module load and re-read on a custom
 ///   `fb:sfx:settings-changed` event. The settings pane fires the
 ///   event after writing so we don't depend on the cross-tab
@@ -58,9 +58,9 @@ export interface PlayOptions {
   ignoreMute?: boolean;
 }
 
-const ENABLED_KEY = "fb:sfx:enabled";
-const VOLUME_KEY = "fb:sfx:volume";
-const SETTINGS_EVENT = "fb:sfx:settings-changed";
+const ENABLED_KEY = "libre:sfx:enabled";
+const VOLUME_KEY = "libre:sfx:volume";
+const SETTINGS_EVENT = "libre:sfx:settings-changed";
 
 /// Module-private context. Lazily created on first sound; iOS
 /// Safari requires a user-gesture-driven creation, so building the

@@ -7,7 +7,7 @@
 ///
 /// Patches BOTH locations so the lesson lights up immediately:
 ///   - The user's INSTALLED copy under `~/Library/Application
-///     Support/com.mattssoftware.kata/courses/a-to-zig/course.json`.
+///     Support/com.mattssoftware.libre/courses/a-to-zig/course.json`.
 ///     This is what the running app reads, so this is the one that
 ///     makes the toggle appear after a reload.
 ///   - The BUNDLED `.libre` archive under
@@ -34,7 +34,7 @@ const COURSE_ID = "a-to-zig";
 const LESSON_ID = "convert-celsius";
 const INSTALLED_COURSE = join(
   process.env.HOME ?? "",
-  "Library/Application Support/com.mattssoftware.kata/courses",
+  "Library/Application Support/com.mattssoftware.libre/courses",
   COURSE_ID,
   "course.json",
 );

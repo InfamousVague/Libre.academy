@@ -1,4 +1,4 @@
-# Fishbones — Build, Sign, Notarize, Install
+# Libre — Build, Sign, Notarize, Install
 # Usage:
 #   make              — full pipeline: build → sign → notarize → install
 #   make build        — tauri release build
@@ -34,9 +34,9 @@ else ifeq ($(ARCH),x86_64)
 else
   ARCH_TAG := $(ARCH)
 endif
-APP_BUNDLE    := $(TAURI)/target/release/bundle/macos/Fishbones.app
-DMG           := $(TAURI)/target/release/bundle/dmg/Fishbones_$(VERSION)_$(ARCH_TAG).dmg
-INSTALL_PATH  := /Applications/Fishbones.app
+APP_BUNDLE    := $(TAURI)/target/release/bundle/macos/Libre.app
+DMG           := $(TAURI)/target/release/bundle/dmg/Libre_$(VERSION)_$(ARCH_TAG).dmg
+INSTALL_PATH  := /Applications/Libre.app
 
 .PHONY: all build sign notarize staple install dev release local-release \
         deploy deploy-site deploy-content clean help \
@@ -45,32 +45,32 @@ INSTALL_PATH  := /Applications/Fishbones.app
         release-phone ship-phone
 
 # Marketing site checkout (separate repo). The site's `npm run deploy`
-# rebuilds Fishbones with FISHBONES_BASE=/learn/, stages dist-web/ under
+# rebuilds Libre with LIBRE_BASE=/learn/, stages dist-web/ under
 # its own public/learn/, builds the Vite site, and rsyncs the result to
-# /var/www/fishbones-academy on the VPS. Override if your laptop has the
+# /var/www/libre-academy on the VPS. Override if your laptop has the
 # academy repo somewhere else.
-ACADEMY_ROOT ?= $(ROOT)/../../Web/fishbones-academy
+ACADEMY_ROOT ?= $(ROOT)/../../Web/libre-academy
 
 # --- iOS / watchOS run config ---------------------------------------------
-WATCH_ROOT      := /Users/matt/Development/Apps/FishbonesWatch
-DEVICE_CACHE    := $(ROOT)/.fishbones-devices.cache
-PHONE_BUNDLE_ID := com.mattssoftware.kata
-WATCH_BUNDLE_ID := com.mattssoftware.fishbones.watchkitapp
+WATCH_ROOT      := /Users/matt/Development/Apps/LibreWatch
+DEVICE_CACHE    := $(ROOT)/.libre-devices.cache
+PHONE_BUNDLE_ID := com.mattssoftware.libre
+WATCH_BUNDLE_ID := com.mattssoftware.libre.watchkitapp
 # CocoaPods needs UTF-8 locale or it bails on unicode in podspecs.
 TAURI_ENV       := LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 
 ## Default: full pipeline
 all: build sign notarize install
 	@echo ""
-	@echo "✓ Done — Fishbones.app installed and notarized"
+	@echo "✓ Done — Libre.app installed and notarized"
 
 ## Build Tauri release.
 ##
 ## TAURI_SIGNING_* env vars trigger the updater plugin to also produce
-## `Fishbones.app.tar.gz` + `.sig` alongside the regular .dmg. These
+## `Libre.app.tar.gz` + `.sig` alongside the regular .dmg. These
 ## are what the OTA updater downloads — without them, installed
 ## clients can't auto-update. Default key path is the maintainer's
-## ~/.tauri/fishbones-updater.key; override TAURI_SIGNING_KEY_PATH if
+## ~/.tauri/libre-updater.key; override TAURI_SIGNING_KEY_PATH if
 ## you've stored the key elsewhere.
 build:
 	@echo "=== Building Tauri release ==="
@@ -85,12 +85,12 @@ build:
 		npm run tauri build -- --bundles app,dmg
 
 ## Tauri OTA-update signing key. Generated once via
-## `npx @tauri-apps/cli signer generate -w ~/.tauri/fishbones-updater.key`;
+## `npx @tauri-apps/cli signer generate -w ~/.tauri/libre-updater.key`;
 ## the public half of this same keypair is committed to
 ## `src-tauri/tauri.conf.json` (`plugins.updater.pubkey`). Losing the
 ## private key requires shipping a manual-install version with a
 ## NEW pubkey to rotate the trust root — keep it backed up.
-TAURI_SIGNING_KEY_PATH      ?= $(HOME)/.tauri/fishbones-updater.key
+TAURI_SIGNING_KEY_PATH      ?= $(HOME)/.tauri/libre-updater.key
 TAURI_SIGNING_KEY_PASSWORD  ?=
 
 ## Post-build: sign everything with hardened runtime + rebuild DMG
@@ -120,10 +120,10 @@ staple:
 ## Install notarized app from DMG to /Applications
 install: staple
 	@echo "=== Installing ==="
-	hdiutil attach "$(DMG)" -quiet -nobrowse -mountpoint /tmp/fishbones-dmg
+	hdiutil attach "$(DMG)" -quiet -nobrowse -mountpoint /tmp/libre-dmg
 	rm -rf "$(INSTALL_PATH)"
-	ditto /tmp/fishbones-dmg/Fishbones.app "$(INSTALL_PATH)"
-	hdiutil detach /tmp/fishbones-dmg -quiet
+	ditto /tmp/libre-dmg/Libre.app "$(INSTALL_PATH)"
+	hdiutil detach /tmp/libre-dmg -quiet
 	@echo "Installed: $(INSTALL_PATH)"
 	@spctl --assess --type execute --verbose "$(INSTALL_PATH)" 2>&1
 
@@ -149,8 +149,8 @@ release:
 	sed -i '' "s/\"version\": \"$$CURRENT\"/\"version\": \"$$NEW\"/" src-tauri/tauri.conf.json; \
 	sed -i '' "s/^version = \"$$CURRENT\"/version = \"$$NEW\"/" src-tauri/Cargo.toml; \
 	git add src-tauri/tauri.conf.json src-tauri/Cargo.toml; \
-	git commit -m "Fishbones v$$NEW"; \
-	git tag -a "v$$NEW" -m "Fishbones v$$NEW"; \
+	git commit -m "Libre v$$NEW"; \
+	git tag -a "v$$NEW" -m "Libre v$$NEW"; \
 	git push origin HEAD; \
 	git push origin "v$$NEW"; \
 	echo ""; \
@@ -172,10 +172,10 @@ release:
 ##   make release        → bump + tag + push (triggers CI Linux+Win)
 ##   make local-release  → build + sign + notarize + publish DMG
 ##   …wait ~25 min…       CI uploads Linux + Windows assets
-##   visit https://github.com/InfamousVague/Fishbones/releases/latest
+##   visit https://github.com/InfamousVague/Libre/releases/latest
 local-release: build sign notarize
-	@DMG_CURRENT="$(TAURI)/target/release/bundle/dmg/Fishbones_$(VERSION)_$(ARCH_TAG).dmg"; \
-	UPDATER_TARBALL="$(TAURI)/target/release/bundle/macos/Fishbones.app.tar.gz"; \
+	@DMG_CURRENT="$(TAURI)/target/release/bundle/dmg/Libre_$(VERSION)_$(ARCH_TAG).dmg"; \
+	UPDATER_TARBALL="$(TAURI)/target/release/bundle/macos/Libre.app.tar.gz"; \
 	UPDATER_SIG="$$UPDATER_TARBALL.sig"; \
 	if [ ! -f "$$DMG_CURRENT" ]; then \
 		echo "ERROR: DMG not found at $$DMG_CURRENT"; exit 1; \
@@ -183,7 +183,7 @@ local-release: build sign notarize
 	if git rev-parse "v$(VERSION)" >/dev/null 2>&1; then \
 		echo "Tag v$(VERSION) already exists — skipping tag creation"; \
 	else \
-		git tag -a "v$(VERSION)" -m "Fishbones v$(VERSION)"; \
+		git tag -a "v$(VERSION)" -m "Libre v$(VERSION)"; \
 		git push origin "v$(VERSION)"; \
 	fi; \
 	gh release view "v$(VERSION)" >/dev/null 2>&1 && { \
@@ -192,19 +192,19 @@ local-release: build sign notarize
 	} || { \
 		gh release create "v$(VERSION)" \
 			"$$DMG_CURRENT" \
-			--title "Fishbones v$(VERSION)" \
+			--title "Libre v$(VERSION)" \
 			--notes "Signed and notarized macOS release." \
 			--latest; \
 	}; \
 	if [ -f "$$UPDATER_TARBALL" ] && [ -f "$$UPDATER_SIG" ]; then \
 		echo "Uploading OTA updater artefacts (Mac):"; \
-		cp "$$UPDATER_TARBALL" "/tmp/Fishbones_$(VERSION)_aarch64.app.tar.gz"; \
-		cp "$$UPDATER_SIG" "/tmp/Fishbones_$(VERSION)_aarch64.app.tar.gz.sig"; \
+		cp "$$UPDATER_TARBALL" "/tmp/Libre_$(VERSION)_aarch64.app.tar.gz"; \
+		cp "$$UPDATER_SIG" "/tmp/Libre_$(VERSION)_aarch64.app.tar.gz.sig"; \
 		gh release upload "v$(VERSION)" \
-			"/tmp/Fishbones_$(VERSION)_aarch64.app.tar.gz" \
-			"/tmp/Fishbones_$(VERSION)_aarch64.app.tar.gz.sig" \
+			"/tmp/Libre_$(VERSION)_aarch64.app.tar.gz" \
+			"/tmp/Libre_$(VERSION)_aarch64.app.tar.gz.sig" \
 			--clobber; \
-		rm -f "/tmp/Fishbones_$(VERSION)_aarch64.app.tar.gz" "/tmp/Fishbones_$(VERSION)_aarch64.app.tar.gz.sig"; \
+		rm -f "/tmp/Libre_$(VERSION)_aarch64.app.tar.gz" "/tmp/Libre_$(VERSION)_aarch64.app.tar.gz.sig"; \
 	else \
 		echo "WARN: OTA updater tarball missing at $$UPDATER_TARBALL"; \
 		echo "      Either TAURI_SIGNING_PRIVATE_KEY isn't set or the build"; \
@@ -247,12 +247,12 @@ update-manifest:
 ## sign).
 deploy: local-release deploy-site
 	@echo ""
-	@echo "✓ Fishbones v$(VERSION) shipped end-to-end."
-	@echo "  Release: https://github.com/InfamousVague/Fishbones/releases/tag/v$(VERSION)"
+	@echo "✓ Libre v$(VERSION) shipped end-to-end."
+	@echo "  Release: https://github.com/InfamousVague/Libre/releases/tag/v$(VERSION)"
 	@echo "  Site:    https://libre.academy/"
 	@echo "  Learn:   https://libre.academy/learn/"
 
-## Site-only deploy: rebuild Fishbones for /learn/, build the academy
+## Site-only deploy: rebuild Libre for /learn/, build the academy
 ## site, rsync to VPS. Use after editing marketing copy or when the
 ## current version's release on GitHub is already up-to-date.
 ##
@@ -263,13 +263,13 @@ deploy: local-release deploy-site
 ## deploy.mjs runs) chains `starter:web → blocks:apply` so the
 ## staged course JSONs always carry blocks payloads, even though
 ## `extract-starter-courses` re-creates the directory from the
-## blocks-free bundled .fishbones packs. Without that chain, every
+## blocks-free bundled .libre packs. Without that chain, every
 ## site deploy would silently ship a /learn/ build without blocks.
 deploy-site:
 	@echo "=== Deploying libre.academy (site + /learn/ embed) ==="
 	@if [ ! -d "$(ACADEMY_ROOT)" ]; then \
 		echo "ERROR: academy site not found at $(ACADEMY_ROOT)"; \
-		echo "       Set ACADEMY_ROOT=/path/to/fishbones-academy and re-run,"; \
+		echo "       Set ACADEMY_ROOT=/path/to/libre-academy and re-run,"; \
 		echo "       or clone the academy repo there."; \
 		exit 1; \
 	fi
@@ -278,11 +278,11 @@ deploy-site:
 		echo "      VPS_SSH_PASSWORD. Set it in env or in api/.env to avoid the"; \
 		echo "      prompt next time."; \
 	fi
-	cd "$(ACADEMY_ROOT)" && FISHBONES_SRC="$(ROOT)" npm run deploy
+	cd "$(ACADEMY_ROOT)" && LIBRE_SRC="$(ROOT)" npm run deploy
 
 # --- Audio + content deploy -----------------------------------------------
 # Audio MP3s and the manifest live on the academy VPS at
-# `/var/www/fishbones-academy/audio/`, served at
+# `/var/www/libre-academy/audio/`, served at
 # https://libre.academy/audio/. They're independent of the academy
 # site's webroot — `--exclude=audio/` in the academy's deploy rsync
 # means a `make deploy-site` won't touch them — so audio gets its own
@@ -350,7 +350,7 @@ clean:
 # `make pick-phone`  / `make pick-watch` — refresh selection without building
 # `make run-clean`   — drop the cached selection
 #
-# Picks are cached in .fishbones-devices.cache (gitignored). The first run on
+# Picks are cached in .libre-devices.cache (gitignored). The first run on
 # a fresh checkout always prompts; subsequent runs prompt "Use last? (Y/n)".
 
 pick-phone:
@@ -413,12 +413,12 @@ release-phone:
 	cd $(ROOT) && $(TAURI_ENV) tauri ios build --target aarch64; \
 	APP=""; \
 	for cand in \
-		"$(TAURI)/gen/apple/build/arm64/Fishbones.app" \
-		"$(TAURI)/gen/apple/build/fishbones_iOS.xcarchive/Products/Applications/Fishbones.app"; do \
+		"$(TAURI)/gen/apple/build/arm64/Libre.app" \
+		"$(TAURI)/gen/apple/build/libre_iOS.xcarchive/Products/Applications/Libre.app"; do \
 		if [ -d "$$cand" ]; then APP="$$cand"; echo "Found .app: $$cand"; break; fi; \
 	done; \
 	if [ -z "$$APP" ]; then \
-		IPA="$(TAURI)/gen/apple/build/arm64/Fishbones.ipa"; \
+		IPA="$(TAURI)/gen/apple/build/arm64/Libre.ipa"; \
 		if [ -f "$$IPA" ]; then \
 			echo "--- no .app found; extracting from $$IPA ---"; \
 			EXTRACT_DIR="$(TAURI)/gen/apple/build/arm64/_ipa-extract"; \
@@ -429,9 +429,9 @@ release-phone:
 		fi; \
 	fi; \
 	if [ -z "$$APP" ] || [ ! -d "$$APP" ]; then \
-		echo "ERROR: no Fishbones.app or .ipa produced under $(TAURI)/gen/apple/build/."; \
+		echo "ERROR: no Libre.app or .ipa produced under $(TAURI)/gen/apple/build/."; \
 		echo "Build likely failed — scroll up for tauri/xcodebuild errors."; \
-		echo "If signing failed, open src-tauri/gen/apple/fishbones.xcodeproj in Xcode,"; \
+		echo "If signing failed, open src-tauri/gen/apple/libre.xcodeproj in Xcode,"; \
 		echo "let it auto-resolve provisioning, then re-run this target."; \
 		exit 1; \
 	fi; \
@@ -439,7 +439,7 @@ release-phone:
 	xcrun devicectl device install app --device "$$IPHONE_UDID" "$$APP"; \
 	xcrun devicectl device process launch --device "$$IPHONE_UDID" --terminate-existing $(PHONE_BUNDLE_ID); \
 	echo ""; \
-	echo "✓ Fishbones (release) installed on $$IPHONE_NAME — usable independent of this Mac."; \
+	echo "✓ Libre (release) installed on $$IPHONE_NAME — usable independent of this Mac."; \
 	echo "  Provisioning expires per your Apple Developer account's policy"; \
 	echo "  (free: 7 days / paid team $(TEAM_ID): ~1 year). Re-run 'make release-phone'"; \
 	echo "  to refresh before that window closes."
@@ -452,7 +452,7 @@ run-phone: $(if $(FB_SKIP_PICK),,pick-phone)
 	if [ "$$IPHONE_KIND" = "sim" ]; then \
 		echo "--- tauri ios build (sim) ---"; \
 		cd $(ROOT) && $(TAURI_ENV) tauri ios build --target aarch64-sim --debug; \
-		APP="$(TAURI)/gen/apple/build/arm64-sim/Fishbones.app"; \
+		APP="$(TAURI)/gen/apple/build/arm64-sim/Libre.app"; \
 		echo "--- boot + install + launch ---"; \
 		xcrun simctl boot "$$IPHONE_UDID" 2>/dev/null || true; \
 		open -a Simulator; \
@@ -463,12 +463,12 @@ run-phone: $(if $(FB_SKIP_PICK),,pick-phone)
 		cd $(ROOT) && $(TAURI_ENV) tauri ios build --target aarch64 --debug; \
 		APP=""; \
 		for cand in \
-			"$(TAURI)/gen/apple/build/arm64/Fishbones.app" \
-			"$(TAURI)/gen/apple/build/fishbones_iOS.xcarchive/Products/Applications/Fishbones.app"; do \
+			"$(TAURI)/gen/apple/build/arm64/Libre.app" \
+			"$(TAURI)/gen/apple/build/libre_iOS.xcarchive/Products/Applications/Libre.app"; do \
 			if [ -d "$$cand" ]; then APP="$$cand"; echo "Found .app: $$cand"; break; fi; \
 		done; \
 		if [ -z "$$APP" ]; then \
-			IPA="$(TAURI)/gen/apple/build/arm64/Fishbones.ipa"; \
+			IPA="$(TAURI)/gen/apple/build/arm64/Libre.ipa"; \
 			if [ -f "$$IPA" ]; then \
 				echo "--- no .app found; extracting from $$IPA ---"; \
 				EXTRACT_DIR="$(TAURI)/gen/apple/build/arm64/_ipa-extract"; \
@@ -479,7 +479,7 @@ run-phone: $(if $(FB_SKIP_PICK),,pick-phone)
 			fi; \
 		fi; \
 		if [ -z "$$APP" ] || [ ! -d "$$APP" ]; then \
-			echo "ERROR: no Fishbones.app or .ipa produced under $(TAURI)/gen/apple/build/."; \
+			echo "ERROR: no Libre.app or .ipa produced under $(TAURI)/gen/apple/build/."; \
 			echo "Build likely failed — scroll up for tauri/xcodebuild errors,"; \
 			echo "or try 'tauri ios dev --target $$IPHONE_UDID' for a guided run."; \
 			exit 1; \
@@ -498,11 +498,11 @@ run-watch: $(if $(FB_SKIP_PICK),,pick-watch)
 	cd $(WATCH_ROOT); \
 	if [ "$$WATCH_KIND" = "sim" ]; then \
 		echo "--- xcodebuild (watchOS sim) ---"; \
-		xcodebuild -project FishbonesWatch.xcodeproj -scheme FishbonesWatch \
+		xcodebuild -project LibreWatch.xcodeproj -scheme LibreWatch \
 			-destination "platform=watchOS Simulator,id=$$WATCH_UDID" \
 			-configuration Debug -derivedDataPath build/DerivedData \
 			build CODE_SIGNING_ALLOWED=NO | tail -40; \
-		APP="$(WATCH_ROOT)/build/DerivedData/Build/Products/Debug-watchsimulator/FishbonesWatch.app"; \
+		APP="$(WATCH_ROOT)/build/DerivedData/Build/Products/Debug-watchsimulator/LibreWatch.app"; \
 		echo "--- boot + install + launch ---"; \
 		xcrun simctl boot "$$WATCH_UDID" 2>/dev/null || true; \
 		open -a Simulator; \
@@ -510,11 +510,11 @@ run-watch: $(if $(FB_SKIP_PICK),,pick-watch)
 		xcrun simctl launch "$$WATCH_UDID" $(WATCH_BUNDLE_ID); \
 	else \
 		echo "--- xcodebuild (watchOS device, signed) ---"; \
-		xcodebuild -project FishbonesWatch.xcodeproj -scheme FishbonesWatch \
+		xcodebuild -project LibreWatch.xcodeproj -scheme LibreWatch \
 			-destination "platform=watchOS,id=$$WATCH_UDID" \
 			-configuration Debug -derivedDataPath build/DerivedData \
 			build | tail -40; \
-		APP="$(WATCH_ROOT)/build/DerivedData/Build/Products/Debug-watchos/FishbonesWatch.app"; \
+		APP="$(WATCH_ROOT)/build/DerivedData/Build/Products/Debug-watchos/LibreWatch.app"; \
 		if [ ! -d "$$APP" ]; then \
 			echo "ERROR: $$APP not found. Check signing settings (DEVELOPMENT_TEAM=F6ZAL7ANAD)."; \
 			exit 1; \

@@ -5,7 +5,7 @@ Punch list for actually clicking through App Store Connect. Each item links to t
 ## Pre-flight (do once, then verify on every release)
 
 - [ ] **Apple Developer Program** active (https://developer.apple.com/account, agreements current).
-- [ ] **App Store Connect "Apps" record** exists for `com.mattssoftware.kata` named "Libre".
+- [ ] **App Store Connect "Apps" record** exists for `com.mattssoftware.libre` named "Libre".
 - [x] **`PRODUCT_NAME = Libre`** in `src-tauri/gen/apple/project.yml` ✅ done — `xcodegen generate` re-run, home-screen label now reads "Libre".
 - [ ] **`CFBundleShortVersionString`** in `Info.plist` matches the version you want shown in the App Store.
 - [ ] **`CFBundleVersion`** is strictly greater than the previous upload.

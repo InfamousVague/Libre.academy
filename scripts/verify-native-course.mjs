@@ -72,7 +72,7 @@ function resolveCoursePath(idOrPath) {
   }
   const live = join(
     homedir(),
-    "Library/Application Support/com.mattssoftware.kata/courses",
+    "Library/Application Support/com.mattssoftware.libre/courses",
     idOrPath,
     "course.json",
   );

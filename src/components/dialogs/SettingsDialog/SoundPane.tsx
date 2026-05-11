@@ -47,9 +47,9 @@ export default function SoundPane() {
       setEnabled(s.enabled);
       setVolume(s.volume);
     };
-    window.addEventListener("fb:sfx:settings-changed", onChanged);
+    window.addEventListener("libre:sfx:settings-changed", onChanged);
     return () =>
-      window.removeEventListener("fb:sfx:settings-changed", onChanged);
+      window.removeEventListener("libre:sfx:settings-changed", onChanged);
   }, []);
 
   const onToggleEnabled = () => {

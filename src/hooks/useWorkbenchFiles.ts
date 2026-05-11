@@ -17,7 +17,7 @@ import { deriveStarterFiles } from "../lib/workbenchFiles";
 /// differ and we fall back to the new starter rather than rendering stale
 /// content into mismatched filenames.
 
-const STORAGE_PREFIX = "kata:workbench:v1:";
+const STORAGE_PREFIX = "libre:workbench:v1:";
 
 function storageKey(courseId: string, lessonId: string): string {
   return `${STORAGE_PREFIX}${courseId}:${lessonId}`;

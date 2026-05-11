@@ -59,7 +59,7 @@ const BUNDLE_DIR = join(REPO_ROOT, "src-tauri", "resources", "bundled-packs");
 // Bundle id from `src-tauri/tauri.conf.json` → resolves the macOS
 // app_data_dir. Hardcoding because Tauri also hardcodes this in the
 // runtime resolver — they go together.
-const BUNDLE_ID = "com.mattssoftware.kata";
+const BUNDLE_ID = "com.mattssoftware.libre";
 const APP_DATA = join(homedir(), "Library", "Application Support", BUNDLE_ID);
 const COURSES_DIR = join(APP_DATA, "courses");
 

@@ -34,7 +34,7 @@ Alternative phrasings (each ≤ 30):
 ## Bundle ID
 
 ```
-com.mattssoftware.kata
+com.mattssoftware.libre
 ```
 
 ## SKU

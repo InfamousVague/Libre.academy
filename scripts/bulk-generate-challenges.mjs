@@ -2,7 +2,7 @@
 /// Bulk-generate challenge packs for languages that don't have one yet.
 /// Calls the Anthropic API directly (key read from the app's settings.json)
 /// and writes each pack as a `course.json` under
-/// `~/Library/Application Support/com.mattssoftware.kata/courses/`,
+/// `~/Library/Application Support/com.mattssoftware.libre/courses/`,
 /// using the same shape the in-app challenge generator produces.
 ///
 /// Two modes:
@@ -34,7 +34,7 @@ import path from "node:path";
 
 const APP_SUPPORT = path.join(
   os.homedir(),
-  "Library/Application Support/com.mattssoftware.kata",
+  "Library/Application Support/com.mattssoftware.libre",
 );
 const COURSES_DIR = path.join(APP_SUPPORT, "courses");
 const SETTINGS_PATH = path.join(APP_SUPPORT, "settings.json");

@@ -18,7 +18,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-const APP = join(homedir(), "Library/Application Support/com.mattssoftware.kata/courses");
+const APP = join(homedir(), "Library/Application Support/com.mattssoftware.libre/courses");
 const COURSE_PATH = join(APP, "mastering-ethereum/course.json");
 const DRY_RUN = !!process.env.DRY_RUN;
 

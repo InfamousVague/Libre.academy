@@ -645,7 +645,7 @@ export default function PlaygroundView() {
           // and matches what courses use so switching between the two
           // doesn't rearrange muscle memory.
           <Workbench
-            storageKey="kata:playground-workbench-split"
+            storageKey="libre:playground-workbench-split"
             fillWidth
             editor={editorNode}
             output={outputNode}

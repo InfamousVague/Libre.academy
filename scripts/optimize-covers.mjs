@@ -56,7 +56,7 @@ const APP_DATA = join(
   homedir(),
   "Library",
   "Application Support",
-  "com.mattssoftware.kata",
+  "com.mattssoftware.libre",
 );
 const COURSES_DIR = join(APP_DATA, "courses");
 
@@ -261,7 +261,7 @@ function main() {
   console.log("");
 
   // ── Local installs ────────────────────────────────────────────
-  console.log("== ~/Library/.../com.mattssoftware.kata/courses/<id>/ ==");
+  console.log("== ~/Library/.../com.mattssoftware.libre/courses/<id>/ ==");
   if (!existsSync(COURSES_DIR)) {
     console.log("  (no local courses dir, skipping)");
     return;

@@ -24,7 +24,7 @@ import path from "node:path";
 
 const APP_SUPPORT = path.join(
   os.homedir(),
-  "Library/Application Support/com.mattssoftware.kata",
+  "Library/Application Support/com.mattssoftware.libre",
 );
 const COURSES_DIR =
   process.env.KATA_COURSES_DIR ?? path.join(APP_SUPPORT, "courses");

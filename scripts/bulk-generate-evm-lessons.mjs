@@ -33,7 +33,7 @@ import { join } from "node:path";
 
 const APP_SUPPORT = join(
   homedir(),
-  "Library/Application Support/com.mattssoftware.kata",
+  "Library/Application Support/com.mattssoftware.libre",
 );
 const SETTINGS_PATH = join(APP_SUPPORT, "settings.json");
 const COURSES_DIR = join(APP_SUPPORT, "courses");

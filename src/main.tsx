@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { applyTheme, loadTheme } from "./theme/themes";
 import { prewarmCoursesSummary } from "./hooks/useCourses";
 import { isMobile } from "./lib/platform";
+import { migrateLegacyStorageKeys } from "./lib/storageMigration";
 // Base library's design tokens FIRST (light `:root` + `[data-theme=
 // "dark"]` blocks), then our theme overrides, then app shell styles.
 // The order is load-bearing: the base kit's `[data-theme="dark"]`
@@ -36,6 +37,14 @@ function bootLog(label: string) {
   console.log(`[boot] +${(performance.now() - tBoot0).toFixed(0)}ms ${label}`);
 }
 bootLog("main.tsx start");
+
+// One-shot rename of legacy localStorage prefixes (kata:* / fishbones:*
+// / fb:*) → libre:*. Runs synchronously before any hook reads
+// localStorage so initial state computations see the migrated values
+// on the same boot the user updates to a Libre-branded build. Gated
+// by a sentinel so subsequent boots are O(1).
+migrateLegacyStorageKeys();
+bootLog("storage keys migrated");
 
 // Apply the user's chosen theme (or system preference for the first-run
 // default) before React mounts so we don't flash the wrong palette.

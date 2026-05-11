@@ -6,7 +6,7 @@
 //! separate processes with separate sandboxes. They communicate via
 //! a **shared App Group container** — a directory that all three
 //! processes can read + write, identified by an entitlement string
-//! (`group.com.mattssoftware.kata.shared`).
+//! (`group.com.mattssoftware.libre.shared`).
 //!
 //! The main app (this Tauri binary) is the SOURCE OF TRUTH for
 //! everything the widgets / watch render. Whenever the relevant
@@ -50,7 +50,7 @@ use tauri::AppHandle;
 /// `libre_watch.entitlements`) AND the App Group registered on
 /// the Apple Developer portal under the same identifier.
 #[cfg(target_os = "ios")]
-const APP_GROUP_ID: &str = "group.com.mattssoftware.kata.shared";
+const APP_GROUP_ID: &str = "group.com.mattssoftware.libre.shared";
 
 /// Filename inside the shared container. Versioned so a future
 /// schema bump can ship without breaking older widget builds (we'd

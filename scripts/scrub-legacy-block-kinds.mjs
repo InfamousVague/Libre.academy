@@ -31,7 +31,7 @@ const STAGED = join(ROOT, "public", "starter-courses");
 const BUNDLED = join(ROOT, "src-tauri", "resources", "bundled-packs");
 const INSTALLED_DIR = join(
   homedir(),
-  "Library/Application Support/com.mattssoftware.kata/courses",
+  "Library/Application Support/com.mattssoftware.libre/courses",
 );
 
 const LEGACY_KINDS = new Set(["puzzle", "cloze", "micropuzzle"]);

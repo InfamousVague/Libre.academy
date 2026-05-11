@@ -49,7 +49,7 @@ const CACHE = join(ROOT, ".cache", "blocks");
 const REJECTED = join(ROOT, ".cache", "blocks", "_rejected");
 const INSTALLED_DIR = join(
   homedir(),
-  "Library/Application Support/com.mattssoftware.kata/courses",
+  "Library/Application Support/com.mattssoftware.libre/courses",
 );
 
 const MODEL = "claude-sonnet-4-5-20250929";

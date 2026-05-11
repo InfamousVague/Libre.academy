@@ -6,7 +6,7 @@
 /// that set against the persisted unlocks to produce "newly
 /// unlocked" — those are what the toast/modal layer enqueues.
 ///
-/// Persistence is a JSON blob in `localStorage["fb:achievements:
+/// Persistence is a JSON blob in `localStorage["libre:achievements:
 /// unlocked"]`, shaped as `{ id, unlockedAt }[]`. Local-only for now;
 /// the cloud-sync layer can pick this up later via the same
 /// piggyback channel `librarySync` uses.
@@ -34,8 +34,8 @@ export interface UnlockedRecord {
   unlockedAt: number;
 }
 
-const PERSIST_KEY = "fb:achievements:unlocked";
-const STREAK_FREEZES_KEY = "fb:achievements:freezes-used";
+const PERSIST_KEY = "libre:achievements:unlocked";
+const STREAK_FREEZES_KEY = "libre:achievements:freezes-used";
 
 /// Snapshot the engine evaluates against. Built once per evaluation
 /// from the live progress + streak state — cheaper than walking
@@ -50,7 +50,7 @@ export interface ProgressSnapshot {
   level: number;
   xp: number;
   /// Cumulative count of streak freezes the learner has used. Tracked
-  /// independently in localStorage["fb:achievements:freezes-used"];
+  /// independently in localStorage["libre:achievements:freezes-used"];
   /// the streak system increments it when a shield is consumed.
   freezesUsed: number;
 }

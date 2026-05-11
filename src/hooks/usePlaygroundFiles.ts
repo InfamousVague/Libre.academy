@@ -9,7 +9,7 @@ import { templateFiles } from "../runtimes/playgroundTemplates";
 /// When the learner has never touched a language, we seed it from the
 /// per-language template (see `playgroundTemplates.ts`).
 
-const STORAGE_PREFIX = "kata:playground:v1:";
+const STORAGE_PREFIX = "libre:playground:v1:";
 
 function storageKey(language: LanguageId): string {
   return `${STORAGE_PREFIX}${language}`;
