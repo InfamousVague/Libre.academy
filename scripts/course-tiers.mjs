@@ -193,7 +193,9 @@ export function tierFor(packId) {
 /// a manual `.fishbones` import. Useful for partner / preview content
 /// we want the URL of without exposing in the public shelf.
 export const HIDDEN_PACK_IDS = new Set([
-  "hellotrade",
+  // (empty — hellotrade graduated to Discover with the public BETA
+  // surface; add new partner / preview ids here when they need a
+  // direct-link-only soft launch)
 ]);
 
 export function isHiddenPack(packId) {

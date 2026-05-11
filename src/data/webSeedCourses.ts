@@ -211,7 +211,17 @@ function starterUrl(path: string): string {
 /// `lesson.blocks` is undefined in the cached records. Bumping
 /// forces a fresh fetch of the deployed JSONs so existing visitors
 /// pick up the blocks payloads without an IndexedDB reset.
-const SEED_VERSION = 11;
+///
+/// V12 — Hellotrade unhide. The manifest's `hidden: true` flag was
+/// stamped onto the IDB record at seed time (see the `hidden:` line
+/// in the loop below). Returning visitors who seeded under V11 still
+/// have `hidden: true` on the cached record and thus on
+/// `course.hidden` at runtime — Library + Discover both filter it
+/// out. Bumping forces a re-fetch of the manifest (which no longer
+/// carries the flag) and overwrites the record with the
+/// undefined-hidden version, surfacing the course in Discover from
+/// the next page load.
+const SEED_VERSION = 12;
 
 /// Run the web seed if it hasn't run yet OR if the persisted
 /// `SEED_VERSION` is older than the current build's. Idempotent +

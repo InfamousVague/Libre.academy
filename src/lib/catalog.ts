@@ -324,7 +324,12 @@ interface BundledCatalogEntryFromRust {
 /// + bumping the IPC schema would be cleaner long-term, but for the
 /// one-or-two-id scale this set lives at, parallel ownership in TS
 /// is fine. Keep in lockstep with course-tiers.mjs.
-const HIDDEN_DESKTOP_PACK_IDS: ReadonlySet<string> = new Set(["hellotrade"]);
+const HIDDEN_DESKTOP_PACK_IDS: ReadonlySet<string> = new Set([
+  // (empty — hellotrade graduated to Discover. Add a pack id here
+  // when it needs to ship in the bundle but stay off the Discover
+  // shelf; mirror it into HIDDEN_PACK_IDS in scripts/course-tiers.mjs
+  // so the web build hides it too.)
+]);
 
 async function fetchDesktopCatalog(): Promise<CatalogEntry[]> {
   try {
