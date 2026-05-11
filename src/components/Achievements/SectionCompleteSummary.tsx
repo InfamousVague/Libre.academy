@@ -157,14 +157,30 @@ export default function SectionCompleteSummary({
     </div>
   );
 
-  // Book-complete is a full-screen takeover (modal). Chapter-complete
-  // sits in the lesson view as an inline card the parent positions.
-  if (kind === "book") {
-    return (
-      <ModalBackdrop onDismiss={onDismiss} zIndex={140}>
-        {body}
-      </ModalBackdrop>
-    );
-  }
-  return body;
+  // Both variants use ModalBackdrop for center-positioning + Escape /
+  // click-outside dismiss. The book takeover gets the full dim+blur
+  // backdrop (default); the chapter variant adds the
+  // `fb-ach-summary-backdrop--quiet` modifier which clears the dim
+  // and blur so the card reads as a floating mini-modal sitting on
+  // top of the lesson view rather than a full-screen takeover.
+  //
+  // Previously the chapter variant returned `{body}` directly with
+  // no wrapping backdrop — that left the card unpositioned, so it
+  // dropped into the document flow at the top-left of the viewport
+  // (the user saw "Welcome to Programming" pinned to the corner
+  // instead of centred). Wrapping in ModalBackdrop fixes the
+  // positioning without changing the visual weight.
+  const backdropClass =
+    kind === "book"
+      ? undefined
+      : "fb-ach-summary-backdrop--quiet";
+  return (
+    <ModalBackdrop
+      onDismiss={onDismiss}
+      zIndex={140}
+      className={backdropClass}
+    >
+      {body}
+    </ModalBackdrop>
+  );
 }

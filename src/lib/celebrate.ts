@@ -206,14 +206,13 @@ function playVideo(srcBase: string): Promise<void> {
 
     const video = document.createElement("video");
     video.src = src;
-    // Play with audio at 40% so the baked-in coin chime registers as
-    // a quiet flourish rather than a notification klaxon (the source
-    // mix is hot — full volume reads as a wallet tipping over). The
-    // `muted` flag stays false so the audio actually plays; we fall
-    // back to muted re-attempt below if the autoplay-with-audio
-    // policy rejects play() despite the user gesture.
-    video.muted = false;
-    video.volume = 0.4;
+    // Play muted — the baked-in coin chime read as a notification
+    // klaxon, and now that achievements may fire several times per
+    // session the audio quickly turns into "wallet tipping over"
+    // ambient noise. Muting also removes the `play() rejected on
+    // unmuted autoplay` retry path entirely, so the visual always
+    // plays first-try.
+    video.muted = true;
     video.playsInline = true;
     video.autoplay = true;
     video.controls = false;
@@ -274,23 +273,14 @@ function playVideo(srcBase: string): Promise<void> {
     activeVideos.add(video);
     finishers.set(video, finish);
     document.body.appendChild(video);
-    // First attempt: unmuted at 40%. The achievement trigger always
-    // follows a user gesture so this should satisfy the autoplay
-    // policy. If the browser still rejects (some Safari builds are
-    // strict on cross-origin / auto-attached element flows), retry
-    // muted so the visual at least fires — the user just loses the
-    // chime for that one unlock.
+    // Muted autoplay always succeeds across browser autoplay
+    // policies — no fallback retry needed now that we never try
+    // unmuted in the first place.
     void video.play().catch((err) => {
       if (typeof console !== "undefined") {
-        console.warn("[celebrate] play() rejected, retrying muted", err);
+        console.warn("[celebrate] play() rejected", err);
       }
-      video.muted = true;
-      void video.play().catch((err2) => {
-        if (typeof console !== "undefined") {
-          console.warn("[celebrate] muted retry rejected", err2);
-        }
-        finish("play-rejected");
-      });
+      finish("play-rejected");
     });
   });
 }

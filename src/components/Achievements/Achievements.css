@@ -365,6 +365,18 @@
   transform: translateY(-1px);
 }
 
+/* "Quiet" backdrop modifier — used by the chapter-complete summary
+   card. Same centered positioning + Escape / click-outside dismiss
+   as the default ModalBackdrop, but the dim and blur layers are
+   stripped so the card reads as a floating mini-modal on top of
+   the lesson view rather than a full-screen takeover. Clicks on
+   the surrounding "transparent backdrop" area still dismiss
+   (handled in ModalBackdrop.tsx's onClick on the wrapper). */
+.fb-ach-summary-backdrop--quiet {
+  background: transparent;
+  backdrop-filter: none;
+}
+
 /* ─── Section / book complete summary card ───────────────────── */
 
 .fb-ach-summary {
