@@ -178,6 +178,21 @@ function pickSrc(srcBase: string): string {
   return `${srcBase}.webm`;
 }
 
+/// Module-scope registry of every coin-shower video currently mounted
+/// in the DOM. The `accelerateActiveCelebrations` /
+/// `dismissActiveCelebrations` exports below iterate this set so an
+/// outside caller (e.g., AchievementModal's dismiss handler) can
+/// affect the in-flight overlay without holding a ref to it. Entries
+/// register themselves in `playVideo` and self-deregister via the
+/// same `finish` path that removes the element from the DOM.
+const activeVideos = new Set<HTMLVideoElement>();
+/// Per-element finishers so callers can force a teardown (the
+/// `finish` closure inside playVideo holds the resolve + cleanup;
+/// stashing it here lets dismissActiveCelebrations call it cleanly
+/// and idempotently — finish() guards against double-fire on its
+/// own via the resolved flag).
+const finishers = new WeakMap<HTMLVideoElement, (reason?: string) => void>();
+
 function playVideo(srcBase: string): Promise<void> {
   if (typeof document === "undefined") return Promise.resolve();
   return new Promise<void>((resolve) => {
@@ -234,6 +249,8 @@ function playVideo(srcBase: string): Promise<void> {
       if (reason && typeof console !== "undefined") {
         console.log("[celebrate] finish", reason, src);
       }
+      activeVideos.delete(video);
+      finishers.delete(video);
       video.remove();
       resolve();
     };
@@ -254,6 +271,8 @@ function playVideo(srcBase: string): Promise<void> {
     // headroom for a slow load before the cleanup kicks in.
     window.setTimeout(() => finish("timeout"), 12_000);
 
+    activeVideos.add(video);
+    finishers.set(video, finish);
     document.body.appendChild(video);
     // First attempt: unmuted at 40%. The achievement trigger always
     // follows a user gesture so this should satisfy the autoplay
@@ -356,6 +375,43 @@ export function celebrateWith(
   target?: { x: number; y: number } | HTMLElement,
 ): Promise<void> {
   return celebrate(preset, target, { effect });
+}
+
+/// Bump the playback rate of every coin shower currently mounted.
+/// Used by AchievementModal's dismiss path so closing the modal
+/// flushes the remaining coin frames at 2x — reads as "the
+/// celebration is wrapping up" rather than "the modal vanished
+/// mid-shower". No-op when no video is active. Setting the rate
+/// during playback is cheap (browsers adjust presentation cadence
+/// without re-decoding); audio adjusts pitch alongside, which on a
+/// 2x bump turns the chime into a brief upward chirp that reads as
+/// a clean "ending" cue.
+export function accelerateActiveCelebrations(rate: number): void {
+  for (const v of activeVideos) {
+    try {
+      v.playbackRate = rate;
+    } catch {
+      /* element gone / browser quirk — ignore, the next finish() will tidy */
+    }
+  }
+}
+
+/// Force every active coin shower to tear down NOW. Calls each
+/// video's finish() closure (idempotent — guarded by the resolved
+/// flag inside playVideo) which removes the element from the DOM,
+/// resolves the celebrate() promise, and drops the entry from the
+/// active set. Used by AchievementModal's dismiss path as the
+/// safety net behind `accelerateActiveCelebrations` — the speed-up
+/// gives the user a perceptible "ending" cue, the dismiss
+/// guarantees the overlay is actually gone before the next route /
+/// modal opens.
+export function dismissActiveCelebrations(): void {
+  // Snapshot the set so we can mutate during iteration (finish()
+  // calls activeVideos.delete on its own row).
+  for (const v of [...activeVideos]) {
+    const finish = finishers.get(v);
+    if (finish) finish("dismissed");
+  }
 }
 
 /// Abort any in-flight effects. Tests + route changes call this
