@@ -19,26 +19,6 @@ function bootLog(label: string) {
 }
 bootLog("main.tsx start");
 
-// Slow the inline HTML preloader video to 75 % of its native rate.
-// The intro animation was outrunning the actual app boot on faster
-// machines — the video would finish + freeze on its last frame
-// while React was still parsing the lazy chunk, which read as
-// "the splash hung" rather than "the app is loading". 0.75x makes
-// the intro length match real-world boot more often. Setting
-// playbackRate after the element has started playing is fine —
-// the browser switches rate mid-playback without re-decoding.
-// The React `<SplashScreen>` sets the same rate on its own video
-// refs so the handoff is continuous.
-{
-  const v = document.getElementById("preloader-video") as
-    | HTMLVideoElement
-    | null;
-  if (v) {
-    v.playbackRate = 0.75;
-    v.defaultPlaybackRate = 0.75;
-  }
-}
-
 // Apply the user's chosen theme (or system preference for the first-run
 // default) before React mounts so we don't flash the wrong palette.
 applyTheme(loadTheme());
