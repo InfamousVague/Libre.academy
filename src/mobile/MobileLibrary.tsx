@@ -21,6 +21,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { Course, LanguageId } from "../data/types";
+import type { Completion } from "../hooks/useProgress";
 import { isChallengePack } from "../data/types";
 import { prefetchCovers } from "../hooks/useCourseCover";
 import { useLocalStorageState } from "../hooks/useLocalStorageState";
@@ -40,6 +41,14 @@ const VIEW_MODE_KEY = "fishbones.mobile.libraryViewMode";
 interface Props {
   courses: Course[];
   completed: Set<string>;
+  /// Full completion history — every (course, lesson, completed_at)
+  /// tuple the learner has logged. Drives the "most-recent activity"
+  /// sort: each course's position is its freshest completion
+  /// timestamp. Optional so older embeddings that haven't wired
+  /// `history` through yet still type-check; when absent the
+  /// library falls back to the previous tier-only sort (in-progress
+  /// → untouched → completed).
+  history?: readonly Completion[];
   onOpenLesson: (course: Course, chapterIndex: number, lessonIndex: number) => void;
   /// Optional — fired by the top-right search button to open the
   /// global mobile search palette. Left optional so callers that
@@ -106,6 +115,7 @@ function nextLessonOf(course: Course, completed: Set<string>): {
 export default function MobileLibrary({
   courses,
   completed,
+  history,
   onOpenLesson,
   onOpenSearch,
   onRefresh,
@@ -156,6 +166,22 @@ export default function MobileLibrary({
     return courses.filter((c) => c.language === filter);
   }, [courses, filter]);
 
+  /// Build a map of `courseId → most-recent completion timestamp`
+  /// from the flat history array. One pass; later completions
+  /// overwrite earlier ones for the same course (we only care about
+  /// the MAX). Empty when `history` isn't wired so the fallback
+  /// branch in the sort below kicks in cleanly. `unix seconds`
+  /// scale (matches Completion.completed_at directly).
+  const lastTouchedAt = useMemo(() => {
+    const m = new Map<string, number>();
+    if (!history) return m;
+    for (const row of history) {
+      const prev = m.get(row.course_id) ?? 0;
+      if (row.completed_at > prev) m.set(row.course_id, row.completed_at);
+    }
+    return m;
+  }, [history]);
+
   /// Group filtered courses by KIND — "Books" (long-form prose with
   /// chapters and exercises) up top, "Challenges" (per-language
   /// exercise packs) at the bottom. Mirrors the desktop
@@ -164,14 +190,24 @@ export default function MobileLibrary({
   /// the Bitcoin book in the desktop library finds it in the same
   /// pile when they pick up the phone.
   ///
-  /// Within each section we float "active" courses (any progress >0,
-  /// not yet 100%) to the top — the books the learner is currently
-  /// working on shouldn't be buried below pristine ones. Untouched
-  /// courses sort next, and fully-completed courses sink to the
-  /// bottom of the section since the learner is unlikely to revisit
-  /// them. Stable within each tier (i.e. the underlying `filtered`
-  /// order is preserved) so the visual order doesn't churn between
-  /// renders.
+  /// Within each section we sort by MOST RECENT ACTIVITY. Each
+  /// course's sort key is the freshest `completed_at` timestamp
+  /// across its completion history (lookup table built above). Two-
+  /// tier sort:
+  ///   - Tier 0 — has activity (any completion logged) → ORDER by
+  ///     timestamp descending (most-recent first). The course you
+  ///     last touched lands at the top of the section.
+  ///   - Tier 1 — no activity yet → keep `filtered` order so the
+  ///     untouched pile stays stable (no churn on every render).
+  /// Fully-completed courses no longer sink to the bottom because
+  /// "I finished this 10 minutes ago" is way more useful than "I
+  /// haven't touched it since 2024" as the implicit recency signal.
+  /// The learner can always scroll past completed courses if they
+  /// want to find a pristine one.
+  ///
+  /// Falls back to the previous tier-only sort when `history` isn't
+  /// available so older callers / empty-history first-launch states
+  /// still render a sensible order.
   const sections = useMemo(() => {
     const books: Course[] = [];
     const challenges: Course[] = [];
@@ -179,14 +215,30 @@ export default function MobileLibrary({
       if (isChallengePack(c)) challenges.push(c);
       else books.push(c);
     }
-    const tier = (c: Course): number => {
-      const { total, done } = nextLessonOf(c, completed);
-      if (total === 0) return 1; // "no lessons yet" — treat as untouched
-      if (done >= total) return 2; // fully complete — sink to bottom
-      if (done > 0) return 0; // actively in progress — float to top
-      return 1; // untouched
-    };
-    const sortByActivity = (a: Course, b: Course) => tier(a) - tier(b);
+    const hasHistory = history && history.length > 0;
+    const sortByActivity = hasHistory
+      ? (a: Course, b: Course) => {
+          const ta = lastTouchedAt.get(a.id) ?? 0;
+          const tb = lastTouchedAt.get(b.id) ?? 0;
+          if (ta === 0 && tb === 0) return 0; // both pristine — keep filtered order
+          // Untouched courses sort AFTER touched ones; otherwise
+          // recent-first within the touched group.
+          if (ta === 0) return 1;
+          if (tb === 0) return -1;
+          return tb - ta;
+        }
+      : // Legacy fallback (no history): keep the tier scheme so a
+        // fresh-install user still sees something reasonable.
+        (a: Course, b: Course) => {
+          const tier = (c: Course) => {
+            const { total, done } = nextLessonOf(c, completed);
+            if (total === 0) return 1;
+            if (done >= total) return 2;
+            if (done > 0) return 0;
+            return 1;
+          };
+          return tier(a) - tier(b);
+        };
     books.sort(sortByActivity);
     challenges.sort(sortByActivity);
     const out: Array<{ key: string; label: string; rows: Course[] }> = [];
@@ -197,7 +249,7 @@ export default function MobileLibrary({
       out.push({ key: "challenges", label: "Challenges", rows: challenges });
     }
     return out;
-  }, [filtered, completed]);
+  }, [filtered, completed, lastTouchedAt, history]);
 
   return (
     <div
@@ -214,16 +266,18 @@ export default function MobileLibrary({
       }}
     >
       <PullToRefresh pullDistance={pullDistance} isRefreshing={isRefreshing} />
-      {/* Brand wordmark sitting at the top of the Library page —
-          uses the wide text-version asset (libre_wide.png) rather
-          than just the squircle icon, so the mobile Library
-          carries the full Libre Academy lockup as its hero band.
-          The "Library" title row below stays as the section
-          marker; the wordmark is the brand anchor above it. */}
+      {/* Brand wordmark — the proper "Libre.academy" full-text
+          lockup (libreacademy.png, 350×123) rather than the
+          oversized libre_wide.png (1756×797) that was here before.
+          libreacademy.png is the same asset the desktop Sidebar
+          uses for the brand anchor, so the cross-platform read is
+          consistent: same word, same letterforms, same proportions.
+          Sized via CSS so the image lands at a comfortable ~200 px
+          wide above the Library section title. */}
       <div className="m-lib__brand" aria-hidden>
         <img
-          src={`${import.meta.env.BASE_URL}libre_wide.png`}
-          alt="Libre Academy"
+          src={`${import.meta.env.BASE_URL}libreacademy.png`}
+          alt="Libre.academy"
           className="m-lib__brand-img"
         />
       </div>

@@ -508,6 +508,15 @@ export default function MobileApp() {
           <MobileLibrary
             courses={courses}
             completed={completed}
+            // `history` threads through so the library can sort by
+            // most-recent activity (last lesson completion per
+            // course). Without it, the library can only check the
+            // completed-Set's CARDINALITY per course, not when each
+            // completion happened — so a course you finished a lesson
+            // in 2 minutes ago and one you touched 6 months ago
+            // would tie. With history we can pick the freshest
+            // completion's timestamp.
+            history={history}
             onOpenLesson={openLesson}
             onOpenSearch={() => setSearchOpen(true)}
             // Pull-to-refresh → realtime resync. Pulls progress

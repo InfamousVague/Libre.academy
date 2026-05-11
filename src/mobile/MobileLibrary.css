@@ -13,10 +13,12 @@
   padding: 4px 0 14px;
 }
 .m-lib__brand-img {
-  /* Cap height for narrow phone screens — the source asset is
-     ~600×140, so 48px keeps it comfortably proportioned and
-     matches a roughly 200px wide visual footprint that doesn't
-     dominate the layout above the section title. */
+  /* Source asset is libreacademy.png (350×123 ~= 2.85:1 aspect).
+     48 px tall lands at a ~135 px wide visual footprint — small
+     enough to leave the Library title room to breathe, large
+     enough that the "Libre.academy" wordmark is legible at arm's
+     length on a phone. max-width: 70% gives narrower phones a
+     soft cap if the height ever bumps up. */
   height: 48px;
   width: auto;
   max-width: 70%;
