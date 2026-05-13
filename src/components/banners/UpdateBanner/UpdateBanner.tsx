@@ -19,6 +19,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Icon } from "@base/primitives/icon";
 import { downloadCloud } from "@base/primitives/icon/icons/download-cloud";
+import { rotateCcw } from "@base/primitives/icon/icons/rotate-ccw";
 import { x as xIcon } from "@base/primitives/icon/icons/x";
 import "@base/primitives/icon/icon.css";
 import { isDesktop } from "../../../lib/platform";
@@ -186,10 +187,25 @@ export function UpdateBanner(): React.ReactElement | null {
 
   if (state.kind === "idle") return null;
 
+  // Ready-state gets a louder treatment — pulse glow, larger surface,
+  // top-centred so the AI orb in the bottom-right doesn't obscure it.
+  // The download is finished and there's nothing to do BUT click
+  // restart, so the banner shouldn't read like a passive notification.
+  const readyMod =
+    state.kind === "ready" ? " libre-update-banner--ready" : "";
+
   return (
-    <div className="libre-update-banner" role="status" aria-live="polite">
+    <div
+      className={`libre-update-banner${readyMod}`}
+      role="status"
+      aria-live="polite"
+    >
       <div className="libre-update-banner__icon" aria-hidden>
-        <Icon icon={downloadCloud} size="sm" color="currentColor" />
+        <Icon
+          icon={state.kind === "ready" ? rotateCcw : downloadCloud}
+          size="sm"
+          color="currentColor"
+        />
       </div>
       <div className="libre-update-banner__body">
         {state.kind === "available" && (
@@ -262,10 +278,12 @@ export function UpdateBanner(): React.ReactElement | null {
         {state.kind === "ready" && (
           <button
             type="button"
-            className="libre-update-banner__btn libre-update-banner__btn--primary"
+            className="libre-update-banner__btn libre-update-banner__btn--primary libre-update-banner__btn--restart"
             onClick={() => void onRestart()}
+            autoFocus
           >
-            {t("banners.restartNow")}
+            <Icon icon={rotateCcw} size="xs" color="currentColor" />
+            <span>{t("banners.restartNow")}</span>
           </button>
         )}
         <button
