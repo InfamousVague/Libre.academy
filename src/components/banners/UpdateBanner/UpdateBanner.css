@@ -45,7 +45,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   /* Accent-tinted icon plate. Reads from --color-accent (bone-amber
      on default-dark) so the banner picks up the active theme palette
      instead of the legacy periwinkle that was hard-coded here. */
@@ -80,14 +80,14 @@
   width: 100%;
   height: 4px;
   background: rgba(255, 255, 255, 0.08);
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
   overflow: hidden;
 }
 
 .libre-update-banner__progress-bar {
   height: 100%;
   background: var(--color-accent, #6c8cff);
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
   transition: width 120ms ease-out;
 }
 
@@ -107,12 +107,12 @@
   font-size: 12px;
   font-weight: 600;
   border: 1px solid transparent;
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   cursor: pointer;
   transition:
-    background var(--fb-motion-snappy),
-    color var(--fb-motion-snappy),
-    border-color var(--fb-motion-snappy);
+    background var(--libre-motion-snappy),
+    color var(--libre-motion-snappy),
+    border-color var(--libre-motion-snappy);
 }
 
 .libre-update-banner__btn--primary {

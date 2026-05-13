@@ -5,7 +5,7 @@
 /// that reads `src-tauri/resources/vendor/`. The web build has no
 /// preview server — it's a static site — so we copy the same files
 /// into Vite's `public/` directory, where they end up at
-/// `https://mattssoftware.com/play/vendor/<file>` after `vite build`.
+/// `https://libre.academy/learn/vendor/<file>` after `vite build`.
 ///
 /// Path stays `/vendor/<file>` in both builds. `src/lib/platform.ts`'s
 /// `vendorUrl(name)` returns an absolute origin-prefixed URL for the

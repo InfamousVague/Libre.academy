@@ -16,8 +16,7 @@ import { Tour } from "./components/Tour/Tour";
 import { TOUR_STEPS, type TourPage } from "./components/Tour/tourSteps";
 import { stopTourAudio } from "./components/Tour/useTourAudio";
 import { stopLessonAudio } from "./hooks/useLessonAudio";
-import TreesView from "./components/Trees/TreesView";
-import TracksView from "./components/Trees/TracksView";
+import TracksView from "./components/Tracks/TracksView";
 import PracticeView from "./components/Practice/PracticeView";
 import EvmDockBanner from "./components/ChainDock/EvmDockBanner";
 import BitcoinDockBanner from "./components/BitcoinChainDock/BitcoinDockBanner";
@@ -35,6 +34,7 @@ import {
   shouldShowTradeDock,
 } from "./lessonHelpers";
 import { useLocalStorageState } from "./hooks/useLocalStorageState";
+import { useKeybinding } from "./hooks/useKeybinding";
 import ImportDialog from "./components/dialogs/ImportDialog/ImportDialog";
 import BulkImportDialog from "./components/dialogs/ImportDialog/BulkImportDialog";
 import DocsImportDialog from "./components/dialogs/ImportDialog/DocsImportDialog";
@@ -45,19 +45,20 @@ import { useArchiveDrop } from "./hooks/useArchiveDrop";
 import { DeferredMount, LoadingPane } from "./components/Shared/DeferredMount";
 import LibreLoader from "./components/Shared/LibreLoader";
 import { prefetchCovers } from "./hooks/useCourseCover";
-import {
-  REMOTE_CATALOG_FALLBACK,
-  isRemoteFallbackId,
-} from "./lib/remoteCatalogFallback";
 import ConfirmDialog from "./components/dialogs/ConfirmDialog/ConfirmDialog";
 import CourseSettingsModal from "./components/dialogs/CourseSettings/CourseSettingsModal";
 import FloatingIngestPanel from "./components/IngestPanel/FloatingIngestPanel";
 import ProfileView from "./components/Profile/ProfileView";
-import PlaygroundView from "./components/Playground/PlaygroundView";
+import SandboxView from "./components/Sandbox/SandboxView";
+import SandboxSidebar from "./components/Sandbox/SandboxSidebar";
+import { useSandboxProjects } from "./hooks/useSandboxProjects";
 import { useAchievements } from "./hooks/useAchievements";
 import AchievementOverlay from "./components/Achievements/AchievementOverlay";
 import AchievementsPage from "./components/Achievements/AchievementsPage";
 import SectionCompleteSummary from "./components/Achievements/SectionCompleteSummary";
+import CertificatesPage from "./components/Certificates/CertificatesPage";
+import { mintCertificate } from "./data/certificates";
+import { notifyCertificatesChanged } from "./hooks/useCertificates";
 import { playSound, unlockAudioContext } from "./lib/sfx";
 import { isWeb, isMobile } from "./lib/platform";
 import { isoToUnixSeconds } from "./lib/timestamps";
@@ -120,6 +121,8 @@ function xpForLessonKind(kind: string | undefined): number {
   }
 }
 
+/// Wrapper that resolves the currently-selected sidebar variant id
+/// to its component and renders it with the standard sidebar Props.
 export default function App() {
   // Mobile short-circuit. Renders a totally separate component tree
   // (no TopBar, no Sidebar, no editor) when running on a phone-sized
@@ -143,15 +146,6 @@ export default function App() {
   /// per-card BookCover hooks read out of a hot module cache the
   /// instant they mount, so the Library shelf paints cleanly without
   /// the "blurry → sharpen" cascade.
-  ///
-  /// Two parallel passes:
-  ///   1. Local covers via the Rust IPC (`prefetchCovers`) — populates
-  ///      the in-memory data-URL map shared by every BookCover hook.
-  ///   2. Remote placeholder covers (the books in
-  ///      REMOTE_CATALOG_FALLBACK whose `.libre` archive hasn't
-  ///      been authored yet). Their cover JPGs live on the libre.academy
-  ///      CDN, so a parallel `new Image()` per id warms the browser
-  ///      image cache before BookCover renders them.
   useEffect(() => {
     if (!coursesLoaded || coursesAll.length === 0) return;
     void prefetchCovers(
@@ -160,12 +154,6 @@ export default function App() {
         cacheBust: c.coverFetchedAt,
       })),
     );
-    const installedIds = new Set(coursesAll.map((c) => c.id));
-    for (const e of REMOTE_CATALOG_FALLBACK) {
-      if (installedIds.has(e.id)) continue;
-      const img = new Image();
-      img.src = `https://libre.academy/learn/starter-courses/${e.id}.jpg`;
-    }
   }, [coursesLoaded, coursesAll]);
 
   // `filterCourseForDesktop` used to strip mobile-only drill lesson
@@ -644,6 +632,14 @@ export default function App() {
     const isFresh = !completed.has(key);
     if (isFresh) {
       setCelebrateAt(Date.now());
+      // Web-only: log the completion as a custom analytics event.
+      // Coarse props (courseId + lessonId + kind) — no PII, no
+      // sensitive data — so the Plausible dashboard can break
+      // "which courses are people finishing?" out by id without
+      // touching individual users. No-op on desktop / iOS builds.
+      void import("./lib/analytics").then(({ trackEvent }) => {
+        trackEvent("lesson.complete", { courseId, lessonId });
+      });
       // Compute and stash XP for the lesson so the section summary
       // card can credit "+N XP" without re-walking the lesson body
       // when the section card eventually triggers.
@@ -746,6 +742,60 @@ export default function App() {
           courseId,
           xpEarned: lastLessonXpRef.current,
         });
+        // Mint a course-completion certificate alongside the
+        // celebration card. Idempotent — `mintCertificate` no-ops
+        // when the courseId already has a cert (so re-completing
+        // after a reset, sync replay, or the same useEffect
+        // firing twice in StrictMode dev doesn't duplicate). The
+        // recipient name + email get captured at issue time so a
+        // future display-name change doesn't rewrite history.
+        const totalLessons = course.chapters.reduce(
+          (n, ch) => n + ch.lessons.length,
+          0,
+        );
+        const recipientName =
+          (typeof cloud.user === "object" && cloud.user?.display_name) ||
+          (typeof cloud.user === "object" && cloud.user?.email
+            ? cloud.user.email.split("@")[0]
+            : null) ||
+          "Libre learner";
+        const recipientEmail =
+          typeof cloud.user === "object" && cloud.user?.email
+            ? cloud.user.email
+            : undefined;
+        // Find the FIRST completion timestamp for this course by
+        // walking the history rows. The cert face shows a date
+        // range (Started → Completed) so the learner sees the
+        // span of the journey, not just the finish line. Falls
+        // back to undefined when no history row exists (e.g., a
+        // bulk-sync replay where the cert mint fires before
+        // history is populated) — the ticket UI hides the row in
+        // that case.
+        const courseHistory = history.filter((c) => c.course_id === courseId);
+        const startedAt =
+          courseHistory.length > 0
+            ? new Date(
+                Math.min(...courseHistory.map((c) => c.completed_at)) * 1000,
+              ).toISOString()
+            : undefined;
+        void mintCertificate({
+          courseId,
+          courseTitle: course.title,
+          courseLanguage: course.language,
+          recipientName,
+          recipientEmail,
+          lessonCount: totalLessons,
+          xpEarned: lastLessonXpRef.current,
+          startedAt,
+        }).then((cert) => {
+          // Tell the listing page (if mounted) to re-read so a
+          // freshly-earned cert appears without a route flush.
+          // Safe to call unconditionally — the hook's listener
+          // is a no-op if the page isn't mounted.
+          notifyCertificatesChanged();
+          // eslint-disable-next-line no-console
+          console.log("[libre] minted certificate", cert.id, cert.courseTitle);
+        });
       } else {
         setSectionSummary({
           kind: "chapter",
@@ -756,7 +806,7 @@ export default function App() {
       }
       break;
     }
-  }, [completed, coursesAll]);
+  }, [completed, coursesAll, cloud.user, history]);
 
   // First user gesture: warm the AudioContext so the very first
   // sound cue plays without the iOS-Safari silent-first-play wart.
@@ -773,7 +823,7 @@ export default function App() {
 
   /// Reactive flags for "is there transaction state on either
   /// in-process chain right now?" Used to gate the EVM and Bitcoin
-  /// dock visibility on lesson view AND on the Playground — once a
+  /// dock visibility on lesson view AND on the Sandbox — once a
   /// learner runs a chain lesson, the dock follows them across
   /// views until they hit Reset.
   const chainActivity = useChainActivity();
@@ -809,19 +859,19 @@ export default function App() {
 
   /// Which main-pane route is showing. "courses" is the default (welcome /
   /// inline library / lesson view depending on tab state). "profile" and
-  /// "playground" are dedicated destinations triggered from the sidebar
+  /// "sandbox" are dedicated destinations triggered from the sidebar
   /// iconbar. Selecting a lesson anywhere forces back to "courses" so the
   /// learner isn't stuck on a side view after clicking a sidebar item.
   const [view, setViewRaw] = useState<
     | "courses"
     | "profile"
-    | "playground"
+    | "sandbox"
     | "library"
     | "discover"
-    | "trees"
     | "tracks"
     | "practice"
     | "achievements"
+    | "certificates"
   >("library");
 
   /// `useTransition` lets us mark the view-switch state update as
@@ -906,6 +956,17 @@ export default function App() {
       deserialize: (raw) => raw === "1",
     },
   );
+
+  // Sandbox projects state — lifted to App level so the project
+  // switcher + file tree rendered in the sidebar slot (when
+  // view === "sandbox") and SandboxView's editor share one source
+  // of truth. The hook persists the whole project list to
+  // localStorage under `libre:sandbox:v1:*`; mounting it at App
+  // means the persistence stays consistent across view switches
+  // without re-instantiating + flushing every time the user enters
+  // the sandbox. (Migrates the user's old per-language playground
+  // entries on first load — see `useSandboxProjects.ts`.)
+  const sandboxProjects = useSandboxProjects("javascript");
 
   // First-run guided tour. The tour itself never auto-starts anymore
   // — instead we surface a confirmation dialog (`tourPromptOpen`,
@@ -996,17 +1057,13 @@ export default function App() {
     },
     [setView],
   );
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      // Cmd+\ on macOS, Ctrl+\ elsewhere — matches VS Code.
-      if ((e.metaKey || e.ctrlKey) && e.key === "\\") {
-        e.preventDefault();
-        setSidebarCollapsed((v) => !v);
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  // Sidebar toggle. The binding ("app.toggle-sidebar", default ⌘\)
+  // is owned by the keybindings registry — see
+  // src/lib/keybindings/registry.ts — so the Settings → Shortcuts
+  // pane shows + rebinds it alongside every other global chord.
+  useKeybinding("app.toggle-sidebar", () => {
+    setSidebarCollapsed((v) => !v);
+  });
 
   // Hand off from index.html's inline preloader to our React loader.
   // Runs in a layout-effect (post-DOM-mutate, pre-paint) so the inline
@@ -1017,22 +1074,25 @@ export default function App() {
     document.body.classList.add("is-booted");
   }, []);
 
-  /// Cmd+K (Ctrl+K) — global command palette toggle. Lives at the
-  /// app root so it works from every route + every focus state.
-  /// Browsers default Cmd+K to "address bar focus" inside <input>;
-  /// preventDefault flips that for our keystroke specifically. The
-  /// palette's own Esc / repeated Cmd+K handlers manage close.
+  /// Global command palette toggle. The binding
+  /// ("app.command-palette", default ⌘K) lives in
+  /// src/lib/keybindings/registry.ts; the hook handles both the
+  /// "fire while inside an input" case (it does NOT fire — the
+  /// input keeps the keystroke unless allowInInput is set, which
+  /// we don't need here since the palette closes input focus on
+  /// open) and the platform fork (⌘ on mac, Ctrl elsewhere). The
+  /// palette's own Esc / repeated chord handlers manage close.
   const [paletteOpen, setPaletteOpen] = useState(false);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setPaletteOpen((v) => !v);
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  useKeybinding("app.command-palette", () => {
+    setPaletteOpen((v) => !v);
+  });
+
+  /// Open the Settings dialog from anywhere — standard mac chord
+  /// ⌘, (Ctrl+, on Windows / Linux). Same registry-driven path as
+  /// every other global binding above.
+  useKeybinding("app.settings", () => {
+    setSettingsOpen(true);
+  });
 
   // Pending-open: a request to land on a specific course+lesson at boot,
   // sourced from either:
@@ -1142,8 +1202,8 @@ export default function App() {
   //
   // Only fires for the Tauri-stub `isWeb` build path. Desktop falls
   // through to the existing catalog/install flow (the manifest is
-  // the source of truth there too — if the entry isn't there, we
-  // don't have the localPath/archiveUrl needed to install).
+  // the source of truth there too — if the entry isn't in it, the
+  // user can't reach it via deep link).
   const installAttemptRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     if (!pendingOpen) return;
@@ -1155,12 +1215,11 @@ export default function App() {
 
     void (async () => {
       try {
-        const base = (import.meta.env.BASE_URL ?? "/").replace(/\/?$/, "/");
-        const url = `${base}starter-courses/${pendingOpen.courseId}.json`;
+        const url = `https://libre.academy/starter-courses/${pendingOpen.courseId}.json`;
         const res = await fetch(url, { cache: "no-cache" });
         if (!res.ok) {
           console.warn(
-            `[deep-link] no /starter-courses/${pendingOpen.courseId}.json (HTTP ${res.status})`,
+            `[deep-link] no ${url} (HTTP ${res.status})`,
           );
           return;
         }
@@ -1296,7 +1355,7 @@ export default function App() {
     void hydrateCourse(courseId);
     // Selecting a lesson always routes back to courses view — otherwise
     // we'd switch the sidebar's active tab silently while the main pane
-    // still shows Profile / Playground. That's disorienting.
+    // still shows Profile / Sandbox. That's disorienting.
     setView("courses");
     const existing = openTabs.findIndex((t) => t.courseId === courseId);
     if (existing >= 0) {
@@ -1383,10 +1442,85 @@ export default function App() {
     }
   }
 
+  /// Resolve the "resume here" lesson for a course — the first lesson
+  /// whose `<courseId>:<lessonId>` key is NOT in `completed`. Walks
+  /// chapters + lessons in narrative order so we never jump past an
+  /// uncompleted lesson to find a later completed one (the learner
+  /// might have marked a downstream lesson done out of order, but
+  /// resume should still land them on the earliest gap).
+  ///
+  /// All complete → falls back to the very last lesson so the
+  /// resume CTA still has somewhere to go.
+  ///
+  /// Returns `undefined` only when the course has no lessons at
+  /// all (impossible in practice but defensively typed).
+  function findResumeLessonId(course: Course): string | undefined {
+    for (const ch of course.chapters) {
+      for (const l of ch.lessons) {
+        if (!completed.has(`${course.id}:${l.id}`)) return l.id;
+      }
+    }
+    // Every lesson is complete — point at the last lesson so the
+    // learner can revisit / re-read rather than ricocheting off
+    // an undefined.
+    const lastCh = course.chapters[course.chapters.length - 1];
+    return lastCh?.lessons[lastCh.lessons.length - 1]?.id;
+  }
+
+  /// Resume target for the NavigationRail's play chip + any
+  /// "Resume" CTA we ship elsewhere. Picks the course with the
+  /// largest `recents` timestamp (i.e. most recently focused) and
+  /// pairs it with `findResumeLessonId` so a single click drops
+  /// the learner back into where they were.
+  ///
+  /// Returns `null` when there's no resumable target — fresh
+  /// installs (`recents` empty), or every recent course got
+  /// uninstalled. Consumers check the null and hide their CTA.
+  const resumeTarget = useMemo<
+    { course: Course; lessonId: string } | null
+  >(() => {
+    let bestId: string | null = null;
+    let bestTs = -Infinity;
+    for (const [id, ts] of Object.entries(recentCourses)) {
+      if (ts > bestTs) {
+        bestTs = ts;
+        bestId = id;
+      }
+    }
+    if (!bestId) return null;
+    // `coursesAll` so hidden courses can still resume (the user
+    // explicitly opened it — recents wouldn't have the id
+    // otherwise). Filtering through the visible `courses` would
+    // silently drop a hidden recent and the rail would mysteriously
+    // show no Resume chip.
+    const course = coursesAll.find((c) => c.id === bestId);
+    if (!course) return null;
+    const lessonId = findResumeLessonId(course);
+    if (!lessonId) return null;
+    return { course, lessonId };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recentCourses, coursesAll, completed]);
+
   /// Open a course from the Library view. Reuses the `selectLesson` path
-  /// (which upserts an open tab) and targets the first lesson if the
-  /// course isn't already open.
+  /// (which upserts an open tab) and targets the user's explicit "where
+  /// I left off" if a tab is already open, otherwise the first
+  /// uncompleted lesson — the natural resume point. An existing tab
+  /// wins because the user EXPLICITLY moved there; we don't want to
+  /// silently teleport them back to the frontier if they were
+  /// peeking at a later chapter.
+  function trackCourseOpen(courseId: string): void {
+    // Web-only: which courses get clicked from the library is the
+    // top funnel signal for the marketing site. Plausible's
+    // dashboard breaks events by props out of the box so
+    // `course.open · { courseId: "a-to-ts" }` gives us a per-
+    // course click chart with no extra config.
+    void import("./lib/analytics").then(({ trackEvent }) => {
+      trackEvent("course.open", { courseId });
+    });
+  }
+
   function openCourseFromLibrary(courseId: string) {
+    trackCourseOpen(courseId);
     // `coursesAll` so deep-link / shared-link entry points can
     // still call this with a hidden course id — Library users
     // never see hidden tiles so they can't reach this code path
@@ -1394,7 +1528,7 @@ export default function App() {
     const c = coursesAll.find((x) => x.id === courseId);
     if (!c) return;
     const existing = openTabs.find((t) => t.courseId === courseId);
-    const lessonId = existing?.lessonId ?? c.chapters[0]?.lessons[0]?.id;
+    const lessonId = existing?.lessonId ?? findResumeLessonId(c);
     if (!lessonId) return;
     selectLesson(courseId, lessonId);
   }
@@ -1404,6 +1538,191 @@ export default function App() {
   function deleteCourseFromLibrary(courseId: string, courseTitle: string) {
     setPendingDelete({ courseId, courseTitle });
   }
+
+  /// `libre:sandbox-focus` from the AI agent's sandbox tools.
+  /// When the agent creates a project / writes a file / applies a
+  /// patch, the tool fires this event with the project id + an
+  /// optional file path; we switch the main view to the sandbox
+  /// so the user sees the work happen in the editor instead of
+  /// hunting for it. The SandboxView's own listener takes the
+  /// detail and sets activeProjectId / activeFileIdx — see
+  /// `useSandboxFocus` in SandboxView.tsx.
+  ///
+  /// View-switch policy: every non-sandbox view becomes sandbox.
+  /// The earlier `view !== "courses"` guard tried to "preserve
+  /// the user's lesson context" but had the opposite effect —
+  /// `"courses"` is the library shell that hosts BOTH the
+  /// library grid AND any open lesson tabs, so the guard
+  /// suppressed the switch in the most common case (user on
+  /// library, hits Generate, expects to land in the sandbox).
+  /// Falling through to a plain switch makes "ask the agent to
+  /// build X" feel responsive regardless of where the user was.
+  useEffect(() => {
+    const onFocus = () => {
+      if (view !== "sandbox") setView("sandbox");
+    };
+    window.addEventListener("libre:sandbox-focus", onFocus);
+    return () => window.removeEventListener("libre:sandbox-focus", onFocus);
+  }, [view, setView]);
+
+  /// Web-only analytics: fire a pageview + a coarse `view`
+  /// custom event whenever the top-level `view` flips between
+  /// library / lesson / sandbox / etc. The analytics module
+  /// short-circuits to a no-op on the desktop / iOS builds (and
+  /// inside popout / tray / dock surfaces) so this useEffect
+  /// only does real work on the libre.academy web build. Custom
+  /// click events live next to their handlers (`trackEvent` from
+  /// `lib/analytics.ts`); the dashboard can also break out
+  /// per-view traffic via this coarse one.
+  useEffect(() => {
+    let cancelled = false;
+    void import("./lib/analytics").then(({ trackPageview, trackEvent }) => {
+      if (cancelled) return;
+      trackPageview();
+      trackEvent("view", { view });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [view]);
+
+  /// libre:// link clicks from the AI assistant. The AI's system
+  /// prompt includes a catalog of installed courses + lessons with
+  /// `libre://course/<id>` / `libre://lesson/<courseId>/<lessonId>`
+  /// URLs; the AiChatPanel intercepts clicks on those links and
+  /// dispatches `libre:open-course` / `libre:open-lesson`
+  /// CustomEvents. Translate those into the existing
+  /// `openCourseFromLibrary` / `selectLesson` flows so an AI
+  /// recommendation is one click away from opening the actual
+  /// lesson.
+  useEffect(() => {
+    const onCourse = (ev: Event) => {
+      const id = (ev as CustomEvent<{ courseId?: string }>).detail
+        ?.courseId;
+      if (!id) return;
+      openCourseFromLibrary(id);
+    };
+    const onLesson = (ev: Event) => {
+      const detail = (
+        ev as CustomEvent<{ courseId?: string; lessonId?: string }>
+      ).detail;
+      if (!detail?.courseId || !detail?.lessonId) return;
+      selectLesson(detail.courseId, detail.lessonId);
+    };
+    window.addEventListener("libre:open-course", onCourse);
+    window.addEventListener("libre:open-lesson", onLesson);
+    return () => {
+      window.removeEventListener("libre:open-course", onCourse);
+      window.removeEventListener("libre:open-lesson", onLesson);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coursesAll, openTabs]);
+
+  /// Bridge for the macOS menu-bar (tray) popover. The popover is
+  /// a separate WebviewWindow (`?tray=1`) — see `TrayPanel.tsx`
+  /// and `src-tauri/src/tray.rs`. It emits Tauri events that this
+  /// main App listens for and translates into the in-window
+  /// equivalents:
+  ///   - `libre:tray-ask` → dispatches the `libre:ask-ai` window
+  ///     CustomEvent the AiAssistant already subscribes to, with
+  ///     `kind: "ask"` + the prompt. Opens the AI panel + queues
+  ///     the question.
+  ///   - `libre:tray-open-course` → routes through the same
+  ///     `openCourseFromLibrary` path the Library card click uses.
+  /// Listener is set up once on mount; the cleanup unlisten
+  /// detaches the Tauri event subscription on unmount.
+  useEffect(() => {
+    let cleanup: (() => void) | undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { listen } = await import("@tauri-apps/api/event");
+        const offAsk = await listen<{ prompt: string }>(
+          "libre:tray-ask",
+          (event) => {
+            const prompt = event.payload?.prompt?.trim();
+            if (!prompt) return;
+            window.dispatchEvent(
+              new CustomEvent("libre:ask-ai", {
+                detail: { kind: "ask", prompt },
+              }),
+            );
+          },
+        );
+        const offOpen = await listen<{ courseId: string }>(
+          "libre:tray-open-course",
+          (event) => {
+            const courseId = event.payload?.courseId;
+            if (!courseId) return;
+            openCourseFromLibrary(courseId);
+          },
+        );
+        // `libre:tray-open-lesson` — the tray's AiChatPanel
+        // intercepts libre://lesson/<courseId>/<lessonId> links
+        // and forwards them as this Tauri event when running in
+        // the popover window. Routes through the same
+        // selectLesson path the in-window markdown click already
+        // uses (via the `libre:open-lesson` CustomEvent listener
+        // above) so the resume flow stays identical regardless
+        // of which window the AI link was clicked from.
+        const offOpenLesson = await listen<{
+          courseId: string;
+          lessonId: string;
+        }>("libre:tray-open-lesson", (event) => {
+          const { courseId, lessonId } = event.payload ?? {};
+          if (!courseId || !lessonId) return;
+          selectLesson(courseId, lessonId);
+        });
+        // Sandbox events forwarded from the tray window's agent.
+        // The tray fires `libre:sandbox-refresh` / `libre:sandbox-focus`
+        // in its own JS context; those don't reach us directly because
+        // separate WebviewWindows are separate runtimes. Re-dispatching
+        // them locally here lights up the same listeners
+        // (`useSandboxProjects`'s disk re-pull + `SandboxView`'s
+        // project/file switch + the view-mode flip below) as if the
+        // agent were running in this window.
+        const offSandboxRefresh = await listen("libre:tray-sandbox-refresh", () => {
+          window.dispatchEvent(new CustomEvent("libre:sandbox-refresh"));
+        });
+        const offSandboxFocus = await listen<{
+          projectId: string;
+          path: string | null;
+        }>("libre:tray-sandbox-focus", (event) => {
+          const { projectId, path } = event.payload ?? {};
+          if (!projectId) return;
+          window.dispatchEvent(
+            new CustomEvent("libre:sandbox-focus", {
+              detail: { projectId, path: path ?? undefined },
+            }),
+          );
+        });
+        if (cancelled) {
+          offAsk();
+          offOpen();
+          offOpenLesson();
+          offSandboxRefresh();
+          offSandboxFocus();
+        } else {
+          cleanup = () => {
+            offAsk();
+            offOpen();
+            offOpenLesson();
+            offSandboxRefresh();
+            offSandboxFocus();
+          };
+        }
+      } catch {
+        // Tauri event plugin unavailable (web build / test runner).
+        // The tray surface only exists on desktop anyway — this
+        // path is intentionally a no-op everywhere else.
+      }
+    })();
+    return () => {
+      cancelled = true;
+      cleanup?.();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /// Actually wipe the course: remove the course dir, drop open tabs, clear
   /// the book's ingest cache so a re-import starts fresh. Errors on cache
@@ -1706,7 +2025,7 @@ export default function App() {
           // Tabs live in the top bar across every route, so clicking one
           // should always land on the course view — otherwise the learner
           // sees the tab highlight change while still looking at Profile
-          // or Playground, which feels broken.
+          // or Sandbox, which feels broken.
           setView("courses");
           setActiveTabIndex(i);
         }}
@@ -1769,33 +2088,61 @@ export default function App() {
         <NavigationRail
           activeView={view}
           onLibrary={() => setView("library")}
+          // Resume chip — drops the learner back into their most-
+          // recently-focused course at the first uncompleted lesson.
+          // Hidden when `resumeTarget` is null (fresh install, or
+          // every recent course got uninstalled).
+          onResume={
+            resumeTarget
+              ? () => selectLesson(resumeTarget.course.id, resumeTarget.lessonId)
+              : undefined
+          }
+          resumeLabel={resumeTarget?.course.title}
           onDiscover={() => setView("discover")}
-          onTrees={() => setView("trees")}
           onTracks={() => setView("tracks")}
           onPractice={() => setView("practice")}
           onAchievements={() => setView("achievements")}
-          onPlayground={() => setView("playground")}
+          onCertificates={() => setView("certificates")}
+          onSandbox={() => setView("sandbox")}
           onSettings={() => setSettingsOpen(true)}
           onStartTour={handleTourStart}
           onToggleSidebar={() => setSidebarCollapsed((v) => !v)}
           sidebarCollapsed={sidebarCollapsed}
         />
-        <Sidebar
-          courses={courses}
-          activeCourseId={view === "courses" ? activeCourse?.id : undefined}
-          activeLessonId={view === "courses" ? activeLesson?.id : undefined}
-          completed={completed}
-          recents={recentCourses}
-          onSelectLesson={selectLesson}
-          onSelectCourse={openCourseFromLibrary}
-          onLibrary={() => setView("library")}
-          onExportCourse={exportCourse}
-          onDeleteCourse={deleteCourseFromLibrary}
-          onCourseSettings={(id) => setCourseSettingsId(id)}
-          onResetLesson={clearLessonCompletion}
-          onResetChapter={clearChapterCompletions}
-          onResetCourse={clearCourseCompletions}
-        />
+        {/* Sidebar slot. The Sandbox view gets a dedicated project
+            switcher + VS Code-style file tree sidebar instead of
+            the course/lesson navigator — the sandbox has no
+            chapters or lessons, so the regular sidebar's chapter
+            tree would render empty there. Every other view keeps
+            the production `Sidebar`.
+
+            The sidebar variant choice (Settings → Theme → "Sidebar
+            layout") still applies inside the production Sidebar
+            for the course view — see `CourseGroup` for the list-
+            vs-grid branch on the active course's body. The
+            Sandbox sidebar is its own thing entirely; it doesn't
+            participate in that variant. */}
+        {view === "sandbox" ? (
+          <SandboxSidebar projects={sandboxProjects} />
+        ) : (
+          <Sidebar
+            courses={courses}
+            activeCourseId={view === "courses" ? activeCourse?.id : undefined}
+            activeLessonId={view === "courses" ? activeLesson?.id : undefined}
+            completed={completed}
+            recents={recentCourses}
+            onSelectLesson={selectLesson}
+            onSelectCourse={openCourseFromLibrary}
+            onLibrary={() => setView("library")}
+            onExportCourse={exportCourse}
+            onDeleteCourse={deleteCourseFromLibrary}
+            onCourseSettings={(id) => setCourseSettingsId(id)}
+            onResetLesson={clearLessonCompletion}
+            onResetChapter={clearChapterCompletions}
+            onResetCourse={clearCourseCompletions}
+            onCertificates={() => setView("certificates")}
+          />
+        )}
 
         <main className="libre__main">
           {view === "profile" ? (
@@ -1806,21 +2153,8 @@ export default function App() {
               stats={stats}
               onOpenLesson={selectLesson}
             />
-          ) : view === "playground" ? (
-            <PlaygroundView />
-          ) : view === "trees" ? (
-            <TreesView
-              courses={courses}
-              completed={completed}
-              onOpenLesson={(courseId, lessonId) => {
-                selectLesson(courseId, lessonId);
-                // Hand off to the lesson view so the learner lands
-                // directly in the chosen lesson; the trees panel
-                // closes itself by virtue of view changing.
-                setView("courses");
-              }}
-              onInstallMissingCourses={handleInstallMissingPathCourses}
-            />
+          ) : view === "sandbox" ? (
+            <SandboxView projects={sandboxProjects} />
           ) : view === "tracks" ? (
             <TracksView
               courses={courses}
@@ -1844,6 +2178,12 @@ export default function App() {
             <AchievementsPage
               unlocked={achievements.unlocked}
               unlockedRecords={achievements.unlockedRecords}
+            />
+          ) : view === "certificates" ? (
+            <CertificatesPage
+              courses={courses}
+              completed={completed}
+              onResume={openCourseFromLibrary}
             />
           ) : view === "library" || view === "discover" ? (
             // Library + Discover both render through CourseLibrary —
@@ -2289,18 +2629,21 @@ export default function App() {
       )}
 
       {/* Floating local-LLM tutor. Lives at the root so it persists
-          across library / lesson / playground / profile routes —
+          across library / lesson / sandbox / profile routes —
           same character, same conversation state. System prompt is
           rebuilt from the active lesson on each send(). */}
       {/* AI assistant is desktop-only for now — the streaming runs
           via Tauri events from a local Ollama / Anthropic-via-Rust
           path that doesn't have a web equivalent yet. Phase 4 will
           re-enable this on web by streaming directly from
-          api.mattssoftware.com once the relay endpoints land. */}
+          api.libre.academy once the relay endpoints land. */}
       {!isWeb && (
         <AiAssistant
           lesson={activeLesson}
           course={activeCourse}
+          courses={courses}
+          completed={completed}
+          history={history}
           celebrateAt={celebrateAt}
         />
       )}
@@ -2352,7 +2695,7 @@ export default function App() {
         courses={courses}
         actions={{
           openLibrary: () => setView("library"),
-          openPlayground: () => setView("playground"),
+          openSandbox: () => setView("sandbox"),
           openProfile: () => setView("profile"),
           openSettings: () => setSettingsOpen(true),
           importBook: () => setImportOpen(true),
@@ -2421,6 +2764,7 @@ export default function App() {
           }}
         />
       )}
+
     </div>
   );
 
@@ -2528,112 +2872,34 @@ export default function App() {
     setVerifySession((s) => (s ? { ...s, done: true, current: null } : null));
   }
 
-  /// Install a course from the catalog by downloading its
-  /// .libre archive (desktop) or its course JSON (web), then
-  /// persisting it via the same path bundled-pack seed uses. After
-  /// the write lands, refresh the in-memory course list + hydrate
-  /// the new course so the placeholder tile in the Library flips
-  /// to a real installed cover and the user can click into it
+  /// Install a course from the catalog by fetching its JSON from the
+  /// libre.academy CDN and persisting it via the storage abstraction.
+  /// Same code path on desktop and web — `storage.saveCourse` picks
+  /// the platform-appropriate persistence (Tauri IPC writes the JSON
+  /// to the user's courses dir; web writes to IndexedDB) under the
+  /// hood. After the write lands, refresh the in-memory course list +
+  /// hydrate the new course so the placeholder tile in the Library
+  /// flips to a real installed cover and the user can click into it
   /// immediately.
   async function handleInstallCatalogEntry(entry: {
     id: string;
     file: string;
-    archiveUrl: string;
-    localPath?: string;
     title: string;
   }) {
-    // Aspirational fallback tiles in Discover (the
-    // remoteCatalogFallback list) point at .json files / .libre
-    // archives that haven't been authored yet — clicking install
-    // 404s and surfaces a confusing "string did not match the
-    // expected pattern" / "HTTP 404" alert. Detect them up-front and
-    // show a friendlier "coming soon" message so the user knows it's
-    // not a bug. The covers stay on the shelf so Discover keeps
-    // reading as aspirational rather than empty.
-    if (isRemoteFallbackId(entry.id)) {
-      alert(
-        `${entry.title} is coming soon — the cover is on Discover so you can see what's queued, but the lesson archive hasn't shipped yet. Check back after the next update.`,
-      );
-      return;
-    }
     try {
-      if (isWeb) {
-        // Web build: fetch the course JSON from same-origin
-        // (`/starter-courses/<file>.json`) and save straight to
-        // IndexedDB via the storage abstraction.
-        const base = (import.meta.env.BASE_URL ?? "/").replace(/\/?$/, "/");
-        const url = `${base}starter-courses/${entry.file}`;
-        const res = await fetch(url, { cache: "no-cache" });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const course = await res.json();
-        const { storage } = await import("./lib/storage");
-        await storage.saveCourse(entry.id, course);
-      } else if (entry.localPath) {
-        // Desktop bundled catalog: the .libre archive ships
-        // inside the binary at `entry.localPath`. Just unzip it
-        // into the courses dir — no network round-trip, no remote
-        // hosting required for the catalog to work.
-        const { invoke } = await import("@tauri-apps/api/core");
-        await invoke<string>("import_course", {
-          archivePath: entry.localPath,
-        });
-      } else {
-        // Desktop remote download: lazy-import the Tauri invoke
-        // helper. The native command fetches the .libre archive
-        // over HTTPS, writes to a temp file, and unzips into the
-        // courses dir. Used when the catalog source is a remote
-        // manifest (e.g. for over-the-air content updates) rather
-        // than the bundled set.
-        const { invoke } = await import("@tauri-apps/api/core");
-        await invoke<string>("download_and_install_course", {
-          archiveUrl: entry.archiveUrl,
-        });
-      }
+      const { jsonHref } = await import("./lib/catalog");
+      const url = jsonHref({ file: entry.file } as Parameters<typeof jsonHref>[0]);
+      const res = await fetch(url, { cache: "no-cache" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const course = await res.json();
+      const { storage } = await import("./lib/storage");
+      await storage.saveCourse(entry.id, course);
       await refreshCourses();
       await hydrateCourse(entry.id);
     } catch (e) {
       console.error("[libre] install catalog entry failed:", e);
       alert(
         `Couldn't install ${entry.title}: ${e instanceof Error ? e.message : String(e)}`,
-      );
-    }
-  }
-
-  /// Path-driven batch install used by the Trees view: when a learner
-  /// picks a goal whose path crosses books they haven't installed yet,
-  /// the SkillPanel offers a single "Install N missing books on this
-  /// path" button. We resolve each id against the cached catalog and
-  /// fan out to `handleInstallCatalogEntry` sequentially. Sequential
-  /// (not parallel) because Tauri's download_and_install_course
-  /// command holds a tokio Mutex on the courses dir; firing five
-  /// installs at once just queues them anyway and makes the error
-  /// reporting harder to attribute.
-  async function handleInstallMissingPathCourses(
-    courseIds: string[],
-  ): Promise<void> {
-    if (courseIds.length === 0) return;
-    const { fetchCatalog } = await import("./lib/catalog");
-    const catalog = await fetchCatalog();
-    const byId = new Map(catalog.map((e) => [e.id, e] as const));
-    const missing: string[] = [];
-    for (const id of courseIds) {
-      const entry = byId.get(id);
-      if (!entry) {
-        missing.push(id);
-        continue;
-      }
-      await handleInstallCatalogEntry({
-        id: entry.id,
-        file: entry.file,
-        archiveUrl: entry.archiveUrl,
-        localPath: entry.localPath,
-        title: entry.title,
-      });
-    }
-    if (missing.length > 0) {
-      console.warn(
-        "[libre] path install: catalog has no entry for",
-        missing,
       );
     }
   }

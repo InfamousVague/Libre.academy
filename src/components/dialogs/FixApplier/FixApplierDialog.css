@@ -40,7 +40,7 @@
   cursor: pointer;
   color: var(--color-text-secondary, #a4a4ad);
   padding: 4px;
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -90,7 +90,7 @@
   background: var(--color-bg-tertiary, #1f1f28);
   color: var(--color-text-primary, #f5f5f7);
   border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.08));
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   text-transform: none;
   letter-spacing: 0;
 }
@@ -102,7 +102,7 @@
   background: var(--color-bg-primary, #0b0b10);
   color: var(--color-text-primary, #f5f5f7);
   border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.08));
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   resize: vertical;
   min-height: 160px;
   text-transform: none;
@@ -118,7 +118,7 @@
 .libre-fixapplier-preview {
   background: var(--color-bg-tertiary, #1f1f28);
   border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.06));
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   padding: 10px;
   font-size: 12px;
 }
@@ -150,7 +150,7 @@
   align-items: center;
   gap: 6px;
   padding: 4px 6px;
-  border-radius: var(--fb-radius-xs);
+  border-radius: var(--libre-radius-xs);
   font-size: 12px;
 }
 
@@ -194,7 +194,7 @@
 .libre-fixapplier-success {
   background: rgba(95, 212, 157, 0.08);
   border: 1px solid rgba(95, 212, 157, 0.25);
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   padding: 8px 10px;
   font-size: 12px;
   color: #5fd49d;
@@ -203,7 +203,7 @@
 .libre-fixapplier-error {
   background: rgba(239, 111, 111, 0.08);
   border: 1px solid rgba(239, 111, 111, 0.25);
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   padding: 8px 10px;
   font-size: 12px;
   color: #ef6f6f;
@@ -229,7 +229,7 @@
   color: var(--color-text-primary, #f5f5f7);
   border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.08));
   padding: 6px 12px;
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   cursor: pointer;
   font-size: 12px;
   display: inline-flex;

@@ -87,7 +87,7 @@
   border: 0;
   color: var(--color-text-tertiary);
   cursor: pointer;
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -141,7 +141,7 @@
   font: inherit;
   color: var(--color-text-primary);
   -webkit-tap-highlight-color: transparent;
-  transition: background var(--fb-motion-quick);
+  transition: background var(--libre-motion-quick);
 }
 
 .m-search__row:active {
@@ -154,7 +154,7 @@
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   background: var(--color-bg-secondary, #15151a);
   color: var(--color-text-secondary);
 }

@@ -21,7 +21,7 @@
      state (null → computed). A CSS keyframe would stomp the inline
      `transform: translateX(-50%)` we rely on for horizontal centering,
      so we animate opacity only. */
-  transition: opacity var(--fb-motion-quick)-out;
+  transition: opacity var(--libre-motion-quick)-out;
 }
 
 .libre-popover--symbol {
@@ -45,7 +45,7 @@
   color: var(--color-text-secondary);
   background: var(--color-bg-primary);
   padding: 4px 7px;
-  border-radius: var(--fb-radius-xs);
+  border-radius: var(--libre-radius-xs);
   overflow-x: auto;
   white-space: nowrap;
   margin: 2px 0;
@@ -107,7 +107,7 @@
 .libre-inline-term {
   cursor: help;
   border-bottom: 1px dotted rgba(199, 155, 255, 0.5);
-  transition: border-color var(--fb-motion-snappy), color var(--fb-motion-snappy);
+  transition: border-color var(--libre-motion-snappy), color var(--libre-motion-snappy);
 }
 
 .libre-inline-term:hover {

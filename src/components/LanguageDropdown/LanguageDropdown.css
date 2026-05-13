@@ -3,23 +3,23 @@
    the wrapper modifier flips trigger sizing only.
 
    Variant matrix:
-     fb-langdrop--field   — full-width row that fits a Settings rail
-     fb-langdrop--compact — pill-sized trigger for top bars / chrome
+     libre-langdrop--field   — full-width row that fits a Settings rail
+     libre-langdrop--compact — pill-sized trigger for top bars / chrome
 */
 
-.fb-langdrop {
+.libre-langdrop {
   position: relative;
   display: inline-block;
 }
 
-.fb-langdrop--field {
+.libre-langdrop--field {
   display: block;
   width: 100%;
 }
 
 /* ─── Trigger ───────────────────────────────────────────── */
 
-.fb-langdrop__trigger {
+.libre-langdrop__trigger {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -27,32 +27,32 @@
   color: var(--color-text-primary);
   background: var(--color-bg-tertiary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md, 8px);
+  border-radius: var(--libre-radius-md, 8px);
   padding: 8px 12px;
   cursor: pointer;
-  transition: background var(--fb-motion-snappy, 0.15s ease),
-    border-color var(--fb-motion-snappy, 0.15s ease);
+  transition: background var(--libre-motion-snappy, 0.15s ease),
+    border-color var(--libre-motion-snappy, 0.15s ease);
 }
 
-.fb-langdrop--field .fb-langdrop__trigger {
+.libre-langdrop--field .libre-langdrop__trigger {
   width: 100%;
   justify-content: flex-start;
 }
 
-.fb-langdrop--compact .fb-langdrop__trigger {
+.libre-langdrop--compact .libre-langdrop__trigger {
   padding: 6px 10px;
   font-size: 13px;
-  border-radius: var(--fb-radius-pill, 999px);
+  border-radius: var(--libre-radius-pill, 999px);
 }
 
-.fb-langdrop__trigger:hover,
-.fb-langdrop__trigger:focus-visible {
+.libre-langdrop__trigger:hover,
+.libre-langdrop__trigger:focus-visible {
   border-color: var(--color-border-strong, var(--color-border-default));
   background: var(--color-bg-secondary);
   outline: none;
 }
 
-.fb-langdrop__flag {
+.libre-langdrop__flag {
   /* Emoji flags need slight downward nudge so they bottom-align with
      the latin/cjk glyphs. The exact offset varies per platform — 1px
      is the median that doesn't read as misaligned anywhere. */
@@ -62,18 +62,18 @@
   font-size: 16px;
 }
 
-.fb-langdrop__label {
+.libre-langdrop__label {
   flex: 1;
   text-align: left;
   font-weight: 600;
   letter-spacing: -0.005em;
 }
 
-.fb-langdrop--compact .fb-langdrop__label {
+.libre-langdrop--compact .libre-langdrop__label {
   flex: initial;
 }
 
-.fb-langdrop__chevron {
+.libre-langdrop__chevron {
   font-size: 10px;
   opacity: 0.6;
   margin-left: 2px;
@@ -81,37 +81,33 @@
 
 /* ─── Menu ──────────────────────────────────────────────── */
 
-.fb-langdrop__menu {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  /* Cap width on `field` so a long endonym row stays readable but the
-     menu doesn't sprawl to the parent's full width on a wide rail. */
-  min-width: 100%;
+/* Menu is portaled to `document.body` (see LanguageDropdown.tsx)
+   so it escapes ancestor `overflow: hidden` clipping — the
+   Settings dialog cards clip their rounded corners, which used
+   to chop the dropdown options. The TSX writes `position: fixed`
+   coords inline (`top`/`left`/`minWidth` from the trigger's
+   measured rect); CSS only handles the visual chrome here. */
+.libre-langdrop__menu {
   max-width: 240px;
   list-style: none;
   margin: 0;
   padding: 6px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md, 8px);
+  border-radius: var(--libre-radius-md, 8px);
   box-shadow:
-    0 16px 40px -8px rgba(0, 0, 0, 0.4),
-    0 4px 12px rgba(0, 0, 0, 0.18);
-  z-index: 50;
+    0 16px 40px -8px rgba(0, 0, 0, 0.45),
+    0 4px 12px rgba(0, 0, 0, 0.22);
+  /* Above modal backdrops (which usually sit at z-index 1000-
+     1200). The dropdown is invoked from inside a dialog so it
+     needs to outrank the dialog's own surface. */
+  z-index: 1300;
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.fb-langdrop--compact .fb-langdrop__menu {
-  /* Anchor the compact variant to its right edge so the menu doesn't
-     overflow when the trigger sits near the right edge of the topbar. */
-  left: auto;
-  right: 0;
-}
-
-.fb-langdrop__option {
+.libre-langdrop__option {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -121,19 +117,19 @@
   color: var(--color-text-primary);
   background: transparent;
   border: 0;
-  border-radius: var(--fb-radius-sm, 6px);
+  border-radius: var(--libre-radius-sm, 6px);
   cursor: pointer;
   text-align: left;
-  transition: background var(--fb-motion-snappy, 0.15s ease);
+  transition: background var(--libre-motion-snappy, 0.15s ease);
 }
 
-.fb-langdrop__option:hover,
-.fb-langdrop__option:focus-visible {
+.libre-langdrop__option:hover,
+.libre-langdrop__option:focus-visible {
   background: var(--color-bg-tertiary);
   outline: none;
 }
 
-.fb-langdrop__option--active {
+.libre-langdrop__option--active {
   background: color-mix(
     in srgb,
     var(--color-accent-warm, #e8954a) 14%,
@@ -143,7 +139,7 @@
   font-weight: 600;
 }
 
-.fb-langdrop__check {
+.libre-langdrop__check {
   margin-left: auto;
   font-size: 12px;
   color: var(--color-accent-warm, #e8954a);

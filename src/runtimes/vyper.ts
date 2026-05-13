@@ -37,7 +37,7 @@ import type { RunResult, LogLine } from "./types";
 ///
 /// ## Strategy C — Remote compile service (last resort)
 ///
-/// POST to a `/compile/vyper` endpoint on api.mattssoftware.com.
+/// POST to a `/compile/vyper` endpoint on api.libre.academy.
 /// Real backend; rate-limited; only used when both A and B fail. Not
 /// implemented in the POC — flagged for the design discussion.
 ///

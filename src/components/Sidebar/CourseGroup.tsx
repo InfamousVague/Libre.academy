@@ -7,6 +7,10 @@ import type { Course, Chapter, Lesson } from "../../data/types";
 import LanguageChip from "../LanguageChip/LanguageChip";
 import { ProgressRing } from "../Shared/ProgressRing";
 import ChapterTree from "./ChapterTree";
+import ChapterGrid from "./ChapterGrid";
+import MiniCertBanner from "./MiniCertBanner";
+import { useSidebarVariant } from "./variants/useSidebarVariant";
+import { useT } from "../../i18n/i18n";
 
 export default function CourseGroup({
   course,
@@ -17,6 +21,7 @@ export default function CourseGroup({
   onContextMenu,
   onChapterContextMenu,
   onLessonContextMenu,
+  onCertificates,
 }: {
   course: Course;
   isActiveCourse: boolean;
@@ -34,12 +39,26 @@ export default function CourseGroup({
     isCompleted: boolean,
     e: React.MouseEvent,
   ) => void;
+  /// Forwarded to MiniCertBanner — clicking the banner switches the
+  /// main view to the certificates page. Optional; without it the
+  /// banner is non-interactive.
+  onCertificates?: () => void;
 }) {
+  const t = useT();
   // The active course is always expanded — the learner is working inside
   // it and needs its tree visible. Inactive courses default collapsed;
   // clicking the row expands them inline so the learner can peek
   // without switching focus.
   const [expanded, setExpanded] = useState(isActiveCourse);
+
+  // Sidebar layout choice (Settings → Theme → "Sidebar layout").
+  // Only affects rendering of the ACTIVE course's chapter list —
+  // inactive courses (peeked-into via the row chevron) always use
+  // ChapterTree because the grid format only makes sense for the
+  // course the learner is actively working through. The choice
+  // lives in localStorage and is reactively read here, so flipping
+  // the radio in Settings instantly re-renders this card.
+  const [sidebarVariant] = useSidebarVariant();
 
   const totalLessons = course.chapters.reduce((n, ch) => n + ch.lessons.length, 0);
   const doneLessons = course.chapters.reduce(
@@ -48,46 +67,53 @@ export default function CourseGroup({
   );
   const pct = totalLessons > 0 ? doneLessons / totalLessons : 0;
 
-  // Active course: full card with circular progress ring, always
-  // expanded. The elevated surface + ring treatment advertises "this is
-  // the course you're in" unambiguously. Inside, only the chapter that
-  // contains the active lesson is open by default — other chapters are
-  // collapsed to their header row so the tree doesn't dominate.
+  // Active course: mini certificate banner at the top (preview of
+  // the artefact the learner is working toward), then the chapter
+  // tree below. The previous treatment was a generic "course
+  // header card" with a progress ring; the cert-style banner gives
+  // the same progress signal but frames the learner's session as
+  // "you're working on the cert" rather than "you're in a course",
+  // which matches the way the certificates page treats completed
+  // courses. Auto-collapse logic in ChapterBlock / SectionGroup
+  // already keeps the tree focused on the active lesson — no
+  // changes here. The right-click context menu (export / delete /
+  // settings / reset) hangs off the banner now since the old
+  // course-header card is gone; behaviour is identical.
   if (isActiveCourse) {
     return (
-      <div className="libre__course libre__course--active">
-        <div
-          className="libre__course-card libre__course-card--expanded libre__course-card--active"
-          onContextMenu={onContextMenu}
-        >
-          <div className="libre__course-title libre__course-title--static">
-            <span className="libre__course-active-dot" aria-hidden />
-            <LanguageChip language={course.language} size="xs" iconOnly />
-            <span className="libre__course-name">{course.title}</span>
-            <span
-              className="libre__course-ring"
-              title={`${doneLessons}/${totalLessons} lessons complete`}
-            >
-              <ProgressRing
-                progress={pct}
-                size={28}
-                stroke={2.5}
-                label={`${Math.round(pct * 100)}%`}
-              />
-            </span>
-          </div>
-        </div>
-
+      <div
+        className="libre__course libre__course--active"
+        onContextMenu={onContextMenu}
+      >
+        <MiniCertBanner
+          course={course}
+          doneLessons={doneLessons}
+          totalLessons={totalLessons}
+          onClick={onCertificates}
+          completed={completed}
+        />
         <div className="libre__course-body">
-          <ChapterTree
-            chapters={course.chapters}
-            courseId={course.id}
-            activeLessonId={activeLessonId}
-            completed={completed}
-            onSelectLesson={onSelectLesson}
-            onChapterContextMenu={onChapterContextMenu}
-            onLessonContextMenu={onLessonContextMenu}
-          />
+          {sidebarVariant === "grid" ? (
+            <ChapterGrid
+              chapters={course.chapters}
+              courseId={course.id}
+              activeLessonId={activeLessonId}
+              completed={completed}
+              onSelectLesson={onSelectLesson}
+              onChapterContextMenu={onChapterContextMenu}
+              onLessonContextMenu={onLessonContextMenu}
+            />
+          ) : (
+            <ChapterTree
+              chapters={course.chapters}
+              courseId={course.id}
+              activeLessonId={activeLessonId}
+              completed={completed}
+              onSelectLesson={onSelectLesson}
+              onChapterContextMenu={onChapterContextMenu}
+              onLessonContextMenu={onLessonContextMenu}
+            />
+          )}
         </div>
       </div>
     );
@@ -119,7 +145,7 @@ export default function CourseGroup({
         <span className="libre__course-name">{course.title}</span>
         <span
           className="libre__course-row-ring"
-          title={`${doneLessons}/${totalLessons} lessons complete`}
+          title={t("sidebar.lessonsCompleteTitle", { done: doneLessons, total: totalLessons })}
         >
           <ProgressRing progress={pct} size={18} stroke={2} label="" />
         </span>

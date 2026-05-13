@@ -46,8 +46,17 @@ function unsupportedInstallResult(action: string): InstallResult {
   };
 }
 
-export function useAiChatRemote(model?: string): UseAiChat {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+export function useAiChatRemote(
+  model?: string,
+  /// Optional starting messages — kept signature-parity with
+  /// `useAiChatLocal` so the picker in useAiChat.ts can typecheck
+  /// `typeof useAiChatLocal`. The remote variant is used on web /
+  /// mobile where the tray's session feature doesn't run.
+  initialMessages?: ChatMessage[],
+): UseAiChat {
+  const [messages, setMessages] = useState<ChatMessage[]>(
+    () => initialMessages ?? [],
+  );
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [probe, setProbe] = useState<ProbeResult | null>(null);
@@ -135,7 +144,7 @@ export function useAiChatRemote(model?: string): UseAiChat {
   }, [refreshProbe]);
 
   const send = useCallback(
-    async (prompt: string, systemPrompt?: string) => {
+    async (prompt: string, systemPrompt?: string, augmented?: string) => {
       const url = aiHostUrl("/api/chat");
       if (!url) {
         setError(
@@ -158,8 +167,16 @@ export function useAiChatRemote(model?: string): UseAiChat {
       // send INCLUDES the prompt (Ollama wants the full back-and-forth).
       // `setMessages` returns the previous list synchronously via the
       // updater fn, so we capture it for the request body.
+      //
+      // `augmented` (when present) is what the LLM receives in place
+      // of the displayed text. Same split as the local hook: the
+      // chat panel renders `content`; the model receives the
+      // augmented version. The wire payload below unwraps it.
       let history: ChatMessage[] = [];
-      const userMsg: ChatMessage = { role: "user", content: prompt };
+      const userMsg: ChatMessage =
+        augmented && augmented.trim() !== prompt.trim()
+          ? { role: "user", content: prompt, augmented }
+          : { role: "user", content: prompt };
       setMessages((prev) => {
         history = [...prev, userMsg];
         return history;
@@ -175,7 +192,16 @@ export function useAiChatRemote(model?: string): UseAiChat {
       if (systemPrompt) {
         reqMessages.push({ role: "system", content: systemPrompt });
       }
-      reqMessages.push(...history);
+      // Unwrap any `augmented` payloads before sending to the wire.
+      // The model never sees the `augmented` field on the message
+      // shape — it gets the augmented text on `content`.
+      for (const m of history) {
+        reqMessages.push(
+          m.role === "user" && m.augmented
+            ? { role: m.role, content: m.augmented }
+            : m,
+        );
+      }
 
       try {
         const r = await fetch(url, {
@@ -306,6 +332,17 @@ export function useAiChatRemote(model?: string): UseAiChat {
     [],
   );
 
+  /// Hot-swap conversation log (parity with `useAiChatLocal`).
+  /// Aborts any in-flight network read first so the new
+  /// conversation starts from a clean slate.
+  const loadMessages = useCallback((msgs: ChatMessage[]) => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setMessages(msgs);
+    setStreaming(false);
+    setError(null);
+  }, []);
+
   return {
     messages,
     streaming,
@@ -319,5 +356,6 @@ export function useAiChatRemote(model?: string): UseAiChat {
     startOllama,
     pullModel,
     setupBusy,
+    loadMessages,
   };
 }

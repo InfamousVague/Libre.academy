@@ -47,13 +47,20 @@ interface Props {
   /// the diff list shows raw IDs. Wired by the host since SyncDebugPanel
   /// doesn't import course state directly.
   describeLesson?: (courseId: string, lessonId: string) => string;
+  /// When true, this panel is being composed inside another pane's
+  /// SettingsPage wrapper (the combined Data & storage pane). The
+  /// panel only renders its content body; its own outermost
+  /// section / title strip is suppressed so the parent owns the
+  /// page-level title. The data flow + table chrome stays
+  /// identical either way — the flag only gates the outer header.
+  embedded?: boolean;
 }
 
 interface ServerSnapshot {
   progress: ProgressRow[];
   fetchedAt: number;
   /// Per-endpoint availability. Some relay deployments only ship the
-  /// `/fishbones/progress` route — `solutions` and `settings` 404 on
+  /// `/progress` route — `solutions` and `settings` 404 on
   /// older / staging relays. We track these separately so the panel
   /// can display "Progress: live · Settings: unavailable" rather
   /// than flagging the whole sync as broken.
@@ -68,7 +75,14 @@ export default function SyncDebugPanel({
   realtime,
   history,
   describeLesson,
+  embedded,
 }: Props) {
+  // `embedded` is a layout-only signal; we just stash it for the
+  // render output below so the JSX can branch its wrapper element.
+  // No behavioural changes — the panel's data fetching, diff
+  // computation, and pull/push handlers are identical between
+  // standalone and embedded modes.
+  void embedded;
   const [server, setServer] = useState<ServerSnapshot | null>(null);
   const [loadingSnapshot, setLoadingSnapshot] = useState(false);
   const [snapshotError, setSnapshotError] = useState<string | null>(null);
@@ -176,10 +190,10 @@ export default function SyncDebugPanel({
   };
 
   // Split server rows into (a) real completions and (b) library
-  // markers. Markers ride the `/fishbones/progress` endpoint as
+  // markers. Markers ride the `/progress` endpoint as
   // sentinel rows — they encode "desktop has this course
   // installed" so mobile can converge its visible library list
-  // without a working `/fishbones/settings` endpoint. They're not
+  // without a working `/settings` endpoint. They're not
   // real completions, so they MUST be excluded from the diff /
   // count math (otherwise the in-sync banner says "3293 completions
   // match" when ~11 of those are actually library markers, and
@@ -247,33 +261,45 @@ export default function SyncDebugPanel({
     realtime.pendingPushCount.settings;
 
   return (
-    <section className="fb-sync-debug">
-      <div className="fb-sync-debug__head">
-        <h3 className="libre-settings-section">Sync</h3>
-        <p className="libre-settings-blurb">
-          Live status of the cross-device sync bus. Use the actions
-          below if your devices look out of sync.
-        </p>
-      </div>
+    <section
+      className={
+        "libre-sync-debug" +
+        (embedded ? " libre-sync-debug--embedded" : "")
+      }
+    >
+      {/* Skip the panel's own title strip when nested under
+          another pane's SettingsPage — the parent header already
+          covers "this is the sync surface". Standalone mode keeps
+          the h3 so the panel reads as self-contained if it ever
+          gets rendered outside the combined Data & storage pane. */}
+      {!embedded && (
+        <div className="libre-sync-debug__head">
+          <h3 className="libre-settings-section">Sync</h3>
+          <p className="libre-settings-blurb">
+            Live status of the cross-device sync bus. Use the actions
+            below if your devices look out of sync.
+          </p>
+        </div>
+      )}
 
       {!cloud.signedIn ? (
-        <div className="fb-sync-debug__signed-out">
+        <div className="libre-sync-debug__signed-out">
           Sign in above to see sync status.
         </div>
       ) : (
         <>
-          <div className="fb-sync-debug__status">
-            <div className="fb-sync-debug__status-row">
-              <span className="fb-sync-debug__label">Connection</span>
+          <div className="libre-sync-debug__status">
+            <div className="libre-sync-debug__status-row">
+              <span className="libre-sync-debug__label">Connection</span>
               <StatusBadge status={realtime.status} error={realtime.error} />
             </div>
-            <div className="fb-sync-debug__status-row">
-              <span className="fb-sync-debug__label">Relay</span>
-              <code className="fb-sync-debug__url">{cloud.relayUrl}</code>
+            <div className="libre-sync-debug__status-row">
+              <span className="libre-sync-debug__label">Relay</span>
+              <code className="libre-sync-debug__url">{cloud.relayUrl}</code>
             </div>
-            <div className="fb-sync-debug__status-row">
-              <span className="fb-sync-debug__label">Pending push</span>
-              <span className="fb-sync-debug__value">
+            <div className="libre-sync-debug__status-row">
+              <span className="libre-sync-debug__label">Pending push</span>
+              <span className="libre-sync-debug__value">
                 {totalPending === 0 ? (
                   "—"
                 ) : (
@@ -287,7 +313,7 @@ export default function SyncDebugPanel({
             </div>
           </div>
 
-          <div className="fb-sync-debug__counts">
+          <div className="libre-sync-debug__counts">
             <CountTile
               label="On this device"
               count={history.length}
@@ -318,7 +344,7 @@ export default function SyncDebugPanel({
           )}
 
           {inSync && server !== null && (
-            <div className="fb-sync-debug__inline-ok">
+            <div className="libre-sync-debug__inline-ok">
               In sync. {history.length} completion
               {history.length === 1 ? "" : "s"}
               {serverLibraryMarkers.length > 0 ? (
@@ -332,7 +358,7 @@ export default function SyncDebugPanel({
           )}
 
           {server !== null && !inSync && (
-            <div className="fb-sync-debug__diff">
+            <div className="libre-sync-debug__diff">
               {localOnly.length > 0 && (
                 <DiffSection
                   title={`On device but not on server (${localOnly.length})`}
@@ -371,7 +397,7 @@ export default function SyncDebugPanel({
           )}
 
           {bigDrift.length > 0 && (
-            <div className="fb-sync-debug__drift-note">
+            <div className="libre-sync-debug__drift-note">
               <strong>{bigDrift.length}</strong> row
               {bigDrift.length === 1 ? "" : "s"} have completion times
               that differ between device and server by more than 30 days.
@@ -381,10 +407,10 @@ export default function SyncDebugPanel({
             </div>
           )}
 
-          <div className="fb-sync-debug__actions">
+          <div className="libre-sync-debug__actions">
             <button
               type="button"
-              className="fb-sync-debug__action"
+              className="libre-sync-debug__action"
               onClick={onPull}
               disabled={pulling}
             >
@@ -393,7 +419,7 @@ export default function SyncDebugPanel({
             </button>
             <button
               type="button"
-              className="fb-sync-debug__action"
+              className="libre-sync-debug__action"
               onClick={onPushAll}
               disabled={pushing || history.length === 0}
             >
@@ -402,7 +428,7 @@ export default function SyncDebugPanel({
             </button>
             <button
               type="button"
-              className="fb-sync-debug__action"
+              className="libre-sync-debug__action"
               onClick={refreshSnapshot}
               disabled={loadingSnapshot}
             >
@@ -411,7 +437,7 @@ export default function SyncDebugPanel({
             </button>
           </div>
 
-          {actionMsg && <div className="fb-sync-debug__msg">{actionMsg}</div>}
+          {actionMsg && <div className="libre-sync-debug__msg">{actionMsg}</div>}
         </>
       )}
     </section>
@@ -426,14 +452,14 @@ export default function SyncDebugPanel({
 /// "is my library synced?", "are my saved solutions synced?".
 /// We translate route availability into those concepts:
 ///
-///   - **Progress** — driven by `/fishbones/progress`. Always
+///   - **Progress** — driven by `/progress`. Always
 ///     required; if it's down everything else is too.
-///   - **Library** — driven by `/fishbones/progress` (we encode
+///   - **Library** — driven by `/progress` (we encode
 ///     marker rows there to work around 404s on `/settings`). So
 ///     "Library: live" reflects "the relay holds N marker rows".
 ///     "Library: empty" means desktop hasn't published its
 ///     installed list yet (or has zero books).
-///   - **Solutions** — driven by `/fishbones/solutions`, which
+///   - **Solutions** — driven by `/solutions`, which
 ///     several deployments don't have. When unavailable we show
 ///     a quiet "server doesn't support yet" pill rather than a
 ///     scary error, because nothing the user does is blocked by
@@ -460,7 +486,7 @@ function FeatureStatusRow({
     libraryCount > 0 ? "ok" : "empty";
 
   return (
-    <div className="fb-sync-debug__endpoints">
+    <div className="libre-sync-debug__endpoints">
       <FeaturePill name="Progress" status="ok" detail="live" />
       <FeaturePill
         name="Library"
@@ -502,11 +528,11 @@ function FeaturePill({
 }) {
   return (
     <span
-      className={`fb-sync-debug__endpoint fb-sync-debug__endpoint--${status}`}
+      className={`libre-sync-debug__endpoint libre-sync-debug__endpoint--${status}`}
       title={title}
     >
-      <span className="fb-sync-debug__endpoint-name">{name}</span>
-      <span className="fb-sync-debug__endpoint-state">{detail}</span>
+      <span className="libre-sync-debug__endpoint-name">{name}</span>
+      <span className="libre-sync-debug__endpoint-state">{detail}</span>
     </span>
   );
 }
@@ -528,13 +554,13 @@ function StatusBadge({
           : "Idle";
   return (
     <span
-      className={`fb-sync-debug__badge fb-sync-debug__badge--${status}`}
+      className={`libre-sync-debug__badge libre-sync-debug__badge--${status}`}
       title={error ?? undefined}
     >
-      <span className="fb-sync-debug__dot" aria-hidden />
+      <span className="libre-sync-debug__dot" aria-hidden />
       {label}
       {status === "error" && error && (
-        <span className="fb-sync-debug__badge-err">— {error}</span>
+        <span className="libre-sync-debug__badge-err">— {error}</span>
       )}
     </span>
   );
@@ -554,12 +580,12 @@ function CountTile({
   error?: string | null;
 }) {
   return (
-    <div className={`fb-sync-debug__tile fb-sync-debug__tile--${tone}`}>
-      <span className="fb-sync-debug__tile-value">
+    <div className={`libre-sync-debug__tile libre-sync-debug__tile--${tone}`}>
+      <span className="libre-sync-debug__tile-value">
         {error ? "—" : loading && count === null ? "…" : count ?? "—"}
       </span>
-      <span className="fb-sync-debug__tile-label">{label}</span>
-      {error && <span className="fb-sync-debug__tile-err">{error}</span>}
+      <span className="libre-sync-debug__tile-label">{label}</span>
+      {error && <span className="libre-sync-debug__tile-err">{error}</span>}
     </div>
   );
 }
@@ -582,14 +608,14 @@ function DiffSection({
   ctaLoading?: boolean;
 }) {
   return (
-    <div className="fb-sync-debug__diff-section">
-      <div className="fb-sync-debug__diff-head">
-        <span className="fb-sync-debug__diff-title">{title}</span>
+    <div className="libre-sync-debug__diff-section">
+      <div className="libre-sync-debug__diff-head">
+        <span className="libre-sync-debug__diff-title">{title}</span>
         {cta && onCta && (
           <button
             type="button"
             className={
-              "fb-sync-debug__diff-cta" +
+              "libre-sync-debug__diff-cta" +
               (ctaTone === "primary" ? " is-primary" : "")
             }
             onClick={onCta}
@@ -599,16 +625,16 @@ function DiffSection({
           </button>
         )}
       </div>
-      <ul className="fb-sync-debug__diff-list">
+      <ul className="libre-sync-debug__diff-list">
         {rows.map((r) => (
           <li key={r.key}>
-            <span className="fb-sync-debug__diff-label">{r.label}</span>
-            <span className="fb-sync-debug__diff-sub">{r.sub}</span>
+            <span className="libre-sync-debug__diff-label">{r.label}</span>
+            <span className="libre-sync-debug__diff-sub">{r.sub}</span>
           </li>
         ))}
       </ul>
       {more > 0 && (
-        <span className="fb-sync-debug__diff-more">… and {more} more</span>
+        <span className="libre-sync-debug__diff-more">… and {more} more</span>
       )}
     </div>
   );

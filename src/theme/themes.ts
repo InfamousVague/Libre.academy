@@ -9,6 +9,8 @@
 
 export type ThemeName =
   | "default-dark"
+  | "cipher-light"
+  | "cipher-dark"
   | "synthwave"
   | "claude-code-dark"
   | "ayu-light"
@@ -39,7 +41,22 @@ export const THEMES: ThemeMeta[] = [
   {
     id: "default-dark",
     label: "Libre Dark",
-    description: "The default monochrome dark theme.",
+    description:
+      "The default dark theme — pure-white text on deep charcoal with the ribbon-snake orange as the accent.",
+    monacoTheme: "vs-dark",
+  },
+  {
+    id: "cipher-light",
+    label: "Libre Light",
+    description:
+      "Cool-grey glass on cream paper with the Libre amber accent — daytime layout chrome, brand-orange highlights.",
+    monacoTheme: "vs",
+  },
+  {
+    id: "cipher-dark",
+    label: "Cipher Dark",
+    description:
+      "Deep navy chrome with the Libre amber accent — slate-blue text on a near-black app surface, no sidebar lift.",
     monacoTheme: "vs-dark",
   },
   {
@@ -57,7 +74,8 @@ export const THEMES: ThemeMeta[] = [
   {
     id: "ayu-light",
     label: "Ayu Light",
-    description: "Clean off-white app chrome with dark code editor for contrast.",
+    description:
+      "Clean off-white app chrome with the Libre amber accent (Ayu's stock orange swapped for the brand colour).",
     // Light themes intentionally pair with the DARK Monaco theme:
     // syntax-highlighting palettes designed for white backgrounds
     // tend to be low-saturation pastels that wash out next to the
@@ -143,9 +161,14 @@ export const THEMES: ThemeMeta[] = [
 
 const STORAGE_KEY = "libre:theme";
 
-/// Read the user's stored theme choice. Falls back to the system preference
-/// between dark (Libre Dark) and light (Ayu Light) so first-run still
-/// feels right.
+/// Read the user's stored theme choice. First-run default is the
+/// dark theme (Libre Dark) regardless of the OS `prefers-color-scheme`
+/// setting — the app's visual identity is dark-first (monochrome code
+/// surfaces, accent-on-black brand palette), and users on light-mode
+/// OSes were getting a jarring Ayu Light first paint that didn't
+/// match any of the marketing screenshots. They can still switch to
+/// any of the light themes from Settings; once they do, that choice
+/// is stored here and survives reloads.
 export function loadTheme(): ThemeName {
   try {
     const stored = localStorage.getItem(STORAGE_KEY) as ThemeName | null;
@@ -153,8 +176,7 @@ export function loadTheme(): ThemeName {
   } catch {
     /* private mode / SSR — fall through */
   }
-  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  return prefersDark ? "default-dark" : "ayu-light";
+  return "default-dark";
 }
 
 /// Theme IDs that render as a LIGHT app surface. Used to flip the
@@ -164,6 +186,7 @@ export function loadTheme(): ThemeName {
 const LIGHT_THEMES: ReadonlySet<ThemeName> = new Set([
   "ayu-light",
   "catppuccin-latte",
+  "cipher-light",
 ]);
 
 /// Predicate exposed for consumers that need to branch on light vs

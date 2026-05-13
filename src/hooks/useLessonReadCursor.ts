@@ -25,7 +25,7 @@
 ///     survives lesson-body re-renders. Effect dep is
 ///     `[article, currentBlock, html]` — `html` covers the
 ///     dangerouslySetInnerHTML rebuild that would otherwise leave
-///     `.fb-tts-current` orphaned on a detached node.
+///     `.libre-tts-current` orphaned on a detached node.
 ///   - User-scroll detection: any scroll event outside a known
 ///     "programmatic-scroll window" pauses auto-scroll for
 ///     `pauseAfterUserScrollMs` so the narration cursor doesn't
@@ -85,7 +85,7 @@ interface UseCursorResult {
   /// 0-indexed block currently being narrated, or null when audio
   /// progress is idle / unknown. Matches `data-tts-block="<N>"`.
   /// Surfaced for tests / debug overlays / sentence-level extensions
-  /// — the hook applies the `.fb-tts-current` class itself.
+  /// — the hook applies the `.libre-tts-current` class itself.
   currentBlock: number | null;
   /// Total annotated blocks in the article (helpful for debugging).
   totalBlocks: number;
@@ -95,7 +95,7 @@ interface UseCursorResult {
 /// current narration position. Stylesheets read this name; tests
 /// can match against it. Centralised here so consumer JSX doesn't
 /// have to repeat it.
-const CURRENT_CLASS = "fb-tts-current";
+const CURRENT_CLASS = "libre-tts-current";
 
 const DEFAULT_PAUSE = 6_000;
 /// Code-block length cap. The TTS pipeline replaces a fenced code

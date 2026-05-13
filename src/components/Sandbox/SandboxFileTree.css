@@ -1,0 +1,378 @@
+/* Sandbox file tree. Renders inside the Sandbox sidebar slot —
+   see App.tsx's view-gate on the sidebar. Visual language
+   borrows from VS Code's Explorer pane: thin rows, soft hover,
+   subtle indent guides via depth padding rather than visible
+   guide-lines. The active row is a separate visual treatment —
+   a white squircle pill with the Hologram primitive layered on
+   top, matching the active project row's holographic accent so
+   the sidebar reads as one consistent "selected = holographic"
+   visual system. */
+
+.libre-sbft {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* ---- Header strip ---------------------------------------------- */
+
+.libre-sbft__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 14px 8px;
+}
+
+.libre-sbft__eyebrow {
+  /* Bumped one tier so the eyebrow reads at the same weight as
+     the project switcher's section labels. */
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+.libre-sbft__head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.libre-sbft__head-btn {
+  /* Bumped to 28×28 to host the base-tier icons (15px) without
+     crowding. Matches the project-create "+" button's chrome
+     so the two affordances feel paired. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--libre-radius-sm, 6px);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.libre-sbft__head-btn:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-border-default);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.libre-sbft__count {
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-tertiary);
+  letter-spacing: 0.02em;
+  margin-left: 6px;
+}
+
+/* ---- List ------------------------------------------------------- */
+
+.libre-sbft__list {
+  list-style: none;
+  margin: 0;
+  /* Side padding on the root list so the active row's squircle
+     pill has breathing room on both edges. Without this, the pill
+     would extend to the sidebar's outer border and lose its
+     "discrete shape" affordance. Nested lists inherit zero
+     padding since their depth indent is supplied inline per row. */
+  padding: 0 6px;
+}
+
+.libre-sbft__list .libre-sbft__list {
+  padding: 0;
+}
+
+/* Root level needs a hair of top breathing room so the first row
+   doesn't crash into the header strip above. */
+.libre-sbft__list--root {
+  padding-top: 2px;
+  padding-bottom: 8px;
+}
+
+/* ---- Row (folder or file) -------------------------------------- */
+
+.libre-sbft__row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  /* `padding-left` is set inline per row via depth × 12 + 10;
+     the right padding lives here so the hover background fills
+     the full row width without clipping the label. Project rows
+     above use the same 7px/12px combo — with the row-actions now
+     absolutely positioned (so their 26×26 buttons don't push the
+     flex line height past the 20px icon), the file rows can run
+     the same vertical air as projects and the two sections share
+     an identical row height. */
+  padding: 7px 8px 7px 0;
+  background: transparent;
+  border: 0;
+  /* Tighter corner radius (was 12 → 8 → 4px) — the active state
+     is no longer a chunky pill; it's a thin holographic strip on
+     the left edge plus a subtle background wash. 4px keeps the
+     hover wash from rendering as a hard rectangle while reading
+     as obviously squarer than the old squircle. */
+  border-radius: 4px;
+  color: var(--color-text-secondary);
+  font: inherit;
+  /* Bumped from 12.5 → 14 so the file labels read at the same
+     weight as the project switcher's project names. The tree
+     was previously pinching its content into a much smaller
+     type tier than the rest of the sidebar. */
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 100ms ease, color 100ms ease;
+}
+
+.libre-sbft__row:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-primary);
+}
+
+[data-theme="light"] .libre-sbft__row:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Active file row — a thin holographic strip sits at the left
+   edge (see `.libre-sbft__row-accent` below) and the row itself
+   carries a subtle background wash to mark the selection. The
+   previous full-white-pill treatment has been retired so the
+   active row no longer dominates the file tree; the foil now
+   communicates "selected" via a small rounded line instead of
+   the entire row's background. */
+.libre-sbft__row--active,
+.libre-sbft__row--active:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-primary);
+}
+
+[data-theme="light"] .libre-sbft__row--active,
+[data-theme="light"] .libre-sbft__row--active:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* Holographic accent strip on the active file row. Absolutely
+   positioned along the row's left edge, with rounded corners
+   on both ends — reads as a small iridescent indicator line
+   rather than a full-row foil. The inner Hologram primitive
+   inherits the strip's border-radius so the rainbow paint
+   stays clipped to the rounded shape. */
+.libre-sbft__row-accent {
+  position: absolute;
+  /* Top / bottom / left / width all match the project switcher's
+     `__project-accent` so the active indicator on a project and
+     the active indicator on a file render at exactly the same
+     dimensions — the sidebar's two selection markers are now
+     visually identical. Slimmed in the 2026-05 pass: width
+     dropped 3px → 2px and top/bottom inset bumped 6px → 9px so
+     the indicator reads as a quiet hairline rather than a
+     chunky bar. The hologram sparkle mask was also re-scaled
+     (see `__row-accent > .libre-holo__foil` below) so the
+     individual rainbow symbols stop appearing oversized
+     against the thinner strip. */
+  top: 9px;
+  bottom: 9px;
+  left: 4px;
+  width: 2px;
+  border-radius: 1px;
+  /* White base so the indicator reads as a white strip; the
+     Hologram primitive inside lays `multiply`-blended rainbow
+     pigment INTO the white, matching the active project row's
+     accent strip + the rest of the holographic "you are here"
+     family across the app. */
+  background: var(--color-text-primary, #ffffff);
+  /* The Hologram primitive blends with `mix-blend-mode`, which
+     needs a stacking context to keep its blend confined to the
+     strip. `isolation: isolate` creates that context without
+     committing to an explicit z-index. */
+  isolation: isolate;
+  /* Clip the foil to the strip's rounded shape — the Hologram
+     primitive renders inset: 0 inside this span and would spill
+     past the border-radius corners without overflow:hidden. */
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.libre-sbft__row-accent > .libre-holo {
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Override the Hologram primitive's default sparkle scale
+   inside this narrow accent strip. The default `mask-size: 5%
+   14%` is calibrated for ~100px+ surfaces (buttons, cards,
+   covers); applied to a 2×~140px hairline pipe it stretches
+   each sparkle into a 20px-tall vertical streak, which is the
+   "symbols are too big" complaint. Pinning to absolute pixel
+   sizes keeps the sparkles as small round dots regardless of
+   how tall the row is. */
+.libre-sbft__row-accent .libre-holo__foil {
+  /* `!important` because the snake-variant rule
+     `.libre-holo--sparkle-snake .libre-holo__foil` carries the
+     same specificity (two class selectors) and sets a much
+     bigger `mask-size: 8% 22%`. The hairline strip needs the
+     tight 4×4px tiling regardless of which sparkle stencil
+     is in use — otherwise the snake silhouette stretches into
+     a vertical streak inside the 2px-wide pipe. Hard pin wins
+     over equal-specificity defaults. */
+  mask-size: 4px 4px !important;
+  -webkit-mask-size: 4px 4px !important;
+}
+
+/* Folder rows skew slightly bolder so the visual hierarchy
+   reads at a glance — folder > file. */
+.libre-sbft__row--folder {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* ---- Inner slots (caret / icon / label) ----------------------- */
+
+.libre-sbft__caret {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Sized for the base-tier chevron (15px) with a hair of
+     breathing room. */
+  width: 16px;
+  height: 20px;
+  color: var(--color-text-tertiary);
+}
+
+/* Trailing chevron — folder rows now render their disclosure
+   indicator on the RIGHT edge of the row instead of the left.
+   Left-aligning the folder icon makes folder icons line up with
+   file icons one tier down, so the tree reads as a coherent
+   vertical column. The trailing caret sits before the absolute-
+   positioned `__row-actions`; hovering swaps the actions in over
+   the chevron (the row click still toggles expand/collapse, so
+   the indicator's hover-time disappearance doesn't cost the user
+   any affordance). */
+.libre-sbft__caret--trailing {
+  margin-left: auto;
+  /* Right padding nudge so the chevron doesn't sit flush against
+     the row's right edge — keeps a sliver of air before the
+     hover-action buttons start. */
+  margin-right: 4px;
+}
+
+.libre-sbft__icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Bumped to 20×20 to fit the base-tier file/folder icons
+     (15px) + a hair of breathing room. */
+  width: 20px;
+  height: 20px;
+}
+
+.libre-sbft__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.35;
+}
+
+/* ---- Inline action buttons on each row ------------------------- */
+
+/* Action buttons (rename / delete on file rows; new-file / new-
+   folder / delete on folder rows) — absolutely positioned at the
+   row's right edge, same pattern the project switcher uses for
+   its delete button. Why absolute: the buttons are 26×26 to host
+   base-tier icons; as in-flow flex children they'd push the row's
+   flex line height up to 26 (versus the icon + label's 20), and
+   the file rows would render 6px taller than the project rows
+   alongside them. Lifting the actions out of the flex flow keeps
+   the row's intrinsic height locked to the icon's 20px and the
+   row visually matches the project switcher. */
+.libre-sbft__row-actions {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  z-index: 2;
+  transition: opacity 100ms ease;
+  pointer-events: none;
+}
+
+.libre-sbft__row:hover .libre-sbft__row-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.libre-sbft__row-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Bumped to 26×26 to host the base-tier icons (15px). */
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: var(--libre-radius-sm, 6px);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: color 100ms ease, background 100ms ease;
+}
+
+.libre-sbft__row-btn:hover {
+  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.libre-sbft__row-btn--danger:hover {
+  color: #fff;
+  background: var(--color-danger, #b04b4b);
+}
+
+/* The active row now uses a subtle dark-tinted background plus a
+   holographic left-edge strip, so the row buttons can reuse the
+   base styling — no inverted-on-white overrides needed. The
+   danger-hover keeps its red wash regardless of active state. */
+
+/* ---- Inline create / rename input ------------------------------ */
+
+.libre-sbft__row--input {
+  background: rgba(255, 255, 255, 0.05);
+  cursor: text;
+}
+
+.libre-sbft__input {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 8px;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--libre-radius-sm, 6px);
+  color: var(--color-text-primary);
+  font: inherit;
+  /* Match the row's new 14px so the placeholder + typing land at
+     the same weight as the surrounding rows. */
+  font-size: 14px;
+  outline: none;
+}
+
+.libre-sbft__input:focus {
+  border-color: var(--color-accent, #d4c5a1);
+}

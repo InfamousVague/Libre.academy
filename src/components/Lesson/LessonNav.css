@@ -28,13 +28,13 @@
   padding: 10px 14px;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   color: var(--color-text-secondary);
   font-family: inherit;
   font-size: 13px;
   text-align: left;
   cursor: pointer;
-  transition: color var(--fb-motion-snappy), background var(--fb-motion-snappy), border-color var(--fb-motion-snappy);
+  transition: color var(--libre-motion-snappy), background var(--libre-motion-snappy), border-color var(--libre-motion-snappy);
 }
 
 .libre-lesson-nav-btn:hover:not(:disabled) {
@@ -51,15 +51,103 @@
 .libre-lesson-nav-btn--next {
   justify-content: flex-end;
   text-align: right;
-  /* Slight emphasis so the forward action reads as the default affordance. */
+  /* Dark-gray base ("the same dark gray as Prev, but with a
+     holographic accent that signals the forward action").
+     `position: relative` + `overflow: hidden` + `isolation:
+     isolate` set up the stacking context the inner Hologram
+     primitive needs so the foil clips to the button's rounded
+     edge and can't bleed onto siblings. */
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
   background: var(--color-bg-tertiary);
   color: var(--color-text-primary);
 }
 
 .libre-lesson-nav-btn--next:hover:not(:disabled) {
-  background: var(--color-text-primary, #ffffff);
-  color: var(--color-bg-primary, #000000);
-  border-color: var(--color-text-primary, #ffffff);
+  /* Same dark-gray base on hover — the hologram is the
+     emphasis, swapping the bg to white would fight the foil's
+     plus-lighter blend. Only nudge the border to indicate
+     interactivity. */
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-strong);
+}
+
+/* The hologram foil paints over the dark surface via
+   plus-lighter — gorgeous on the default-dark / libre-dark
+   themes (rainbow glow against near-black) but on light
+   themes the same blend washes out into a milky band against
+   the cream surface. Gate visibility to dark themes only. The
+   light-theme path falls back to the plain dark-gray button
+   (no foil). */
+[data-theme="light"] .libre-lesson-nav-btn--next .libre-holo {
+  display: none;
+}
+
+/* Lift the label + arrow above the foil so the text stays
+   crisp. The button itself is the positioning context
+   (isolation: isolate above), so z-index 1 is enough. Mirrors
+   the same trick the CTA variant uses lower down in this file. */
+.libre-lesson-nav-btn--next .libre-lesson-nav-text,
+.libre-lesson-nav-btn--next .libre-lesson-nav-arrow {
+  position: relative;
+  z-index: 1;
+}
+
+/* CTA variant — applied when the next button doubles as
+   "mark read & next" on reading-only lessons. Promotes the
+   button to the brand-accent base (white on default-dark) so
+   the hologram has a bright canvas to composite over, and
+   sets up the positioning context the Hologram primitive
+   needs: position:relative + overflow:hidden + isolation:
+   isolate. The inner text + arrow get z-index lifted so they
+   paint above the foil overlay. */
+.libre-lesson-nav-btn--cta {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--color-accent, var(--color-text-primary, #ffffff));
+  color: var(--color-accent-fg, var(--color-bg-primary, #000000));
+  border-color: var(--color-accent, var(--color-text-primary, #ffffff));
+  font-weight: 600;
+}
+
+.libre-lesson-nav-btn--cta:hover:not(:disabled) {
+  background: var(--color-accent, var(--color-text-primary, #ffffff));
+  color: var(--color-accent-fg, var(--color-bg-primary, #000000));
+  border-color: var(--color-accent, var(--color-text-primary, #ffffff));
+  /* Slight opacity tick on hover instead of the standard
+     swap — the foil + base together are already the
+     emphasis; a colour swap on top fights the hologram. */
+  opacity: 0.96;
+}
+
+/* Lift the label, arrow, and middle-title stacks above the
+   hologram overlay so the text remains readable. The button
+   itself is the positioning context (isolation: isolate
+   above), so z-index 1 is enough — no need to fight with
+   higher stacking contexts. */
+.libre-lesson-nav-btn--cta .libre-lesson-nav-text,
+.libre-lesson-nav-btn--cta .libre-lesson-nav-arrow {
+  position: relative;
+  z-index: 1;
+}
+
+/* The label inside the CTA inherits the accent-fg colour; the
+   muted shortcut hint inside it would otherwise paint at the
+   tertiary text colour from the base rule and disappear
+   against the white base. Override to currentColor + a
+   transparent fill so the chip stays visible. */
+.libre-lesson-nav-btn--cta .libre-lesson-nav-label {
+  color: inherit;
+  opacity: 1;
+}
+
+.libre-lesson-nav-btn--cta .libre-shortcut-hint {
+  color: currentColor;
+  background: transparent;
+  border-color: currentColor;
 }
 
 .libre-lesson-nav-arrow {

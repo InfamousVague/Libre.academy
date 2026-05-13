@@ -169,14 +169,25 @@ export interface Course {
   translations?: import("./locales").TranslationOverlay<
     import("./locales").CourseTranslation
   >;
-  /// Distinguishes book-derived linear courses from kata-style challenge
-  /// packs. Missing OR "course" means it's a linear course (default for
-  /// everything imported before this field was added). "challenges" means
-  /// the chapters are difficulty tiers and lessons carry `topic` tags.
-  /// Shapes are identical so the same UI, persistence, and progress
-  /// tracking apply — the flag is purely a classification for the
-  /// sidebar, library, and profile views.
-  packType?: "course" | "challenges";
+  /// Classification for the library / sidebar / profile views.
+  /// All three packType variants share the same on-disk shape
+  /// (chapters → lessons), so persistence + progress tracking +
+  /// the lesson reader treat them identically; the flag only
+  /// affects how the catalog GROUPS and displays them.
+  ///
+  ///   - "course" (or missing) — book-derived linear curricula.
+  ///     Chapter-major prose. Default for everything imported
+  ///     before this field existed.
+  ///   - "challenges" — kata-style packs. Chapters are
+  ///     difficulty tiers, lessons carry `topic` tags. Sibling
+  ///     packs for the same language are deduped by canonical
+  ///     `-handwritten` suffix.
+  ///   - "track" — language curriculums in the Exercism mould
+  ///     (concept exercises in prerequisite order + practice
+  ///     exercises). Distinct library section between Books and
+  ///     Challenges; card layout uses the language icon as the
+  ///     visual anchor rather than a cover photo.
+  packType?: "course" | "challenges" | "track";
   /// Epoch-ms timestamp of the most recent cover-artwork extraction.
   /// When present, the Library + Sidebar render the PNG at
   /// `<courses_dir>/<id>/cover.png` via the `load_course_cover` Tauri
@@ -642,6 +653,17 @@ export function filterCourseForDesktop(course: Course): Course {
 /// on disk) counts as "course" so nothing changes for existing data.
 export function isChallengePack(course: Course): boolean {
   return course.packType === "challenges";
+}
+
+/// Exercism-style language curriculums — the third packType
+/// variant added alongside `course` / `challenges`. Library
+/// renders them as a distinct section with language-icon cards
+/// (no cover art), so the catalog has three lanes: Books,
+/// Tracks, Challenges. Predicate centralises the check so
+/// future additions (multi-track filters, dedupe rules, the
+/// `categorize` partitioner) all agree on what counts.
+export function isExerciseTrack(course: Course): boolean {
+  return course.packType === "track";
 }
 
 /** Canonicalize a user or accepted-answer string for short-answer matching. */

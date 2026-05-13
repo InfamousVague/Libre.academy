@@ -9,6 +9,10 @@ import {
 } from "../../data/types";
 import { localizedLesson } from "../../data/localize";
 import { useLocale } from "../../hooks/useLocale";
+import { useKeybinding } from "../../hooks/useKeybinding";
+import { setRunStatus } from "../../hooks/useRunStatus";
+import { fireHaptic } from "../../lib/haptics";
+import { track } from "../../lib/track";
 import { Icon } from "@base/primitives/icon";
 import { panelLeftOpen } from "@base/primitives/icon/icons/panel-left-open";
 import "@base/primitives/icon/icon.css";
@@ -21,6 +25,7 @@ import {
   openPhonePopout,
   closePhonePopout,
   makePhonePreviewBus,
+  type PhonePreviewMsg,
 } from "../../lib/phonePopout";
 import Workbench from "../Workbench/Workbench";
 import MissingToolchainBanner from "../banners/MissingToolchain/MissingToolchainBanner";
@@ -37,6 +42,7 @@ import {
 import { runFiles, isPassing, type RunResult } from "../../runtimes";
 import { useWorkbenchFiles } from "../../hooks/useWorkbenchFiles";
 import type { Neighbors } from "../../lessonHelpers";
+import { useT } from "../../i18n/i18n";
 
 /// Languages that need a local compiler / VM / assembler installed on
 /// the host before lessons in them can run. Used by LessonView to
@@ -102,6 +108,7 @@ export default function LessonView({
   // the localized version. Identity-stable when locale is `en` or no
   // overlay exists for this lesson, so React's referential-equality
   // checks downstream still skip re-renders.
+  const t = useT();
   const [locale] = useLocale();
   const lesson = useMemo(
     () => localizedLesson(rawLesson, locale),
@@ -140,19 +147,26 @@ export default function LessonView({
   const [popped, setPopped] = useState(false);
 
   // Exercise render mode — only meaningful when `lesson.blocks` is present
-  // (otherwise the lesson can only be played as a free-form editor). Stored
-  // per-lesson in localStorage so a learner who prefers blocks gets blocks
-  // every time on their saved lessons. Default is "editor" on desktop —
-  // we don't want to flip the workflow out from under existing users; they
-  // opt in to blocks via the toggle. Mobile is forced to "blocks" (see
-  // MobileLesson dispatch — this LessonView is desktop-only).
+  // (otherwise the lesson can only be played as a free-form editor).
+  // Stored GLOBALLY in localStorage (key `libre:lesson-mode`) rather than
+  // per-lesson — flipping the toggle on any lesson with blocks now applies
+  // to every other lesson with blocks. The previous per-lesson key
+  // (`fb:lesson-mode:<id>`) read as "I want blocks for THIS lesson only,"
+  // which was almost never what learners wanted; users who like blocks
+  // like them everywhere, and the toggle-on-this-lesson, toggle-off-on-
+  // the-next dance was friction. Default stays "editor" on desktop;
+  // mobile forces "blocks" (see MobileLesson dispatch — this LessonView
+  // is desktop-only).
   const exerciseHasBlocks =
     hasExercise && "blocks" in lesson && !!lesson.blocks;
   const [exerciseMode, setExerciseMode] = useLocalStorageState<
     "editor" | "blocks"
-  >(`fb:lesson-mode:${lesson.id}`, "editor");
-  // Force editor mode when blocks aren't available — even if a user once
-  // saved "blocks" for this lesson and then a regenerate stripped the data.
+  >("libre:lesson-mode", "editor");
+  // Force editor mode when blocks aren't available for THIS lesson. The
+  // global flag may say "blocks" but a lesson without a blocks payload
+  // can't honour it — falls back to editor mode without touching the
+  // stored preference, so the next lesson that DOES have blocks picks
+  // up where the learner left off.
   const effectiveExerciseMode: "editor" | "blocks" = exerciseHasBlocks
     ? exerciseMode
     : "editor";
@@ -176,10 +190,49 @@ export default function LessonView({
     "libre:floating-phone-open",
     true,
   );
-  // Bus the LessonView pushes preview URLs through. Memoised
-  // implicitly because makePhonePreviewBus is cheap; the popout
-  // listens with the matching scope.
-  const phoneBus = useFloatingPhone ? makePhonePreviewBus(phoneScope) : null;
+  // Cache the most recent state we pushed to the popout. When the
+  // popout opens AFTER the run already happened (or after a reload)
+  // it asks us to re-emit via a `request-state` message — without
+  // a cache the popout sits forever on the empty placeholder. The
+  // ref isn't reactive: it's read inside an event-listener callback,
+  // not during render.
+  const lastPhoneStateRef = useRef<PhonePreviewMsg | null>(null);
+  // Bus the LessonView pushes preview URLs through. The raw bus
+  // (`makePhonePreviewBus`) is constructed once per scope and
+  // wrapped so each `emit` updates `lastPhoneStateRef` automatically
+  // — the seven call sites elsewhere in this file stay unchanged.
+  const phoneBus = useMemo(() => {
+    if (!useFloatingPhone) return null;
+    const raw = makePhonePreviewBus(phoneScope);
+    return {
+      listen: raw.listen,
+      emit: (msg: PhonePreviewMsg) => {
+        // Cache everything except the inbound `request-state`
+        // handshake so a later re-emit replays the actual state.
+        if (msg.type !== "request-state") {
+          lastPhoneStateRef.current = msg;
+        }
+        raw.emit(msg);
+      },
+    };
+  }, [useFloatingPhone, phoneScope]);
+
+  // Reply to the popout's `request-state` handshake with the most
+  // recent cached message. Without this, opening the popout after
+  // a run already happened leaves it stuck on "run your code to
+  // see it here on the simulator." `phoneBus.emit` here triggers
+  // our own listener too (Tauri-event broadcast is bidirectional),
+  // but the re-emitted message type is `preview` / `console` /
+  // `running` — not `request-state` — so we don't loop.
+  useEffect(() => {
+    if (!phoneBus) return;
+    const unlisten = phoneBus.listen((msg: PhonePreviewMsg) => {
+      if (msg.type !== "request-state") return;
+      const cached = lastPhoneStateRef.current;
+      if (cached) phoneBus.emit(cached);
+    });
+    return unlisten;
+  }, [phoneBus]);
   // When the user closes the lesson tab or pops the workbench out,
   // close the popout too — leaving an orphaned phone window for a
   // lesson the user has stopped looking at is just confusing.
@@ -238,6 +291,14 @@ export default function LessonView({
   async function handleRun() {
     if (!hasExercise) return;
     setRunning(true);
+    // Broadcast the run to the global is-running signal so surfaces
+    // outside this view (sidebar's ChapterGrid holograms, future
+    // status chrome) can react. Cleared in the same `finally` that
+    // resets the local `setRunning(false)` below so the global
+    // flag's lifecycle matches the local one exactly. Safe to call
+    // even when no subscriber is mounted — the hook no-ops on
+    // empty listener sets.
+    setRunStatus(true);
     setResult(null);
     // Auto-pop the phone simulator open on every Run so a closed
     // popout surfaces itself when the user actually has output to
@@ -313,7 +374,30 @@ export default function LessonView({
       }
       setResult(r);
       const passed = isPassing(r);
-      if (passed) onComplete();
+      // Analytics: every Run produces one `lesson.run` event with
+      // the pass/fail verdict. Distinct from `lesson.complete`
+      // (which only fires on first-time pass) so the dashboard
+      // can compute pass-rate per course + see how many attempts
+      // people take before passing.
+      track.lessonRun({
+        courseId,
+        lessonId: lesson.id,
+        language: effectiveLanguage,
+        passed,
+      });
+      // Run-outcome haptic: completion crescendo on pass,
+      // error notification on fail. Fires BEFORE the visual
+      // result lands so the buzz hits the moment the test
+      // verdict is known — "you felt the result, then the
+      // green/red flips in front of you." Mobile users get
+      // the most out of this; desktop users only feel it on
+      // touch laptops or paired devices.
+      if (passed) {
+        void fireHaptic("completion");
+        onComplete();
+      } else {
+        void fireHaptic("notification-error");
+      }
       // Watch-mode verifier: announce the run finished + whether it
       // passed so the verify-course coroutine can advance to the
       // next lesson without polling React state.
@@ -361,6 +445,7 @@ export default function LessonView({
       }
     } finally {
       setRunning(false);
+      setRunStatus(false);
     }
   }
 
@@ -533,8 +618,67 @@ export default function LessonView({
     });
   }, [courseId, lesson.id, lesson.kind]);
 
-  const nextLabel =
-    isReadingOnly && !isCompleted && neighbors.next ? "mark read & next" : "next";
+  /// Plausible: fire `lesson.start` once per unique lesson mount so
+  /// the dashboard can pair it with `lesson.run` for a funnel
+  /// ("started → ran → passed"). Keyed on `[courseId, lesson.id]`
+  /// — same key the verifier-event effect above uses, so a tab
+  /// switch back and forth re-fires (intentional: each visit is
+  /// a fresh start for engagement purposes).
+  useEffect(() => {
+    track.lessonStart({
+      courseId,
+      lessonId: lesson.id,
+      kind: lesson.kind,
+    });
+  }, [courseId, lesson.id, lesson.kind]);
+
+  // ── Keyboard shortcuts (this view's scope) ───────────────────────
+  //
+  // `lesson.run` fires the Run handler. `allowInInput: true` is
+  // critical here — Run is the one shortcut learners want active
+  // while their cursor is in Monaco; without the opt-in, ⌘R would
+  // silently do nothing inside the editor. We guard with
+  // `hasExercise` so a reading-only lesson doesn't intercept ⌘R
+  // (which would otherwise reload the page or hijack the browser
+  // shortcut in unhelpful ways).
+  //
+  // Prev / Next pull straight from the same handlers the nav arrow
+  // buttons use, so any side effects (completion-mark, scroll-to-
+  // top, etc.) stay identical between mouse and keyboard.
+  useKeybinding("lesson.run", () => void handleRun(), {
+    enabled: hasExercise,
+    allowInInput: true,
+  });
+  useKeybinding("lesson.run.alt", () => void handleRun(), {
+    enabled: hasExercise,
+    allowInInput: true,
+  });
+  useKeybinding("lesson.prev", handlePrev, {
+    enabled: !!neighbors.prev,
+  });
+  useKeybinding("lesson.next", handleNext, {
+    enabled: !!neighbors.next,
+  });
+
+  // The "mark read & next" variant is the moment we want to
+  // celebrate visually — reading-only lessons don't have a Run /
+  // submit button to mark completion, so this nav button doubles
+  // as the "you finished reading, claim the lesson" CTA. The
+  // holographic foil treatment lives on the LessonNav side; we
+  // just signal here that this nav slot is in CTA mode.
+  const isMarkReadCta =
+    isReadingOnly && !isCompleted && !!neighbors.next;
+  // Code-challenge / quiz lessons get the same celebration once
+  // the learner has actually passed them: tests green (or quiz
+  // answered) flips `isCompleted` → true, and the Next button
+  // lights up holographic to signal "you solved it, move on."
+  // Reading-only lessons are excluded because their CTA window
+  // is BEFORE completion (the click IS the completion); for
+  // exercise + quiz lessons the CTA window is AFTER completion.
+  const isPostPassCta =
+    !isReadingOnly && isCompleted && !!neighbors.next;
+  const isNextCta = isMarkReadCta || isPostPassCta;
+  const nextLabel = isMarkReadCta ? "mark read & next" : "next";
 
   const nav = (
     <LessonNav
@@ -543,6 +687,7 @@ export default function LessonView({
       onPrev={handlePrev}
       onNext={handleNext}
       nextLabel={nextLabel}
+      nextIsCta={isNextCta}
     />
   );
 
@@ -644,6 +789,18 @@ export default function LessonView({
           ) : (
             <Workbench
               widthControlsParent
+              // Challenge lessons open the workbench WIDE by default
+              // — the prose is a one-paragraph problem statement
+              // and the action lives in the workbench. 66% matches
+              // the visual width the older flex:1 layout produced
+              // (reader ~32% + workbench ~68%) so existing users
+              // don't see the column jump on first load. The drag
+              // handle still lets them resize narrower or wider
+              // within MIN_WORKBENCH_PCT / MAX_WORKBENCH_PCT.
+              // Regular reading lessons fall through to the
+              // Workbench's own 48% default — leaves more room for
+              // the prose column which carries the lesson body.
+              defaultWorkbenchPct={isChallenge ? 66 : undefined}
               editor={
                 <EditorPane
                   language={lesson.language}
@@ -681,12 +838,12 @@ export default function LessonView({
         <button
           className="libre__workbench-popped-pill"
           onClick={handleReopenInline}
-          title="Close the popped window and dock the workbench back into this pane"
+          title={t("lesson.popBackTitle")}
         >
           <span className="libre__workbench-popped-pill-icon" aria-hidden>
             <Icon icon={panelLeftOpen} size="xs" color="currentColor" />
           </span>
-          <span>pop back in</span>
+          <span>{t("lesson.popBackIn")}</span>
         </button>
       )}
 

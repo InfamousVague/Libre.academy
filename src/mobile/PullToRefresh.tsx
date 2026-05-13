@@ -45,9 +45,9 @@ export default function PullToRefresh({
   return (
     <div
       className={
-        "fb-ptr" +
-        (armed ? " fb-ptr--armed" : "") +
-        (isRefreshing ? " fb-ptr--refreshing" : "")
+        "libre-ptr" +
+        (armed ? " libre-ptr--armed" : "") +
+        (isRefreshing ? " libre-ptr--refreshing" : "")
       }
       style={{ transform: `translateY(${pullDistance - 32}px)` }}
       aria-hidden
@@ -56,17 +56,17 @@ export default function PullToRefresh({
         viewBox="0 0 32 32"
         width="32"
         height="32"
-        className="fb-ptr__svg"
+        className="libre-ptr__svg"
       >
         <circle
-          className="fb-ptr__track"
+          className="libre-ptr__track"
           cx="16"
           cy="16"
           r={r}
           fill="none"
         />
         <circle
-          className="fb-ptr__fill"
+          className="libre-ptr__fill"
           cx="16"
           cy="16"
           r={r}

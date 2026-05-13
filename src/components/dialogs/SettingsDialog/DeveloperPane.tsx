@@ -1,44 +1,38 @@
 import { useEffect, useState } from "react";
+import { terminal } from "@base/primitives/icon/icons/terminal";
+import { sparkles } from "@base/primitives/icon/icons/sparkles";
+import { dice5 } from "@base/primitives/icon/icons/dice-5";
 import {
   celebrate,
   celebrateWith,
   type CelebrationEffect,
 } from "../../../lib/celebrate";
 
+import SettingsCard, { SettingsPage } from "./SettingsCard";
+import SettingsRow from "./SettingsRow";
+import SettingsToggle from "./SettingsToggle";
+import { useT } from "../../../i18n/i18n";
+
 const FLAG_KEY = "libre:devconsole";
 
-/// Names + short descriptions for the six celebration effects shown
-/// in the achievement-test panel below. Order matches the
-/// `CelebrationEffect` union — see `src/lib/celebrate.ts` for the
-/// rendering details.
-const EFFECT_LABELS: Array<{
+/// i18n keys for the celebration effects in the achievement-test panel.
+/// Stored as keys so the labels track the active locale at render time.
+const EFFECT_LABEL_KEYS: Array<{
   id: CelebrationEffect;
-  label: string;
-  hint: string;
+  labelKey: string;
+  hintKey: string;
 }> = [
   {
     id: "coin-burst",
-    label: "Coin burst",
-    hint: "Gold coins erupt from the centre and fall into a pile. Currently the only celebration effect — the magenta-keyed alternates were retired in favour of the cleaner green-keyed coin source.",
+    labelKey: "settings.coinBurst",
+    hintKey: "settings.coinBurstHint",
   },
 ];
 
-/// Developer settings — currently just a toggle for the floating
-/// dev console. The console (`public/devconsole.js`) loads on every
-/// boot and patches `console.log` / `window.error` /
-/// `unhandledrejection` so logs are buffered from page-zero, but the
-/// PANEL only mounts when this flag is set. Toggling it on calls
-/// `window.__fbDevConsole_toggle()` which mounts the panel
-/// immediately and flushes the entire buffered log into it — so
-/// you see what the app already logged from the very first render.
-///
-/// Why a separate pane: the console is a debugging affordance, not
-/// a normal feature. Mixing it into General clutters the
-/// most-visited section, and putting it under "Resources"
-/// (DiagnosticsPanel) implies it's a one-time-look thing rather
-/// than a stateful toggle. Its own section makes the boundary
-/// explicit ("you're poking around under the hood now").
+/// Developer settings — the floating dev console toggle, plus a
+/// celebration tester for designers wiring up new unlock cues.
 export default function DeveloperPane() {
+  const t = useT();
   const [enabled, setEnabled] = useState<boolean>(() => {
     try {
       return localStorage.getItem(FLAG_KEY) === "1";
@@ -49,8 +43,7 @@ export default function DeveloperPane() {
 
   // Re-sync if devconsole.js was toggled by another path (the
   // 5-tap fallback gesture, the panel's × button, or a second
-  // tab) so the toggle doesn't lie about state. Polling at 1Hz is
-  // fine for a settings dialog the user only has open briefly.
+  // tab). Polling at 1Hz is fine for a settings dialog open briefly.
   useEffect(() => {
     const id = window.setInterval(() => {
       let live = false;
@@ -64,7 +57,7 @@ export default function DeveloperPane() {
     return () => window.clearInterval(id);
   }, []);
 
-  function toggle() {
+  function toggle(next: boolean) {
     // Prefer the runtime API exposed by devconsole.js — it
     // mounts/unmounts the panel live without a reload AND flushes
     // the buffered logs into the panel on toggle-on.
@@ -72,144 +65,95 @@ export default function DeveloperPane() {
       window as unknown as { __fbDevConsole_toggle?: () => "on" | "off" }
     ).__fbDevConsole_toggle;
     if (api) {
-      const next = api();
-      setEnabled(next === "on");
+      const result = api();
+      setEnabled(result === "on");
       return;
     }
-    // Fallback: devconsole.js didn't load (CSP block, missing
-    // bundle, etc.). Flip the flag and reload so the next boot
-    // tries again.
+    // Fallback: devconsole.js didn't load. Flip the flag and reload.
     try {
-      if (enabled) localStorage.removeItem(FLAG_KEY);
-      else localStorage.setItem(FLAG_KEY, "1");
+      if (next) localStorage.setItem(FLAG_KEY, "1");
+      else localStorage.removeItem(FLAG_KEY);
     } catch {
-      /* private mode / quota — toggle silently fails */
+      /* private mode / quota — silently fail */
     }
-    setEnabled(!enabled);
+    setEnabled(next);
     window.location.reload();
   }
 
   return (
-    <section>
-      <h3 className="libre-settings-section">Developer</h3>
-      <p className="libre-settings-blurb">
-        A floating panel that captures every <code>console.log</code>,
-        thrown error, and unhandled promise rejection from the moment
-        the app loads. Useful for debugging boot stalls, slow
-        navigations, and crashes — especially on iPad where Safari's
-        Web Inspector isn't reachable. Drag the header to move,
-        bottom-right corner to resize, "–" to minimise, "×" to close
-        and disable.
-      </p>
-      <div className="libre-settings-data-row">
-        <div>
-          <div className="libre-settings-data-label">
-            Show dev console
-          </div>
-          <div className="libre-settings-data-hint">
-            {enabled
-              ? "Console panel is visible (or about to be). Tap × on the panel header to dismiss."
-              : "Console is hidden. Logs are still being captured — toggle on to see them."}
-          </div>
-        </div>
-        <button
-          type="button"
-          className="libre-settings-secondary"
-          onClick={toggle}
+    <SettingsPage
+      title={t("settings.developerTitle")}
+      description={t("settings.developerDescription")}
+    >
+      <SettingsCard title={t("settings.consoleCard")}>
+        <SettingsRow
+          icon={terminal}
+          tone={enabled ? "accent" : "default"}
+          label={t("settings.showDevConsole")}
+          sub={
+            enabled
+              ? t("settings.devConsoleOn")
+              : t("settings.devConsoleOff")
+          }
+          control={
+            <SettingsToggle
+              checked={enabled}
+              onChange={toggle}
+              label={t("settings.showDevConsole")}
+            />
+          }
+        />
+        <div
+          style={{
+            padding: "12px 20px 16px",
+            fontSize: 12.5,
+            color: "var(--color-text-tertiary, rgba(245, 245, 247, 0.55))",
+            lineHeight: 1.5,
+          }}
         >
-          {enabled ? "Hide console" : "Show console"}
-        </button>
-      </div>
-      <p className="libre-settings-blurb" style={{ marginTop: 18 }}>
-        <strong>Emergency fallback:</strong> if the app freezes before
-        you can open Settings (the iPad-stuck-on-preloader case), tap
-        the top-left corner of the screen 5 times within 2.5 seconds.
-        Same toggle, no UI required.
-      </p>
+          <strong style={{ color: "var(--color-text-secondary)" }}>
+            {t("settings.emergencyFallback")}
+          </strong>{" "}
+          {t("settings.emergencyFallbackBody")}
+        </div>
+      </SettingsCard>
 
-      {/* ── Achievement test panel ──────────────────────────────
-          Lets a designer / developer sample each celebration cue
-          without needing to actually earn an achievement, plus a
-          reset-unlocks affordance for stepping through the unlock
-          flow from a clean slate. Lives inside the Developer pane
-          so it doesn't add visible chrome to the user-facing rails.
-      */}
-      <h3
-        className="libre-settings-section"
-        style={{ marginTop: 28 }}
-      >
-        Achievements (test)
-      </h3>
-      <p className="libre-settings-blurb">
-        Sample each celebration effect, fire a random one (the live
-        unlock path), or wipe the persisted unlocks so the next
-        achievement event re-fires from scratch. The buttons here
-        skip the achievement-engine — they just trigger the visual
-        cue, so progress + persisted unlocks are unaffected unless
-        you press <em>Reset</em>.
-      </p>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr",
-          gap: 8,
-          marginTop: 8,
-        }}
-      >
-        {EFFECT_LABELS.map((eff) => (
-          <div className="libre-settings-data-row" key={eff.id}>
-            <div>
-              <div className="libre-settings-data-label">{eff.label}</div>
-              <div className="libre-settings-data-hint">{eff.hint}</div>
-            </div>
+      <SettingsCard title={t("settings.celebrationTester")}>
+        {EFFECT_LABEL_KEYS.map((eff) => (
+          <SettingsRow
+            key={eff.id}
+            icon={sparkles}
+            tone="accent"
+            label={t(eff.labelKey)}
+            sub={t(eff.hintKey)}
+            control={
+              <button
+                type="button"
+                className="libre-settings-secondary"
+                onClick={() =>
+                  void celebrateWith(eff.id, "medium", { x: 0.5, y: 0.5 })
+                }
+              >
+                {t("settings.tryBtn")}
+              </button>
+            }
+          />
+        ))}
+        <SettingsRow
+          icon={dice5}
+          label={t("settings.randomCelebration")}
+          sub={t("settings.randomCelebrationHint")}
+          control={
             <button
               type="button"
               className="libre-settings-secondary"
-              onClick={() =>
-                void celebrateWith(eff.id, "medium", { x: 0.5, y: 0.5 })
-              }
+              onClick={() => void celebrate("medium", { x: 0.5, y: 0.5 })}
             >
-              Try
+              {t("settings.fireBtn")}
             </button>
-          </div>
-        ))}
-      </div>
-
-      <div
-        className="libre-settings-data-row"
-        style={{ marginTop: 16 }}
-      >
-        <div>
-          <div className="libre-settings-data-label">
-            Random celebration
-          </div>
-          <div className="libre-settings-data-hint">
-            Calls the same weighted random pick the achievement
-            unlock path uses. Hit it a few times — the effect
-            varies on each press.
-          </div>
-        </div>
-        <button
-          type="button"
-          className="libre-settings-secondary"
-          onClick={() => void celebrate("medium", { x: 0.5, y: 0.5 })}
-        >
-          Fire
-        </button>
-      </div>
-
-      {/* The "Reset unlocked achievements" + "Reset account to
-          default" rows that used to live here were folded into the
-          single "Start fresh" affordance under Settings → Account
-          on 2026-05-10 (see resetAccount.ts). One button now wipes
-          courses + completions + achievements + streak + practice
-          history + cached progress + the matching cloud rows in
-          one shot, replacing the four scattered surfaces that
-          previously did partial overlapping wipes. Developer-pane
-          stays scoped to dev affordances (console toggle, achievement
-          test panel) per the original "you're poking around under
-          the hood" framing. */}
-    </section>
+          }
+        />
+      </SettingsCard>
+    </SettingsPage>
   );
 }

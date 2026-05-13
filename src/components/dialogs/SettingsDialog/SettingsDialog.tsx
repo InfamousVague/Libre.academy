@@ -2,9 +2,16 @@ import { useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Icon } from "@base/primitives/icon";
 import { check as checkIcon } from "@base/primitives/icon/icons/check";
+import { x as xIcon } from "@base/primitives/icon/icons/x";
 import "@base/primitives/icon/icon.css";
-import { applyTheme, loadTheme, type ThemeName } from "../../../theme/themes";
+import {
+  applyTheme,
+  loadTheme,
+  THEMES,
+  type ThemeName,
+} from "../../../theme/themes";
 import { resetAccount } from "../../../lib/resetAccount";
+import { useT } from "../../../i18n/i18n";
 import type { UseLibreCloud } from "../../../hooks/useLibreCloud";
 import type { RealtimeSyncHandle } from "../../../hooks/useRealtimeSync";
 import type { Completion } from "../../../hooks/useProgress";
@@ -13,11 +20,15 @@ import ModalBackdrop from "../../Shared/ModalBackdrop";
 import AccountSection from "./AccountSection";
 import AiPane from "./AiPane";
 import DeveloperPane from "./DeveloperPane";
-import DiagnosticsPanel from "./DiagnosticsPanel";
 import GeneralPane from "./GeneralPane";
+import ShortcutsPane from "./ShortcutsPane";
 import SoundPane from "./SoundPane";
-import SyncDebugPanel from "./SyncDebugPanel";
+import HapticsPane from "./HapticsPane";
+import DataPane from "./DataPane";
 import ThemePane from "./ThemePane";
+import SettingsNav, { deriveUserDisplay } from "./SettingsNav";
+import { describeAuthProvider } from "./helpers";
+import { PANES, type PaneId } from "./panes";
 import "./SettingsDialog.css";
 
 interface Props {
@@ -54,39 +65,12 @@ interface Settings {
   openai_api_key: string | null;
 }
 
-type SectionId =
-  | "general"
-  | "ai"
-  | "theme"
-  | "sounds"
-  | "data"
-  | "sync"
-  | "diagnostics"
-  | "developer"
-  | "account";
-
-interface SectionDef {
-  id: SectionId;
-  label: string;
-  hint: string;
-}
-
-const BASE_SECTIONS: SectionDef[] = [
-  { id: "general", label: "General", hint: "Version + updates" },
-  { id: "ai", label: "AI & API", hint: "Anthropic key + model" },
-  { id: "theme", label: "Theme", hint: "App + editor colors" },
-  { id: "sounds", label: "Sounds", hint: "SFX + achievement cues" },
-  { id: "data", label: "Data", hint: "Caches + courses" },
-  { id: "sync", label: "Sync", hint: "Cloud diff + force pull/push" },
-  { id: "diagnostics", label: "Resources", hint: "What's installed + what's not" },
-  { id: "developer", label: "Developer", hint: "Floating console for debugging" },
-];
-
-const ACCOUNT_SECTION: SectionDef = {
-  id: "account",
-  label: "Account",
-  hint: "Cloud sync · sign out",
-};
+// Legacy `SectionId` is now an alias for the data-driven `PaneId`
+// exported from ./panes. Kept under the old name in this file so
+// the existing `section === "data"` ladder in the render switch
+// below doesn't have to change. New code should reach for `PaneId`
+// from panes.ts directly.
+type SectionId = PaneId;
 
 /// Two-column settings dialog with a left-rail section nav and a right-side
 /// scrollable pane. Keeps the panel at a bounded max-height so additional
@@ -99,6 +83,7 @@ export default function SettingsDialog({
   courses,
   onRequestSignIn,
 }: Props) {
+  const t = useT();
   const [section, setSection] = useState<SectionId>("general");
   const [apiKey, setApiKey] = useState("");
   const [openaiKey, setOpenaiKey] = useState("");
@@ -106,11 +91,11 @@ export default function SettingsDialog({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [syncingCourses, setSyncingCourses] = useState(false);
-  /// Last-sync result message. Held for ~4s after a manual sync so the
-  /// learner can see the outcome ("1 new course added" / "Already up
-  /// to date") before the row reverts to the idle state.
-  const [syncResult, setSyncResult] = useState<string | null>(null);
+  // (Sync-courses state moved to DataPane along with the manual-
+  // sync row. The dialog used to host both the state and the
+  // syncCourses() helper inline when "Data" was its own pane;
+  // collapsing into the combined Data & storage pane co-locates
+  // everything sync-related in one component.)
   const [theme, setTheme] = useState<ThemeName>(() => loadTheme());
   // Account-section state. `confirmDeleteAccount` follows the same
   // two-tap-confirm pattern that the consolidated "Start fresh"
@@ -122,35 +107,68 @@ export default function SettingsDialog({
 
   // Account is always in the rail — when signed out the section
   // shows a sign-in CTA so the entry point is discoverable before
-  // the learner has an account. The `hint` swaps out depending on
-  // sign-in state to give the rail a useful summary either way.
+  // the learner has an account. The `hint` text on the pane definition
+  // swaps to a sign-in nudge so the rail entry reads useful even
+  // for a signed-out learner.
   //
   // Web build: drop the rail entry entirely. There's nothing to do
   // in the Account section without a sign-in path, and showing an
   // empty pane is worse than not advertising it.
   const accountAvailable = !!onRequestSignIn || cloud.signedIn;
-  const sections = useMemo<SectionDef[]>(
-    () => [
-      ...BASE_SECTIONS,
-      ...(accountAvailable
-        ? [
-            cloud.signedIn
-              ? ACCOUNT_SECTION
-              : { ...ACCOUNT_SECTION, hint: "Sign in to sync progress" },
-          ]
-        : []),
-    ],
-    [cloud.signedIn, accountAvailable],
-  );
+  const visiblePanes = useMemo(() => {
+    return PANES.filter((p) => p.id !== "account" || accountAvailable).map(
+      (p) => {
+        // Swap the Account pane's hint when signed out so the rail
+        // entry advertises the sign-in CTA the body will render.
+        if (p.id === "account" && !cloud.signedIn) {
+          return { ...p, hint: t("settings.signInToSync") };
+        }
+        return p;
+      },
+    );
+  }, [accountAvailable, cloud.signedIn, t]);
 
   // If the active section disappears (e.g. user signs out while the
   // dialog is open), fall back to General so we don't render a
   // dangling section pointer with no nav entry.
   useEffect(() => {
-    if (!sections.find((s) => s.id === section)) {
+    if (!visiblePanes.find((p) => p.id === section)) {
       setSection("general");
     }
-  }, [sections, section]);
+  }, [visiblePanes, section]);
+
+  // Derived nav-rail metadata: user profile tile, app version, and
+  // the active theme's display label for the rail footer chip.
+  // Reading the version is async (Tauri's `getVersion`); we lazy-
+  // load the plugin on first mount so the web build doesn't choke
+  // on the import.
+  const [appVersion, setAppVersion] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { getVersion } = await import("@tauri-apps/api/app");
+        const v = await getVersion();
+        if (!cancelled) setAppVersion(v);
+      } catch {
+        /* web build / Tauri unavailable — leave null, footer shortens */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const userDisplay = useMemo(() => {
+    if (!cloud.signedIn || typeof cloud.user !== "object" || !cloud.user) {
+      return null;
+    }
+    const providerLabel = describeAuthProvider(cloud.user);
+    return deriveUserDisplay(cloud.user, providerLabel, t("settings.signedIn"));
+  }, [cloud.signedIn, cloud.user, t]);
+  const themeLabel = useMemo(
+    () => THEMES.find((t) => t.id === theme)?.label ?? null,
+    [theme],
+  );
 
   function handleThemeChange(next: ThemeName) {
     setTheme(next);
@@ -204,72 +222,51 @@ export default function SettingsDialog({
   /// so lesson / drill / cover updates land. User-deleted packs stay
   /// deleted (we respect their choice).
   ///
-  /// On success we full-reload the window so `useCourses` picks up the
-  /// fresh course folders without us having to plumb a refresh callback
-  /// through props. Same pattern as `clearAllCourses` above.
-  async function syncCourses() {
-    setSyncingCourses(true);
-    setSyncResult(null);
-    setError(null);
-    try {
-      const report = await invoke<{
-        new: number;
-        refreshed: number;
-        skipped_deleted: number;
-      }>("refresh_bundled_courses");
-      const parts: string[] = [];
-      if (report.new > 0) {
-        parts.push(`${report.new} new course${report.new === 1 ? "" : "s"}`);
-      }
-      if (report.refreshed > 0) {
-        parts.push(`${report.refreshed} refreshed`);
-      }
-      const message =
-        parts.length > 0 ? `Synced — ${parts.join(", ")}.` : "Already up to date.";
-      setSyncResult(message);
-      // If we actually changed something on disk, reload the window so
-      // the course list re-fetches. Up-to-date case skips the reload to
-      // avoid flickering the whole UI for a no-op.
-      if (report.new > 0 || report.refreshed > 0) {
-        // Brief delay so the user reads the success message before the
-        // window blanks for the reload.
-        setTimeout(() => window.location.reload(), 700);
-      } else {
-        // Clear the "already up to date" message after a few seconds.
-        setTimeout(() => setSyncResult(null), 4000);
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setSyncingCourses(false);
-    }
-  }
+  // syncCourses() helper moved to DataPane alongside the manual-
+  // sync row that triggers it. Removing it from SettingsDialog
+  // collapses ~40 lines of dialog-level state down to zero — the
+  // dialog stays a router, the pane owns its own state.
 
   return (
     <ModalBackdrop onDismiss={onDismiss}>
       <div className="libre-settings-panel">
-        <div className="libre-settings-header">
-          <span className="libre-settings-title">Settings</span>
-          <button className="libre-settings-close" onClick={onDismiss}>×</button>
-        </div>
+        {/* The old top dialog-header (`libre-settings-header`) is
+            gone — the "Settings" title now lives inside the nav
+            rail (top), matching Cipher's layout. Close button
+            becomes a floating × in the panel's top-right corner
+            so it's reachable without occupying a dedicated header
+            strip. */}
+        <button
+          type="button"
+          className="libre-settings-close-floating"
+          onClick={onDismiss}
+          aria-label={t("settings.closeAria")}
+          title={t("settings.closeTitle")}
+        >
+          <Icon icon={xIcon} size="xs" color="currentColor" />
+        </button>
 
         <div className="libre-settings-columns">
-          <nav className="libre-settings-nav" aria-label="Settings sections">
-            {sections.map((s) => (
-              <button
-                key={s.id}
-                className={`libre-settings-nav-item ${
-                  section === s.id ? "libre-settings-nav-item--active" : ""
-                }`}
-                onClick={() => setSection(s.id)}
-              >
-                <span className="libre-settings-nav-label">{s.label}</span>
-                <span className="libre-settings-nav-hint">{s.hint}</span>
-              </button>
-            ))}
-          </nav>
+          <SettingsNav
+            panes={visiblePanes}
+            activeId={section}
+            onPaneSelect={setSection}
+            user={userDisplay}
+            onProfileClick={() => setSection("account")}
+            appVersion={appVersion}
+            themeName={themeLabel}
+          />
 
           <div className="libre-settings-body">
+            {/* Migrated panes render their own page-level h2 via
+                `SettingsPage`. Unmigrated panes (AiPane, SyncDebugPanel)
+                still ship their own internal h3-styled titles. The
+                old `libre-settings-body__header` strip that
+                duplicated the active pane's title here was removed
+                with the dialog-header refactor — Cipher doesn't
+                have a body-header strip, and rendering the title
+                twice on migrated panes read as a layout bug. */}
+
             {section === "general" && <GeneralPane />}
 
             {section === "ai" && (
@@ -287,77 +284,18 @@ export default function SettingsDialog({
               <ThemePane theme={theme} onThemeChange={handleThemeChange} />
             )}
             {section === "sounds" && <SoundPane />}
+            {section === "haptics" && <HapticsPane />}
+
+            {section === "shortcuts" && <ShortcutsPane />}
 
             {section === "data" && (
-              <section>
-                <h3 className="libre-settings-section">Data</h3>
-                <p className="libre-settings-blurb">
-                  Pull in new bundled books, clear caches, or wipe local content.
-                  Your API key and preferences stay.
-                </p>
-                <div className="libre-settings-data-row">
-                  <div>
-                    <div className="libre-settings-data-label">Sync latest courses</div>
-                    <div className="libre-settings-data-hint">
-                      Pulls newly-bundled books into your library and refreshes any
-                      existing courses with the latest lessons + drills. Deleted
-                      packs stay deleted.
-                      {syncResult && (
-                        <span className="libre-settings-data-success">
-                          {" · "}
-                          {syncResult}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    className="libre-settings-secondary"
-                    onClick={syncCourses}
-                    disabled={syncingCourses}
-                  >
-                    {syncingCourses ? "Syncing…" : "Sync now"}
-                  </button>
-                </div>
-                {/* "Clear cache" + "Clear all courses" rows used to
-                    live here. Folded into the single "Start fresh"
-                    affordance under Settings → Account on 2026-05-10
-                    (see lib/resetAccount.ts). One button now wipes
-                    courses + ingest cache + completions + every
-                    achievement + the matching cloud rows in one
-                    shot. The Data section now stays scoped to
-                    additive operations (Sync); destructive ones
-                    moved to the natural home next to Sign-out and
-                    Delete-account. */}
-              </section>
+              <DataPane
+                cloud={cloud}
+                realtime={realtime}
+                history={history}
+                courses={courses}
+              />
             )}
-
-            {section === "sync" && (
-              realtime ? (
-                <SyncDebugPanel
-                  cloud={cloud}
-                  realtime={realtime}
-                  history={history ?? []}
-                  describeLesson={(courseId, lessonId) => {
-                    const course = courses?.find((c) => c.id === courseId);
-                    if (!course) return `${courseId} · ${lessonId}`;
-                    for (const ch of course.chapters) {
-                      const lesson = ch.lessons.find((l) => l.id === lessonId);
-                      if (lesson) return `${course.title} · ${lesson.title}`;
-                    }
-                    return `${course.title} · ${lessonId}`;
-                  }}
-                />
-              ) : (
-                <section>
-                  <h3 className="libre-settings-section">Sync</h3>
-                  <p className="libre-settings-blurb">
-                    Sync diagnostics aren't available in this build.
-                  </p>
-                </section>
-              )
-            )}
-
-            {section === "diagnostics" && <DiagnosticsPanel />}
 
             {section === "developer" && <DeveloperPane />}
 
@@ -425,7 +363,7 @@ export default function SettingsDialog({
           {saved && (
             <span className="libre-settings-saved">
               <Icon icon={checkIcon} size="xs" color="currentColor" />
-              saved
+              {t("settings.saved")}
             </span>
           )}
           {section === "ai" && (
@@ -434,12 +372,12 @@ export default function SettingsDialog({
               onClick={save}
               disabled={saving}
             >
-              {saving ? "Saving…" : "Save"}
+              {saving ? t("settings.saving") : t("settings.save")}
             </button>
           )}
           {section !== "ai" && (
             <span className="libre-settings-footer-hint">
-              Changes on this tab apply immediately.
+              {t("settings.changesApplyImmediately")}
             </span>
           )}
         </div>
@@ -462,6 +400,7 @@ function SignedOutAccountSection({
   cloud: UseLibreCloud;
   onRequestSignIn: () => void;
 }) {
+  const t = useT();
   const [armed, setArmed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -472,19 +411,16 @@ function SignedOutAccountSection({
   }, [armed]);
   return (
     <section>
-      <h3 className="libre-settings-section">Account</h3>
+      <h3 className="libre-settings-section">{t("settings.account")}</h3>
       <p className="libre-settings-blurb">
-        Sign in to sync progress, streaks, and lesson history between
-        devices, upload your imported books, and share courses with
-        friends. Libre works fully offline without an account —
-        signing in is purely additive.
+        {t("settings.signedOutBlurb")}
       </p>
       <button
         type="button"
         className="libre-settings-primary"
         onClick={onRequestSignIn}
       >
-        Sign in
+        {t("auth.signIn")}
       </button>
 
       <div
@@ -492,15 +428,15 @@ function SignedOutAccountSection({
         style={{ marginTop: 24 }}
       >
         <div>
-          <div className="libre-settings-data-label">Start fresh</div>
+          <div className="libre-settings-data-label">{t("settings.startFresh")}</div>
           <div className="libre-settings-data-hint">
             {armed
-              ? "Tap Confirm within 5 s to wipe every course, completion, achievement, streak, and cached progress on this device. The page will reload with a freshly-seeded library."
+              ? t("settings.startFreshArmedBody")
               : busy
-              ? msg ?? "Resetting…"
+              ? msg ?? t("settings.resetting")
               : msg
               ? msg
-              : "Wipes every course, completion, achievement, streak, and cached progress on this device. Theme, language, and other preferences stay. (Cross-device sync needs a sign-in — without one this only resets the local copy.)"}
+              : t("settings.startFreshBody")}
           </div>
         </div>
         <button
@@ -514,20 +450,22 @@ function SignedOutAccountSection({
             }
             setArmed(false);
             setBusy(true);
-            setMsg("Resetting…");
+            setMsg(t("settings.resetting"));
             try {
               const report = await resetAccount(cloud);
-              setMsg(report.message + " Reloading…");
+              setMsg(t("settings.resetReloading", { message: report.message }));
               setTimeout(() => window.location.reload(), 700);
             } catch (e) {
               setMsg(
-                `Reset failed: ${e instanceof Error ? e.message : String(e)}`,
+                t("settings.resetFailed", {
+                  error: e instanceof Error ? e.message : String(e),
+                }),
               );
               setBusy(false);
             }
           }}
         >
-          {busy ? "Resetting…" : armed ? "Confirm" : "Start fresh"}
+          {busy ? t("settings.resetting") : armed ? t("settings.confirm") : t("settings.startFresh")}
         </button>
       </div>
     </section>

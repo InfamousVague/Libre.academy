@@ -25,6 +25,11 @@
 import { Icon } from "@base/primitives/icon";
 import { search as searchIcon } from "@base/primitives/icon/icons/search";
 import "@base/primitives/icon/icon.css";
+import {
+  ShortcutHint,
+  formatShortcutForTitle,
+} from "../ShortcutHint/ShortcutHint";
+import { useT } from "../../i18n/i18n";
 import type { Course } from "../../data/types";
 import "./TopBarSearch.css";
 
@@ -41,6 +46,7 @@ interface Props {
 }
 
 export default function TopBarSearch({ onOpenFullSearch }: Props) {
+  const t = useT();
   return (
     <div
       className="libre__tbsearch"
@@ -50,8 +56,11 @@ export default function TopBarSearch({ onOpenFullSearch }: Props) {
         type="button"
         className="libre__tbsearch-input-row"
         onClick={() => onOpenFullSearch?.()}
-        aria-label="Open command palette"
-        title="Search lessons, courses, and actions (⌘K)"
+        aria-label={t("topBar.searchAriaLabel")}
+        title={formatShortcutForTitle(
+          t("topBar.searchTooltip"),
+          "app.command-palette",
+        )}
       >
         <Icon
           icon={searchIcon}
@@ -60,14 +69,18 @@ export default function TopBarSearch({ onOpenFullSearch }: Props) {
           className="libre__tbsearch-icon"
         />
         <span className="libre__tbsearch-placeholder">
-          Search lessons…
+          {t("topBar.searchPlaceholder")}
         </span>
-        <span
+        {/* Trailing chord chip — same registry-driven label as the
+            button's tooltip so the visible hint and the actual
+            binding never drift apart. The old hardcoded "⌘K"
+            string was wrong on Windows + didn't update if the
+            user rebound the action in Settings → Shortcuts. */}
+        <ShortcutHint
+          actionId="app.command-palette"
+          variant="muted"
           className="libre__tbsearch-kbd"
-          aria-hidden="true"
-        >
-          ⌘K
-        </span>
+        />
       </button>
     </div>
   );

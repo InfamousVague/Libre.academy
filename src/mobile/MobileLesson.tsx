@@ -15,6 +15,7 @@ import MobileReader from "./MobileReader";
 import MobileQuiz from "./MobileQuiz";
 import MobileOutline from "./MobileOutline";
 import BlocksView from "../components/Blocks/BlocksView";
+import { haptics } from "../lib/haptics";
 import { Icon } from "@base/primitives/icon";
 import { chevronLeft } from "@base/primitives/icon/icons/chevron-left";
 import { chevronRight } from "@base/primitives/icon/icons/chevron-right";
@@ -147,7 +148,12 @@ export default function MobileLesson({
           <button
             type="button"
             className="m-lesson__nav-btn"
-            onClick={onPrev}
+            // Light impact on backward navigation — the buzz
+            // signals "going back to the previous beat" without
+            // the success-pattern the Next button uses on
+            // completion. Plain `onNext` (when already complete)
+            // gets the same light impact below.
+            onClick={onPrev ? () => { void haptics.light(); onPrev(); } : undefined}
             disabled={!onPrev}
           >
             <Icon icon={chevronLeft} size="base" />
@@ -162,11 +168,25 @@ export default function MobileLesson({
             to a single onClick. No more inline "mark complete" /
             "next lesson" buttons inside puzzle / cloze / reader —
             this row owns advancement across every kind.
+
+            Haptic split: the "I just finished this" tap gets the
+            full success notification pattern (handled inside
+            `onComplete` itself in MobileApp). The "already
+            complete, just navigating forward" tap gets a plain
+            light impact so the user knows the button registered
+            without celebrating a non-event.
           */}
           <button
             type="button"
             className="m-lesson__nav-btn m-lesson__nav-btn--next"
-            onClick={isCompleted ? onNext : onComplete}
+            onClick={() => {
+              if (isCompleted) {
+                void haptics.light();
+                onNext?.();
+              } else {
+                onComplete();
+              }
+            }}
             disabled={!onNext}
           >
             <span>Next</span>

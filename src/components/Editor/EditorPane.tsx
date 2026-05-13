@@ -4,7 +4,8 @@
 // configured before any Editor component mounts. See lib/monaco/setup.ts
 // for the full rationale (signed-production CDN-load issue).
 import "../../lib/monaco/setup";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Editor from "@monaco-editor/react";
 import { Icon } from "@base/primitives/icon";
 import { arrowLeft } from "@base/primitives/icon/icons/arrow-left";
@@ -13,6 +14,8 @@ import { chevronDown } from "@base/primitives/icon/icons/chevron-down";
 import { rotateCcw } from "@base/primitives/icon/icons/rotate-ccw";
 import { eye } from "@base/primitives/icon/icons/eye";
 import "@base/primitives/icon/icon.css";
+import { ShortcutHint } from "../ShortcutHint/ShortcutHint";
+import { useT } from "../../i18n/i18n";
 import type { FileLanguage, LanguageId, WorkbenchFile } from "../../data/types";
 import { useActiveTheme } from "../../theme/useActiveTheme";
 import { MONACO_THEME_BY_APP_THEME, registerMonacoThemes } from "../../theme/monaco-themes";
@@ -190,6 +193,7 @@ export default function EditorPane({
   exerciseMode,
   onExerciseModeChange,
 }: Props) {
+  const t = useT();
   // `language` no longer renders as a header label (the slot is now
   // the Editor/Blocks toggle when present). Kept as a prop for
   // tooltip purposes + future use; reference the variable here so
@@ -214,13 +218,29 @@ export default function EditorPane({
   // pattern in components/Library/AddCourseButton.tsx).
   const [helpMenuOpen, setHelpMenuOpen] = useState(false);
   const helpRef = useRef<HTMLDivElement | null>(null);
+  // Portaled menu position. The dropdown lives in `document.body`
+  // (so it isn't clipped by any ancestor `overflow: hidden` —
+  // notably `.libre-sandbox` and the sandbox-view scroll container
+  // both clip absolute children), with `position: fixed` coords
+  // measured from the help trigger's bounding rect on each open.
+  const helpMenuRef = useRef<HTMLDivElement | null>(null);
+  const [helpMenuPos, setHelpMenuPos] = useState<{
+    top: number;
+    right: number;
+  } | null>(null);
   useEffect(() => {
     if (!helpMenuOpen) return;
     const onDocClick = (e: MouseEvent) => {
-      if (!helpRef.current) return;
-      if (e.target instanceof Node && helpRef.current.contains(e.target)) {
-        return;
-      }
+      const t = e.target as Node | null;
+      if (!t) return;
+      // Clicks inside the trigger keep the menu open (the chevron
+      // handler toggles it itself; we don't want this listener to
+      // race-close it on the same event).
+      if (helpRef.current?.contains(t)) return;
+      // Clicks inside the portaled menu also keep it open — they
+      // hit a menu item which is responsible for closing the menu
+      // after running its action.
+      if (helpMenuRef.current?.contains(t)) return;
       setHelpMenuOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
@@ -231,6 +251,40 @@ export default function EditorPane({
     return () => {
       window.removeEventListener("mousedown", onDocClick);
       window.removeEventListener("keydown", onKey);
+    };
+  }, [helpMenuOpen]);
+  // Measure the trigger and compute the portaled menu's `top` +
+  // `right` (viewport coordinates). Re-runs on open, on window
+  // resize, and on scroll-at-capture so the menu tracks the
+  // editor scrolling underneath it. `useLayoutEffect` so the
+  // measurement happens before paint and the menu doesn't flash
+  // at (0, 0) before snapping into position.
+  useLayoutEffect(() => {
+    if (!helpMenuOpen) {
+      setHelpMenuPos(null);
+      return;
+    }
+    const measure = () => {
+      const trigger = helpRef.current;
+      if (!trigger) return;
+      const rect = trigger.getBoundingClientRect();
+      setHelpMenuPos({
+        top: rect.bottom + 4,
+        // `right` = distance from the trigger's right edge to the
+        // viewport's right edge. Mirrors the prior `right: 0`
+        // anchoring (menu's right edge sits on the trigger's right
+        // edge) but in viewport space so `position: fixed` works.
+        right: Math.max(8, window.innerWidth - rect.right),
+      });
+    };
+    measure();
+    const onResize = () => measure();
+    const onScroll = () => measure();
+    window.addEventListener("resize", onResize);
+    window.addEventListener("scroll", onScroll, true);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onScroll, true);
     };
   }, [helpMenuOpen]);
   const activeTheme = useActiveTheme();
@@ -293,7 +347,7 @@ export default function EditorPane({
             ships authored blocks data. Replaces the previous static
             language label — the toggle is more useful in-context. */}
         {exerciseMode && onExerciseModeChange ? (
-          <div className="libre-editor-mode" role="group" aria-label="Exercise mode">
+          <div className="libre-editor-mode" role="group" aria-label={t("editor.ariaExerciseMode")}>
             <button
               type="button"
               className={
@@ -305,7 +359,7 @@ export default function EditorPane({
               onClick={() => onExerciseModeChange("editor")}
               aria-pressed={exerciseMode === "editor"}
             >
-              Editor
+              {t("editor.modeEditor")}
             </button>
             <button
               type="button"
@@ -318,14 +372,48 @@ export default function EditorPane({
               onClick={() => onExerciseModeChange("blocks")}
               aria-pressed={exerciseMode === "blocks"}
             >
-              Blocks
+              {t("editor.modeBlocks")}
             </button>
           </div>
         ) : (
-          // Empty placeholder so the header's space-between still
-          // pushes the action cluster right when no mode toggle
-          // shows.
+          // Empty placeholder so the header's flex layout still
+          // anchors the action cluster on the right when no mode
+          // toggle shows on the left.
           <span aria-hidden />
+        )}
+        {/* File tabs — slotted INTO the header row alongside the
+            help / run cluster instead of living on their own row
+            below. Takes `flex: 1` so the tabs span the gap between
+            the left placeholder + the actions; scrolls
+            horizontally when there are more tabs than fit. Only
+            rendered when there's actually more than one file
+            (single-file projects have nothing to switch between). */}
+        {multiFile && (
+          <div
+            className="libre-editor-tabs"
+            role="tablist"
+            aria-label={t("editor.tabsAriaLabel")}
+          >
+            {files.map((f, i) => (
+              <button
+                key={f.name}
+                role="tab"
+                aria-selected={i === safeIndex}
+                className={`libre-editor-tab ${
+                  i === safeIndex ? "libre-editor-tab--active" : ""
+                } ${f.readOnly ? "libre-editor-tab--readonly" : ""}`}
+                onClick={() => onActiveIndexChange(i)}
+                title={f.readOnly ? `${f.name} ${t("editor.readOnlyBadge")}` : f.name}
+              >
+                <span className="libre-editor-tab-name">{f.name}</span>
+                {f.readOnly && (
+                  <span className="libre-editor-tab-badge" aria-hidden>
+                    🔒
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
         )}
         <div className="libre-editor-actions">
           {showHelpCluster && (
@@ -338,13 +426,13 @@ export default function EditorPane({
                   disabled={!hasHints}
                   title={
                     hasHints
-                      ? "Reveal a progressively more specific hint"
+                      ? t("editorHints.tooltipNext")
                       : hasMenuItems
-                        ? "No hints for this lesson — use the menu for reset / solution"
-                        : "No hints, reset, or solution for this lesson"
+                        ? t("editorHints.tooltipNoneWithMenu")
+                        : t("editorHints.tooltipNoneNoMenu")
                   }
                 >
-                  {hasHints ? `hint ${revealed}/${hints!.length}` : "help"}
+                  {hasHints ? t("lesson.hintProgress", { current: revealed, total: hints!.length }) : t("lesson.help")}
                 </button>
                 {hasMenuItems && (
                   <button
@@ -353,63 +441,78 @@ export default function EditorPane({
                     onClick={() => setHelpMenuOpen((v) => !v)}
                     aria-expanded={helpMenuOpen}
                     aria-haspopup="menu"
-                    aria-label="More help options"
-                    title="More help options"
+                    aria-label={t("editor.ariaHelpOptions")}
+                    title={t("editor.ariaHelpOptions")}
                   >
                     <Icon icon={chevronDown} size="xs" color="currentColor" />
                   </button>
                 )}
               </div>
-              {helpMenuOpen && hasMenuItems && (
-                <div
-                  className="libre-editor-help-menu"
-                  role="menu"
-                  aria-label="Help options"
-                >
-                  {onReset && (
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className="libre-editor-help-item"
-                      onClick={() => {
-                        setHelpMenuOpen(false);
-                        onReset();
-                      }}
-                    >
-                      <Icon icon={rotateCcw} size="xs" color="currentColor" />
-                      <span className="libre-editor-help-item-body">
-                        <span className="libre-editor-help-item-title">
-                          Reset
+              {helpMenuOpen &&
+                hasMenuItems &&
+                helpMenuPos &&
+                typeof document !== "undefined" &&
+                createPortal(
+                  <div
+                    ref={helpMenuRef}
+                    className="libre-editor-help-menu libre-editor-help-menu--portaled"
+                    role="menu"
+                    aria-label={t("editor.ariaHelpOptions")}
+                    style={{
+                      position: "fixed",
+                      top: `${helpMenuPos.top}px`,
+                      right: `${helpMenuPos.right}px`,
+                    }}
+                  >
+                    {onReset && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="libre-editor-help-item"
+                        onClick={() => {
+                          setHelpMenuOpen(false);
+                          onReset();
+                        }}
+                      >
+                        <Icon
+                          icon={rotateCcw}
+                          size="xs"
+                          color="currentColor"
+                        />
+                        <span className="libre-editor-help-item-body">
+                          <span className="libre-editor-help-item-title">
+                            {t("lesson.reset")}
+                          </span>
+                          <span className="libre-editor-help-item-hint">
+                            {t("lesson.resetStarter")}
+                          </span>
                         </span>
-                        <span className="libre-editor-help-item-hint">
-                          Restore the starter code
+                      </button>
+                    )}
+                    {onRevealSolution && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="libre-editor-help-item libre-editor-help-item--danger"
+                        onClick={() => {
+                          setHelpMenuOpen(false);
+                          setConfirmingReveal(true);
+                        }}
+                      >
+                        <Icon icon={eye} size="xs" color="currentColor" />
+                        <span className="libre-editor-help-item-body">
+                          <span className="libre-editor-help-item-title">
+                            {t("lesson.revealSolution")}
+                          </span>
+                          <span className="libre-editor-help-item-hint">
+                            {t("lesson.revealSolutionHint")}
+                          </span>
                         </span>
-                      </span>
-                    </button>
-                  )}
-                  {onRevealSolution && (
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className="libre-editor-help-item libre-editor-help-item--danger"
-                      onClick={() => {
-                        setHelpMenuOpen(false);
-                        setConfirmingReveal(true);
-                      }}
-                    >
-                      <Icon icon={eye} size="xs" color="currentColor" />
-                      <span className="libre-editor-help-item-body">
-                        <span className="libre-editor-help-item-title">
-                          Reveal solution
-                        </span>
-                        <span className="libre-editor-help-item-hint">
-                          Overwrite your code with the reference
-                        </span>
-                      </span>
-                    </button>
-                  )}
-                </div>
-              )}
+                      </button>
+                    )}
+                  </div>,
+                  document.body,
+                )}
             </div>
           )}
           {onPopOut && (
@@ -417,7 +520,7 @@ export default function EditorPane({
               type="button"
               className="libre-editor-button"
               onClick={onPopOut}
-              title="Open editor + console in a separate window"
+              title={t("editor.popOut")}
             >
               ⇱
             </button>
@@ -427,52 +530,33 @@ export default function EditorPane({
             className="libre-editor-button libre-editor-run"
             onClick={onRun}
           >
-            run
+            {/* Holographic foil retired — the rainbow snake-sparkle
+                treatment is now scoped to certificates + the AI
+                button so the cert moment stays special and the
+                primary-CTA buttons read as quiet flat surfaces. */}
+            <span className="libre-editor-run__label">{t("editor.run")}</span>
+            <ShortcutHint actionId="lesson.run" className="libre-shortcut-hint--gap" />
           </button>
         </div>
       </div>
-
-      {multiFile && (
-        <div className="libre-editor-tabs" role="tablist" aria-label="Workbench files">
-          {files.map((f, i) => (
-            <button
-              key={f.name}
-              role="tab"
-              aria-selected={i === safeIndex}
-              className={`libre-editor-tab ${
-                i === safeIndex ? "libre-editor-tab--active" : ""
-              } ${f.readOnly ? "libre-editor-tab--readonly" : ""}`}
-              onClick={() => onActiveIndexChange(i)}
-              title={f.readOnly ? `${f.name} (read-only)` : f.name}
-            >
-              <span className="libre-editor-tab-name">{f.name}</span>
-              {f.readOnly && (
-                <span className="libre-editor-tab-badge" aria-hidden>
-                  🔒
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-      )}
 
       {hasHints && open && revealed > 0 && (
         <div className="libre-editor-hints">
           <div className="libre-editor-hints-header">
             <span className="libre-editor-hints-label">
-              Hint {currentIdx + 1} of {hints!.length}
+              {t("editorHints.label", { current: currentIdx + 1, total: hints!.length })}
               {revealed < hints!.length && (
                 <span className="libre-editor-hints-locked">
                   {" "}
-                  · {hints!.length - revealed} locked
+                  {t("editorHints.locked", { count: hints!.length - revealed })}
                 </span>
               )}
             </span>
             <button
               className="libre-editor-hints-close"
               onClick={() => setOpen(false)}
-              title="Close hints"
-              aria-label="Close hints"
+              title={t("editorHints.close")}
+              aria-label={t("editorHints.close")}
             >
               ×
             </button>
@@ -485,7 +569,7 @@ export default function EditorPane({
               className="libre-editor-hints-nav-btn"
               onClick={prevHint}
               disabled={currentIdx === 0}
-              aria-label="Previous hint"
+              aria-label={t("editorHints.previous")}
             >
               <Icon icon={arrowLeft} size="xs" color="currentColor" />
               prev
@@ -509,7 +593,7 @@ export default function EditorPane({
                 currentIdx === revealed - 1 && revealed === hints!.length
               }
               aria-label={
-                currentIdx < revealed - 1 ? "Next hint" : "Unlock next hint"
+                currentIdx < revealed - 1 ? t("editorHints.next") : t("editorHints.unlockNext")
               }
             >
               {currentIdx < revealed - 1 ? "next" : "reveal next"}
@@ -563,23 +647,22 @@ export default function EditorPane({
       {confirmingReveal && (
         <div className="libre-editor-modal-backdrop" onClick={() => setConfirmingReveal(false)}>
           <div className="libre-editor-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="libre-editor-modal-title">Reveal reference solution?</div>
+            <div className="libre-editor-modal-title">{t("editorHints.confirmTitle")}</div>
             <p className="libre-editor-modal-body">
-              This will replace your current code with the hidden reference solution.
-              Your in-progress work will be lost.
+              {t("editorHints.confirmBody")}
             </p>
             <div className="libre-editor-modal-actions">
               <button
                 className="libre-editor-button"
                 onClick={() => setConfirmingReveal(false)}
               >
-                cancel
+                {t("common.cancel").toLowerCase()}
               </button>
               <button
                 className="libre-editor-button libre-editor-button--danger"
                 onClick={confirmReveal}
               >
-                reveal solution
+                {t("editorHints.confirmAction")}
               </button>
             </div>
           </div>

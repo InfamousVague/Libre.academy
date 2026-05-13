@@ -4,6 +4,7 @@ import { x as xIcon } from "@base/primitives/icon/icons/x";
 import "@base/primitives/icon/icon.css";
 import { isWeb } from "../../../lib/platform";
 import DownloadButton from "../../DownloadButton/DownloadButton";
+import { useT } from "../../../i18n/i18n";
 import "./InstallBanner.css";
 
 /// Floating "get the desktop app" card mounted by App.tsx on the web
@@ -30,6 +31,7 @@ const RESHOW_AFTER_MS = 30 * 24 * 60 * 60 * 1000;
 const SHOW_AFTER_MS = 2200;
 
 export function InstallBanner() {
+  const t = useT();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -68,22 +70,21 @@ export function InstallBanner() {
     <aside
       className="libre-install-banner"
       role="complementary"
-      aria-label="Get the Libre desktop app"
+      aria-label={t("banners.installAria")}
     >
       <button
         type="button"
         className="libre-install-banner__close"
         onClick={dismiss}
-        aria-label="Dismiss for 30 days"
+        aria-label={t("banners.installDismiss")}
       >
         <Icon icon={xIcon} size="xs" color="currentColor" />
       </button>
       <div className="libre-install-banner__title">
-        Get the full Libre
+        {t("banners.installTitle")}
       </div>
       <div className="libre-install-banner__body">
-        Run Rust, Swift, C, C++, Java, Kotlin, C#, SvelteKit, and
-        offline AI. Free + open source.
+        {t("banners.installBody")}
       </div>
       <div className="libre-install-banner__cta">
         <DownloadButton />

@@ -18,6 +18,7 @@
 import { Icon } from "@base/primitives/icon";
 import { upload } from "@base/primitives/icon/icons/upload";
 import { bookOpen } from "@base/primitives/icon/icons/book-open";
+import { useT } from "../../i18n/i18n";
 import "./ArchiveDropOverlay.css";
 
 interface Props {
@@ -36,6 +37,7 @@ export default function ArchiveDropOverlay({
   isImporting,
   progress,
 }: Props) {
+  const t = useT();
   return (
     <>
       {/* Full-window drop target. Pointer-events disabled so the
@@ -53,12 +55,12 @@ export default function ArchiveDropOverlay({
             <Icon icon={upload} size="xl" color="currentColor" />
           </div>
           <div className="libre-archive-drop__title">
-            Drop to add to your library
+            {t("library.dropTitle")}
           </div>
-          <div className="libre-archive-drop__sub">
-            Accepts <code>.academy</code> archives (and legacy{" "}
-            <code>.libre</code> / <code>.kata</code> exports).
-          </div>
+          <div
+            className="libre-archive-drop__sub"
+            dangerouslySetInnerHTML={{ __html: t("library.dropSub") }}
+          />
         </div>
       </div>
 
@@ -72,8 +74,8 @@ export default function ArchiveDropOverlay({
           </span>
           <span className="libre-archive-toast__label">
             {progress.total === 1
-              ? "Importing course…"
-              : `Importing ${progress.current} of ${progress.total}…`}
+              ? t("library.importingOne")
+              : t("library.importingProgress", { current: progress.current, total: progress.total })}
           </span>
           <span
             className="libre-archive-toast__bar"

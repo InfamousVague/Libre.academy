@@ -22,7 +22,7 @@ import { listTree } from "@base/primitives/icon/icons/list-tree";
 import { bookHeadphones } from "@base/primitives/icon/icons/book-headphones";
 import { terminal } from "@base/primitives/icon/icons/terminal";
 import { blocks } from "@base/primitives/icon/icons/blocks";
-import { trees } from "@base/primitives/icon/icons/trees";
+import { trainTrack } from "@base/primitives/icon/icons/train-track";
 import { compass } from "@base/primitives/icon/icons/compass";
 import { flame } from "@base/primitives/icon/icons/flame";
 import tourData from "./tourSteps.json";
@@ -30,10 +30,9 @@ import tourData from "./tourSteps.json";
 export type TourPage =
   | "library"
   | "discover"
-  | "trees"
   | "tracks"
   | "practice"
-  | "playground"
+  | "sandbox"
   | "courses"
   | "profile";
 
@@ -78,7 +77,7 @@ const ICON_LOOKUP: Record<string, string> = {
   "book-headphones": bookHeadphones,
   terminal,
   blocks,
-  trees,
+  "train-track": trainTrack,
   compass,
   flame,
 };

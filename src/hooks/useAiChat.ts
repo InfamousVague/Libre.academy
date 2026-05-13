@@ -20,6 +20,16 @@ import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
   content: string;
+  /// Optional LLM-only payload that replaces `content` when the
+  /// message is shipped to the model. Used by callers that
+  /// bolster the user's wording with framing the user shouldn't
+  /// have to see in their own bubble — the lesson reader's "ask
+  /// about this code" / "walk me through this quiz" flows, the
+  /// quiz view's hint button, etc. The chat panel always renders
+  /// `content`; the `send()` path unwraps `augmented` (when
+  /// present) into the wire-format `content` so the LLM receives
+  /// the framed version.
+  augmented?: string;
 }
 
 export interface ProbeResult {
@@ -46,7 +56,22 @@ export interface UseAiChat {
   streaming: boolean;
   /// Transient error from the last send(). Cleared on next send().
   error: string | null;
-  send: (prompt: string, systemPrompt?: string) => Promise<void>;
+  /// Send a new user message into the chat.
+  ///
+  /// `prompt` is what the chat panel renders in the user's
+  /// bubble — typically what the user typed verbatim.
+  /// `systemPrompt` is an optional one-shot system prefix.
+  /// `augmented` (optional) is an alternate payload sent to the
+  /// LLM in place of `prompt`. Used by callers that bolster the
+  /// user's wording with framing the user shouldn't have to read
+  /// — e.g. lesson reader's "Explain this code" button
+  /// pre-wraps the snippet in workflow instructions for the
+  /// model. When omitted, the LLM sees `prompt` verbatim.
+  send: (
+    prompt: string,
+    systemPrompt?: string,
+    augmented?: string,
+  ) => Promise<void>;
   reset: () => void;
   /// Probes the Ollama daemon. Useful for the first-run banner; the
   /// hook also calls it automatically on mount so `probe` in state is
@@ -68,6 +93,11 @@ export interface UseAiChat {
   /// the banner disable the buttons + render a spinner without each
   /// caller maintaining its own state.
   setupBusy: boolean;
+  /// Swap the message log to a previously-saved snapshot — used by
+  /// the session picker to load a different conversation into the
+  /// SAME hook instance (no remount). Aborts any in-flight stream
+  /// first so the new conversation starts from a clean state.
+  loadMessages: (messages: ChatMessage[]) => void;
 }
 
 /// Map serialized event name → random-but-cheap id that makes
@@ -78,8 +108,17 @@ let nextStreamId = 1;
 /// localhost Ollama daemon. Renamed from the original `useAiChat`
 /// so the new top-level export below can pick between this and the
 /// remote variant at module load.
-export function useAiChatLocal(model?: string): UseAiChat {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+export function useAiChatLocal(
+  model?: string,
+  /// Optional starting messages — used by the tray to restore a
+  /// previously-saved session when the user switches between
+  /// stored chats. State initialization only runs once per mount;
+  /// remount via React `key={sessionId}` to swap conversations.
+  initialMessages?: ChatMessage[],
+): UseAiChat {
+  const [messages, setMessages] = useState<ChatMessage[]>(
+    () => initialMessages ?? [],
+  );
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [probe, setProbe] = useState<ProbeResult | null>(null);
@@ -177,20 +216,48 @@ export function useAiChatLocal(model?: string): UseAiChat {
     setError(null);
   }, []);
 
+  /// Hot-swap the conversation log. Cancels any active stream
+  /// (so a half-rendered assistant chunk doesn't carry over into
+  /// the loaded conversation), clears error state, replaces the
+  /// messages. Used by the in-app session picker; the tray's
+  /// session picker uses a key-driven remount instead.
+  const loadMessages = useCallback((msgs: ChatMessage[]) => {
+    activeUnlistenRef.current?.();
+    activeUnlistenRef.current = null;
+    setMessages(msgs);
+    setStreaming(false);
+    setError(null);
+  }, []);
+
   const send = useCallback(
-    async (prompt: string, systemPrompt?: string) => {
+    async (prompt: string, systemPrompt?: string, augmented?: string) => {
       if (streaming) return; // caller should gate; defensive
       setError(null);
 
       const streamId = `c${nextStreamId++}`;
-      const userMsg: ChatMessage = { role: "user", content: prompt };
+      // The user message in STATE carries `content` (what the
+      // chat panel shows) AND optionally `augmented` (what the
+      // LLM receives). The wire-format payload below unwraps
+      // `augmented` so the model never sees the `augmented`
+      // field directly — it just sees the framed text on
+      // `content`. Subsequent turns reading the conversation
+      // history pull from state and re-unwrap, so the model's
+      // view of the conversation stays consistent across turns.
+      const userMsg: ChatMessage =
+        augmented && augmented.trim() !== prompt.trim()
+          ? { role: "user", content: prompt, augmented }
+          : { role: "user", content: prompt };
       // Snapshot for the IPC payload BEFORE setState — React batches
       // state updates, so `messages` inside the closure is the stale
       // value. We pass the full history explicitly.
       const systemPart: ChatMessage[] = systemPrompt
         ? [{ role: "system", content: systemPrompt }]
         : [];
-      const outbound = [...systemPart, ...messages, userMsg];
+      const outbound = [...systemPart, ...messages, userMsg].map((m) =>
+        m.role === "user" && m.augmented
+          ? { role: m.role, content: m.augmented }
+          : { role: m.role, content: m.content },
+      );
       setMessages((m) => [...m, userMsg, { role: "assistant", content: "" }]);
       setStreaming(true);
 
@@ -291,6 +358,7 @@ export function useAiChatLocal(model?: string): UseAiChat {
     startOllama,
     pullModel,
     setupBusy,
+    loadMessages,
   };
 }
 

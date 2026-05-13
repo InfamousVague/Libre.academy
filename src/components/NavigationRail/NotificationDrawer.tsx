@@ -24,6 +24,7 @@ import { x as xIcon } from "@base/primitives/icon/icons/x";
 import "@base/primitives/icon/icon.css";
 import { ACHIEVEMENTS } from "../../data/achievements";
 import { resolveAchievementImage } from "../../data/achievementImages";
+import { useT, type TFunction } from "../../i18n/i18n";
 import "./NotificationDrawer.css";
 
 interface UnlockedRecord {
@@ -82,17 +83,18 @@ function writeLastSeen(ts: number): void {
   }
 }
 
-function formatRelative(now: number, ts: number): string {
+function formatRelative(now: number, ts: number, t: TFunction): string {
   const diff = Math.max(0, now - ts);
-  if (diff < 60_000) return "just now";
-  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
-  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`;
-  if (diff < 7 * 86_400_000) return `${Math.floor(diff / 86_400_000)}d ago`;
+  if (diff < 60_000) return t("notifications.justNow");
+  if (diff < 3_600_000) return t("notifications.minutesShort", { n: Math.floor(diff / 60_000) });
+  if (diff < 86_400_000) return t("notifications.hoursShort", { n: Math.floor(diff / 3_600_000) });
+  if (diff < 7 * 86_400_000) return t("notifications.daysShort", { n: Math.floor(diff / 86_400_000) });
   const d = new Date(ts);
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 export default function NotificationDrawer() {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [unlocks, setUnlocks] = useState<UnlockedRecord[]>(() => readUnlocked());
   const [lastSeen, setLastSeen] = useState<number>(() => readLastSeen());
@@ -189,45 +191,45 @@ export default function NotificationDrawer() {
   const now = Date.now();
 
   return (
-    <div ref={wrapperRef} className="fb-notif">
+    <div ref={wrapperRef} className="libre-notif">
       <button
         type="button"
-        className="fb-notif__trigger"
+        className="libre-notif__trigger"
         aria-label={
           unreadCount > 0
-            ? `Notifications (${unreadCount} unread)`
-            : "Notifications"
+            ? t("notifications.ariaWithUnread", { count: unreadCount })
+            : t("notifications.title")
         }
         aria-expanded={open}
         onClick={togglePanel}
       >
         <Icon icon={bell} size="xl" color="currentColor" weight="regular" />
         {unreadCount > 0 && (
-          <span className="fb-notif__badge" aria-hidden>
+          <span className="libre-notif__badge" aria-hidden>
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="fb-notif__panel" role="dialog" aria-label="Notifications">
-          <div className="fb-notif__panel-head">
-            <span className="fb-notif__panel-title">Notifications</span>
-            <div className="fb-notif__panel-actions">
+        <div className="libre-notif__panel" role="dialog" aria-label={t("notifications.title")}>
+          <div className="libre-notif__panel-head">
+            <span className="libre-notif__panel-title">{t("notifications.title")}</span>
+            <div className="libre-notif__panel-actions">
               {items.length > 0 && unreadCount > 0 && (
                 <button
                   type="button"
-                  className="fb-notif__panel-link"
+                  className="libre-notif__panel-link"
                   onClick={markAllRead}
                 >
-                  Mark all read
+                  {t("notifications.markAllRead")}
                 </button>
               )}
               <button
                 type="button"
-                className="fb-notif__panel-close"
+                className="libre-notif__panel-close"
                 onClick={() => setOpen(false)}
-                aria-label="Close notifications"
+                aria-label={t("notifications.ariaClose")}
               >
                 <Icon icon={xIcon} size="xs" color="currentColor" />
               </button>
@@ -235,45 +237,45 @@ export default function NotificationDrawer() {
           </div>
 
           {items.length === 0 ? (
-            <div className="fb-notif__empty">
-              <span className="fb-notif__empty-glyph" aria-hidden>
+            <div className="libre-notif__empty">
+              <span className="libre-notif__empty-glyph" aria-hidden>
                 ✦
               </span>
-              <div className="fb-notif__empty-title">All caught up</div>
-              <div className="fb-notif__empty-blurb">
-                Achievement unlocks and other notifications will land here.
+              <div className="libre-notif__empty-title">{t("notifications.emptyTitle")}</div>
+              <div className="libre-notif__empty-blurb">
+                {t("notifications.emptyBlurb")}
               </div>
             </div>
           ) : (
-            <ul className="fb-notif__list">
+            <ul className="libre-notif__list">
               {items.map((it) => (
                 <li
                   key={`${it.id}-${it.ts}`}
                   className={
-                    "fb-notif__item" +
-                    (it.ts > lastSeen ? " fb-notif__item--unread" : "")
+                    "libre-notif__item" +
+                    (it.ts > lastSeen ? " libre-notif__item--unread" : "")
                   }
                 >
-                  <div className="fb-notif__item-icon" aria-hidden>
+                  <div className="libre-notif__item-icon" aria-hidden>
                     {it.image ? (
                       <img
                         src={it.image}
                         alt=""
-                        className="fb-notif__item-img"
+                        className="libre-notif__item-img"
                         draggable={false}
                       />
                     ) : (
                       <Icon icon={bell} size="sm" color="currentColor" />
                     )}
                   </div>
-                  <div className="fb-notif__item-body">
-                    <div className="fb-notif__item-title">{it.title}</div>
+                  <div className="libre-notif__item-body">
+                    <div className="libre-notif__item-title">{it.title}</div>
                     {it.blurb && (
-                      <div className="fb-notif__item-blurb">{it.blurb}</div>
+                      <div className="libre-notif__item-blurb">{it.blurb}</div>
                     )}
                   </div>
-                  <div className="fb-notif__item-ts">
-                    {formatRelative(now, it.ts)}
+                  <div className="libre-notif__item-ts">
+                    {formatRelative(now, it.ts, t)}
                   </div>
                 </li>
               ))}

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Icon } from "@base/primitives/icon";
 import { flame } from "@base/primitives/icon/icons/flame";
 import { trophy } from "@base/primitives/icon/icons/trophy";
@@ -13,6 +13,9 @@ import { award } from "@base/primitives/icon/icons/award";
 import { crown } from "@base/primitives/icon/icons/crown";
 import { medal } from "@base/primitives/icon/icons/medal";
 import { target as targetIcon } from "@base/primitives/icon/icons/target";
+import { chevronDown } from "@base/primitives/icon/icons/chevron-down";
+import { chevronUp } from "@base/primitives/icon/icons/chevron-up";
+import { globe } from "@base/primitives/icon/icons/globe";
 import "@base/primitives/icon/icon.css";
 import type { Course, LanguageId } from "../../data/types";
 import { isExerciseKind } from "../../data/types";
@@ -37,26 +40,23 @@ const XP_PER_KIND = {
   puzzle: 15,
 } as const;
 
-/// Stat-tile accent palette. Each tone shows up as the tile's left-edge
-/// stripe, the icon's tinted background, and (for rings) the stroke
-/// color. Picked to read as distinct on a dark + light shell without any
-/// becoming the "loudest" — the page is meant to feel composed, not
-/// circus.
-const TONE = {
-  streak: "#f59e3b",
-  lessons: "#7cd9d3",
-  xp: "#fcd34d",
-  level: "#7cd97c",
-  longest: "#c79bff",
-  // Saturated coin gold — distinct from XP's softer butter tone so the
-  // currency reads as its own thing in the stats row.
-  coins: "#f3a93a",
-} as const;
-
 /// 20 weeks of activity. Wider than mobile's 12-week strip because the
 /// desktop column is wider — enough cells to show seasonal patterns
 /// rather than just "the current sprint".
 const HEATMAP_WEEKS = 20;
+
+/// How many rows of the Recent activity feed render by default. The
+/// rest live behind a "Show all (N)" toggle so a long-lived account
+/// doesn't bury everything else under a 200-row scroll wall. 8 fits
+/// in roughly half a fold of vertical space at the typical desktop
+/// width, which matches the achievements grid sitting beside it.
+const ACTIVITY_PREVIEW_COUNT = 8;
+
+/// Same trim for Topics practised — challenge-pack learners can easily
+/// accumulate 30+ distinct topics, and the long-tail topics each have
+/// 1-2 hits. Show the top 10 by frequency; the rest are reachable
+/// behind a "Show all (N)" expander.
+const TOPICS_PREVIEW_COUNT = 10;
 
 const LANG_LABELS: Partial<Record<LanguageId, string>> = {
   javascript: "JavaScript",
@@ -95,13 +95,33 @@ interface Props {
   onOpenLesson: (courseId: string, lessonId: string) => void;
 }
 
-/// Profile / stats page. Reads directly from the same hooks the StatsChip
-/// dropdown uses, but lays everything out as a dedicated surface — twin
-/// rings, color-toned stat tiles, 20-week activity heatmap, per-language
-/// brand-colored XP bar chart, achievement badges grid, topic chips, and
-/// a recent-activity timeline. Visual parity with MobileProfile so the
-/// two surfaces feel like sibling views of the same data, sized for
-/// each form factor.
+/// Profile / stats page.
+///
+/// Redesign rationale (2026-05): the previous layout stacked every
+/// section vertically — hero with two big rings, then stats row,
+/// then heatmap, then per-language bars, then a 12-badge grid,
+/// then topics, then a 24-row activity feed. Every section ate a
+/// full row of viewport width, which produced a low information-
+/// per-scroll ratio AND let topics + activity grow unbounded over
+/// time (a heavy user could see 40+ topic chips and 24 activity
+/// rows past the fold).
+///
+/// New shape:
+///   1. Compact header strip: title + meta + level progress bar.
+///   2. Single-row stat strip (5 dense tiles).
+///   3. Two-column dashboard grid:
+///        Left  — Activity heatmap, then Achievements (4×3).
+///        Right — XP by language, then Topics practised.
+///   4. Full-width Recent activity at the bottom, capped to 8
+///      visible rows with a "Show all (N)" toggle.
+///
+/// Net effect: same data, ~30% less vertical scroll on a typical
+/// run, and the two unbounded sections (topics + activity) stay
+/// digestible no matter how long the user has been on the
+/// platform. Visual parity with MobileProfile is intentionally
+/// dropped for the desktop layout — the small-screen surface has
+/// its own vertical-stack constraints that don't translate to a
+/// wide pane.
 export default function ProfileView({
   courses,
   completed,
@@ -109,6 +129,15 @@ export default function ProfileView({
   stats,
   onOpenLesson,
 }: Props) {
+  // Show-all toggles for the two sections that historically grew
+  // unbounded. Default closed; clicking the chevron flips to true
+  // and renders the full set. State lives here (not in localStorage)
+  // because the closed/open preference is per-page-load — a learner
+  // who explicitly opened it usually has a reason, and the next
+  // session typically wants the digest view again.
+  const [showAllTopics, setShowAllTopics] = useState(false);
+  const [showAllActivity, setShowAllActivity] = useState(false);
+
   /// Build a lookup of `{courseId: course}` and flatten all lessons once
   /// so downstream math can resolve completions without nested scans.
   const { lessonById } = useMemo(() => {
@@ -140,9 +169,9 @@ export default function ProfileView({
   /// READABLE — Mon/Wed/Fri labels on the left now correspond to
   /// stable weekdays.
   ///
-  /// Also tracks the activeDays count + earliest+latest dates so the
+  /// Also tracks the activeDays count + total completions so the
   /// summary line under the grid can tell the learner what they're
-  /// looking at ("12 active days across the last 20 weeks").
+  /// looking at ("12 active days · 47 completions").
   const heatmap = useMemo(() => {
     const counts = new Map<string, number>();
     for (const c of history) {
@@ -152,9 +181,6 @@ export default function ProfileView({
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayDow = today.getDay(); // 0=Sun, 6=Sat
-    // First day of the grid = Sunday of the (HEATMAP_WEEKS-1)-weeks-ago
-    // week. We start the grid that far back so it ends with this week's
-    // Sunday + intervening days up to today.
     const start = new Date(today);
     start.setDate(start.getDate() - todayDow - (HEATMAP_WEEKS - 1) * 7);
 
@@ -164,17 +190,12 @@ export default function ProfileView({
       label: string;
       isPad: boolean;
     }> = [];
-    let firstActive: Date | null = null;
-    let lastActive: Date | null = null;
     let activeDays = 0;
     let totalCompletions = 0;
     for (let i = 0; i < HEATMAP_WEEKS * 7; i++) {
       const d = new Date(start);
       d.setDate(d.getDate() + i);
       if (d > today) {
-        // Future day in the current week — render an invisible
-        // placeholder so today lands at row=todayDow rather than the
-        // bottom of the last column.
         cells.push({ key: `pad-${i}`, count: 0, label: "", isPad: true });
         continue;
       }
@@ -185,8 +206,6 @@ export default function ProfileView({
       if (count > 0) {
         activeDays += 1;
         totalCompletions += count;
-        if (!firstActive) firstActive = new Date(d);
-        lastActive = new Date(d);
       }
       cells.push({
         key,
@@ -195,16 +214,12 @@ export default function ProfileView({
         isPad: false,
       });
     }
-    // Anchor color binning to the busy days inside the window so a
-    // single 50-lesson day months ago doesn't squash the rest of the
-    // chart into pale boxes.
     const peak = Math.max(1, ...cells.map((c) => c.count));
-    return { cells, peak, activeDays, totalCompletions, firstActive, lastActive, start };
+    return { cells, peak, activeDays, totalCompletions };
   }, [history]);
 
   /// Per-language XP breakdown — bars sorted descending, language
-  /// totals shown on the right. Cap to top 8 (vs mobile's 6) since
-  /// desktop has the vertical room for a slightly fuller chart.
+  /// totals shown on the right. Cap to top 8.
   const langChart = useMemo(() => {
     const xpByLang = new Map<LanguageId, number>();
     const lessonsByLang = new Map<LanguageId, number>();
@@ -267,8 +282,11 @@ export default function ProfileView({
       .sort((a, b) => b.count - a.count);
   }, [history, lessonById]);
 
-  /// Newest-first slice of completions, capped at 24. Orphaned entries
+  /// Newest-first slice of completions, capped at 60. Orphaned entries
   /// (course was deleted) are dropped rather than rendered as ghosts.
+  /// The cap is higher than the old 24 because the expander makes
+  /// the full list reachable; the preview-vs-expanded split lives in
+  /// the render, not in the slicing.
   const recentActivity = useMemo(() => {
     const sorted = history
       .slice()
@@ -282,7 +300,7 @@ export default function ProfileView({
       completedAt: number;
     }> = [];
     for (const h of sorted) {
-      if (out.length >= 24) break;
+      if (out.length >= 60) break;
       const resolved = lessonById.get(`${h.course_id}:${h.lesson_id}`);
       if (!resolved) continue;
       out.push({
@@ -297,8 +315,8 @@ export default function ProfileView({
     return out;
   }, [history, lessonById]);
 
-  /// Achievement / milestone unlocks. Twelve total — same set as
-  /// MobileProfile so progress reads identically across surfaces.
+  /// Achievement / milestone unlocks. Twelve total — kept identical
+  /// to MobileProfile so progress reads the same on both surfaces.
   /// Order is roughly easiest → hardest top-to-bottom.
   const milestones = useMemo<MilestoneSpec[]>(
     () => [
@@ -321,214 +339,304 @@ export default function ProfileView({
   void completed;
 
   const xpToNext = Math.max(0, stats.xpForLevel - stats.xpIntoLevel);
+  const levelPct =
+    stats.xpForLevel > 0
+      ? Math.min(stats.xpIntoLevel / stats.xpForLevel, 1)
+      : 0;
+  const unlockedCount = milestones.filter((m) => m.actual >= m.target).length;
+
+  const visibleTopics = showAllTopics
+    ? topicStats
+    : topicStats.slice(0, TOPICS_PREVIEW_COUNT);
+  const visibleActivity = showAllActivity
+    ? recentActivity
+    : recentActivity.slice(0, ACTIVITY_PREVIEW_COUNT);
+  const hiddenTopicsCount = Math.max(0, topicStats.length - TOPICS_PREVIEW_COUNT);
+  const hiddenActivityCount = Math.max(
+    0,
+    recentActivity.length - ACTIVITY_PREVIEW_COUNT,
+  );
+
+  // Round large XP/coin counts so the stat tiles don't overflow at
+  // 5+ digits. "1.2k" reads cleaner than "1234"; the raw value is in
+  // the tile's `title` for users who want exact.
+  const totalLangsTouched = langChart.rows.filter((r) => r.xp > 0).length;
 
   return (
     <div className="libre-profile">
       <div className="libre-profile-scroll">
         <div className="libre-profile-inner">
-          {/* Hero — twin rings (streak target + XP into level) flanked
-              by a header. The two rings are the page's emotional
-              focal point: "what number am I chasing right now?". */}
-          <section className="libre-profile-hero" aria-label="Streak and level">
-            <div className="libre-profile-hero-text">
-              <h1 className="libre-profile-hero-title">Profile</h1>
-              <p className="libre-profile-hero-sub">
+          {/* ── Header strip ────────────────────────────────────
+              Title + meta + a single inline level-progress bar.
+              Drops the previous twin-rings hero in favour of a
+              compact band — the same "where am I in this level?"
+              signal but rendered as one bar across the page width
+              so it doesn't fight the stat strip for attention. */}
+          <header className="libre-profile-header">
+            <div className="libre-profile-header-text">
+              <h1 className="libre-profile-title">Profile</h1>
+              <p className="libre-profile-subtitle">
                 Level {stats.level} ·{" "}
                 {xpToNext === 0
                   ? "ready to level up — complete any lesson"
-                  : `${xpToNext} XP to level ${stats.level + 1}`}
+                  : `${formatNumber(xpToNext)} XP to level ${stats.level + 1}`}{" "}
+                · {unlockedCount}/{milestones.length} achievements
               </p>
             </div>
-            <div className="libre-profile-rings">
-              <RingGauge
-                value={stats.streakDays}
-                target={ringStreakTarget(stats.streakDays)}
-                label="Streak"
-                icon={flame}
-                tone="streak"
-              />
-              <RingGauge
-                value={stats.xpIntoLevel}
-                target={Math.max(stats.xpForLevel, 1)}
-                label={`Level ${stats.level}`}
-                icon={zap}
-                tone="level"
-              />
-            </div>
-          </section>
-
-          {/* Four color-toned stat tiles. Same data the rings cover but
-              flat / numeric — rings for emotional pull, tiles for
-              at-a-glance scanning. Desktop arranges them in a single
-              row of 4 instead of mobile's 2×2 grid. */}
-          <div className="libre-profile-stats" role="list">
-            <StatTile icon={flame} tone="streak" value={stats.streakDays} label="Day streak" />
-            <StatTile icon={bookOpenCheck} tone="lessons" value={stats.lessonsCompleted} label="Lessons" />
-            <StatTile icon={zap} tone="xp" value={stats.xp} label="Total XP" />
-            <StatTile icon={trophy} tone="longest" value={stats.longestStreakDays} label="Longest streak" />
-            {/* Coins are the soft-currency dropped alongside XP on every
-                completion. They don't spend on anything yet — the
-                upgrades / cosmetics / streak-freeze shop is queued for a
-                later release — but persisting them now means the
-                learner banks a balance the moment that shop ships,
-                rather than starting at 0. */}
-            <StatTile icon={coinsIcon} tone="coins" value={stats.coins} label="Coins" />
-          </div>
-
-          {/* Activity heatmap — 20 weeks, calendar-aligned. Rows are
-              stable weekdays (Sun at top, Sat at bottom) so the
-              Mon/Wed/Fri labels on the left have meaning. The
-              summary line below tells the learner what time range
-              they're looking at and how active they've been in it,
-              answering the "is this real data?" question. */}
-          <section className="libre-profile-section">
-            <div className="libre-profile-section-head">
-              <h2 className="libre-profile-section-title">Activity</h2>
-              <span className="libre-profile-heatmap-summary">
-                {heatmap.activeDays === 0
-                  ? "No completions yet — open a lesson to start the chart."
-                  : `${heatmap.totalCompletions} completion${heatmap.totalCompletions === 1 ? "" : "s"} across ${heatmap.activeDays} active day${heatmap.activeDays === 1 ? "" : "s"} · last ${HEATMAP_WEEKS} weeks`}
+            <div
+              className="libre-profile-level-bar"
+              role="progressbar"
+              aria-valuenow={Math.round(levelPct * 100)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`Level ${stats.level} progress`}
+            >
+              <div className="libre-profile-level-bar-track">
+                <div
+                  className="libre-profile-level-bar-fill"
+                  style={{ width: `${Math.max(levelPct * 100, 2)}%` }}
+                />
+              </div>
+              <span className="libre-profile-level-bar-meta">
+                {formatNumber(stats.xpIntoLevel)}
+                <span className="libre-profile-level-bar-meta-sub">
+                  /{formatNumber(stats.xpForLevel)}
+                </span>
               </span>
             </div>
-            <div className="libre-profile-heatmap-wrap">
-              {/* Day-of-week labels. Show only Mon / Wed / Fri to
-                  avoid clutter — same convention as GitHub's
-                  contribution graph. */}
-              <div className="libre-profile-heatmap-rowlabels" aria-hidden>
-                <span />
-                <span>Mon</span>
-                <span />
-                <span>Wed</span>
-                <span />
-                <span>Fri</span>
-                <span />
-              </div>
-              <Heatmap cells={heatmap.cells} peak={heatmap.peak} />
-            </div>
-            <div className="libre-profile-heatmap-legend" aria-hidden>
-              <span>Less</span>
-              <span className="libre-profile-heatmap-cell libre-profile-heatmap-cell--lvl-0" />
-              <span className="libre-profile-heatmap-cell libre-profile-heatmap-cell--lvl-1" />
-              <span className="libre-profile-heatmap-cell libre-profile-heatmap-cell--lvl-2" />
-              <span className="libre-profile-heatmap-cell libre-profile-heatmap-cell--lvl-3" />
-              <span className="libre-profile-heatmap-cell libre-profile-heatmap-cell--lvl-4" />
-              <span>More</span>
-            </div>
-          </section>
+          </header>
 
-          {/* Per-language XP — horizontal bars, brand-tinted via
-              `data-lang` so JS reads yellow, Rust reads oxblood, etc.
-              Doubles as a "languages I've touched" surface. */}
-          {langChart.rows.length > 0 && (
-            <section className="libre-profile-section">
-              <h2 className="libre-profile-section-title">XP by language</h2>
-              <ul className="libre-profile-lang-chart" role="list">
-                {langChart.rows.map((r) => (
-                  <li key={r.lang} className="libre-profile-lang-row">
-                    <span className="libre-profile-lang-name" data-lang={r.lang}>
-                      {LANG_LABELS[r.lang] ?? r.lang}
-                    </span>
-                    <div className="libre-profile-lang-bar" aria-hidden data-lang={r.lang}>
-                      <div
-                        className="libre-profile-lang-bar-fill"
-                        style={{ width: `${Math.max(r.pct * 100, 2)}%` }}
-                      />
-                    </div>
-                    <span className="libre-profile-lang-meta">
-                      {r.lessonsDone}
-                      <span className="libre-profile-lang-meta-sub">/{r.lessonsTotal}</span>
-                    </span>
-                    <span className="libre-profile-lang-xp">{r.xp} XP</span>
-                  </li>
-                ))}
+          {/* ── Stats strip ─────────────────────────────────────
+              Six compact tiles, single row. Density vs. the old
+              5-tile chunkier row: half the vertical footprint per
+              tile, ~50% more info per scroll-inch. */}
+          <div className="libre-profile-stats" role="list">
+            <StatTile icon={flame} tone="streak" value={stats.streakDays} label="Day streak" />
+            <StatTile icon={trophy} tone="longest" value={stats.longestStreakDays} label="Longest streak" />
+            <StatTile icon={bookOpenCheck} tone="lessons" value={stats.lessonsCompleted} label="Lessons" />
+            <StatTile icon={zap} tone="xp" value={stats.xp} label="Total XP" formatted />
+            <StatTile icon={coinsIcon} tone="coins" value={stats.coins} label="Coins" formatted />
+            <StatTile icon={globe} tone="level" value={totalLangsTouched} label="Languages" />
+          </div>
+
+          {/* ── Dashboard grid ─────────────────────────────────
+              Two columns at wide widths, single column on narrow
+              (the grid template collapses via CSS, no JS branch).
+              Left holds Activity + Achievements; right holds
+              Languages + Topics. Bottom row spans full width
+              because the recent-activity list reads better as a
+              wide table than a half-pane column. */}
+          <div className="libre-profile-grid">
+            {/* Activity heatmap ────────────────────────────── */}
+            <section className="libre-profile-card libre-profile-card--activity">
+              <header className="libre-profile-card-head">
+                <h2 className="libre-profile-card-title">Activity</h2>
+                <span className="libre-profile-card-meta">
+                  {heatmap.activeDays === 0
+                    ? "No completions yet"
+                    : `${heatmap.totalCompletions} completion${heatmap.totalCompletions === 1 ? "" : "s"} · ${heatmap.activeDays} active day${heatmap.activeDays === 1 ? "" : "s"} · last ${HEATMAP_WEEKS}w`}
+                </span>
+              </header>
+              <div className="libre-profile-heatmap-wrap">
+                <div className="libre-profile-heatmap-rowlabels" aria-hidden>
+                  <span />
+                  <span>Mon</span>
+                  <span />
+                  <span>Wed</span>
+                  <span />
+                  <span>Fri</span>
+                  <span />
+                </div>
+                <Heatmap cells={heatmap.cells} peak={heatmap.peak} />
+              </div>
+              <div className="libre-profile-heatmap-legend" aria-hidden>
+                <span>Less</span>
+                <span className="libre-profile-heatmap-cell libre-profile-heatmap-cell--lvl-0" />
+                <span className="libre-profile-heatmap-cell libre-profile-heatmap-cell--lvl-1" />
+                <span className="libre-profile-heatmap-cell libre-profile-heatmap-cell--lvl-2" />
+                <span className="libre-profile-heatmap-cell libre-profile-heatmap-cell--lvl-3" />
+                <span className="libre-profile-heatmap-cell libre-profile-heatmap-cell--lvl-4" />
+                <span>More</span>
+              </div>
+            </section>
+
+            {/* XP by language ──────────────────────────────── */}
+            {langChart.rows.length > 0 ? (
+              <section className="libre-profile-card libre-profile-card--lang">
+                <header className="libre-profile-card-head">
+                  <h2 className="libre-profile-card-title">XP by language</h2>
+                  <span className="libre-profile-card-meta">
+                    {totalLangsTouched} touched
+                  </span>
+                </header>
+                <ul className="libre-profile-lang-chart" role="list">
+                  {langChart.rows.map((r) => (
+                    <li key={r.lang} className="libre-profile-lang-row">
+                      <span className="libre-profile-lang-name" data-lang={r.lang}>
+                        {LANG_LABELS[r.lang] ?? r.lang}
+                      </span>
+                      <div className="libre-profile-lang-bar" aria-hidden data-lang={r.lang}>
+                        <div
+                          className="libre-profile-lang-bar-fill"
+                          style={{ width: `${Math.max(r.pct * 100, 2)}%` }}
+                        />
+                      </div>
+                      <span className="libre-profile-lang-meta">
+                        {r.lessonsDone}
+                        <span className="libre-profile-lang-meta-sub">/{r.lessonsTotal}</span>
+                      </span>
+                      <span className="libre-profile-lang-xp">
+                        {formatNumber(r.xp)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : (
+              // Empty languages card keeps the grid's right column
+              // populated when a learner hasn't started anything;
+              // collapsing it would let achievements (below) re-flow
+              // into the right column on a fresh install and the
+              // layout would look hollow.
+              <section className="libre-profile-card libre-profile-card--lang">
+                <header className="libre-profile-card-head">
+                  <h2 className="libre-profile-card-title">XP by language</h2>
+                </header>
+                <p className="libre-profile-empty libre-profile-empty--inline">
+                  Open any lesson to start earning XP.
+                </p>
+              </section>
+            )}
+
+            {/* Achievements ────────────────────────────────── */}
+            <section className="libre-profile-card libre-profile-card--ach">
+              <header className="libre-profile-card-head">
+                <h2 className="libre-profile-card-title">Achievements</h2>
+                <span className="libre-profile-card-meta">
+                  {unlockedCount}/{milestones.length} unlocked
+                </span>
+              </header>
+              <ul className="libre-profile-badges" role="list">
+                {milestones.map((m) => {
+                  const unlocked = m.actual >= m.target;
+                  return (
+                    <li
+                      key={m.id}
+                      className={
+                        "libre-profile-badge" +
+                        (unlocked ? " libre-profile-badge--unlocked" : "")
+                      }
+                      title={
+                        unlocked
+                          ? `${m.label} unlocked`
+                          : `${m.actual}/${m.target} ${m.unit}`
+                      }
+                    >
+                      <span className="libre-profile-badge-icon" aria-hidden>
+                        <Icon icon={m.icon} size="sm" color="currentColor" />
+                      </span>
+                      <span className="libre-profile-badge-label">{m.label}</span>
+                      <span className="libre-profile-badge-meta">
+                        {unlocked ? "Unlocked" : `${m.actual}/${m.target}`}
+                      </span>
+                    </li>
+                  );
+                })}
               </ul>
             </section>
-          )}
 
-          {/* Achievement badges — unlocked ones glow gold, locked ones
-              dim with a "x / target" hint so the next goal stays
-              visible. Six columns × two rows on desktop (vs mobile's
-              3×4) — the page has the horizontal room. */}
-          <section className="libre-profile-section">
-            <h2 className="libre-profile-section-title">Achievements</h2>
-            <ul className="libre-profile-badges" role="list">
-              {milestones.map((m) => {
-                const unlocked = m.actual >= m.target;
-                return (
-                  <li
-                    key={m.id}
-                    className={
-                      "libre-profile-badge" +
-                      (unlocked ? " libre-profile-badge--unlocked" : "")
-                    }
-                    title={
-                      unlocked
-                        ? `${m.label} unlocked`
-                        : `${m.actual}/${m.target} ${m.unit}`
-                    }
-                  >
-                    <span className="libre-profile-badge-icon" aria-hidden>
-                      <Icon icon={m.icon} size="sm" color="currentColor" />
-                    </span>
-                    <span className="libre-profile-badge-label">{m.label}</span>
-                    <span className="libre-profile-badge-meta">
-                      {unlocked ? "Unlocked" : `${m.actual}/${m.target}`}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-
-          {/* Topics — pulled only from challenge-pack lessons (they
-              carry the `topic` tag). Desktop-unique; books don't have
-              topics, so a learner who only reads books sees nothing. */}
-          {topicStats.length > 0 && (
-            <section className="libre-profile-section">
-              <h2 className="libre-profile-section-title">Topics practised</h2>
-              <div className="libre-profile-topic-grid">
-                {topicStats.map((t) => (
-                  <div key={t.topic} className="libre-profile-topic-chip">
-                    <span className="libre-profile-topic-name">{t.topic}</span>
-                    <span className="libre-profile-topic-count">{t.count}</span>
+            {/* Topics ──────────────────────────────────────── */}
+            <section className="libre-profile-card libre-profile-card--topics">
+              <header className="libre-profile-card-head">
+                <h2 className="libre-profile-card-title">Topics practised</h2>
+                <span className="libre-profile-card-meta">
+                  {topicStats.length === 0
+                    ? "Challenge packs only"
+                    : `${topicStats.length} topic${topicStats.length === 1 ? "" : "s"}`}
+                </span>
+              </header>
+              {topicStats.length === 0 ? (
+                <p className="libre-profile-empty libre-profile-empty--inline">
+                  Finish a challenge-pack lesson — its topic shows up here.
+                </p>
+              ) : (
+                <>
+                  <div className="libre-profile-topic-grid">
+                    {visibleTopics.map((t) => (
+                      <div key={t.topic} className="libre-profile-topic-chip">
+                        <span className="libre-profile-topic-name">{t.topic}</span>
+                        <span className="libre-profile-topic-count">{t.count}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                  {hiddenTopicsCount > 0 && (
+                    <ExpanderButton
+                      open={showAllTopics}
+                      onToggle={() => setShowAllTopics((v) => !v)}
+                      collapsedLabel={`Show all (${topicStats.length})`}
+                      expandedLabel={`Show top ${TOPICS_PREVIEW_COUNT}`}
+                    />
+                  )}
+                </>
+              )}
             </section>
-          )}
+          </div>
 
-          {/* Recent activity timeline. Clicks jump back to the lesson. */}
-          <section className="libre-profile-section">
-            <h2 className="libre-profile-section-title">Recent activity</h2>
+          {/* ── Recent activity ────────────────────────────────
+              Full-width below the grid. Capped to 8 visible by
+              default; the expander toggles between "Show all (N)"
+              and "Show recent 8". Each row is a single dense
+              line: kind dot, lesson title, course title, relative
+              time — designed to scan vertically without wasted
+              padding. */}
+          <section className="libre-profile-card libre-profile-card--activity-feed">
+            <header className="libre-profile-card-head">
+              <h2 className="libre-profile-card-title">Recent activity</h2>
+              <span className="libre-profile-card-meta">
+                {recentActivity.length === 0
+                  ? "No completions yet"
+                  : `${recentActivity.length}${recentActivity.length >= 60 ? "+" : ""} recent`}
+              </span>
+            </header>
             {recentActivity.length > 0 ? (
-              <ul className="libre-profile-activity">
-                {recentActivity.map((r, i) => (
-                  <li key={`${r.courseId}:${r.lessonId}:${i}`}>
-                    <button
-                      className="libre-profile-activity-row"
-                      onClick={() => onOpenLesson(r.courseId, r.lessonId)}
-                    >
-                      <span
-                        className={`libre-profile-activity-kind libre-profile-activity-kind--${r.kind}`}
-                        aria-hidden
-                      />
-                      <span className="libre-profile-activity-body">
+              <>
+                <ul className="libre-profile-activity">
+                  {visibleActivity.map((r, i) => (
+                    <li key={`${r.courseId}:${r.lessonId}:${i}`}>
+                      <button
+                        className="libre-profile-activity-row"
+                        onClick={() => onOpenLesson(r.courseId, r.lessonId)}
+                        title={`${r.lessonTitle} · ${r.courseTitle}`}
+                      >
+                        <span
+                          className={`libre-profile-activity-kind libre-profile-activity-kind--${r.kind}`}
+                          aria-hidden
+                          title={r.kind}
+                        />
                         <span className="libre-profile-activity-lesson">
                           {r.lessonTitle}
                         </span>
                         <span className="libre-profile-activity-course">
                           {r.courseTitle}
                         </span>
-                      </span>
-                      <span className="libre-profile-activity-time">
-                        {formatRelative(r.completedAt)}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
+                        <span className="libre-profile-activity-time">
+                          {formatRelative(r.completedAt)}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                {hiddenActivityCount > 0 && (
+                  <ExpanderButton
+                    open={showAllActivity}
+                    onToggle={() => setShowAllActivity((v) => !v)}
+                    collapsedLabel={`Show all (${recentActivity.length})`}
+                    expandedLabel={`Show recent ${ACTIVITY_PREVIEW_COUNT}`}
+                  />
+                )}
+              </>
             ) : (
-              <p className="libre-profile-empty">
+              <p className="libre-profile-empty libre-profile-empty--inline">
                 No completed lessons yet. Pick a course in the sidebar to start
                 building your profile.
               </p>
@@ -549,15 +657,36 @@ interface MilestoneSpec {
   unit: string;
 }
 
-/// Pick the next milestone target a streak should chase — 3 / 7 / 14 /
-/// 30 / 60 / 100 / 365 ladder. Empty rings on a 200-day streak would
-/// feel demotivating; this keeps the fill always relative to the next
-/// reachable goal.
-function ringStreakTarget(streak: number): number {
-  for (const t of [3, 7, 14, 30, 60, 100, 365]) {
-    if (streak < t) return t;
-  }
-  return Math.max(streak + 30, 365);
+/// Reusable expand/collapse footer button used by Topics + Recent
+/// activity. The two surfaces share the same UX vocabulary — a
+/// chevron + label — so a learner who learns the gesture once
+/// applies it to both.
+function ExpanderButton({
+  open,
+  onToggle,
+  collapsedLabel,
+  expandedLabel,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  collapsedLabel: string;
+  expandedLabel: string;
+}) {
+  return (
+    <button
+      type="button"
+      className="libre-profile-expander"
+      onClick={onToggle}
+      aria-expanded={open}
+    >
+      <Icon
+        icon={open ? chevronUp : chevronDown}
+        size="xs"
+        color="currentColor"
+      />
+      <span>{open ? expandedLabel : collapsedLabel}</span>
+    </button>
+  );
 }
 
 function localDayKey(tsSeconds: number): string {
@@ -567,77 +696,38 @@ function localDayKey(tsSeconds: number): string {
   return `${d.getFullYear()}-${m}-${day}`;
 }
 
-/// Circular SVG gauge. Fill is animated via stroke-dashoffset (CSS
-/// transition), so React re-renders drive the visual change for free.
-/// Sized via CSS (--ring-size on the parent) so the same component
-/// works in the StatsChip dropdown and on the full Profile page.
-function RingGauge({
-  value,
-  target,
-  label,
-  icon,
-  tone,
-}: {
-  value: number;
-  target: number;
-  label: string;
-  icon: string;
-  tone: "streak" | "level";
-}) {
-  const pct = target > 0 ? Math.min(value / target, 1) : 0;
-  const r = 42;
-  const c = Math.round(2 * Math.PI * r * 100) / 100;
-  const offset = c * (1 - pct);
-  return (
-    <div className={`libre-profile-ring libre-profile-ring--${tone}`}>
-      <svg viewBox="0 0 100 100" className="libre-profile-ring-svg" aria-hidden>
-        <circle className="libre-profile-ring-track" cx="50" cy="50" r={r} fill="none" />
-        <circle
-          className="libre-profile-ring-fill"
-          cx="50"
-          cy="50"
-          r={r}
-          fill="none"
-          strokeDasharray={c}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          transform="rotate(-90 50 50)"
-        />
-      </svg>
-      <div className="libre-profile-ring-body">
-        <span className="libre-profile-ring-icon" aria-hidden>
-          <Icon icon={icon} size="xl" color="currentColor" />
-        </span>
-        <span className="libre-profile-ring-value">{value}</span>
-        <span className="libre-profile-ring-label">{label}</span>
-      </div>
-    </div>
-  );
-}
-
-/// One stat tile. Icon-tinted by `tone` so the four tiles read as
-/// distinct numerics even when the values are similar.
+/// One dense stat tile. Switched from the previous "icon + 2-line
+/// text" stacked layout to a horizontal "icon + value + label" so
+/// six tiles fit in a single row at the typical desktop width.
 function StatTile({
   icon,
   tone,
   value,
   label,
+  formatted,
 }: {
   icon: string;
-  tone: keyof typeof TONE;
+  tone: "streak" | "lessons" | "xp" | "level" | "longest" | "coins";
   value: number;
   label: string;
+  /// Pass `formatted` for XP / coin counters so 5+ digit values
+  /// render compactly as "1.2k" / "10k". Streak / lesson counters
+  /// stay as raw integers — they're naturally smaller.
+  formatted?: boolean;
 }) {
   return (
     <div
       className={`libre-profile-stat libre-profile-stat--${tone}`}
       role="listitem"
+      title={`${value} ${label.toLowerCase()}`}
     >
       <span className="libre-profile-stat-icon" aria-hidden>
-        <Icon icon={icon} size="base" color="currentColor" />
+        <Icon icon={icon} size="sm" color="currentColor" />
       </span>
       <div className="libre-profile-stat-text">
-        <span className="libre-profile-stat-value">{value}</span>
+        <span className="libre-profile-stat-value">
+          {formatted ? formatNumber(value) : value}
+        </span>
         <span className="libre-profile-stat-label">{label}</span>
       </div>
     </div>
@@ -656,8 +746,6 @@ function Heatmap({
   cells: Array<{ key: string; count: number; label: string; isPad: boolean }>;
   peak: number;
 }) {
-  // Bin counts to 5 levels (0-4). Level 0 = no activity (muted);
-  // levels 1-4 ramp from quiet to bright.
   const level = (count: number) => {
     if (count <= 0) return 0;
     if (count >= peak) return 4;
@@ -703,4 +791,21 @@ function formatRelative(unixSeconds: number): string {
   if (diff < 86400 * 7) return `${Math.floor(diff / 86400)}d ago`;
   const d = new Date(unixSeconds * 1000);
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+/// Pretty-print a number with k/M suffixes for the stat tiles +
+/// activity feed where horizontal room is tight. 1234 → "1.2k",
+/// 1000000 → "1M". Sub-1000 values pass through unchanged. Returns a
+/// string (not a number) so the formatted output can sit next to
+/// `<span class="…meta-sub">/…</span>` siblings without coercion
+/// headaches.
+function formatNumber(n: number): string {
+  if (n < 1000) return String(n);
+  if (n < 10000) {
+    const k = n / 1000;
+    return `${k.toFixed(1).replace(/\.0$/, "")}k`;
+  }
+  if (n < 1000000) return `${Math.round(n / 1000)}k`;
+  const m = n / 1000000;
+  return `${m.toFixed(1).replace(/\.0$/, "")}M`;
 }

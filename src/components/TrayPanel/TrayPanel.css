@@ -1,0 +1,757 @@
+/* Menu-bar popover.
+   Tauri WebviewWindow is frameless + transparent (see
+   `src-tauri/src/tray.rs`); the CSS card below paints the
+   visible (rounded) shape so the OS window's rectangular
+   bounds don't ghost behind it.
+
+   Colorways are theme-driven and mode-aware. Both modes pull
+   from the SAME theme accent token (`--color-accent`) so the
+   tray's palette automatically follows whatever the active
+   theme declares (white on default-dark, amber on libre-dark,
+   blue on base-light, etc.). The two modes diverge via a
+   color-mix derivation, not via a separate hardcoded palette:
+     --tray-accent       primary brand accent — drives active
+                         pill, send button, brand square, empty-
+                         state border + chip stripe, focus ring
+     --tray-accent-soft  same color at low alpha — backgrounds
+                         and hover tints
+     --tray-accent-fg    text-on-accent so labels stay legible
+                         when painted over the saturated accent
+   Semantic state colors (`--tray-ok` / `--tray-warn` / `--tray-bad`)
+   stay constant — they signal Ollama daemon health, not mode. */
+
+:root,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  color: var(--color-text-primary);
+}
+
+.libre-tray {
+  /* Defaults — overridden per mode below. Chat mode is the
+     fallback when the `data-tray-mode` attribute is missing
+     (initial render before sessions resolve). */
+  --tray-accent: var(--color-accent, #5b6bd6);
+  --tray-accent-soft: color-mix(in srgb, var(--tray-accent) 16%, transparent);
+  --tray-accent-fg: var(--color-accent-fg, #ffffff);
+  --tray-ok: #46d49a;
+  --tray-warn: #f3b14a;
+  --tray-bad: #ef5a6f;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  border-radius: 14px;
+  border: 1px solid var(--color-border-default);
+  overflow: hidden;
+}
+
+/* Both modes pull from the SAME theme accent token
+   (`--color-accent`), but agent mode derives a tonally-shifted
+   variant via `color-mix` so the two pills still read as
+   "different colors" without introducing a non-theme palette
+   (the earlier orange override was retired — every accent now
+   flows from whatever the active theme declares).
+   - Chat → pure `--color-accent` (the theme's primary brand
+     color: white on default-dark, amber on libre-dark, blue on
+     base-light, etc.)
+   - Agent → mix accent 65% with `--color-text-secondary` 35%
+     to land on a related-but-distinct tone. Same hue family,
+     muted by the cool-gray text token — reads as a sibling of
+     the chat accent, not a competitor. The mix runs in oklab
+     for perceptual smoothness so the result doesn't drift
+     into an unexpected hue. */
+.libre-tray[data-tray-mode="chat"] {
+  --tray-accent: var(--color-accent, #5b6bd6);
+  --tray-accent-soft: color-mix(in srgb, var(--tray-accent) 16%, transparent);
+  --tray-accent-fg: var(--color-accent-fg, #ffffff);
+}
+
+.libre-tray[data-tray-mode="agent"] {
+  --tray-accent: color-mix(
+    in oklab,
+    var(--color-accent, #5b6bd6) 65%,
+    var(--color-text-secondary, #a4a4ad) 35%
+  );
+  --tray-accent-soft: color-mix(in srgb, var(--tray-accent) 18%, transparent);
+  --tray-accent-fg: var(--color-accent-fg, #ffffff);
+}
+
+/* Drag region — 10px-tall invisible strip at the top of the
+   card. Buttons opt out via `-webkit-app-region: no-drag` so
+   they stay clickable. The header below has its own opt-out;
+   the empty space above the brand emoji handles the case where
+   the user grabs the popover from a region that has no
+   interactive child. */
+.libre-tray::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 10px;
+  -webkit-app-region: drag;
+  app-region: drag;
+  z-index: 100;
+  pointer-events: none;
+}
+
+/* Hide the in-app panel's own header inside the tray. The tray
+   provides its own header (TrayHeader), so duplicating the
+   panel's title bar is just clutter. */
+.libre-tray .libre-ai-panel-header {
+  display: none;
+}
+
+/* AiChatPanel position overrides — fill the available space
+   inside the tray card instead of floating in the bottom-right
+   like it does in the main window. */
+.libre-tray .libre-ai-panel {
+  position: relative;
+  inset: 0;
+  top: auto;
+  bottom: auto;
+  left: auto;
+  right: auto;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  transform: none !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transition: none !important;
+}
+
+/* ── Tray header ─────────────────────────────────────────────────
+   Three zones laid out left-to-right inside a single row:
+     [brand] [mode toggle]   spacer   [status] [sessions] [+ new]
+   The header is the only zone that gets the accent gradient — a
+   bright sliver underneath the controls so the popover doesn't
+   read as a sea of monochrome chrome. */
+.libre-tray-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 10px 10px 12px;
+  border-bottom: 1px solid var(--color-border-default);
+  /* Drag region for the entire header strip — controls
+     individually opt out below. */
+  -webkit-app-region: drag;
+  app-region: drag;
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--tray-accent) 14%, transparent),
+      color-mix(in srgb, var(--tray-accent) 5%, transparent) 70%,
+      transparent 100%
+    ),
+    var(--color-bg-primary);
+  /* Mode color changes shouldn't flash — fade through the
+     gradient by transitioning the background blend instead. */
+  transition: background 200ms ease;
+}
+
+/* Mode toggle — two-pill segmented control with icons. Active
+   tab gets the accent gradient as its fill so the popover's
+   primary state is signaled in color, not just typography. */
+.libre-tray-header-mode {
+  display: inline-flex;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 999px;
+  padding: 2px;
+  gap: 0;
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
+.libre-tray-header-mode-btn {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.libre-tray-header-mode-btn:hover {
+  color: var(--color-text-primary);
+}
+
+.libre-tray-header-mode-btn.is-active {
+  background: var(--tray-accent);
+  color: var(--tray-accent-fg);
+  /* Subtle inner highlight so the pill reads as "glowing"
+     rather than flat — picks up the interactive feel of the
+     brand sliver above. */
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.libre-tray-header-spacer {
+  flex: 1;
+}
+
+/* Status dot — colored pill with a single dot indicating the
+   Ollama daemon's reachability. Tooltip surfaces the
+   human-readable state on hover. */
+.libre-tray-header-status {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  cursor: default;
+  padding: 0;
+}
+
+.libre-tray-header-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.libre-tray-header-status--ok .libre-tray-header-status-dot {
+  background: var(--tray-ok);
+  box-shadow: 0 0 6px var(--tray-ok);
+}
+
+.libre-tray-header-status--warn .libre-tray-header-status-dot {
+  background: var(--tray-warn);
+  box-shadow: 0 0 6px var(--tray-warn);
+}
+
+.libre-tray-header-status--bad .libre-tray-header-status-dot {
+  background: var(--tray-bad);
+  box-shadow: 0 0 6px var(--tray-bad);
+}
+
+/* Sessions menu — clickable trigger that opens a popover-anchored
+   dropdown of past conversations. */
+.libre-tray-header-sessions {
+  position: relative;
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
+.libre-tray-header-sessions-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.libre-tray-header-sessions-trigger:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+.libre-tray-header-sessions-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.libre-tray-header-sessions-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 260px;
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  z-index: 1100;
+  padding: 6px;
+}
+
+.libre-tray-header-sessions-menu-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--color-text-tertiary);
+  padding: 4px 6px 6px;
+}
+
+.libre-tray-header-sessions-menu-empty {
+  padding: 12px 6px;
+  color: var(--color-text-tertiary);
+  font-size: 12px;
+}
+
+.libre-tray-header-sessions-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.libre-tray-header-sessions-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.libre-tray-header-sessions-row-pick {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: transparent;
+  color: var(--color-text-primary);
+  border: 0;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.libre-tray-header-sessions-row-pick:hover {
+  background: var(--color-bg-tertiary);
+}
+
+.libre-tray-header-sessions-row.is-active .libre-tray-header-sessions-row-pick {
+  background: color-mix(
+    in srgb,
+    var(--tray-accent) 18%,
+    var(--color-bg-secondary)
+  );
+}
+
+/* Each session row badges its mode with the canonical mode
+   color so the dropdown reads as a colored timeline at a
+   glance — orange squares = agent sessions, themed accent
+   squares = chat sessions. The colors here are intentionally
+   constant across modes (rather than `var(--tray-accent)`,
+   which would shift with the active selection); the badge
+   tells the user what KIND of session a row IS, not what's
+   active right now. */
+.libre-tray-header-sessions-mode {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  color: #fff;
+}
+
+/* Session-row mode badges. Same two-tone-from-one-accent system
+   the active pill uses, so a row's badge color matches the
+   color the header would adopt if you picked that row. */
+.libre-tray-header-sessions-mode--chat {
+  background: var(--color-accent, #5b6bd6);
+  color: var(--color-accent-fg, #fff);
+}
+
+.libre-tray-header-sessions-mode--agent {
+  background: color-mix(
+    in oklab,
+    var(--color-accent, #5b6bd6) 65%,
+    var(--color-text-secondary, #a4a4ad) 35%
+  );
+  color: var(--color-accent-fg, #fff);
+}
+
+.libre-tray-header-sessions-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.libre-tray-header-sessions-time {
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.libre-tray-header-sessions-row-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-right: 2px;
+  opacity: 0.5;
+  transition: opacity 140ms ease, color 140ms ease, background 140ms ease;
+}
+
+.libre-tray-header-sessions-row:hover .libre-tray-header-sessions-row-delete {
+  opacity: 1;
+}
+
+.libre-tray-header-sessions-row-delete:hover {
+  background: color-mix(in srgb, var(--tray-bad) 22%, transparent);
+  color: var(--tray-bad);
+}
+
+/* New-session button — accent-tinted plus icon. Same affordance
+   as a "+ New chat" entry in the dropdown but visible at all
+   times so the most common action is one click away. */
+.libre-tray-header-new {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: var(--tray-accent);
+  color: var(--tray-accent-fg);
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  padding: 0;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  transition: transform 120ms ease, filter 120ms ease, background 200ms ease;
+}
+
+.libre-tray-header-new:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+
+.libre-tray-header-new:active {
+  transform: translateY(0);
+}
+
+/* Close button — only present in the in-app variant where the
+   panel is a slide-in that needs an explicit dismiss. The tray
+   popover hides on blur and intentionally omits this button. */
+.libre-tray-header-close {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-tertiary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 999px;
+  cursor: pointer;
+  padding: 0;
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+
+.libre-tray-header-close:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-strong);
+}
+
+/* ── In-panel chip styling ──────────────────────────────────────
+   The chat / agent panels render a stack of suggestion chips on
+   their empty state. Inside the tray we want those chips to feel
+   more like actionable tools — accent-tinted left edge + a hover
+   that lifts them. The actual content / icons stay the panel's
+   responsibility; we just upgrade the visual treatment per
+   variant. */
+.libre-tray .libre-ai-panel-empty {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--tray-accent) 8%, var(--color-bg-secondary)),
+    var(--color-bg-secondary)
+  );
+  border: 1px solid color-mix(
+    in srgb,
+    var(--tray-accent) 22%,
+    var(--color-border-default)
+  );
+  transition: background 200ms ease, border-color 200ms ease;
+}
+
+.libre-tray .libre-ai-panel-empty-chip {
+  position: relative;
+  padding-left: 18px;
+  transition: transform 120ms ease, border-color 120ms ease;
+}
+
+.libre-tray .libre-ai-panel-empty-chip::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 60%;
+  border-radius: 2px;
+  background: var(--tray-accent);
+  opacity: 0.8;
+  transition: background 200ms ease;
+}
+
+.libre-tray .libre-ai-panel-empty-chip:hover {
+  transform: translateX(2px);
+  border-color: color-mix(
+    in srgb,
+    var(--tray-accent) 45%,
+    var(--color-border-default)
+  );
+}
+
+/* Accent the composer's send button so the primary CTA stands
+   out against the otherwise-neutral chrome. Mode color flows
+   through `--tray-accent`, so the button is orange in agent
+   mode and the theme's brand color in chat mode. */
+.libre-tray .libre-ai-panel-send:not(:disabled) {
+  background: var(--tray-accent);
+  border-color: transparent;
+  color: var(--tray-accent-fg);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition: background 200ms ease, filter 120ms ease;
+}
+
+.libre-tray .libre-ai-panel-send:not(:disabled):hover {
+  filter: brightness(1.08);
+}
+
+/* Focus ring inside the composer textarea picks up the accent
+   color too, so the keyboard focus state matches the visual
+   language of the rest of the popover. */
+.libre-tray .libre-ai-panel-input:focus {
+  border-color: color-mix(
+    in srgb,
+    var(--tray-accent) 60%,
+    var(--color-border-default)
+  );
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--tray-accent) 25%, transparent);
+}
+
+/* ── In-app host (`.libre-ai-host`) ──────────────────────────────
+   The same colorful AI chrome the menu-bar tray uses, but
+   mounted INSIDE the in-app `AiAssistant`'s slide-in panel
+   (bottom-right of the main window) instead of the tray
+   popover. AiAssistant wraps the header + surface in a
+   `<div class="libre-ai-host" data-tray-mode="...">` so all the
+   `.libre-tray-header-*` rules above apply by association
+   (they're not scoped to `.libre-tray`), and the `--tray-accent`
+   tokens cascade through.
+   The mode-color selectors at the top of this file are scoped
+   to `.libre-tray[data-tray-mode]` — we mirror them here so the
+   in-app host picks up the same per-mode palette without
+   duplicating every rule. */
+.libre-ai-host {
+  /* Inherit the same defaults `.libre-tray` declares. The mode
+     attribute overrides below pick the right per-mode accent. */
+  --tray-accent: var(--color-accent, #5b6bd6);
+  --tray-accent-soft: color-mix(in srgb, var(--tray-accent) 16%, transparent);
+  --tray-accent-fg: var(--color-accent-fg, #ffffff);
+  --tray-ok: #46d49a;
+  --tray-warn: #f3b14a;
+  --tray-bad: #ef5a6f;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+/* `--floating` modifier — used when the host is the in-app
+   slide-in AI panel anchored to the bottom-right of the main
+   window. The host takes over the geometry the legacy
+   `.libre-ai-panel` was painting (same numbers, just shifted up
+   one level so the new TrayHeader can render INSIDE the floating
+   card instead of being a separate layer above it). */
+.libre-ai-host--floating {
+  position: fixed;
+  /* Anchor just above the AI orb. Geometry:
+       orb-height (52px) + orb-bottom-anchor (20px) + breathing
+       gap (8px) = 80px
+     Drives both the `bottom` anchor here AND the `top` + `height`
+     calculations below (they subtract the same 80px so the panel
+     fits in the remaining viewport above the orb). */
+  bottom: 80px;
+  right: 20px;
+  top: max(14px, calc(100vh - 80px - min(620px, 80vh)));
+  height: min(620px, calc(100vh - 80px - 14px));
+  width: 380px;
+  max-width: calc(100vw - 28px);
+  z-index: 91;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--libre-radius-lg);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.38);
+  overflow: hidden;
+}
+
+/* In-app host mirrors the same theme-derived per-mode palette
+   as the menu-bar tray above. Single source of truth for the
+   color logic; both surfaces look identical for a given mode. */
+.libre-ai-host[data-tray-mode="chat"] {
+  --tray-accent: var(--color-accent, #5b6bd6);
+  --tray-accent-soft: color-mix(in srgb, var(--tray-accent) 16%, transparent);
+  --tray-accent-fg: var(--color-accent-fg, #ffffff);
+}
+
+.libre-ai-host[data-tray-mode="agent"] {
+  --tray-accent: color-mix(
+    in oklab,
+    var(--color-accent, #5b6bd6) 65%,
+    var(--color-text-secondary, #a4a4ad) 35%
+  );
+  --tray-accent-soft: color-mix(in srgb, var(--tray-accent) 18%, transparent);
+  --tray-accent-fg: var(--color-accent-fg, #ffffff);
+}
+
+/* In-app panel mirrors the same per-element overrides the tray
+   variant uses for the embedded `.libre-ai-panel`. Hides the
+   built-in chat/agent header so the new `TrayHeader` (rendered
+   ABOVE the panel by AiAssistant) is the single source of
+   truth. */
+.libre-ai-host .libre-ai-panel-header {
+  display: none;
+}
+
+.libre-ai-host .libre-ai-panel {
+  /* Fill the slot the host gives us — AiAssistant's wrapper
+     handles positioning (slide-in from bottom-right). Reset the
+     panel's own floating chrome since the host owns the
+     surrounding card. */
+  position: relative;
+  inset: 0;
+  top: auto;
+  bottom: auto;
+  left: auto;
+  right: auto;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  transform: none !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transition: none !important;
+}
+
+/* Reuse the same accent-tinted empty-state + chip styling the
+   tray gets — mode color flows through `--tray-accent`, so
+   agent / chat tints work the same way here. */
+.libre-ai-host .libre-ai-panel-empty {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--tray-accent) 8%, var(--color-bg-secondary)),
+    var(--color-bg-secondary)
+  );
+  border: 1px solid color-mix(
+    in srgb,
+    var(--tray-accent) 22%,
+    var(--color-border-default)
+  );
+  transition: background 200ms ease, border-color 200ms ease;
+}
+
+.libre-ai-host .libre-ai-panel-empty-chip {
+  position: relative;
+  padding-left: 18px;
+  transition: transform 120ms ease, border-color 120ms ease;
+}
+
+.libre-ai-host .libre-ai-panel-empty-chip::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 60%;
+  border-radius: 2px;
+  background: var(--tray-accent);
+  opacity: 0.8;
+  transition: background 200ms ease;
+}
+
+.libre-ai-host .libre-ai-panel-empty-chip:hover {
+  transform: translateX(2px);
+  border-color: color-mix(
+    in srgb,
+    var(--tray-accent) 45%,
+    var(--color-border-default)
+  );
+}
+
+.libre-ai-host .libre-ai-panel-send:not(:disabled) {
+  background: var(--tray-accent);
+  border-color: transparent;
+  color: var(--tray-accent-fg);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition: background 200ms ease, filter 120ms ease;
+}
+
+.libre-ai-host .libre-ai-panel-send:not(:disabled):hover {
+  filter: brightness(1.08);
+}
+
+.libre-ai-host .libre-ai-panel-input:focus {
+  border-color: color-mix(
+    in srgb,
+    var(--tray-accent) 60%,
+    var(--color-border-default)
+  );
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--tray-accent) 25%, transparent);
+}

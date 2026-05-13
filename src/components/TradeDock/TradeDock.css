@@ -3,13 +3,13 @@
  * lesson-bound tools: same frosted-card chrome, same monospace
  * data, same pill-headed status indicators. */
 
-.fb-trade-dock {
+.libre-trade-dock {
   position: relative;
   display: flex;
   flex-direction: column;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-lg, 14px);
+  border-radius: var(--libre-radius-lg, 14px);
   /* Margins match the chain docks exactly (.chain-dock uses
    * `margin: 8px 8px 6px 0`). The 8px right is the important
    * one: the lesson pane below has `.libre__lesson` with
@@ -35,7 +35,7 @@
   color: var(--color-text-primary);
 }
 
-.fb-trade-dock--popout {
+.libre-trade-dock--popout {
   height: 100%;
   min-height: 0;
   max-height: none;
@@ -49,7 +49,7 @@
  * 1px line stays the visible chrome and the affordance shows up
  * only via the `ns-resize` cursor on hover. Same convention
  * BitcoinChainDock uses — visual continuity across docks. */
-.fb-trade-dock__resize-handle {
+.libre-trade-dock__resize-handle {
   position: absolute;
   left: 0;
   right: 0;
@@ -62,7 +62,7 @@
 
 /* ── Header ────────────────────────────────────────────────── */
 
-.fb-trade-dock__header {
+.libre-trade-dock__header {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -72,7 +72,7 @@
   flex-wrap: wrap;
 }
 
-.fb-trade-dock__title {
+.libre-trade-dock__title {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -82,16 +82,16 @@
   color: var(--color-text-primary);
 }
 
-.fb-trade-dock__title-icon {
+.libre-trade-dock__title-icon {
   display: inline-flex;
   color: var(--color-text-secondary);
 }
 
-.fb-trade-dock__mode-pill {
+.libre-trade-dock__mode-pill {
   display: inline-flex;
   align-items: center;
   padding: 1px 7px;
-  border-radius: var(--fb-radius-pill, 999px);
+  border-radius: var(--libre-radius-pill, 999px);
   font-size: 9.5px;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -100,22 +100,22 @@
   margin-left: 4px;
 }
 
-.fb-trade-dock__mode-pill--live {
+.libre-trade-dock__mode-pill--live {
   background: rgba(124, 217, 124, 0.18);
   color: #7cd97c;
 }
 
-.fb-trade-dock__tabs {
+.libre-trade-dock__tabs {
   display: inline-flex;
   gap: 4px;
   background: var(--color-bg-secondary);
   padding: 3px;
-  border-radius: var(--fb-radius-md, 8px);
+  border-radius: var(--libre-radius-md, 8px);
   border: 1px solid var(--color-border-default);
   margin-left: auto;
 }
 
-.fb-trade-dock__tab {
+.libre-trade-dock__tab {
   background: transparent;
   border: 0;
   color: var(--color-text-secondary);
@@ -123,21 +123,21 @@
   font-size: 12px;
   font-weight: 600;
   padding: 4px 12px;
-  border-radius: var(--fb-radius-md, 6px);
+  border-radius: var(--libre-radius-md, 6px);
   cursor: pointer;
   transition: background 140ms ease, color 140ms ease;
 }
 
-.fb-trade-dock__tab:hover {
+.libre-trade-dock__tab:hover {
   color: var(--color-text-primary);
 }
 
-.fb-trade-dock__tab.is-active {
+.libre-trade-dock__tab.is-active {
   background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.06));
   color: var(--color-text-primary);
 }
 
-.fb-trade-dock__header-actions {
+.libre-trade-dock__header-actions {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -157,7 +157,7 @@
  * 28px icon buttons (the bigger track height keeps the
  * touch target comfortable while staying compact in the
  * header). */
-.fb-trade-dock__live-switch {
+.libre-trade-dock__live-switch {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -172,18 +172,18 @@
   flex: 0 0 auto;
 }
 
-.fb-trade-dock__live-switch:hover {
+.libre-trade-dock__live-switch:hover {
   border-color: var(--color-border-strong, var(--color-text-tertiary));
 }
 
-.fb-trade-dock__live-switch.is-live {
+.libre-trade-dock__live-switch.is-live {
   background: rgba(124, 217, 124, 0.22);
   border-color: rgba(124, 217, 124, 0.55);
 }
 
 /* Thumb. Translates left↔right based on the switch state. The
  * inline-flex centers the icon perfectly inside the circle. */
-.fb-trade-dock__live-thumb {
+.libre-trade-dock__live-thumb {
   position: absolute;
   top: 50%;
   left: 1px;
@@ -202,7 +202,7 @@
   pointer-events: none;
 }
 
-.fb-trade-dock__live-switch.is-live .fb-trade-dock__live-thumb {
+.libre-trade-dock__live-switch.is-live .libre-trade-dock__live-thumb {
   /* Slide right by (track width − thumb width − 2 × 1px gap). */
   transform: translate(18px, -50%);
   background: #7cd97c;
@@ -211,12 +211,12 @@
 
 /* Hard-clamp the inline icon so it sits inside the 18px thumb
  * without being clipped by the global xs-icon size token. */
-.fb-trade-dock__live-thumb svg {
+.libre-trade-dock__live-thumb svg {
   width: 11px !important;
   height: 11px !important;
 }
 
-.fb-trade-dock__icon-btn {
+.libre-trade-dock__icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -224,20 +224,20 @@
   height: 22px;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: var(--fb-radius-md, 6px);
+  border-radius: var(--libre-radius-md, 6px);
   color: var(--color-text-secondary);
   cursor: pointer;
   transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
   flex: 0 0 auto;
 }
 
-.fb-trade-dock__icon-btn:hover {
+.libre-trade-dock__icon-btn:hover {
   background: var(--color-bg-secondary);
   border-color: var(--color-border-default);
   color: var(--color-text-primary);
 }
 
-.fb-trade-dock__icon-btn[aria-pressed="true"] {
+.libre-trade-dock__icon-btn[aria-pressed="true"] {
   background: var(--color-bg-tertiary, var(--color-bg-secondary));
   border-color: var(--color-border-default);
   color: var(--color-text-primary);
@@ -247,14 +247,14 @@
  * to a smaller size than the global +6px bump from App.css —
  * otherwise an `xs` (~18px after the bump) icon overflows the
  * 22px button. 13px keeps the glyph well inside the chrome. */
-.fb-trade-dock__icon-btn svg {
+.libre-trade-dock__icon-btn svg {
   width: 13px !important;
   height: 13px !important;
 }
 
 /* ── Env panel ─────────────────────────────────────────────── */
 
-.fb-trade-dock__env {
+.libre-trade-dock__env {
   padding: 10px 14px;
   border-bottom: 1px solid var(--color-border-default);
   background: var(--color-bg-secondary);
@@ -263,31 +263,31 @@
   gap: 6px;
 }
 
-.fb-trade-dock__env-hint {
+.libre-trade-dock__env-hint {
   font-size: 11px;
   color: var(--color-text-tertiary);
 }
 
-.fb-trade-dock__env-hint code {
+.libre-trade-dock__env-hint code {
   background: var(--color-bg-inset, rgba(255, 255, 255, 0.06));
   padding: 1px 4px;
   border-radius: 3px;
   font-family: var(--font-mono, monospace);
 }
 
-.fb-trade-dock__env-grid {
+.libre-trade-dock__env-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 6px;
 }
 
-.fb-trade-dock__env-row {
+.libre-trade-dock__env-row {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.fb-trade-dock__env-label {
+.libre-trade-dock__env-label {
   font-size: 10.5px;
   font-weight: 700;
   text-transform: uppercase;
@@ -295,10 +295,10 @@
   color: var(--color-text-tertiary);
 }
 
-.fb-trade-dock__env-input {
+.libre-trade-dock__env-input {
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md, 6px);
+  border-radius: var(--libre-radius-md, 6px);
   padding: 6px 8px;
   font: inherit;
   font-family: var(--font-mono, monospace);
@@ -306,14 +306,14 @@
   color: var(--color-text-primary);
 }
 
-.fb-trade-dock__env-input:focus {
+.libre-trade-dock__env-input:focus {
   outline: none;
   border-color: var(--color-text-primary);
 }
 
 /* ── Body layout ───────────────────────────────────────────── */
 
-.fb-trade-dock__body {
+.libre-trade-dock__body {
   display: grid;
   grid-template-columns: 220px 1fr;
   flex: 1;
@@ -322,14 +322,14 @@
 }
 
 @media (max-width: 720px) {
-  .fb-trade-dock__body {
+  .libre-trade-dock__body {
     grid-template-columns: 1fr;
   }
 }
 
 /* ── Sidebar ───────────────────────────────────────────────── */
 
-.fb-trade-dock__sidebar {
+.libre-trade-dock__sidebar {
   border-right: 1px solid var(--color-border-default);
   background: var(--color-bg-primary);
   overflow-y: auto;
@@ -337,18 +337,18 @@
 }
 
 @media (max-width: 720px) {
-  .fb-trade-dock__sidebar {
+  .libre-trade-dock__sidebar {
     border-right: 0;
     border-bottom: 1px solid var(--color-border-default);
     max-height: 180px;
   }
 }
 
-.fb-trade-dock__group {
+.libre-trade-dock__group {
   padding: 6px 0;
 }
 
-.fb-trade-dock__group-title {
+.libre-trade-dock__group-title {
   margin: 0 0 4px;
   padding: 0 12px;
   font-size: 10px;
@@ -358,13 +358,13 @@
   color: var(--color-text-tertiary);
 }
 
-.fb-trade-dock__preset-list {
+.libre-trade-dock__preset-list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.fb-trade-dock__preset {
+.libre-trade-dock__preset {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -381,18 +381,18 @@
   transition: background 140ms ease, color 140ms ease;
 }
 
-.fb-trade-dock__preset:hover {
+.libre-trade-dock__preset:hover {
   background: var(--color-bg-secondary);
   color: var(--color-text-primary);
 }
 
-.fb-trade-dock__preset.is-active {
+.libre-trade-dock__preset.is-active {
   background: var(--color-bg-secondary);
   color: var(--color-text-primary);
   border-left-color: var(--color-text-primary);
 }
 
-.fb-trade-dock__preset-method {
+.libre-trade-dock__preset-method {
   flex: 0 0 32px;
   text-align: center;
   font-family: var(--font-mono, monospace);
@@ -405,29 +405,29 @@
   color: var(--color-text-tertiary);
 }
 
-.fb-trade-dock__preset-method--get {
+.libre-trade-dock__preset-method--get {
   background: rgba(124, 217, 124, 0.15);
   color: #7cd97c;
 }
-.fb-trade-dock__preset-method--post {
+.libre-trade-dock__preset-method--post {
   background: rgba(252, 211, 77, 0.18);
   color: #fcd34d;
 }
-.fb-trade-dock__preset-method--put,
-.fb-trade-dock__preset-method--patch {
+.libre-trade-dock__preset-method--put,
+.libre-trade-dock__preset-method--patch {
   background: rgba(124, 193, 217, 0.18);
   color: #7cc1d9;
 }
-.fb-trade-dock__preset-method--delete {
+.libre-trade-dock__preset-method--delete {
   background: rgba(232, 124, 110, 0.18);
   color: #e87c6e;
 }
-.fb-trade-dock__preset-method--ws {
+.libre-trade-dock__preset-method--ws {
   background: rgba(199, 155, 255, 0.2);
   color: #c79bff;
 }
 
-.fb-trade-dock__preset-label {
+.libre-trade-dock__preset-label {
   flex: 1;
   white-space: nowrap;
   overflow: hidden;
@@ -436,7 +436,7 @@
 
 /* ── Main panel (REST + WS share) ──────────────────────────── */
 
-.fb-trade-dock__main {
+.libre-trade-dock__main {
   overflow-y: auto;
   padding: 12px 14px 16px;
   display: flex;
@@ -444,16 +444,16 @@
   gap: 10px;
 }
 
-.fb-trade-dock__url-row {
+.libre-trade-dock__url-row {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.fb-trade-dock__method {
+.libre-trade-dock__method {
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md, 6px);
+  border-radius: var(--libre-radius-md, 6px);
   padding: 7px 8px;
   font: inherit;
   font-family: var(--font-mono, monospace);
@@ -464,11 +464,11 @@
   flex: 0 0 auto;
 }
 
-.fb-trade-dock__url {
+.libre-trade-dock__url {
   flex: 1;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md, 6px);
+  border-radius: var(--libre-radius-md, 6px);
   padding: 7px 10px;
   font: inherit;
   font-family: var(--font-mono, monospace);
@@ -477,20 +477,20 @@
   min-width: 0;
 }
 
-.fb-trade-dock__url:focus,
-.fb-trade-dock__method:focus {
+.libre-trade-dock__url:focus,
+.libre-trade-dock__method:focus {
   outline: none;
   border-color: var(--color-text-primary);
 }
 
-.fb-trade-dock__send {
+.libre-trade-dock__send {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
   border: 0;
-  border-radius: var(--fb-radius-md, 6px);
+  border-radius: var(--libre-radius-md, 6px);
   padding: 8px 14px;
   font: inherit;
   font-size: 12.5px;
@@ -499,38 +499,38 @@
   flex: 0 0 auto;
 }
 
-.fb-trade-dock__send:hover:not(:disabled) {
+.libre-trade-dock__send:hover:not(:disabled) {
   opacity: 0.9;
 }
 
-.fb-trade-dock__send:disabled {
+.libre-trade-dock__send:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.fb-trade-dock__send--danger {
+.libre-trade-dock__send--danger {
   background: rgba(232, 124, 110, 0.18);
   color: #e87c6e;
 }
 
-.fb-trade-dock__resolved {
+.libre-trade-dock__resolved {
   font-family: var(--font-mono, monospace);
   font-size: 10.5px;
   color: var(--color-text-tertiary);
   word-break: break-all;
 }
 
-.fb-trade-dock__resolved code {
+.libre-trade-dock__resolved code {
   background: transparent;
 }
 
-.fb-trade-dock__section {
+.libre-trade-dock__section {
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md, 8px);
+  border-radius: var(--libre-radius-md, 8px);
   background: var(--color-bg-primary);
 }
 
-.fb-trade-dock__section > summary {
+.libre-trade-dock__section > summary {
   cursor: pointer;
   padding: 7px 12px;
   font-size: 12px;
@@ -539,22 +539,22 @@
   list-style: none;
 }
 
-.fb-trade-dock__section > summary::-webkit-details-marker {
+.libre-trade-dock__section > summary::-webkit-details-marker {
   display: none;
 }
 
-.fb-trade-dock__section > summary::before {
+.libre-trade-dock__section > summary::before {
   content: "▸ ";
   font-size: 9px;
   color: var(--color-text-tertiary);
   margin-right: 4px;
 }
 
-.fb-trade-dock__section[open] > summary::before {
+.libre-trade-dock__section[open] > summary::before {
   content: "▾ ";
 }
 
-.fb-trade-dock__textarea {
+.libre-trade-dock__textarea {
   width: 100%;
   min-height: 60px;
   background: var(--color-bg-primary);
@@ -568,28 +568,28 @@
   box-sizing: border-box;
 }
 
-.fb-trade-dock__textarea--mono {
+.libre-trade-dock__textarea--mono {
   font-family: var(--font-mono, monospace);
   font-size: 12px;
   line-height: 1.5;
 }
 
-.fb-trade-dock__textarea:focus {
+.libre-trade-dock__textarea:focus {
   outline: none;
 }
 
 /* ── Response panel ────────────────────────────────────────── */
 
-.fb-trade-dock__response {
+.libre-trade-dock__response {
   display: flex;
   flex-direction: column;
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md, 8px);
+  border-radius: var(--libre-radius-md, 8px);
   background: #0d1117;
   overflow: hidden;
 }
 
-.fb-trade-dock__response-head {
+.libre-trade-dock__response-head {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -601,7 +601,7 @@
   font-weight: 600;
 }
 
-.fb-trade-dock__status {
+.libre-trade-dock__status {
   font-family: var(--font-mono, monospace);
   font-size: 11px;
   font-weight: 700;
@@ -609,33 +609,33 @@
   border-radius: 4px;
 }
 
-.fb-trade-dock__status--ok {
+.libre-trade-dock__status--ok {
   background: rgba(124, 217, 124, 0.18);
   color: #7cd97c;
 }
 
-.fb-trade-dock__status--warn {
+.libre-trade-dock__status--warn {
   background: rgba(252, 211, 77, 0.18);
   color: #fcd34d;
 }
 
-.fb-trade-dock__status--err {
+.libre-trade-dock__status--err {
   background: rgba(232, 124, 110, 0.18);
   color: #e87c6e;
 }
 
-.fb-trade-dock__status--neutral {
+.libre-trade-dock__status--neutral {
   background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.06));
   color: var(--color-text-tertiary);
 }
 
-.fb-trade-dock__duration {
+.libre-trade-dock__duration {
   font-variant-numeric: tabular-nums;
   font-size: 11px;
   color: var(--color-text-tertiary);
 }
 
-.fb-trade-dock__source {
+.libre-trade-dock__source {
   margin-left: auto;
   font-family: var(--font-mono, monospace);
   font-size: 9.5px;
@@ -643,20 +643,20 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 1px 6px;
-  border-radius: var(--fb-radius-pill, 999px);
+  border-radius: var(--libre-radius-pill, 999px);
 }
 
-.fb-trade-dock__source--mock {
+.libre-trade-dock__source--mock {
   background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.06));
   color: var(--color-text-tertiary);
 }
 
-.fb-trade-dock__source--live {
+.libre-trade-dock__source--live {
   background: rgba(124, 217, 124, 0.18);
   color: #7cd97c;
 }
 
-.fb-trade-dock__response-body {
+.libre-trade-dock__response-body {
   margin: 0;
   padding: 10px 12px;
   font-family: var(--font-mono, monospace);
@@ -668,11 +668,11 @@
   overflow-x: auto;
 }
 
-.fb-trade-dock__response-body--error {
+.libre-trade-dock__response-body--error {
   color: #ef6f6f;
 }
 
-.fb-trade-dock__response-empty {
+.libre-trade-dock__response-empty {
   padding: 18px;
   text-align: center;
   font-size: 12px;
@@ -682,13 +682,13 @@
 
 /* ── WebSocket panel ───────────────────────────────────────── */
 
-.fb-trade-dock__ws-status-row {
+.libre-trade-dock__ws-status-row {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.fb-trade-dock__ws-status {
+.libre-trade-dock__ws-status {
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -698,12 +698,12 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   padding: 2px 8px;
-  border-radius: var(--fb-radius-pill, 999px);
+  border-radius: var(--libre-radius-pill, 999px);
   background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.06));
   color: var(--color-text-tertiary);
 }
 
-.fb-trade-dock__ws-status::before {
+.libre-trade-dock__ws-status::before {
   content: "";
   width: 7px;
   height: 7px;
@@ -711,58 +711,58 @@
   background: currentColor;
 }
 
-.fb-trade-dock__ws-status--idle,
-.fb-trade-dock__ws-status--closed {
+.libre-trade-dock__ws-status--idle,
+.libre-trade-dock__ws-status--closed {
   background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.06));
   color: var(--color-text-tertiary);
 }
 
-.fb-trade-dock__ws-status--connecting {
+.libre-trade-dock__ws-status--connecting {
   background: rgba(252, 211, 77, 0.18);
   color: #fcd34d;
 }
 
-.fb-trade-dock__ws-status--open {
+.libre-trade-dock__ws-status--open {
   background: rgba(124, 217, 124, 0.18);
   color: #7cd97c;
 }
 
-.fb-trade-dock__ws-status--closing,
-.fb-trade-dock__ws-status--error {
+.libre-trade-dock__ws-status--closing,
+.libre-trade-dock__ws-status--error {
   background: rgba(232, 124, 110, 0.18);
   color: #e87c6e;
 }
 
-.fb-trade-dock__ws-stream {
+.libre-trade-dock__ws-stream {
   flex: 1;
   min-height: 160px;
   max-height: 280px;
   overflow-y: auto;
   background: #0d1117;
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md, 8px);
+  border-radius: var(--libre-radius-md, 8px);
   padding: 4px;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.fb-trade-dock__ws-msg {
+.libre-trade-dock__ws-msg {
   border-left: 2px solid transparent;
   padding: 4px 8px;
   background: var(--color-bg-primary);
   border-radius: 4px;
 }
 
-.fb-trade-dock__ws-msg--in {
+.libre-trade-dock__ws-msg--in {
   border-left-color: #7cd97c;
 }
 
-.fb-trade-dock__ws-msg--out {
+.libre-trade-dock__ws-msg--out {
   border-left-color: #c79bff;
 }
 
-.fb-trade-dock__ws-msg-meta {
+.libre-trade-dock__ws-msg-meta {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -771,19 +771,19 @@
   font-family: var(--font-mono, monospace);
 }
 
-.fb-trade-dock__ws-msg-arrow {
+.libre-trade-dock__ws-msg-arrow {
   font-weight: 800;
 }
 
-.fb-trade-dock__ws-msg--in .fb-trade-dock__ws-msg-arrow {
+.libre-trade-dock__ws-msg--in .libre-trade-dock__ws-msg-arrow {
   color: #7cd97c;
 }
 
-.fb-trade-dock__ws-msg--out .fb-trade-dock__ws-msg-arrow {
+.libre-trade-dock__ws-msg--out .libre-trade-dock__ws-msg-arrow {
   color: #c79bff;
 }
 
-.fb-trade-dock__ws-msg-body {
+.libre-trade-dock__ws-msg-body {
   margin: 2px 0 0;
   padding: 0;
   font-family: var(--font-mono, monospace);
@@ -795,12 +795,12 @@
   background: transparent;
 }
 
-.fb-trade-dock__ws-send {
+.libre-trade-dock__ws-send {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.fb-trade-dock__ws-send .fb-trade-dock__send {
+.libre-trade-dock__ws-send .libre-trade-dock__send {
   align-self: flex-end;
 }

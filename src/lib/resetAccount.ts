@@ -29,7 +29,7 @@
 ///       libre:practice:today:v1, libre:recent-courses:v1,
 ///       libre:notifications:last-seen-at,
 ///       libre:open-tabs:v2, fb:catalog-cache-v2
-///   - **Cloud progress** — DELETE /fishbones/progress (best-effort;
+///   - **Cloud progress** — DELETE /progress (best-effort;
 ///     falls back to local-only if the relay route 404s)
 ///
 /// What it KEEPS (preferences):
@@ -191,6 +191,22 @@ export async function resetAccount(
         console.warn(`[reset] metaDelete(${key}) failed:`, e);
       }
     }
+  }
+
+  // 4a. Wipe earned certificates. They live behind the storage meta
+  // layer (which is shared across desktop + web), so this fires on
+  // both paths. The Certificates page re-reads on the
+  // `libre:certificates-changed` event the helper dispatches.
+  try {
+    const { clearCertificates } = await import("../data/certificates");
+    const { notifyCertificatesChanged } = await import(
+      "../hooks/useCertificates"
+    );
+    await clearCertificates();
+    notifyCertificatesChanged();
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn("[reset] clearCertificates failed:", e);
   }
 
   // 5. Wipe each progress-shaped localStorage key. Each removeItem

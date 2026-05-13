@@ -3,7 +3,8 @@ import { Icon } from "@base/primitives/icon";
 import { libraryBig } from "@base/primitives/icon/icons/library-big";
 import "@base/primitives/icon/icon.css";
 import type { Course, LanguageId } from "../../data/types";
-import { isChallengePack } from "../../data/types";
+import { isChallengePack, isExerciseTrack } from "../../data/types";
+import { track } from "../../lib/track";
 import BookCover from "./BookCover";
 import LibreLoader from "../Shared/LibreLoader";
 import CourseContextMenu, { useCourseMenu } from "../Shared/CourseContextMenu";
@@ -29,6 +30,7 @@ import {
   type CourseCategory,
   type CryptoChain,
 } from "./categorize";
+import { useT } from "../../i18n/i18n";
 import "./CourseLibrary.css";
 
 /// Library display mode persistence key. `shelf` = tall 2:3 book-cover
@@ -152,6 +154,7 @@ export default function CourseLibrary({
 }: Props) {
   const isInline = mode === "inline";
   const ctxMenu = useCourseMenu();
+  const t = useT();
 
   // Deferred scope. The chrome (header title, count, filter pills)
   // reads `scope` directly, so it commits IMMEDIATELY when the user
@@ -191,9 +194,9 @@ export default function CourseLibrary({
   // exercises) vs handcrafted challenge packs (flat list of
   // increasing-difficulty exercises). The default is "all" so a fresh
   // visit shows everything; toggling restricts to one bucket.
-  const [kindFilter, setKindFilter] = useState<"all" | "books" | "challenges">(
-    "all",
-  );
+  const [kindFilter, setKindFilter] = useState<
+    "all" | "books" | "tracks" | "challenges"
+  >("all");
   const [sortBy, setSortBy] = useState<SortKey>("name");
   const [query, setQuery] = useState("");
   const [viewMode, setViewMode] = useLocalStorageState<ViewMode>(
@@ -249,8 +252,8 @@ export default function CourseLibrary({
     [placeholderEntries],
   );
   // Map id → catalog entry for the install click handler — we need
-  // the original entry (with archiveUrl, file, etc.), not just the
-  // synthetic placeholder Course.
+  // the original entry (with `file`, etc.), not just the synthetic
+  // placeholder Course.
   const entryById = useMemo(() => {
     const m = new Map<string, CatalogEntry>();
     for (const e of catalog) m.set(e.id, e);
@@ -274,6 +277,17 @@ export default function CourseLibrary({
     });
     try {
       await onInstallCatalogEntry(entry);
+      // Successful install only — failures throw, skipping this
+      // line. `source` is derived from the scope prop the host
+      // passes (Library view vs. Discover view); both mount the
+      // same CourseLibrary component, so this single fire site
+      // covers both surfaces. The import-dialog + agent-tool
+      // install paths fire their own events from their own
+      // handlers (see ImportDialog + aiTools/tools.ts).
+      track.courseInstall({
+        courseId,
+        source: scope === "discover" ? "discover" : "library",
+      });
     } finally {
       setInstallingIds((prev) => {
         const next = new Set(prev);
@@ -383,8 +397,12 @@ export default function CourseLibrary({
       .filter((e) => langFilter === "all" || e.course.language === langFilter)
       .filter((e) => {
         if (kindFilter === "all") return true;
-        const isPack = isChallengePack(e.course);
-        return kindFilter === "challenges" ? isPack : !isPack;
+        if (kindFilter === "challenges") return isChallengePack(e.course);
+        if (kindFilter === "tracks") return isExerciseTrack(e.course);
+        // "books" — anything that's neither a challenge pack nor a
+        // language track (the default bucket for legacy/book-derived
+        // courses where packType is unset or "course").
+        return !isChallengePack(e.course) && !isExerciseTrack(e.course);
       })
       .filter((e) =>
         q === ""
@@ -414,39 +432,52 @@ export default function CourseLibrary({
     query,
   ]);
 
-  // Group filtered courses by KIND — "Books" (chapter-major prose
-  // with exercises) up top, "Challenges" (flat list of
-  // increasing-difficulty exercises) at the bottom. The split is
-  // visual + structural: a learner browsing the library sees
-  // courses-they-will-read first, code-katas second. We dropped the
-  // earlier release-status bucketing (BETA / ALPHA / UNREVIEWED)
-  // here — that's editorial chrome, not reader-facing structure.
+  // Group filtered courses by KIND into THREE lanes — "Books"
+  // (chapter-major prose with exercises) up top, "Tracks"
+  // (Exercism-style language curriculums) in the middle, and
+  // "Challenges" (flat lists of increasing-difficulty exercises)
+  // at the bottom. The split is visual + structural: a learner
+  // browsing the library sees courses-they-will-read first, the
+  // structured language tracks second, code-katas third. We
+  // dropped the earlier release-status bucketing (BETA / ALPHA
+  // / UNREVIEWED) here — that's editorial chrome, not
+  // reader-facing structure.
   const sections = useMemo(() => {
     const books: typeof filtered = [];
+    const tracks: typeof filtered = [];
     const challenges: typeof filtered = [];
     for (const e of filtered) {
       if (isChallengePack(e.course)) challenges.push(e);
+      else if (isExerciseTrack(e.course)) tracks.push(e);
       else books.push(e);
     }
     const out: Array<{ key: string; label: string; blurb: string; rows: typeof filtered }> = [];
     if (books.length > 0) {
       out.push({
         key: "books",
-        label: "Books",
-        blurb: "Long-form courses with chapters and exercises.",
+        label: t("library.books"),
+        blurb: t("library.booksBlurb"),
         rows: books,
+      });
+    }
+    if (tracks.length > 0) {
+      out.push({
+        key: "tracks",
+        label: t("library.tracks"),
+        blurb: t("library.tracksBlurb"),
+        rows: tracks,
       });
     }
     if (challenges.length > 0) {
       out.push({
         key: "challenges",
-        label: "Challenges",
-        blurb: "Per-language exercise packs — short coding problems sorted easy → hard.",
+        label: t("library.challenges"),
+        blurb: t("library.challengesBlurb"),
         rows: challenges,
       });
     }
     return out;
-  }, [filtered]);
+  }, [filtered, t]);
 
   // Count courses per category so the top-level toggle can show
   // badges. Always uses the full enriched set — the badge needs to
@@ -504,12 +535,13 @@ export default function CourseLibrary({
     return m;
   }, [enriched, categoryFilter, chainFilter]);
 
-  // Count books vs challenges so the kind toggle can show badges. Only
-  // counts within the current category + chain + language filters so
-  // the numbers track what's actually visible after upstream filters
-  // narrow the set.
+  // Count books / tracks / challenges so the kind toggle can show
+  // badges. Only counts within the current category + chain + language
+  // filters so the numbers track what's actually visible after upstream
+  // filters narrow the set.
   const kindCounts = useMemo(() => {
     let books = 0;
+    let tracks = 0;
     let challenges = 0;
     for (const e of enriched) {
       if (
@@ -527,9 +559,10 @@ export default function CourseLibrary({
       }
       if (langFilter !== "all" && e.course.language !== langFilter) continue;
       if (isChallengePack(e.course)) challenges += 1;
+      else if (isExerciseTrack(e.course)) tracks += 1;
       else books += 1;
     }
-    return { books, challenges, all: books + challenges };
+    return { books, tracks, challenges, all: books + tracks + challenges };
   }, [enriched, categoryFilter, chainFilter, langFilter]);
 
   // "Update all" button — docks into the right edge of the first
@@ -550,32 +583,65 @@ export default function CourseLibrary({
   const inflightUpdateCount = courses.filter((c) =>
     updatingIds.has(c.id),
   ).length;
-  const updateAllBusy =
-    pendingUpdateIds.length === 0 && inflightUpdateCount > 0;
   const hasAnyUpdates =
     pendingUpdateIds.length > 0 || inflightUpdateCount > 0;
+  // Per-batch progress tracker — separate from `updatingIds` (which
+  // holds the per-course in-flight set the per-book buttons use)
+  // because we need the batch's ORIGINAL total to stay constant as
+  // books complete, and we need a monotonically increasing "current
+  // book" index so the label reads "Updating 1/3 → 2/3 → 3/3"
+  // instead of "Updating 1/3 → 1/2 → 1/1" as `pendingUpdateIds`
+  // shrinks under our feet.
+  const [updateBatch, setUpdateBatch] = useState<{
+    total: number;
+    done: number;
+  } | null>(null);
   const handleUpdateAll = async () => {
-    // Update sequentially — the per-book sync reads a fresh disk
-    // snapshot for each, and N parallel writes would thrash both
-    // the disk and the React render path.
-    for (const id of pendingUpdateIds) {
-      await handleUpdateClick(id);
+    // Snapshot the ids ONCE at click time. Resolving them inside the
+    // loop body would re-read `pendingUpdateIds` (computed from React
+    // state) every iteration, but that closure was captured at render
+    // start — we'd re-update books already in flight, or skip newly
+    // arrived ones. Snapshotting up front makes the batch boundary
+    // explicit.
+    const ids = [...pendingUpdateIds];
+    if (ids.length === 0) return;
+    setUpdateBatch({ total: ids.length, done: 0 });
+    try {
+      // Sequential — the per-book sync reads a fresh disk snapshot
+      // for each, and N parallel writes would thrash both the disk
+      // and the React render path.
+      for (let i = 0; i < ids.length; i++) {
+        await handleUpdateClick(ids[i]);
+        setUpdateBatch((b) => (b ? { ...b, done: i + 1 } : b));
+      }
+    } finally {
+      setUpdateBatch(null);
     }
   };
+  // While a batch is running, the label shows "Updating k/N" where k
+  // is the 1-based index of the book CURRENTLY being synced. Capped
+  // at `total` so the final tick after the last completion doesn't
+  // briefly read "Updating 4/3" before the batch state clears.
+  const batchInProgress = updateBatch !== null;
+  const batchCurrent = updateBatch
+    ? Math.min(updateBatch.done + 1, updateBatch.total)
+    : 0;
   const updateAllButton = hasAnyUpdates ? (
     <button
       type="button"
       className="libre-library-section-update-btn"
       onClick={handleUpdateAll}
-      disabled={updateAllBusy || pendingUpdateIds.length === 0}
+      disabled={batchInProgress || pendingUpdateIds.length === 0}
       title="Re-sync each updated book against its bundled source"
       aria-label={
-        updateAllBusy
-          ? `Updating ${inflightUpdateCount} ${inflightUpdateCount === 1 ? "book" : "books"}`
+        batchInProgress
+          ? `Updating book ${batchCurrent} of ${updateBatch!.total}`
           : `Update all ${pendingUpdateIds.length} ${pendingUpdateIds.length === 1 ? "book" : "books"}`
       }
     >
-      {updateAllBusy ? "Updating…" : `Update all (${pendingUpdateIds.length})`}
+      {batchInProgress
+        ? `Updating ${batchCurrent}/${updateBatch!.total}`
+        : `Update all (${pendingUpdateIds.length})`}
     </button>
   ) : null;
 
@@ -593,12 +659,16 @@ export default function CourseLibrary({
               + the count metadata. */}
           <div className="libre-library-titleblock">
             <span className="libre-library-title">
-              {scope === "discover" ? "Discover" : "Library"}
+              {scope === "discover" ? t("library.headerDiscover") : t("library.headerLibrary")}
             </span>
             <span className="libre-library-subtitle">
               {scope === "discover"
-                ? `${placeholderCourses.length} book${placeholderCourses.length === 1 ? "" : "s"} available to install`
-                : `${courses.length} course${courses.length === 1 ? "" : "s"} on this machine`}
+                ? placeholderCourses.length === 1
+                  ? t("library.subtitleInstall", { count: placeholderCourses.length })
+                  : t("library.subtitleInstallPlural", { count: placeholderCourses.length })
+                : courses.length === 1
+                  ? t("library.subtitle", { count: courses.length })
+                  : t("library.subtitlePlural", { count: courses.length })}
             </span>
           </div>
           <div className="libre-library-header-actions">
@@ -631,7 +701,7 @@ export default function CourseLibrary({
                 className="libre-library-import"
                 onClick={onBrowseCatalog}
               >
-                Browse catalog
+                {t("library.browseCatalog")}
               </button>
             )}
             {/* Fallback: when the host hasn't wired the new
@@ -642,9 +712,9 @@ export default function CourseLibrary({
               <button
                 className="libre-library-import-seg libre-library-import-seg--primary"
                 onClick={onImport}
-                title="Run the AI pipeline on a PDF or EPUB to generate a course"
+                title={t("library.importBookTitle")}
               >
-                Import book…
+                {t("library.importBook")}
               </button>
             )}
             {onBulkExport && (
@@ -652,13 +722,13 @@ export default function CourseLibrary({
                 className="libre-library-bulk-export"
                 onClick={onBulkExport}
                 disabled={filtered.length === 0 && courses.length === 0}
-                title="Export every course in the library as .academy archives to a folder of your choice"
+                title={t("library.exportAllTitle")}
               >
-                Export all
+                {t("library.exportAll")}
               </button>
             )}
             {!isInline && (
-              <button className="libre-library-close" onClick={onDismiss} aria-label="Close">
+              <button className="libre-library-close" onClick={onDismiss} aria-label={t("library.closeAria")}>
                 ×
               </button>
             )}
@@ -830,13 +900,13 @@ export default function CourseLibrary({
                     {sec.rows.map((e, idx) => (
                       <BookCover
                         key={e.course.id}
-                        // --fb-ripple-i drives the staggered mount
+                        // --libre-ripple-i drives the staggered mount
                         // animation in CourseLibrary.css. Linear by
                         // index so cards animate in across the shelf
                         // in document order, capped at MAX_RIPPLE_I
                         // via the CSS `min()` so giant shelves don't
                         // produce a multi-second tail.
-                        style={{ "--fb-ripple-i": idx } as React.CSSProperties}
+                        style={{ "--libre-ripple-i": idx } as React.CSSProperties}
                         course={e.course}
                         progress={e.pct}
                         loading={hydrating?.has(e.course.id)}
@@ -910,10 +980,10 @@ export default function CourseLibrary({
                     {sec.rows.map((e, idx) => (
                       <CourseCard
                         key={e.course.id}
-                        // See the matching --fb-ripple-i comment on
+                        // See the matching --libre-ripple-i comment on
                         // the shelf-mode map above. Same staggered
                         // mount animation, same custom property.
-                        style={{ "--fb-ripple-i": idx } as React.CSSProperties}
+                        style={{ "--libre-ripple-i": idx } as React.CSSProperties}
                         course={e.course}
                         total={e.total}
                         done={e.done}

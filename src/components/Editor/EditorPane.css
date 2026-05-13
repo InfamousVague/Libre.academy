@@ -8,8 +8,18 @@
 .libre-editor-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 6px 12px;
+  /* `gap` replaces the previous `space-between` because the
+     header now hosts THREE clusters: the left placeholder / mode
+     toggle, the file-tabs strip (flex: 1), and the right action
+     cluster. With gap-based layout the tabs grow to fill the gap
+     between the two end clusters without us having to wrangle
+     justify-content. */
+  gap: 12px;
+  /* Top/bottom padding bumped slightly so the inline tabs have
+     enough air around them — the tabs were previously on their
+     own row with their own 4px top padding, which becomes part
+     of the shared header row now. */
+  padding: 8px 12px;
   background: var(--color-bg-secondary);
   border-bottom: 1px solid var(--color-border-default);
 }
@@ -38,7 +48,7 @@
   padding: 2px;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
 }
 
 .libre-editor-mode-btn {
@@ -48,7 +58,7 @@
   color: var(--color-text-secondary);
   background: transparent;
   border: 0;
-  border-radius: calc(var(--fb-radius-sm) - 2px);
+  border-radius: calc(var(--libre-radius-sm) - 2px);
   cursor: pointer;
   transition:
     background 120ms ease,
@@ -61,8 +71,12 @@
 }
 
 .libre-editor-mode-btn--active {
-  background: var(--color-text-primary);
-  color: var(--color-bg-primary);
+  /* Active segment uses the brand accent — same primary-emphasis
+     treatment as the Run button (both are "the way to act"
+     controls on this toolbar). Theme-set via --color-accent so
+     each theme's brand colour drives the pill. */
+  background: var(--color-accent, var(--color-text-primary));
+  color: var(--color-accent-fg, var(--color-bg-primary));
 }
 
 .libre-editor-actions {
@@ -71,13 +85,21 @@
 }
 
 .libre-editor-button {
-  padding: 3px 10px;
+  /* Larger toolbar buttons — earlier 3×10 padding read as cramped
+     next to the editor's full vertical real estate. Bumped to
+     5×14 with a bigger font so the row of actions feels weight-
+     matched to the editor body. */
+  padding: 5px 14px;
   background: transparent;
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-xs);
+  border-radius: var(--libre-radius-xs);
   color: var(--color-text-primary);
-  font-size: 11px;
+  font-size: 12.5px;
+  font-weight: 500;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .libre-editor-button:hover:not(:disabled) {
@@ -90,20 +112,87 @@
 }
 
 .libre-editor-run {
-  /* Primary "Run" button — the most prominent action in the editor.
-     Theme-driven via --color-text-primary so the bone-tinted dark
-     theme paints it bone-white, light themes paint it the light
-     theme's primary text colour. Pre-bone-palette versions
-     hard-coded #ffffff which fought the warm wordmark. */
-  background: var(--color-text-primary, #ffffff);
-  color: var(--color-bg-primary, #000000);
-  border-color: var(--color-text-primary, #ffffff);
+  /* Primary "Run" button — the most prominent action in the
+     editor. Base layer is the brand accent (white on default-
+     dark, theme-set elsewhere). The Hologram primitive sits on
+     top via an absolute overlay; required clipping + stacking
+     setup lives here:
+       - position: relative + overflow: hidden so the foil is
+         contained inside the rounded button shape and inherits
+         the radius via the .libre-holo `border-radius: inherit`
+         rule.
+       - The label + shortcut hint must sit ABOVE the foil — see
+         the `.libre-editor-run__label` rule below for the
+         z-index lift. */
+  position: relative;
+  overflow: hidden;
+  background: var(--color-accent, var(--color-text-primary, #ffffff));
+  color: var(--color-accent-fg, var(--color-bg-primary, #000000));
+  border-color: var(--color-accent, var(--color-text-primary, #ffffff));
   font-weight: 600;
+  isolation: isolate;
 }
 
 .libre-editor-run:hover:not(:disabled) {
-  opacity: 0.9;
-  background: var(--color-text-primary, #ffffff);
+  opacity: 0.92;
+  background: var(--color-accent, var(--color-text-primary, #ffffff));
+}
+
+/* Label + the shortcut hint live ABOVE the holo overlay so the
+   foil decorates the button surface without obscuring the
+   text. Both children sit at z-index 1; the overlay defaults
+   to 0 (auto) inside its absolute layer. */
+.libre-editor-run__label,
+.libre-editor-run .libre-shortcut-hint {
+  position: relative;
+  z-index: 1;
+}
+
+/* Shortcut hint inside the Run button: drop the background fill
+   so the foil shows through the chip area. Sized + shaped to
+   match the TopBar search's ⌘K chip — fixed 18px height, 0 × 6px
+   padding, modest border-radius — so the keyboard hint reads as a
+   first-class affordance, not a vestigial annotation. The earlier
+   version inherited the base chip's 10.5px font which crowded
+   the "⌘R" glyph pair on the much larger Run button. The chip
+   now sits at the same visual weight as the topbar's, so a
+   learner glancing at the editor toolbar immediately reads the
+   binding instead of squinting at micro-text. */
+.libre-editor-run .libre-shortcut-hint {
+  height: 22px;
+  /* Line-height matches the box height so the ⌘R glyphs centre
+     via the line box itself rather than relying on the parent's
+     flex `align-items: center`. Without this the chip's vertical
+     position depended on the cascade of:
+       1. base chip's `line-height: 1.4`
+       2. button's `align-items: center`
+       3. base chip's `transform: translateY(-0.5px)`
+     and ANY repaint of the button (e.g. when the Hologram shine
+     animation kicks in on hover) could cause a 1px subpixel re-
+     round that read as a visible "jump" of the chip. Locking the
+     line-height to the box height makes the chip's layout
+     intrinsic + repaint-stable. */
+  line-height: 22px;
+  padding: 0 8px;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: var(--libre-radius-xs);
+  color: var(--color-accent-fg, var(--color-bg-primary, #000000));
+  /* Bumped from 10.5 → 12 so the ⌘R glyph pair lands at roughly
+     the same point size as the topbar's chip + reads at the
+     same vertical optical weight as the button's "run" label. */
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  /* `translateZ(0)` pins the chip to its own compositor layer
+     (also implicitly resets the base chip's `translateY(-0.5px)`
+     to (0, 0, 0)). The layer hint matters specifically because
+     the parent button repaints heavily during the hover-shine
+     animation; without an isolated layer the chip's subpixel
+     position can re-round mid-animation and read as a tiny
+     vertical jump. */
+  transform: translateZ(0);
+  vertical-align: middle;
 }
 
 .libre-editor-button--danger {
@@ -131,7 +220,7 @@
 .libre-editor-help-split {
   display: inline-flex;
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-xs);
+  border-radius: var(--libre-radius-xs);
   overflow: hidden;
   background: transparent;
 }
@@ -167,9 +256,17 @@
   cursor: not-allowed;
 }
 
-/* Floating menu — anchors below the split, right-aligned to the
-   chevron so it doesn't drift into the run button. z-index sits
-   above the editor body but below modal backdrops. */
+/* Floating menu. Two render modes:
+     - Inline (legacy): `position: absolute` anchored to the help
+       trigger's containing block. Kept as the fallback for any
+       caller that still renders the menu without the portal.
+     - Portaled (`--portaled` modifier): the React tree renders
+       the menu via `createPortal` into `document.body`, with
+       `position: fixed` + viewport-space coords measured from
+       the trigger. This escapes every ancestor `overflow:
+       hidden` (notably `.libre-sandbox`) so the menu can render
+       at full width regardless of how cramped the editor pane
+       happens to be. */
 .libre-editor-help-menu {
   position: absolute;
   top: calc(100% + 4px);
@@ -178,13 +275,23 @@
   z-index: 50;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   box-shadow:
     0 8px 20px rgba(0, 0, 0, 0.45),
     0 2px 6px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
   padding: 4px;
+}
+
+.libre-editor-help-menu--portaled {
+  /* `position` + `top` + `right` are set inline from the
+     measured trigger rect — see EditorPane.tsx. Z-index has to
+     sit above modal backdrops (z-index: 200) because the menu
+     is now a top-level body child and would otherwise be
+     occluded by any open dialog whose backdrop ranks higher
+     than the original z-index: 50. */
+  z-index: 1300;
 }
 
 .libre-editor-help-item {
@@ -196,7 +303,7 @@
   border: 0;
   text-align: left;
   padding: 8px 10px;
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   cursor: pointer;
   font-size: 12px;
   font-family: inherit;
@@ -243,15 +350,21 @@
   background: rgba(239, 111, 111, 0.08);
 }
 
-/* File tabs row — only rendered when the workbench has more than one file.
-   VSCode-style: monospace filename, slim pill background on active. Scrolls
-   horizontally if the learner adds many files. */
+/* File tabs strip — only rendered when the workbench has more than
+   one file. Now lives INSIDE the editor header row alongside the
+   help + run cluster (previously occupied a dedicated row below
+   the header). Visual chrome trimmed to fit inline: no background
+   / border-bottom of its own (the header's background + bottom
+   border serve), no extra padding (the header's padding handles
+   the vertical air). VSCode-style: monospace filename, slim pill
+   background on the active tab. Scrolls horizontally if the
+   learner adds more tabs than fit between the left placeholder
+   and the right action cluster. */
 .libre-editor-tabs {
+  flex: 1;
+  min-width: 0;
   display: flex;
   gap: 2px;
-  padding: 4px 8px 0;
-  background: var(--color-bg-secondary);
-  border-bottom: 1px solid var(--color-border-default);
   overflow-x: auto;
   overflow-y: hidden;
   white-space: nowrap;
@@ -269,27 +382,30 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  /* Slightly tighter padding than the standalone-row treatment
+     since the tabs no longer anchor to a panel below — they're
+     inline controls now. Border-radius is symmetric (was
+     `6px 6px 0 0` for the tab-on-panel look) so the pills read
+     as discrete affordances at this in-header size. */
   padding: 5px 10px;
   background: transparent;
   border: 0;
-  border-bottom: 2px solid transparent;
-  border-radius: 6px 6px 0 0;
+  border-radius: var(--libre-radius-sm, 6px);
   color: var(--color-text-tertiary);
   font-family: "SF Mono", ui-monospace, Menlo, monospace;
   font-size: 11.5px;
   cursor: pointer;
-  transition: color var(--fb-motion-snappy), background var(--fb-motion-snappy), border-color var(--fb-motion-snappy);
+  transition: color var(--libre-motion-snappy), background var(--libre-motion-snappy);
 }
 
 .libre-editor-tab:hover {
   color: var(--color-text-secondary);
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .libre-editor-tab--active {
   color: var(--color-text-primary);
   background: var(--color-bg-primary);
-  border-bottom-color: var(--color-text-primary);
 }
 
 .libre-editor-tab--active:hover {
@@ -328,6 +444,24 @@
      still escapes so it can't bleed into adjacent panes. */
   position: relative;
   overflow: hidden;
+}
+
+/* Default Dark only — frame Monaco inside a thin black border with
+   slightly rounded corners. The 2px `padding` creates the visible
+   ring; `background: var(--color-bg-primary)` (≈ black in this
+   theme) is what shows through that ring; `border-radius` rounds
+   both the outer edge AND — by way of the existing `overflow:
+   hidden` on the host above — Monaco's content corners, because
+   the rounded clip subtracts from Monaco's rectangle.
+   Scoped to the default-dark theme so the other themes (light
+   palettes, Catppuccin, etc.) keep their flush-edge editor look.
+   Themes with non-black bg-primary would otherwise paint a
+   coloured frame around Monaco's syntax surface and read as a
+   bug. */
+[data-theme-name="default-dark"] .libre-editor-host {
+  padding: 2px;
+  background: var(--color-bg-primary);
+  border-radius: 10px;
 }
 
 /* Belt-and-suspenders: force Monaco's internals to use monospace
@@ -391,7 +525,7 @@
   font-size: 18px;
   line-height: 1;
   cursor: pointer;
-  border-radius: var(--fb-radius-xs);
+  border-radius: var(--libre-radius-xs);
 }
 
 .libre-editor-hints-close:hover {
@@ -422,7 +556,7 @@
   padding: 4px 10px;
   background: transparent;
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-xs);
+  border-radius: var(--libre-radius-xs);
   color: var(--color-text-secondary);
   font-size: 11px;
   font-family: inherit;

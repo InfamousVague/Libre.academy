@@ -1,0 +1,239 @@
+/* Keyboard shortcuts pane. Two-pane structure:
+     1) Header strip with title + Reset-all button.
+     2) Vertical list of category sections, each with a title + a
+        stack of row entries.
+   Each row is a flex grid: [label + description | chip + reset-arrow]. */
+
+.libre-shortcuts-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  /* Allow the inner scroll-area to claim height inside the
+     SettingsDialog's fixed-height body. */
+  min-height: 0;
+}
+
+/* ---- Head ------------------------------------------------------- */
+
+.libre-shortcuts-pane__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.08));
+}
+
+.libre-shortcuts-pane__head-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.libre-shortcuts-pane__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+.libre-shortcuts-pane__title :global(.libre-icon) {
+  color: var(--color-accent, #f3a93a);
+}
+
+.libre-shortcuts-pane__hint {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  max-width: 50ch;
+}
+
+.libre-shortcuts-pane__reset-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: transparent;
+  border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.12));
+  border-radius: var(--libre-radius-md, 8px);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    color 120ms ease,
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+.libre-shortcuts-pane__reset-all:not(:disabled):hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-accent, #f3a93a);
+  background: color-mix(in srgb, var(--color-accent, #f3a93a) 8%, transparent);
+}
+
+.libre-shortcuts-pane__reset-all:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ---- Groups ----------------------------------------------------- */
+
+.libre-shortcuts-pane__groups {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.libre-shortcuts-pane__group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.libre-shortcuts-pane__group-title {
+  margin: 0 0 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary, rgba(255, 255, 255, 0.4));
+}
+
+.libre-shortcuts-pane__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ---- Row -------------------------------------------------------- */
+
+.libre-shortcuts-pane__row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 12px;
+  border-radius: var(--libre-radius-md, 8px);
+  transition: background 120ms ease;
+}
+
+.libre-shortcuts-pane__row:hover {
+  background: color-mix(in srgb, var(--color-bg-elevated, rgba(255, 255, 255, 0.04)) 70%, transparent);
+}
+
+.libre-shortcuts-pane__row-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.libre-shortcuts-pane__row-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.libre-shortcuts-pane__row-desc {
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--color-text-tertiary, rgba(255, 255, 255, 0.45));
+}
+
+.libre-shortcuts-pane__row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* ---- Binding chip ---------------------------------------------- */
+
+.libre-shortcuts-pane__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px 5px 12px;
+  background: color-mix(in srgb, var(--color-bg-elevated, rgba(255, 255, 255, 0.05)) 100%, transparent);
+  border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.1));
+  border-radius: var(--libre-radius-md, 8px);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition:
+    color 120ms ease,
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+.libre-shortcuts-pane__chip:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-accent, #f3a93a);
+}
+
+.libre-shortcuts-pane__chip kbd {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, monospace);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  background: none;
+  border: none;
+  padding: 0;
+  letter-spacing: 0.02em;
+  /* Mac chord glyphs (⌘⇧⌥) are a hair smaller than ASCII chars at
+     the same font-size; nudge up so the chip feels balanced. */
+  line-height: 1;
+}
+
+.libre-shortcuts-pane__chip--custom {
+  border-color: color-mix(in srgb, var(--color-accent, #f3a93a) 50%, var(--color-border-default) 50%);
+  background: color-mix(in srgb, var(--color-accent, #f3a93a) 6%, transparent);
+}
+
+/* Pencil icon inside the chip — subtler than the kbd label so it
+   reads as "edit" without dominating. */
+.libre-shortcuts-pane__chip :global(.libre-icon) {
+  opacity: 0.55;
+  transition: opacity 120ms ease;
+}
+
+.libre-shortcuts-pane__chip:hover :global(.libre-icon) {
+  opacity: 1;
+}
+
+/* ---- Per-row reset button (the rotate-ccw arrow) --------------- */
+
+.libre-shortcuts-pane__reset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: var(--libre-radius-sm, 6px);
+  color: var(--color-text-tertiary, rgba(255, 255, 255, 0.45));
+  cursor: pointer;
+  transition:
+    color 120ms ease,
+    background 120ms ease;
+}
+
+.libre-shortcuts-pane__reset:not(:disabled):hover {
+  color: var(--color-text-primary);
+  background: color-mix(in srgb, var(--color-bg-elevated, rgba(255, 255, 255, 0.06)) 100%, transparent);
+}
+
+.libre-shortcuts-pane__reset:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}

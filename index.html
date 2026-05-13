@@ -37,7 +37,106 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
     <link rel="icon" type="image/png" href="/libre_app_icon.png" />
     <link rel="apple-touch-icon" href="/libre_app_icon.png" />
-    <title>Libre</title>
+
+    <!-- ── SEO base block ────────────────────────────────────────────
+         These meta tags are the static SEO baseline that ships in
+         EVERY page. Per-route surfaces (course pages, lesson pages)
+         override `document.title` + the `description` meta via the
+         `useMeta` hook in `src/hooks/useMeta.ts`. The static defaults
+         here cover the homepage + every JS-less crawl (Googlebot
+         renders JS but Bingbot / DuckDuckGo / older social-link
+         unfurlers don't always; the static block keeps those readers
+         honest).
+
+         Canonical: every page resolves to `https://libre.academy`
+         (the app routes are query-string driven, not path-based, so
+         a single canonical avoids duplicate-content penalties).
+         Per-route overrides happen via the `useMeta` hook.
+
+         Open Graph + Twitter Card use the same headline + image
+         pair so Slack / Discord / iMessage / etc. unfurls match
+         the browser tab title.
+
+         Theme color targets desktop + iOS Safari address-bar
+         tinting; we use the libre-dark `#0a0a0a` since that's the
+         majority experience. -->
+    <title>Libre.academy — A local-first learning platform for code</title>
+    <meta name="description" content="Libre.academy is a local-first, open coding-education platform. Install books on JavaScript, TypeScript, Rust, Solidity, and more — run code in real workbenches, track progress, earn certificates, and learn with a private AI tutor that runs entirely on your machine." />
+    <meta name="keywords" content="learn to code, programming courses, local-first learning, javascript, typescript, rust, solidity, python, web3, coding tutor, libre academy" />
+    <meta name="author" content="Libre.academy" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#0a0a0a" />
+    <link rel="canonical" href="https://libre.academy/" />
+
+    <!-- Open Graph — Slack / Discord / iMessage / Facebook unfurls -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Libre.academy" />
+    <meta property="og:title" content="Libre.academy — A local-first learning platform for code" />
+    <meta property="og:description" content="Install coding books, run real code, earn certificates, learn with a private AI tutor. Everything stays on your machine." />
+    <meta property="og:url" content="https://libre.academy/" />
+    <meta property="og:image" content="https://libre.academy/libre_header.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card — same headline pair, larger image preview. -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Libre.academy — A local-first learning platform for code" />
+    <meta name="twitter:description" content="Install coding books, run real code, earn certificates, learn with a private AI tutor. Everything stays on your machine." />
+    <meta name="twitter:image" content="https://libre.academy/libre_header.png" />
+
+    <!-- Sitemap pointer for crawlers that read inline links. -->
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+
+    <!-- JSON-LD structured data. Two graphs: the brand (Organization)
+         and the site (WebSite + SearchAction so Google can offer a
+         search-box rich result). The EducationalOrganization sibling
+         flags the site to search engines as a learning destination,
+         which surfaces it in education-related queries / Lens /
+         Discover. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": ["Organization", "EducationalOrganization"],
+            "@id": "https://libre.academy/#organization",
+            "name": "Libre.academy",
+            "url": "https://libre.academy/",
+            "logo": "https://libre.academy/libreacademy.png",
+            "description": "Open, local-first coding-education platform with installable books, real-code workbenches, and a private AI tutor.",
+            "sameAs": [
+              "https://github.com/InfamousVague/Libre"
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://libre.academy/#website",
+            "url": "https://libre.academy/",
+            "name": "Libre.academy",
+            "publisher": { "@id": "https://libre.academy/#organization" },
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://libre.academy/?q={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
+          },
+          {
+            "@type": "SoftwareApplication",
+            "name": "Libre.academy",
+            "operatingSystem": "macOS, Windows, Linux, iOS, Web",
+            "applicationCategory": "EducationalApplication",
+            "description": "Local-first learning platform for programmers — installable courses, real-code execution, private AI tutor.",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          }
+        ]
+      }
+    </script>
+    <!-- ── end SEO base block ──────────────────────────────────────── -->
     <!-- Pre-React preloader. The main bundle + Monaco take ~1 s to
          parse on a cold launch and React's bootloader can't paint
          until the module graph resolves — so without this inline
@@ -58,6 +157,28 @@
         background: #0a0a0a;
         color: #eaeaea;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      }
+      /* Tray-popover mode (host window loaded at `?tray=1`). The
+         outer Tauri window is frameless + transparent; without
+         these overrides the inline preloader would paint a hard
+         dark rectangle filling the OS window before React mounts
+         the rounded glass card. Detected via the inline script
+         below which flips `html.libre-tray-mode` on the very first
+         token after `<head>` opens. */
+      html.libre-tray-mode,
+      html.libre-tray-mode body {
+        background: transparent;
+      }
+      html.libre-tray-mode #preloader {
+        /* Match the painted-via-React card: same rounded corners,
+           border, shadow, and dark glass tint so the handoff from
+           inline preloader to React mount is invisible. */
+        background: rgba(10, 10, 14, 0.96);
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        box-shadow:
+          0 18px 48px rgba(0, 0, 0, 0.55),
+          inset 0 1px 0 rgba(255, 255, 255, 0.05);
       }
       #preloader {
         position: fixed;
@@ -113,6 +234,18 @@
         to { transform: rotate(360deg); }
       }
     </style>
+    <!-- Detect the tray-popover mode BEFORE any other script runs so
+         the inline preloader's CSS branch (above) can paint its
+         rounded glass shape on the very first frame. Without this,
+         a cold-launched tray window briefly paints the full-screen
+         dark preloader rectangle before React swaps in the rounded
+         card. The body element doesn't exist yet at parse time, so
+         we tag `html` (which always does). -->
+    <script>
+      if (location.search.indexOf("tray=1") !== -1) {
+        document.documentElement.classList.add("libre-tray-mode");
+      }
+    </script>
     <!-- Floating dev console. Loads BEFORE the React module bundle
          (parser-blocking, no `defer`/`async`) so it can hook
          console.log/.error and window error events before main.tsx

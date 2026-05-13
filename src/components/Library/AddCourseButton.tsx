@@ -6,6 +6,7 @@ import { filePlus } from "@base/primitives/icon/icons/file-plus";
 import { libraryBig } from "@base/primitives/icon/icons/library-big";
 import { globe } from "@base/primitives/icon/icons/globe";
 import "@base/primitives/icon/icon.css";
+import { useT } from "../../i18n/i18n";
 import "./AddCourseButton.css";
 
 interface Props {
@@ -55,6 +56,7 @@ export default function AddCourseButton({
   onArchive,
   onBrowseCatalog,
 }: Props) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
@@ -93,10 +95,10 @@ export default function AddCourseButton({
           type="button"
           className="libre-addcourse-main"
           onClick={onSmartPick}
-          title="Pick a PDF, EPUB, .academy archive, or course.json — we'll figure out which pipeline to run"
+          title={t("addCourse.primaryTitle")}
         >
           <Icon icon={plus} size="xs" color="currentColor" />
-          <span>Add course</span>
+          <span>{t("addCourse.primary")}</span>
         </button>
         <button
           type="button"
@@ -104,8 +106,8 @@ export default function AddCourseButton({
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-haspopup="menu"
-          aria-label="More import options"
-          title="More import options"
+          aria-label={t("addCourse.caretAria")}
+          title={t("addCourse.caretTitle")}
         >
           <Icon icon={chevronDown} size="xs" color="currentColor" />
         </button>
@@ -115,7 +117,7 @@ export default function AddCourseButton({
         <div
           className="libre-addcourse-menu"
           role="menu"
-          aria-label="Import options"
+          aria-label={t("addCourse.menuAria")}
         >
           <button
             type="button"
@@ -126,10 +128,10 @@ export default function AddCourseButton({
             <Icon icon={filePlus} size="xs" color="currentColor" />
             <span className="libre-addcourse-item-body">
               <span className="libre-addcourse-item-title">
-                Pick file(s)…
+                {t("addCourse.pickFile")}
               </span>
               <span className="libre-addcourse-item-hint">
-                PDF, EPUB, .academy, course.json — we sniff and route
+                {t("addCourse.pickFileHint")}
               </span>
             </span>
           </button>
@@ -143,10 +145,10 @@ export default function AddCourseButton({
               <Icon icon={libraryBig} size="xs" color="currentColor" />
               <span className="libre-addcourse-item-body">
                 <span className="libre-addcourse-item-title">
-                  Bulk PDFs…
+                  {t("addCourse.bulkPdfs")}
                 </span>
                 <span className="libre-addcourse-item-hint">
-                  Queue many books for unattended batch import
+                  {t("addCourse.bulkPdfsHint")}
                 </span>
               </span>
             </button>
@@ -161,10 +163,10 @@ export default function AddCourseButton({
               <Icon icon={globe} size="xs" color="currentColor" />
               <span className="libre-addcourse-item-body">
                 <span className="libre-addcourse-item-title">
-                  From docs URL…
+                  {t("addCourse.docsUrl")}
                 </span>
                 <span className="libre-addcourse-item-hint">
-                  Crawl a documentation site and generate a course
+                  {t("addCourse.docsUrlHint")}
                 </span>
               </span>
             </button>
@@ -179,10 +181,10 @@ export default function AddCourseButton({
               <Icon icon={filePlus} size="xs" color="currentColor" />
               <span className="libre-addcourse-item-body">
                 <span className="libre-addcourse-item-title">
-                  Import archive…
+                  {t("addCourse.archive")}
                 </span>
                 <span className="libre-addcourse-item-hint">
-                  .academy / .libre / .kata exports (also handled by the smart picker)
+                  {t("addCourse.archiveHint")}
                 </span>
               </span>
             </button>
@@ -197,10 +199,10 @@ export default function AddCourseButton({
               <Icon icon={libraryBig} size="xs" color="currentColor" />
               <span className="libre-addcourse-item-body">
                 <span className="libre-addcourse-item-title">
-                  Browse catalog…
+                  {t("addCourse.browseCatalog")}
                 </span>
                 <span className="libre-addcourse-item-hint">
-                  Search and install books from the Libre library
+                  {t("addCourse.browseCatalogHint")}
                 </span>
               </span>
             </button>

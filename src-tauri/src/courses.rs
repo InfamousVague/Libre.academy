@@ -156,7 +156,7 @@ pub fn is_archive_ext(ext: Option<&str>) -> bool {
 /// just two foundational books plus every challenge pack — and the
 /// user discovers + installs everything else from the in-app catalog
 /// browser (CatalogBrowser modal, served from
-/// mattssoftware.com/fishbones/catalog/manifest.json).
+/// libre.academy/catalog/manifest.json).
 ///
 /// In dev mode, `app.path().resource_dir()` resolves to the source
 /// `src-tauri/resources/` directory, which contains every archive

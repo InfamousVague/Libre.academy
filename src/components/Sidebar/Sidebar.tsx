@@ -13,6 +13,7 @@ import { isChallengePack } from "../../data/types";
 import { languageLabel } from "./labels";
 import CourseGroup from "./CourseGroup";
 import CourseCarousel from "./CourseCarousel";
+import { useT } from "../../i18n/i18n";
 import "./Sidebar.css";
 
 interface Props {
@@ -50,6 +51,12 @@ interface Props {
   /// Wipe every completion in a course. Reachable from the course
   /// right-click menu (sits between Export and Delete).
   onResetCourse?: (courseId: string) => void;
+  /// Switch the main view to the certificates page. Used by the
+  /// MiniCertBanner above the active-course tree — clicking the
+  /// banner takes the learner to the gallery of cert artefacts
+  /// (earned + in-progress). Optional: if not wired the banner
+  /// stops behaving as a button.
+  onCertificates?: () => void;
 }
 
 /// Floating left rail. Completion dots fill in as lessons get marked done
@@ -70,7 +77,9 @@ export default function Sidebar({
   onResetLesson,
   onResetChapter,
   onResetCourse,
+  onCertificates,
 }: Props) {
+  const t = useT();
   /// Open context menu state, positioned at the cursor when a course card
   /// is right-clicked. One menu at a time across the sidebar — opening a
   /// new one closes the previous. Clicking outside, pressing Escape, or
@@ -131,21 +140,6 @@ export default function Sidebar({
 
   return (
     <aside className="libre__sidebar">
-      {/* Brand wordmark — pinned at the very top of the sidebar so the
-          Libre.academy lockup anchors the rail and stays visible
-          regardless of which view is active. Moved here from the
-          Library / Discover headers (where it doubled up the page
-          identity with the title block). Naked image, no card chrome
-          — the rail's frosted-glass surface is the framing. */}
-      <div className="libre__sidebar-brand" aria-hidden>
-        <img
-          src={`${import.meta.env.BASE_URL}libreacademy.png`}
-          alt="Libre.academy"
-          className="libre__sidebar-brand-img"
-          draggable={false}
-        />
-      </div>
-
       {/* Primary nav — vertical list with icon + label. Claude-Code-style:
           full-width rows, clear call-outs, no ambiguity about what each
           chip does. Routes (Profile / Playground) show an active state
@@ -156,34 +150,48 @@ export default function Sidebar({
           Playground route, and Settings. Profile lives on the top-bar
           streak pill alongside level/XP so it's adjacent to the data
           it belongs with, not hiding in the left rail. */}
-      {/* Recent-courses carousel lives at the very top of the sidebar —
-          it's the first thing the learner's eye hits when switching
-          contexts. Horizontally scrollable row of cover thumbnails,
-          newest-activity first. Hidden when there's 0 or 1 course
-          (nothing to switch between). Clicking a thumbnail jumps to
-          the course — the parent resolves which lesson to resume.
-          */}
-      {onSelectCourse && (
-        <CourseCarousel
-          courses={courses}
-          recents={recents}
-          completed={completed}
-          onSelectCourse={onSelectCourse}
-          onContextMenu={
-            onExportCourse || onDeleteCourse || onCourseSettings
-              ? (course, e) => {
-                  e.preventDefault();
-                  setMenu({
-                    courseId: course.id,
-                    courseTitle: course.title,
-                    x: e.clientX,
-                    y: e.clientY,
-                  });
-                }
-              : undefined
-          }
-        />
-      )}
+      {/* "Viewing a lesson" mode collapses everything except the
+          brand + active course card. When `activeLessonId` is set
+          the learner has drilled all the way down into a specific
+          lesson; surrounding course-list / challenge-pack /
+          carousel chrome turns into visual noise competing with
+          the chapter tree they're working in. Outside that mode
+          (library, discover, the course landing before a lesson
+          is picked) the full layout is the right call — that's
+          when the carousel + sibling sections actually earn their
+          space. */}
+      {(() => {
+        const viewingLesson = !!activeLessonId && !!activeCourseId;
+
+        // Recent-courses carousel lives at the very top of the
+        // sidebar in non-lesson contexts. Horizontally scrollable
+        // row of cover thumbnails, newest-activity first; hidden
+        // when there's 0 or 1 course (nothing to switch between).
+        // Clicking a thumbnail jumps to the course — the parent
+        // resolves which lesson to resume.
+        if (viewingLesson || !onSelectCourse) return null;
+        return (
+          <CourseCarousel
+            courses={courses}
+            recents={recents}
+            completed={completed}
+            onSelectCourse={onSelectCourse}
+            onContextMenu={
+              onExportCourse || onDeleteCourse || onCourseSettings
+                ? (course, e) => {
+                    e.preventDefault();
+                    setMenu({
+                      courseId: course.id,
+                      courseTitle: course.title,
+                      x: e.clientX,
+                      y: e.clientY,
+                    });
+                  }
+                : undefined
+            }
+          />
+        );
+      })()}
 
       {/* Library / Discover / Trees / Playground / Settings live in
           the navigation rail to the LEFT of this sidebar — see
@@ -254,6 +262,7 @@ export default function Sidebar({
                     }
                   : undefined
               }
+              onCertificates={onCertificates}
             />
           );
 
@@ -307,17 +316,30 @@ export default function Sidebar({
           const hasAnything =
             !!activeCourse || inactiveBooks.length > 0 || relevantPacks.length > 0;
 
+          // Viewing a lesson — collapse to the active course only.
+          // No "Current" section header (it's redundant when the
+          // active course is the ONLY thing in the sidebar), no
+          // challenge-pack list, no in-progress list, no empty
+          // state. The brand wordmark above already provides the
+          // visual anchor; placing the course card right under it
+          // gives the learner a focused tree to navigate without
+          // sibling chrome competing for attention.
+          const viewingLesson = !!activeLessonId && !!activeCourse;
+          if (viewingLesson) {
+            return renderGroup(activeCourse!);
+          }
+
           return (
             <>
               {activeCourse && (
                 <>
-                  <div className="libre__nav-section">Current</div>
+                  <div className="libre__nav-section">{t("sidebar.sectionCurrent")}</div>
                   {renderGroup(activeCourse)}
                 </>
               )}
               {!activeCourse && inactiveBooks.length > 0 && (
                 <>
-                  <div className="libre__nav-section">In progress</div>
+                  <div className="libre__nav-section">{t("sidebar.sectionInProgress")}</div>
                   {inactiveBooks.map(renderGroup)}
                 </>
               )}
@@ -328,8 +350,8 @@ export default function Sidebar({
                       <Icon icon={swords} size="xs" color="currentColor" />
                     </span>
                     {activeCourse
-                      ? `${languageLabel(activeCourse.language)} challenges`
-                      : "Challenge packs"}
+                      ? t("sidebar.sectionLanguageChallenges", { language: languageLabel(activeCourse.language) })
+                      : t("sidebar.sectionChallengePacks")}
                   </div>
                   {relevantPacks.map(renderGroup)}
                 </>
@@ -337,11 +359,10 @@ export default function Sidebar({
               {!hasAnything && (
                 <div className="libre__nav-empty">
                   <p className="libre__nav-empty-headline">
-                    Nothing started yet
+                    {t("sidebar.emptyHeadline")}
                   </p>
                   <p className="libre__nav-empty-body">
-                    Pick something from the library to get going. Courses
-                    you start will show up here.
+                    {t("sidebar.emptyBody")}
                   </p>
                   <button
                     type="button"
@@ -351,7 +372,7 @@ export default function Sidebar({
                     <span aria-hidden>
                       <Icon icon={libraryBig} size="xs" color="currentColor" />
                     </span>
-                    Open Library
+                    {t("sidebar.openLibraryCta")}
                   </button>
                 </div>
               )}
@@ -386,7 +407,7 @@ export default function Sidebar({
               <span className="libre__context-menu-icon" aria-hidden>
                 <Icon icon={settingsIcon} size="xs" color="currentColor" />
               </span>
-              Course settings…
+              {t("sidebar.ctxCourseSettings")}
             </button>
           )}
           {onExportCourse && (
@@ -401,7 +422,7 @@ export default function Sidebar({
               <span className="libre__context-menu-icon" aria-hidden>
                 <Icon icon={downloadIcon} size="xs" color="currentColor" />
               </span>
-              Export course…
+              {t("sidebar.ctxExportCourse")}
             </button>
           )}
           {/* Reset progress sits between the safe actions and Delete:
@@ -420,7 +441,7 @@ export default function Sidebar({
               <span className="libre__context-menu-icon" aria-hidden>
                 <Icon icon={rotateCcw} size="xs" color="currentColor" />
               </span>
-              Reset progress
+              {t("sidebar.ctxResetProgress")}
             </button>
           )}
           {onDeleteCourse && (
@@ -438,7 +459,7 @@ export default function Sidebar({
                 <span className="libre__context-menu-icon" aria-hidden>
                   <Icon icon={xIcon} size="xs" color="currentColor" />
                 </span>
-                Delete course…
+                {t("sidebar.ctxDeleteCourse")}
               </button>
             </>
           )}
@@ -464,7 +485,7 @@ export default function Sidebar({
             <span className="libre__context-menu-icon" aria-hidden>
               <Icon icon={rotateCcw} size="xs" color="currentColor" />
             </span>
-            Reset chapter progress
+            {t("sidebar.ctxResetChapter")}
           </button>
         </div>,
         document.body,
@@ -488,7 +509,7 @@ export default function Sidebar({
             <span className="libre__context-menu-icon" aria-hidden>
               <Icon icon={rotateCcw} size="xs" color="currentColor" />
             </span>
-            Mark incomplete
+            {t("sidebar.ctxMarkIncomplete")}
           </button>
         </div>,
         document.body,

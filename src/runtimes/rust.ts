@@ -184,20 +184,52 @@ export function joinCodeAndTests(userCode: string, testCode: string): string {
   // Ensure the file has a main() so cargo run / test is happy even if the
   // user's starter didn't include one.
   const mainFallback = /\bfn\s+main\s*\(/.test(userCode) ? "" : "\nfn main() {}\n";
+  // Earlier this wrapper carried `#[allow(unused_imports)]` on the
+  // `use super::*;` line to mask "unused import" warnings when a
+  // test's body didn't reference anything from the parent scope.
+  // That approach BACKFIRES against starters that ship
+  // `#![forbid(unused_imports)]` at the file level (Rustlings does
+  // this in `smart_pointers3`, `clippy3`, and a handful of other
+  // exercises to make learners wire up imports deliberately):
+  // `forbid` overrules `allow`, so the annotation itself fires
+  // error E0453 — a hard compile error the user can't fix
+  // without editing the test wrapper.
+  //
+  // Correct approach: don't paper over the warning at all. Lesson
+  // authors of compile-only tests are expected to add a single
+  // reference to a parent-scope item (`let _ = main;` is the
+  // canonical pattern — `main` exists in every starter or our
+  // fallback) so the import is genuinely used. The synthetic
+  // `COMPILE_ONLY_TEST` template in `scripts/import-rustlings.mjs`
+  // bakes this in for every compile-only exercise we generate.
+  // Inline the test body WITHOUT re-indenting. The earlier
+  // implementation called `indent(testCode, 4)` to align the
+  // tests visually under the `mod kata_tests {` block, but that
+  // pass prepends 4 spaces to EVERY non-empty line — including
+  // continuation lines INSIDE multi-line string literals. The
+  // canonical victim was `hashmaps3`: its `const RESULTS = "…\n…"`
+  // multi-line literal got 4 leading spaces baked into every team
+  // name except the first, so `scores.get("England")` worked but
+  // every other lookup silently missed. Rust doesn't care about
+  // indentation, so dropping the call keeps the code valid and
+  // the embedded string content pristine.
   return `${userCode}${mainFallback}
 
 #[cfg(test)]
 mod kata_tests {
     use super::*;
-${indent(testCode, 4)}
+${testCode}
 }
 `;
 }
 
-function indent(s: string, n: number): string {
-  const pad = " ".repeat(n);
-  return s.split("\n").map((l) => (l.length ? pad + l : l)).join("\n");
-}
+// `indent()` was retired alongside its sole caller in
+// `joinCodeAndTests` — the per-line space prefix it added was
+// corrupting continuation lines inside multi-line string
+// literals (see the comment in `joinCodeAndTests` for the
+// canonical victim). Kept here as a commented-out stub for
+// anyone tracing through git blame; do NOT reintroduce it
+// without a parser-aware variant that respects string literals.
 
 /// Parse the cargo test output lines. They look like:
 ///   test tests::foo ... ok

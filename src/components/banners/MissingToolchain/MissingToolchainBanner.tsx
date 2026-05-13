@@ -4,6 +4,7 @@ import { Icon } from "@base/primitives/icon";
 import { wrench } from "@base/primitives/icon/icons/wrench";
 import "@base/primitives/icon/icon.css";
 import type { ToolchainStatus } from "../../../hooks/useToolchainStatus";
+import { useT } from "../../../i18n/i18n";
 import "./MissingToolchainBanner.css";
 
 interface InstallResult {
@@ -42,6 +43,7 @@ export default function MissingToolchainBanner({
   onInstalled,
   onDismiss,
 }: Props) {
+  const t = useT();
   const [installing, setInstalling] = useState(false);
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +60,7 @@ export default function MissingToolchainBanner({
 
   async function handleInstall() {
     if (hint.requires_password && !password.trim()) {
-      setError("Password is required for this install.");
+      setError(t("banners.toolchainPasswordRequired"));
       return;
     }
     setInstalling(true);
@@ -83,13 +85,13 @@ export default function MissingToolchainBanner({
         // Keep the tail of stdout/stderr visible for a moment so the
         // learner sees "✓ installed" or the brew tap output before the
         // banner disappears.
-        setOutput(tailOutput(result));
+        setOutput(tailOutput(t, result));
         // Clear password from memory as soon as we've used it.
         setPassword("");
         onInstalled();
       } else {
         setError(
-          `Install exited with a non-zero status.\n\n${tailOutput(result)}`,
+          t("banners.toolchainInstallFailed", { output: tailOutput(t, result) }),
         );
       }
     } catch (e) {
@@ -110,18 +112,18 @@ export default function MissingToolchainBanner({
       </div>
       <div className="libre-missing-tc-body">
         <div className="libre-missing-tc-title">
-          {hint.title ?? `${labelLang} isn't installed`}
+          {hint.title ?? t("banners.toolchainNotInstalled", { language: labelLang })}
         </div>
         <div className="libre-missing-tc-desc">{hint.description}</div>
 
-        <div className="libre-missing-tc-cmd" role="note" aria-label="Install command">
+        <div className="libre-missing-tc-cmd" role="note" aria-label={t("banners.toolchainInstallCmd")}>
           <code>{hint.command}</code>
         </div>
 
         {hint.requires_password && !installing && (
           <div className="libre-missing-tc-pw-row">
             <label className="libre-missing-tc-pw-label">
-              Admin password
+              {t("banners.toolchainAdminPassword")}
               <input
                 type="password"
                 className="libre-missing-tc-pw-input"
@@ -133,8 +135,7 @@ export default function MissingToolchainBanner({
               />
             </label>
             <div className="libre-missing-tc-pw-hint">
-              Stays on your machine — piped directly into <code>sudo</code> and
-              never logged or persisted.
+              {t("banners.toolchainPasswordHint")}
             </div>
           </div>
         )}
@@ -155,9 +156,11 @@ export default function MissingToolchainBanner({
           disabled={
             installing || (hint.requires_password && !password.trim())
           }
-          title={`Runs: ${hint.command}`}
+          title={t("banners.toolchainInstallRuns", { command: hint.command })}
         >
-          {installing ? "Installing…" : (hint.button_label ?? `Install ${labelLang}`)}
+          {installing
+            ? t("banners.toolchainInstalling")
+            : (hint.button_label ?? t("banners.toolchainInstallLang", { language: labelLang }))}
         </button>
         {onDismiss && !installing && (
           <button
@@ -165,7 +168,7 @@ export default function MissingToolchainBanner({
             className="libre-missing-tc-btn"
             onClick={onDismiss}
           >
-            Skip for now
+            {t("banners.toolchainSkip")}
           </button>
         )}
       </div>
@@ -176,11 +179,11 @@ export default function MissingToolchainBanner({
 /// Trim installer output to something readable in the banner. Brew
 /// can emit thousands of lines during a cold install — we keep the
 /// last ~40 lines of whichever stream had the most signal.
-function tailOutput(r: InstallResult): string {
+function tailOutput(t: (key: string) => string, r: InstallResult): string {
   const both = `${r.stdout}\n${r.stderr}`.trim();
   const lines = both.split("\n").filter(Boolean);
   const tail = lines.slice(-40).join("\n");
-  return tail || "(no output)";
+  return tail || t("banners.toolchainNoOutput");
 }
 
 function capitalize(s: string): string {

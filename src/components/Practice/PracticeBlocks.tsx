@@ -313,15 +313,15 @@ export default function PracticeBlocks({
       onDragEnd={onDragEnd}
     >
       <div
-        className={"fb-practice-blocks" + (committed ? " is-committed" : "")}
+        className={"libre-practice-blocks" + (committed ? " is-committed" : "")}
       >
         {blocks.prompt && (
-          <p className="fb-practice-blocks__prompt">{blocks.prompt}</p>
+          <p className="libre-practice-blocks__prompt">{blocks.prompt}</p>
         )}
 
-        <pre className="fb-practice-blocks__template">
+        <pre className="libre-practice-blocks__template">
           {renderedLines.map((line, lineIdx) => (
-            <span key={lineIdx} className="fb-practice-blocks__line">
+            <span key={lineIdx} className="libre-practice-blocks__line">
               {line.map((tok, tokIdx) =>
                 tok.kind === "slot" ? (
                   <SlotZone
@@ -376,16 +376,16 @@ export default function PracticeBlocks({
             ),
           )}
           {shuffledPool.every((b) => placedBlockIds.has(b.id)) && (
-            <span className="fb-practice-blocks__pool-empty">
+            <span className="libre-practice-blocks__pool-empty">
               All blocks placed.
             </span>
           )}
         </PoolZone>
 
-        <div className="fb-practice-blocks__actions">
+        <div className="libre-practice-blocks__actions">
           <button
             type="button"
-            className="fb-practice-blocks__check"
+            className="libre-practice-blocks__check"
             onClick={check}
             disabled={!allPlaced || committed}
           >
@@ -404,9 +404,9 @@ export default function PracticeBlocks({
         {activeBlock ? (
           <div
             className={
-              "fb-practice-blocks__chip fb-practice-blocks__chip--ghost" +
+              "libre-practice-blocks__chip libre-practice-blocks__chip--ghost" +
               (activeDragId?.startsWith(DRAG_FROM_SLOT)
-                ? " fb-practice-blocks__chip--placed"
+                ? " libre-practice-blocks__chip--placed"
                 : "")
             }
           >
@@ -463,13 +463,13 @@ function SlotZone({
     <span
       ref={setNodeRef}
       className={
-        "fb-practice-blocks__slot" +
+        "libre-practice-blocks__slot" +
         (filled
-          ? " fb-practice-blocks__slot--filled"
-          : " fb-practice-blocks__slot--empty") +
-        (isOver ? " fb-practice-blocks__slot--over" : "") +
-        (correct ? " fb-practice-blocks__slot--correct" : "") +
-        (wrong ? " fb-practice-blocks__slot--wrong" : "")
+          ? " libre-practice-blocks__slot--filled"
+          : " libre-practice-blocks__slot--empty") +
+        (isOver ? " libre-practice-blocks__slot--over" : "") +
+        (correct ? " libre-practice-blocks__slot--correct" : "") +
+        (wrong ? " libre-practice-blocks__slot--wrong" : "")
       }
       role="button"
       tabIndex={disabled ? -1 : 0}
@@ -500,7 +500,7 @@ function SlotZone({
           disabled={disabled}
         />
       ) : (
-        <span className="fb-practice-blocks__slot-placeholder">
+        <span className="libre-practice-blocks__slot-placeholder">
           {hint ?? "·"}
         </span>
       )}
@@ -519,8 +519,8 @@ function PoolZone({ children }: { children: React.ReactNode }) {
     <div
       ref={setNodeRef}
       className={
-        "fb-practice-blocks__pool" +
-        (isOver ? " fb-practice-blocks__pool--over" : "")
+        "libre-practice-blocks__pool" +
+        (isOver ? " libre-practice-blocks__pool--over" : "")
       }
       role="list"
     >
@@ -561,9 +561,9 @@ function BlockChip({
       {...attributes}
       {...listeners}
       className={
-        "fb-practice-blocks__chip" +
-        (armed ? " fb-practice-blocks__chip--armed" : "") +
-        (isDragging ? " fb-practice-blocks__chip--dragging" : "") +
+        "libre-practice-blocks__chip" +
+        (armed ? " libre-practice-blocks__chip--armed" : "") +
+        (isDragging ? " libre-practice-blocks__chip--dragging" : "") +
         (disabled ? " is-disabled" : "")
       }
       role="listitem"
@@ -608,8 +608,8 @@ function DraggablePlacedBlock({
     <span
       ref={setNodeRef}
       className={
-        "fb-practice-blocks__chip fb-practice-blocks__chip--placed" +
-        (isDragging ? " fb-practice-blocks__chip--dragging" : "")
+        "libre-practice-blocks__chip libre-practice-blocks__chip--placed" +
+        (isDragging ? " libre-practice-blocks__chip--dragging" : "")
       }
       style={{
         transform: CSS.Translate.toString(transform),

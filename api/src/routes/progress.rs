@@ -60,7 +60,7 @@ pub async fn upsert(
     Ok(StatusCode::NO_CONTENT)
 }
 
-/// DELETE /fishbones/progress — wipes every completion row for this
+/// DELETE /progress — wipes every completion row for this
 /// user. Triggered by the desktop "Start fresh" Settings action; the
 /// client paired wipe (local SQLite / IDB + cached state) runs in
 /// parallel so the local + remote views converge to empty on this

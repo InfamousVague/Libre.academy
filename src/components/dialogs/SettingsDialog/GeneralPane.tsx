@@ -3,7 +3,11 @@ import { Icon } from "@base/primitives/icon";
 import { check as checkIcon } from "@base/primitives/icon/icons/check";
 import { rocket } from "@base/primitives/icon/icons/rocket";
 import { arrowDownToLine } from "@base/primitives/icon/icons/arrow-down-to-line";
+import { info } from "@base/primitives/icon/icons/info";
 import "@base/primitives/icon/icon.css";
+import SettingsCard, { SettingsPage } from "./SettingsCard";
+import SettingsRow from "./SettingsRow";
+import { useT } from "../../../i18n/i18n";
 
 /// "General" section of the Settings dialog. Hosts the Updates
 /// sub-panel: current version, manual check-for-updates, and the
@@ -33,6 +37,7 @@ function isTauri(): boolean {
 }
 
 export default function GeneralPane() {
+  const t = useT();
   const [version, setVersion] = useState<string | null>(null);
   const [state, setState] = useState<UpdateState>({ kind: "idle" });
 
@@ -59,7 +64,7 @@ export default function GeneralPane() {
 
   const checkForUpdates = useCallback(async () => {
     if (!isTauri()) {
-      setState({ kind: "error", message: "Updates are only checked from the desktop build." });
+      setState({ kind: "error", message: t("settings.updatesDesktopOnly") });
       return;
     }
     setState({ kind: "checking" });
@@ -81,7 +86,7 @@ export default function GeneralPane() {
         message: e instanceof Error ? e.message : String(e),
       });
     }
-  }, []);
+  }, [t]);
 
   const downloadAndInstall = useCallback(async () => {
     if (!isTauri()) return;
@@ -119,39 +124,37 @@ export default function GeneralPane() {
   }, []);
 
   return (
-    <section>
-      <h3 className="libre-settings-section">General</h3>
-      <p className="libre-settings-blurb">
-        About this build, and where to grab the next one.
-      </p>
-
-      {/* ── Updates sub-panel ─────────────────────────────────── */}
-      <div className="libre-settings-data-row">
-        <div>
-          <div className="libre-settings-data-label">App version</div>
-          <div className="libre-settings-data-hint">
-            {version ? (
+    <SettingsPage
+      title={t("settings.general")}
+      description={t("settings.generalDescription")}
+    >
+      <SettingsCard title={t("settings.updatesCard")}>
+        <SettingsRow
+          icon={info}
+          label={t("settings.appVersionLabel")}
+          sub={
+            version ? (
               <>
-                You're running <strong>v{version}</strong>.
+                {t("settings.appVersionRunning")} <strong>v{version}</strong>
+                {state.kind === "uptodate" && ` · ${t("settings.appVersionUpToDate")}`}
               </>
             ) : (
-              <>Reading version…</>
-            )}
-            {state.kind === "uptodate" && (
-              <span className="libre-settings-data-success">
-                {" · "}You're up to date.
-              </span>
-            )}
-          </div>
-        </div>
-        <button
-          className="libre-settings-secondary"
-          onClick={checkForUpdates}
-          disabled={state.kind === "checking" || state.kind === "downloading"}
-        >
-          {state.kind === "checking" ? "Checking…" : "Check for updates"}
-        </button>
-      </div>
+              <>{t("settings.appVersionReading")}</>
+            )
+          }
+          control={
+            <button
+              className="libre-settings-secondary"
+              onClick={checkForUpdates}
+              disabled={
+                state.kind === "checking" || state.kind === "downloading"
+              }
+            >
+              {state.kind === "checking" ? t("settings.checkingUpdates") : t("settings.checkForUpdates")}
+            </button>
+          }
+        />
+      </SettingsCard>
 
       {state.kind === "available" && (
         <div className="libre-settings-update">
@@ -159,10 +162,10 @@ export default function GeneralPane() {
             <Icon icon={rocket} size="sm" color="currentColor" />
             <div>
               <div className="libre-settings-update-title">
-                Libre v{state.version} is available
+                {t("settings.updateAvailableTitle", { version: state.version })}
               </div>
               <div className="libre-settings-update-sub">
-                Download + install from inside the app — no reinstall needed.
+                {t("settings.updateAvailableSub")}
               </div>
             </div>
             <button
@@ -170,13 +173,13 @@ export default function GeneralPane() {
               onClick={downloadAndInstall}
             >
               <Icon icon={arrowDownToLine} size="xs" color="currentColor" />
-              Download &amp; install
+              {t("settings.downloadInstall")}
             </button>
           </div>
           {state.notes.trim().length > 0 && (
             <div className="libre-settings-update-notes">
               <div className="libre-settings-update-notes-label">
-                What's new
+                {t("settings.whatsNew")}
               </div>
               <pre className="libre-settings-update-notes-body">
                 {state.notes}
@@ -192,14 +195,17 @@ export default function GeneralPane() {
             <Icon icon={arrowDownToLine} size="sm" color="currentColor" />
             <div>
               <div className="libre-settings-update-title">
-                Downloading update…
+                {t("settings.downloadingUpdate")}
               </div>
               <div className="libre-settings-update-sub">
                 {state.total
-                  ? `${(state.progress / 1024 / 1024).toFixed(1)} / ${(
-                      state.total / 1024 / 1024
-                    ).toFixed(1)} MB`
-                  : `${(state.progress / 1024 / 1024).toFixed(1)} MB downloaded`}
+                  ? t("settings.downloadedProgress", {
+                      progress: (state.progress / 1024 / 1024).toFixed(1),
+                      total: (state.total / 1024 / 1024).toFixed(1),
+                    })
+                  : t("settings.downloadedNoTotal", {
+                      progress: (state.progress / 1024 / 1024).toFixed(1),
+                    })}
               </div>
             </div>
           </div>
@@ -212,10 +218,10 @@ export default function GeneralPane() {
             <Icon icon={checkIcon} size="sm" color="currentColor" />
             <div>
               <div className="libre-settings-update-title">
-                Update installed
+                {t("settings.updateInstalledTitle")}
               </div>
               <div className="libre-settings-update-sub">
-                Restart the app to switch to the new version.
+                {t("settings.updateRestartHint")}
               </div>
             </div>
           </div>
@@ -224,9 +230,9 @@ export default function GeneralPane() {
 
       {state.kind === "error" && (
         <div className="libre-settings-error">
-          Couldn't check for updates: {state.message}
+          {t("settings.updateError", { message: state.message })}
         </div>
       )}
-    </section>
+    </SettingsPage>
   );
 }

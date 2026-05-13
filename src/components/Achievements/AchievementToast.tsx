@@ -19,6 +19,8 @@ import { x as xIcon } from "@base/primitives/icon/icons/x";
 
 import type { Achievement } from "../../data/achievements";
 import AchievementBadge from "./AchievementBadge";
+import { fireHaptic } from "../../lib/haptics";
+import { useT } from "../../i18n/i18n";
 import "./Achievements.css";
 
 interface Props {
@@ -34,6 +36,7 @@ export default function AchievementToast({
   holdMs,
   onDismiss,
 }: Props) {
+  const t = useT();
   const [phase, setPhase] = useState<"in" | "hold" | "out">("in");
   const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tierHold = achievement.tier === "bronze" ? 4000 : 5000;
@@ -44,9 +47,24 @@ export default function AchievementToast({
   // just sequences the timers and calls onDismiss after the exit
   // finishes.
   useEffect(() => {
+    // Tier-scaled haptic crescendo timed to the toast's enter
+    // slide. Bronze gets a triple-pulse success; silver/gold/
+    // platinum escalate to the level-up pattern. Fires on the
+    // enter phase so the buzz arrives WITH the badge sliding
+    // in (not after, which reads as a delayed afterthought).
+    const tier = achievement.tier;
+    if (tier === "bronze") {
+      void fireHaptic("notification-success");
+    } else if (tier === "silver") {
+      void fireHaptic("level-up");
+    } else {
+      // gold / platinum — the heaviest celebration we have, the
+      // same pattern the course-complete moment uses.
+      void fireHaptic("completion");
+    }
     const enterTimer = setTimeout(() => setPhase("hold"), 240);
     return () => clearTimeout(enterTimer);
-  }, []);
+  }, [achievement.tier]);
 
   useEffect(() => {
     if (phase !== "hold") return;
@@ -80,24 +98,24 @@ export default function AchievementToast({
     <div
       role="status"
       aria-live="polite"
-      className={`fb-ach-toast fb-ach-toast--${achievement.tier} fb-ach-toast--${phase}`}
+      className={`libre-ach-toast libre-ach-toast--${achievement.tier} libre-ach-toast--${phase}`}
       onMouseEnter={pause}
       onMouseLeave={resume}
       onClick={handleDismiss}
     >
       <AchievementBadge achievement={achievement} size="sm" />
-      <div className="fb-ach-toast__body">
-        <span className="fb-ach-toast__eyebrow">Achievement unlocked</span>
-        <span className="fb-ach-toast__title">{achievement.title}</span>
-        <span className="fb-ach-toast__blurb">{achievement.blurb}</span>
+      <div className="libre-ach-toast__body">
+        <span className="libre-ach-toast__eyebrow">{t("achievements.unlocked2")}</span>
+        <span className="libre-ach-toast__title">{achievement.title}</span>
+        <span className="libre-ach-toast__blurb">{achievement.blurb}</span>
         {achievement.xpReward ? (
-          <span className="fb-ach-toast__xp">+{achievement.xpReward} XP</span>
+          <span className="libre-ach-toast__xp">{t("achievements.xpRewardChip", { n: achievement.xpReward })}</span>
         ) : null}
       </div>
       <button
         type="button"
-        className="fb-ach-toast__close"
-        aria-label="Dismiss"
+        className="libre-ach-toast__close"
+        aria-label={t("achievements.dismissToast")}
         onClick={(e) => {
           // Don't double-fire dismiss via the parent onClick handler.
           e.stopPropagation();

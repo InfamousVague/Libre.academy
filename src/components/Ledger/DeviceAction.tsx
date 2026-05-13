@@ -236,11 +236,11 @@ export default function DeviceAction({ config }: Props) {
     needsConnection && config.verb !== "disconnect";
 
   return (
-    <div className="fb-device-action">
-      <div className="fb-device-action__row">
+    <div className="libre-device-action">
+      <div className="libre-device-action__row">
         <button
           type="button"
-          className="fb-device-action__button"
+          className="libre-device-action__button"
           onClick={() => void (showConnectInstead ? inlineConnect() : run())}
           disabled={busy}
           title={
@@ -259,10 +259,10 @@ export default function DeviceAction({ config }: Props) {
         </button>
       </div>
       {config.verb === "custom" && (
-        <div className="fb-device-action__custom">
+        <div className="libre-device-action__custom">
           <input
             type="text"
-            className="fb-device-action__input"
+            className="libre-device-action__input"
             placeholder="APDU bytes as hex, e.g. e0060000"
             value={customApdu}
             onChange={(e) => setCustomApdu(e.target.value)}
@@ -274,10 +274,10 @@ export default function DeviceAction({ config }: Props) {
       {result && (
         <pre
           className={
-            "fb-device-action__output " +
+            "libre-device-action__output " +
             (result.kind === "ok"
-              ? "fb-device-action__output--ok"
-              : "fb-device-action__output--err")
+              ? "libre-device-action__output--ok"
+              : "libre-device-action__output--err")
           }
         >
           {result.text}

@@ -1,0 +1,625 @@
+/* Mini certificate banner — chrome-sized echo of the full cert
+   ticket, painted in the same parchment + amber + holo language.
+   Layout: parchment body on the left, perforated tear-off stub
+   on the right, holo foil layered over the whole thing. Below
+   the ticket sits a small metadata line in plain chrome text.
+
+   Motion model:
+     - Ambient drift on the holo foil position runs ALWAYS, slow
+       enough to read as "the hologram is alive" rather than
+       "something is animating at me."
+     - Hover (interactive variant) runs a 3D wobble keyframe that
+       rotates the ticket ±10° on the Y axis so the foil catches
+       different angles — same shimmer treatment the full cert
+       page uses, scaled down for the sidebar. The wobble drives
+       a `@property`-registered `--mini-cert-r` variable; when the
+       cursor leaves, the keyframe stops and the variable
+       transitions smoothly from its current value back to the
+       resting 0°, producing a "play the wobble in reverse" feel
+       instead of a snap.
+     - Click (via the wrapping button) navigates to the
+       certificates page. */
+
+@property --mini-cert-h {
+  syntax: "<percentage>";
+  initial-value: 50%;
+  inherits: true;
+}
+
+@property --mini-cert-p {
+  syntax: "<percentage>";
+  initial-value: 50%;
+  inherits: true;
+}
+
+/* Rotation property used by the hover wobble. Registered so its
+   value can be `transition`'d back to rest when the cursor
+   leaves — un-registered CSS custom properties default to
+   `<*>` syntax and DON'T animate via transition, so the typed
+   declaration here is what bridges "animation just stopped" and
+   "back at resting." */
+@property --mini-cert-r {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: true;
+}
+
+/* ─── Outer shell ────────────────────────────────────────────── *
+ *
+ * Used to host the ticket + a meta line ("N / M lessons · K to go")
+ * stacked below it. The meta line has been retired (the percentage
+ * + chapter badge grid inside the cert body already carries the
+ * progress signal); the shell now wraps just the ticket, but stays
+ * as a layer so future supplementary chrome can slot back in
+ * without a structural rewrite. */
+
+.libre-mini-cert-shell {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* ─── Ticket frame ───────────────────────────────────────────── */
+
+.libre-mini-cert {
+  position: relative;
+  width: 100%;
+  /* No fixed aspect ratio any more — the cert now hosts a badge
+     punch-hole grid AND the right-hand stub stacks three stat
+     blocks plus the id footer. Both grow with content, so the
+     parent has to flex. min-height is bumped to 132px (up from
+     78px) — that's the floor where the stub can fit three stat
+     rows + the id without clipping. Shorter courses just leave
+     a bit of extra parchment under the badge grid; that's a
+     better failure mode than the stub silently dropping its
+     secondary stats behind `overflow: hidden`. */
+  min-height: 132px;
+  /* Perspective context for the 3D hover wobble. Smaller value
+     than the full cert page's 1800px because the mini cert is
+     ~270px wide vs the full page's ~720px — a tighter
+     perspective at small physical size still feels like
+     "looking at a postcard from arm's length" rather than
+     "looking at a flat sticker." */
+  perspective: 800px;
+  /* Resting rotation. The hover keyframe overrides this with
+     wider swings; when hover ends, this value is the target the
+     `transition` below interpolates back to. */
+  --mini-cert-r: 0deg;
+  display: block;
+  /* Reset button defaults so the interactive variant doesn't
+     inherit form chrome. */
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  border: 0;
+  padding: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  isolation: isolate;
+  cursor: default;
+
+  /* Parchment + radial wash matching the full cert. */
+  background-color: #fbfaf6;
+  background-image: radial-gradient(
+    circle at var(--mini-cert-p) 35%,
+    rgba(212, 176, 107, 0.18) 0%,
+    transparent 65%
+  );
+
+  /* Resting holo positions — overridden by the ambient
+     keyframes below. */
+  --mini-cert-h: 50%;
+  --mini-cert-p: 50%;
+
+  /* Transition the registered rotation variable back to its
+     resting value (0deg) when hover ends. The hover keyframe
+     drives `--mini-cert-r` through a wide swing; without the
+     transition, removing the animation would SNAP the value
+     to 0deg and the ticket would jolt straight. A 2.8s ease-
+     out lets the rotation settle smoothly — visually identical
+     to the wobble playing back in reverse to the origin.
+     The pre-rework `transition: transform 0.18s ease` is
+     retained as a fallback for any direct transform changes
+     (focus rings etc.) that still rely on it. */
+  transition:
+    --mini-cert-r 2.8s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.18s ease;
+  transform-origin: center;
+  transform: rotateY(var(--mini-cert-r));
+}
+
+/* Inner motion wrapper. Holds the ambient breathe transform and
+   contains all the visible content (foil, body, stub). Sized to
+   fill the button so the absolute-positioned overlays still
+   inset to the full card area. */
+.libre-mini-cert__motion {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  /* Slow 16s loop with very small transform amplitudes so the
+     hologram catches different angles without the rectangle
+     visibly warping. Amplitudes:
+       - rotateZ ±0.4deg — barely perceptible tilt
+       - scale 0.998 ↔ 1.002 — sub-pixel breathing
+     Combined with the holo's own background-position drift
+     this gives the hologram two independent motion sources
+     (card pose + foil position), which is how real foil moves
+     in real light. The tiny amplitudes mean the user reads
+     "the foil is alive" not "the card is wobbling." */
+  animation: libre-mini-cert-breathe 16s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.libre-mini-cert--interactive {
+  cursor: pointer;
+}
+
+/* Hover: 3D wobble that swings the ticket left and right so the
+   holographic foil catches different angles — same shimmer
+   treatment the full cert page uses, just scaled down. The
+   keyframe drives `--mini-cert-r` (registered above as an
+   `<angle>` so it can be transitioned) through wide left/right
+   swings; the rest of the cert's transform pipeline picks up
+   the value via `transform: rotateY(var(--mini-cert-r))` on the
+   base rule. When the cursor leaves, the animation is removed
+   and the `transition: --mini-cert-r 2.8s ease-out` on the base
+   rule eases the value back to its resting 0° — visually that
+   reads as the wobble playing in reverse to the origin rather
+   than snapping flat. */
+.libre-mini-cert--interactive:hover {
+  animation: libre-mini-cert-wobble 4.5s ease-in-out infinite;
+}
+
+@keyframes libre-mini-cert-wobble {
+  /* Wobble both directions around the resting tilt so the cert
+     swings left, right, and back. Amplitudes (-9° / +11°) are
+     scaled down from the full cert page's (-10° / +12°) to suit
+     the smaller surface, and the asymmetric peaks keep the
+     motion feeling organic instead of metronomic. The 0% / 100%
+     frames match the resting value so the loop seams cleanly. */
+  0%   { --mini-cert-r: 0deg; }
+  25%  { --mini-cert-r: -9deg; }
+  50%  { --mini-cert-r: 11deg; }
+  75%  { --mini-cert-r: 3deg; }
+  100% { --mini-cert-r: 0deg; }
+}
+
+.libre-mini-cert--interactive:focus-visible {
+  outline: 2px solid #a85e1c;
+  outline-offset: 2px;
+}
+
+.libre-mini-cert--interactive:active {
+  /* Press feedback composes with the rotation so the cert stays
+     wobbling under the cursor — without `rotateY(var(...))` in
+     this transform the press would briefly flatten the ticket
+     and read as a jarring snap mid-wobble. */
+  transform: rotateY(var(--mini-cert-r)) scale(0.995);
+}
+
+/* ─── Holographic foil (ambient drift) ───────────────────────── */
+
+.libre-mini-cert__holo {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  --space: 5%;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    hsl(0, 95%, 60%) 0%,
+    hsl(30, 95%, 60%) calc(var(--space) * 1),
+    hsl(60, 95%, 60%) calc(var(--space) * 2),
+    hsl(120, 90%, 55%) calc(var(--space) * 3),
+    hsl(180, 90%, 55%) calc(var(--space) * 4),
+    hsl(222, 95%, 60%) calc(var(--space) * 5),
+    hsl(258, 95%, 60%) calc(var(--space) * 6),
+    hsl(300, 95%, 60%) calc(var(--space) * 7),
+    hsl(0, 95%, 60%) calc(var(--space) * 8)
+  );
+  background-size: 200% 200%;
+  background-position: var(--mini-cert-h) var(--mini-cert-h);
+  background-repeat: no-repeat;
+
+  /* Brand-mark sparkle stencil — same `/new-logo-tile.png` the
+     Hologram primitive's snake variant and the full cert ticket
+     use, so the iridescent-dust pattern reads as one unified
+     visual thread across the in-progress banner, the
+     completed-cert ticket, and every other holographic chrome
+     surface in the app.
+     Mask-size 8% × 18%. The mini-cert is ~2.3:1 landscape
+     (300px wide × 132+px tall), so equal `X% Y%` would render
+     cells ~2.3× wider than tall and stretch the square logo
+     horizontally. height% ≈ width% × 2.3 cancels the aspect
+     out, giving roughly square cells (24×24 absolute px at the
+     default 300×132 render) — the silhouettes appear at their
+     natural 1:1 ratio. Saturate(0.55) matches the soften pass
+     the primitive applies on its snake variant; full saturation
+     reads too loud on top of a recognisable silhouette. */
+  --sparkle-mask: url("/new-logo-tile.png");
+  mask-image: var(--sparkle-mask);
+  -webkit-mask-image: var(--sparkle-mask);
+  mask-size: 8% 18%;
+  -webkit-mask-size: 8% 18%;
+  mask-repeat: repeat;
+  -webkit-mask-repeat: repeat;
+
+  mix-blend-mode: multiply;
+  filter: brightness(0.95) contrast(0.85) saturate(0.55);
+  /* Resting opacity — enough that the foil is visible at all
+     times. The earlier 0.08 was so low the hologram looked
+     dormant; bumped to 0.32 (around the previous "completed"
+     state) so the cert reads as iridescent at rest. */
+  opacity: 0.32;
+  /* Ambient drift — slow 14s loop; the rainbow position glides
+     gently so the hologram visibly "breathes" without ever
+     swinging hard enough to feel like an animation. */
+  animation: libre-mini-cert-ambient 14s ease-in-out infinite;
+}
+
+.libre-mini-cert__shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+    -70deg,
+    transparent 42%,
+    rgba(212, 176, 107, 0.4) 50%,
+    transparent 58%
+  );
+  background-size: 220% 220%;
+  background-position: var(--mini-cert-p) var(--mini-cert-p);
+  background-repeat: no-repeat;
+  mix-blend-mode: multiply;
+  opacity: 0.22;
+}
+
+@keyframes libre-mini-cert-ambient {
+  0%   { --mini-cert-h: 30%; --mini-cert-p: 30%; }
+  50%  { --mini-cert-h: 80%; --mini-cert-p: 75%; }
+  100% { --mini-cert-h: 30%; --mini-cert-p: 30%; }
+}
+
+/* Card-level breathe — runs on the inner motion wrapper. Tiny
+   transform amplitudes so the rectangle doesn't visibly warp;
+   the goal is to keep the hologram alive by varying the card's
+   pose subtly, NOT to draw the eye to the motion itself.
+   0% / 100% are identical so the loop seams without a jump. */
+@keyframes libre-mini-cert-breathe {
+  0%   { transform: rotate(0deg) scale(1); }
+  25%  { transform: rotate(0.35deg) scale(1.0015); }
+  50%  { transform: rotate(0deg) scale(1.002); }
+  75%  { transform: rotate(-0.35deg) scale(1.0015); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+/* ─── Body (left ~71%) ──────────────────────────────────────── */
+
+.libre-mini-cert__body {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 71.2%;
+  padding: 9px 11px 9px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: #1a1418;
+  min-width: 0;
+}
+
+.libre-mini-cert__head {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Icon companion to the eyebrow. Wraps the Lucide `award` glyph
+   in a fixed-size flex slot so the icon's bounding box doesn't
+   nudge the eyebrow text around as the SVG's intrinsic size
+   varies. Color tracks the eyebrow's amber so the two read as a
+   pair. */
+.libre-mini-cert__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 13px;
+  height: 13px;
+  color: #a85e1c;
+  flex-shrink: 0;
+}
+
+.libre-mini-cert__icon svg {
+  width: 13px !important;
+  height: 13px !important;
+}
+
+.libre-mini-cert__eyebrow {
+  font-family: Georgia, "Times New Roman", Times, serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #a85e1c;
+}
+
+.libre-mini-cert__course {
+  font-family: Georgia, "Times New Roman", Times, serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.15;
+  color: #1a1418;
+  margin: 3px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.libre-mini-cert__bar {
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(26, 20, 24, 0.12);
+  overflow: hidden;
+}
+
+.libre-mini-cert__bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  /* Amber → gold gradient so the fill reads as part of the
+     cert's foil family. */
+  background: linear-gradient(
+    90deg,
+    #a85e1c 0%,
+    #d4863a 60%,
+    #e6b15a 100%
+  );
+  transition: width 0.4s ease;
+}
+
+/* ─── Tear-off stub (right ~29%) ─────────────────────────────── */
+
+.libre-mini-cert__stub {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 28.8%;
+  padding: 9px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  text-align: center;
+  color: #1a1418;
+  /* Dashed perforation rule on the left edge — visually mirrors
+     the full ticket's separator, scaled down for the chrome
+     size. The dash spacing is tighter so the rule still reads
+     as perforated at this scale. */
+  background-image: repeating-linear-gradient(
+    180deg,
+    transparent 0px,
+    transparent 4px,
+    rgba(26, 20, 24, 0.5) 4px,
+    rgba(26, 20, 24, 0.5) 8px
+  );
+  background-size: 1.5px 100%;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+}
+
+/* Stats stack — the stub used to host a single PCT readout; the
+   badge grid added vertical real estate on the body side, so the
+   stub now stacks three labeled stats (PCT hero + Lessons +
+   Badges) plus the id footer. `space-evenly` distributes the
+   stats so they breathe regardless of how tall the cert gets. */
+.libre-mini-cert__stub-stats {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  justify-content: space-evenly;
+  align-items: center;
+  gap: 4px;
+  min-height: 0;
+}
+
+.libre-mini-cert__stub-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
+  /* Don't let the flex parent's `justify-content: space-evenly`
+     squeeze each block below its natural size. Without this the
+     secondary stats can collapse to zero-height when the cert
+     body is short, silently disappearing behind the cert's
+     `overflow: hidden` and leaving only the hero visible. With
+     `flex-shrink: 0` the children hold their content height; any
+     extra room redistributes around them, and if there's NOT
+     enough room the cert's `min-height` floor kicks in instead. */
+  flex-shrink: 0;
+}
+
+.libre-mini-cert__stub-stat-label {
+  font-family: Georgia, "Times New Roman", Times, serif;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #a85e1c;
+  line-height: 1;
+}
+
+.libre-mini-cert__stub-stat-value {
+  font-family: Georgia, "Times New Roman", Times, serif;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1;
+  color: #1a1418;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hero stat (PCT) — visibly larger than the others so the
+   primary completion read still anchors the stub. The other
+   stats follow as secondary numbers. */
+.libre-mini-cert__stub-stat--hero .libre-mini-cert__stub-stat-value {
+  font-size: 19px;
+}
+
+/* Suffix slot — "/15" after "12". Muted + slightly smaller so the
+   denominator reads as a reference number rather than competing
+   with the numerator for the eye's attention. */
+.libre-mini-cert__stub-stat-suffix {
+  font-size: 0.7em;
+  color: rgba(26, 20, 24, 0.55);
+  font-weight: 600;
+  margin-left: 1px;
+}
+
+.libre-mini-cert__stub-id {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 8px;
+  font-weight: 600;
+  color: rgba(26, 20, 24, 0.6);
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+
+/* ─── Earned variant ─────────────────────────────────────────── */
+
+.libre-mini-cert--complete .libre-mini-cert__holo {
+  /* Earned cert: foil opacity bumped so the hologram reads
+     prominently — the artefact is "yours" now. */
+  opacity: 0.5;
+}
+
+/* ─── Reduced motion ─────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .libre-mini-cert__holo,
+  .libre-mini-cert__motion {
+    /* Stop both motion sources (foil drift + card breathe) but
+       keep the resting opacity / transform so the foil + shape
+       are still visible, just static. */
+    animation: none;
+  }
+  /* Kill the hover wobble keyframe — both `animation` (the new
+     wobble) and `transform` (the legacy scale-fallback) so a
+     reduced-motion user gets a perfectly still ticket on hover
+     regardless of which property the active rule was driving. */
+  .libre-mini-cert--interactive:hover {
+    animation: none;
+    transform: none;
+  }
+  .libre-mini-cert {
+    transition: none;
+  }
+}
+
+/* ─── Badge punch-hole grid ─────────────────────────────────────
+ *
+ * Lives inside the cert body, below the progress bar. One slot per
+ * chapter rendered as a 5-wide auto-flow grid (rows wrap as the
+ * chapter count grows). Earned chapters render as a darkened
+ * icon-shaped silhouette that visually "punches" into the
+ * parchment; pending chapters render as a faint outline of the
+ * same icon, so the empty slots advertise what's coming.
+ *
+ * Each badge carries a small inline `transform: rotate(Xdeg)` from
+ * `chapterRotation()` so the punches look semi-random / hand-
+ * applied — without it the grid reads as a sticker sheet.
+ * ──────────────────────────────────────────────────────────── */
+
+.libre-mini-cert__badges {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18px, 1fr));
+  gap: 4px;
+  margin-top: 8px;
+  padding-top: 8px;
+  /* Dashed perforation line separating the badge grid from the
+     progress bar above — echoes the tear-off stub's perforation
+     so the cert's visual vocabulary stays consistent. */
+  border-top: 1px dashed rgba(26, 20, 24, 0.18);
+}
+
+.libre-mini-cert__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1 / 1;
+  /* `transform-origin: center` (default) keeps the rotation
+     anchored to the cell so a hash-driven `rotate(-9deg)` doesn't
+     visually drift the icon out of its slot. */
+  transition: filter 200ms ease;
+}
+
+/* Pending — faint outline of the chapter's icon in the parchment
+   foreground colour, low opacity so empty slots whisper rather
+   than shout. */
+.libre-mini-cert__badge--pending {
+  color: rgba(26, 20, 24, 0.18);
+}
+
+/* Earned — dark-coloured icon silhouette + drop-shadow rim so the
+   shape reads as a hole punched through the parchment. The
+   drop-shadow's offset (0, 1px) + bright tone simulate light
+   catching the far edge of a punched cutout. Combined with the
+   `fill: currentColor` override below — which paints every
+   shape inside the SVG solid instead of leaving it as a line
+   drawing — the result paints as a chunky icon-shaped opening
+   like a cookie cutter, not the open outline the base Icon
+   primitive produces.
+   Color matches the cert's primary text ink so the punch reads
+   as "missing material" against the parchment. */
+.libre-mini-cert__badge--earned {
+  color: #1a1418;
+  filter:
+    drop-shadow(0 1px 0 rgba(255, 250, 240, 0.7))
+    drop-shadow(0 0 1px rgba(26, 20, 24, 0.55));
+}
+
+/* Cookie-cutter silhouette: fill every shape inside an earned
+   badge's SVG with the current colour AND keep its stroke. The
+   filled paths give the solid silhouette; the strokes thicken
+   any thin features (like the connecting lines on a "key" icon)
+   so they don't render as hairline gaps inside the otherwise-
+   solid shape. The base `Icon` primitive sets `fill="none"` as
+   a presentation attribute on the SVG, but a CSS rule targeting
+   the child elements wins because their own `fill` is unset.
+   This is scoped to `.libre-mini-cert__badge--earned` so the
+   line-art Icon primitive's appearance is preserved everywhere
+   else in the app. */
+.libre-mini-cert__badge--earned svg path,
+.libre-mini-cert__badge--earned svg circle,
+.libre-mini-cert__badge--earned svg rect,
+.libre-mini-cert__badge--earned svg ellipse,
+.libre-mini-cert__badge--earned svg polygon,
+.libre-mini-cert__badge--earned svg polyline,
+.libre-mini-cert__badge--earned svg line {
+  fill: currentColor;
+}
+
+/* Bump the stroke-width on earned badges past the Icon
+   primitive's `weight="bold"` cap (3) so internal details
+   inside the silhouette — page lines on a book, gem facets,
+   etc. — get visually absorbed into the fill instead of
+   reading as inner outlines. With fill on AND a 4px stroke,
+   the shape paints as a single connected blob. */
+.libre-mini-cert__badge--earned svg {
+  stroke-width: 4;
+}
+
+/* Make the SVG inside each badge fill the cell — Icon size="xs"
+   defaults to 12px which is too small for the badge slot (~20px).
+   The override sizes the glyph to the cell's full width minus a
+   small inset so adjacent badges don't visually touch. */
+.libre-mini-cert__badge svg {
+  width: calc(100% - 2px) !important;
+  height: calc(100% - 2px) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .libre-mini-cert__badge {
+    transition: none;
+  }
+}

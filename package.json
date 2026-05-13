@@ -29,7 +29,9 @@
     "library:promote": "node scripts/promote-library-to-bundle.mjs",
     "library:reset": "node scripts/reset-local-library.mjs",
     "library:unreviewed": "node scripts/mark-bundled-unreviewed.mjs",
-    "library:promote-status": "node scripts/set-release-statuses.mjs"
+    "library:promote-status": "node scripts/set-release-statuses.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@bitauth/libauth": "^3.0.0",
@@ -46,6 +48,7 @@
     "@tauri-apps/plugin-deep-link": "^2.4.8",
     "@tauri-apps/plugin-dialog": "^2.7.0",
     "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-os": "^2.3.2",
     "@tauri-apps/plugin-process": "^2.3.1",
     "@tauri-apps/plugin-updater": "^2.10.1",
     "@types/markdown-it": "^14.1.2",
@@ -76,16 +79,20 @@
     "@solana/kit": "^6.8.0",
     "@solana/web3.js": "^1.98.4",
     "@tauri-apps/cli": "^2",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^25.5.2",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@types/sql.js": "^1.4.11",
     "@vitejs/plugin-react": "^4.6.0",
     "esbuild": "^0.28.0",
+    "jsdom": "^29.1.1",
     "litesvm": "^1.0.0",
     "solc": "^0.8.35",
     "typescript": "~5.8.3",
     "vite": "^7.0.4",
-    "vite-plugin-node-polyfills": "^0.26.0"
+    "vite-plugin-node-polyfills": "^0.26.0",
+    "vitest": "^2.1.9"
   }
 }

@@ -1,46 +1,170 @@
-/// "Sounds" section of the Settings dialog.
+/// "Sounds" pane — a complete rebuild in the Cipher-inspired
+/// settings idiom adopted across the rest of the dialog.
 ///
-/// Three controls:
-///   1. Master mute toggle — kills every cue including unlocks.
-///   2. Volume slider (0-100%) — multiplies into the synth's master
-///      gain. Live update as the slider moves; the sfx module reads
-///      a debounced settings cache so dragging doesn't thrash the
-///      AudioContext.
-///   3. Per-cue "Test sound" preview row. Useful for the user to
-///      tune before a real unlock, and useful as a screenshot story
-///      for the marketing site.
+/// Structure (top → bottom):
+///   1. MASTER card
+///        - Sound effects toggle (kills every cue)
+///        - Volume slider (0-100% with live readout)
+///   2. ACHIEVEMENT UNLOCKS card
+///        - One row per unlock tier (bronze chime → silver success
+///          → gold fanfare → platinum arpeggio) with a Play button
+///          on the right so the learner can audition each tier's
+///          cue without waiting for a real unlock.
+///   3. LESSON PROGRESS card
+///        - XP pop, level up, section complete, book complete.
+///   4. STREAK card
+///        - Day flip, streak milestone, streak freeze.
+///   5. INTERFACE card
+///        - UI tap (the generic ping used by chrome interactions).
 ///
-/// Settings persist via the sfx module's setSfxSettings() helper —
-/// it writes to localStorage and dispatches a custom event so all
-/// other parts of the app pick up the change without a reload.
+/// Each cue row carries an icon, the friendly label, a one-line
+/// description of WHEN the cue fires, and a Play button as the
+/// row's control. Volume + master mute apply globally; the Play
+/// buttons bypass mute via `ignoreMute: true` so the user can
+/// preview even with master off.
 
 import { useEffect, useState } from "react";
 import { Icon } from "@base/primitives/icon";
 import { play as playIcon } from "@base/primitives/icon/icons/play";
 import { volume2 } from "@base/primitives/icon/icons/volume-2";
 import { volumeX } from "@base/primitives/icon/icons/volume-x";
+import { sliders } from "@base/primitives/icon/icons/sliders";
+import { award } from "@base/primitives/icon/icons/award";
+import { medal } from "@base/primitives/icon/icons/medal";
+import { trophy } from "@base/primitives/icon/icons/trophy";
+import { sparkles } from "@base/primitives/icon/icons/sparkles";
+import { zap } from "@base/primitives/icon/icons/zap";
+import { arrowUp } from "@base/primitives/icon/icons/arrow-up";
+import { bookCheck } from "@base/primitives/icon/icons/book-check";
+import { bookOpenCheck } from "@base/primitives/icon/icons/book-open-check";
+import { flame } from "@base/primitives/icon/icons/flame";
+import { flameKindling } from "@base/primitives/icon/icons/flame-kindling";
+import { snowflake } from "@base/primitives/icon/icons/snowflake";
+import { mousePointerClick } from "@base/primitives/icon/icons/mouse-pointer-click";
 
 import {
-  ALL_SFX,
-  SFX_LABELS,
   getSfxSettings,
   playSound,
   setSfxSettings,
   unlockAudioContext,
+  type SfxName,
 } from "../../../lib/sfx";
 
+import SettingsCard, { SettingsPage } from "./SettingsCard";
+import SettingsRow from "./SettingsRow";
+import SettingsToggle from "./SettingsToggle";
+import { useT } from "../../../i18n/i18n";
+
+/// Per-cue metadata for the preview rows. Each entry is a single
+/// row's worth of presentation:
+///   - cue: the `SfxName` to fire when the Play button is clicked
+///   - icon: the row's icon chip
+///   - labelKey: i18n key for the row's title
+///   - subKey: i18n key for when the cue actually fires
+interface CueMeta {
+  cue: SfxName;
+  icon: string;
+  labelKey: string;
+  subKey: string;
+}
+
+const UNLOCK_CUES: CueMeta[] = [
+  {
+    cue: "chime",
+    icon: medal,
+    labelKey: "settings.bronzeUnlock",
+    subKey: "settings.bronzeUnlockSub",
+  },
+  {
+    cue: "success",
+    icon: award,
+    labelKey: "settings.silverUnlock",
+    subKey: "settings.silverUnlockSub",
+  },
+  {
+    cue: "fanfare",
+    icon: trophy,
+    labelKey: "settings.goldUnlock",
+    subKey: "settings.goldUnlockSub",
+  },
+  {
+    cue: "arpeggio",
+    icon: sparkles,
+    labelKey: "settings.platinumUnlock",
+    subKey: "settings.platinumUnlockSub",
+  },
+];
+
+const PROGRESS_CUES: CueMeta[] = [
+  {
+    cue: "xp-pop",
+    icon: zap,
+    labelKey: "settings.xpEarned",
+    subKey: "settings.xpEarnedSub",
+  },
+  {
+    cue: "level-up",
+    icon: arrowUp,
+    labelKey: "settings.levelUp",
+    subKey: "settings.levelUpSub",
+  },
+  {
+    cue: "complete-section",
+    icon: bookCheck,
+    labelKey: "settings.sectionComplete",
+    subKey: "settings.sectionCompleteSub",
+  },
+  {
+    cue: "complete-book",
+    icon: bookOpenCheck,
+    labelKey: "settings.bookComplete",
+    subKey: "settings.bookCompleteSub",
+  },
+];
+
+const STREAK_CUES: CueMeta[] = [
+  {
+    cue: "streak-tick",
+    icon: flameKindling,
+    labelKey: "settings.dayFlip",
+    subKey: "settings.dayFlipSub",
+  },
+  {
+    cue: "streak-flame",
+    icon: flame,
+    labelKey: "settings.streakMilestone",
+    subKey: "settings.streakMilestoneSub",
+  },
+  {
+    cue: "freeze",
+    icon: snowflake,
+    labelKey: "settings.streakFreezeUsed",
+    subKey: "settings.streakFreezeUsedSub",
+  },
+];
+
+const INTERFACE_CUES: CueMeta[] = [
+  {
+    cue: "ping",
+    icon: mousePointerClick,
+    labelKey: "settings.uiTap",
+    subKey: "settings.uiTapSub",
+  },
+];
+
 export default function SoundPane() {
-  // Mirror the sfx module's settings into local React state so
+  const t = useT();
+  // Mirror sfx.ts's settings cache into local React state so
   // toggling re-renders. Initialise from the cache so the first
-  // paint lands with the user's persisted value, not a flash of the
-  // default.
+  // paint lands on the user's persisted value rather than the
+  // default flash.
   const initial = getSfxSettings();
   const [enabled, setEnabled] = useState<boolean>(initial.enabled);
   const [volume, setVolume] = useState<number>(initial.volume);
 
-  // Cross-tab + cross-component sync: re-read the cache when another
-  // surface bumps it. The custom event is the same one sfx.ts fires
-  // on its own writes, so we hear about updates everywhere.
+  // Cross-tab + cross-component sync. The custom event is what
+  // sfx.ts dispatches on its own writes; same channel a second
+  // open settings window (rare) would use to inform us.
   useEffect(() => {
     const onChanged = () => {
       const s = getSfxSettings();
@@ -52,13 +176,15 @@ export default function SoundPane() {
       window.removeEventListener("libre:sfx:settings-changed", onChanged);
   }, []);
 
-  const onToggleEnabled = () => {
-    const next = !enabled;
+  const onToggleEnabled = (next: boolean) => {
     setEnabled(next);
     setSfxSettings({ enabled: next });
     if (next) {
-      // Warm the audio context now so the first cue after enabling
-      // doesn't play silently on iOS Safari.
+      // Warm the audio context the moment the toggle lights so
+      // the FIRST cue after enabling isn't silenced by iOS
+      // Safari's "no sound until a gesture" policy. Then chirp
+      // a confirmation ping the same way the master toggle did
+      // pre-rewrite.
       void unlockAudioContext();
       playSound("ping", { ignoreMute: true });
     }
@@ -70,12 +196,12 @@ export default function SoundPane() {
     setSfxSettings({ volume: clamped });
   };
 
-  // Bump the volume up the moment the user starts dragging if it
-  // was previously zero — otherwise the test-buttons stay silent
-  // and the user thinks the system is broken. We only do this once
-  // per "from zero" interaction, hence the local guard.
+  // "Audition" assist: when the user hits Play with volume at 0,
+  // bump volume up once so the preview is actually audible. Keeps
+  // a "I tried it and heard nothing" support thread from happening.
+  // Latched per-mount so we don't keep over-riding their setting.
   const [auditioned, setAuditioned] = useState(false);
-  const audition = (cue: (typeof ALL_SFX)[number]) => {
+  const audition = (cue: SfxName) => {
     void unlockAudioContext();
     if (volume <= 0 && !auditioned) {
       onVolume(0.6);
@@ -84,103 +210,107 @@ export default function SoundPane() {
     playSound(cue, { ignoreMute: true });
   };
 
+  // Compact icon-only Play button used as the row's control. Same
+  // chrome as the other inline settings buttons; sized to fit a
+  // row's right-hand cell without crowding the row label.
+  const renderPlay = (cue: SfxName) => (
+    <button
+      type="button"
+      onClick={() => audition(cue)}
+      aria-label={t("settings.previewSound", { cue })}
+      className="libre-settings-cue-play"
+    >
+      <Icon icon={playIcon} size="xs" color="currentColor" />
+    </button>
+  );
+
   return (
-    <div className="libre-settings-pane">
-      <h3 className="libre-settings-pane-title">Sounds</h3>
-      <p className="libre-settings-pane-blurb">
-        Sound effects fire on lesson complete, achievement unlocks, streak
-        milestones, and section/book wraps. Synthesised at runtime — no
-        bundled audio, latency-free.
-      </p>
-
-      <div className="libre-settings-row">
-        <div className="libre-settings-row__label">
-          <span className="libre-settings-row__title">
-            Sound effects
-          </span>
-          <span className="libre-settings-row__hint">
-            Master toggle for every cue.
-          </span>
-        </div>
-        <button
-          type="button"
-          className={`libre-settings-toggle ${enabled ? "libre-settings-toggle--on" : ""}`}
-          aria-pressed={enabled}
-          onClick={onToggleEnabled}
-        >
-          <Icon
-            icon={enabled ? volume2 : volumeX}
-            size="sm"
-            color="currentColor"
-          />
-          <span>{enabled ? "On" : "Off"}</span>
-        </button>
-      </div>
-
-      <div className="libre-settings-row">
-        <div className="libre-settings-row__label">
-          <span className="libre-settings-row__title">Volume</span>
-          <span className="libre-settings-row__hint">
-            {Math.round(volume * 100)}%
-          </span>
-        </div>
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={volume}
-          onChange={(e) => onVolume(Number.parseFloat(e.target.value))}
-          aria-label="Sound effect volume"
-          disabled={!enabled}
-          style={{ flex: 1, maxWidth: 220 }}
+    <SettingsPage
+      title={t("settings.soundsTitle")}
+      description={t("settings.soundsDescription")}
+    >
+      <SettingsCard title={t("settings.masterCard")}>
+        <SettingsRow
+          icon={enabled ? volume2 : volumeX}
+          tone={enabled ? "accent" : "default"}
+          label={t("settings.soundEffects")}
+          sub={t("settings.soundEffectsSub")}
+          control={
+            <SettingsToggle
+              checked={enabled}
+              onChange={onToggleEnabled}
+              label={t("settings.soundEffects")}
+            />
+          }
         />
-      </div>
+        <SettingsRow
+          icon={sliders}
+          label={t("settings.volumeLabel")}
+          sub={t("settings.volumeSub", { percent: Math.round(volume * 100) })}
+          control={
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={volume}
+              onChange={(e) => onVolume(Number.parseFloat(e.target.value))}
+              aria-label={t("settings.volumeAria")}
+              disabled={!enabled}
+              className="libre-settings-cue-slider"
+            />
+          }
+        />
+      </SettingsCard>
 
-      <div className="libre-settings-row libre-settings-row--column">
-        <div className="libre-settings-row__label">
-          <span className="libre-settings-row__title">Test cues</span>
-          <span className="libre-settings-row__hint">
-            Preview each effect.
-          </span>
-        </div>
-        <ul
-          style={{
-            listStyle: "none",
-            margin: 0,
-            padding: 0,
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-            gap: 8,
-            width: "100%",
-          }}
-        >
-          {ALL_SFX.map((cue) => (
-            <li key={cue}>
-              <button
-                type="button"
-                onClick={() => audition(cue)}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  width: "100%",
-                  padding: "8px 10px",
-                  background: "var(--color-bg-secondary, #241b2f)",
-                  border: "1px solid var(--color-border-default, rgba(255, 255, 255, 0.07))",
-                  borderRadius: 8,
-                  color: "var(--color-text-primary, #f4eedd)",
-                  fontSize: 12,
-                  cursor: "pointer",
-                }}
-              >
-                <Icon icon={playIcon} size="xs" color="currentColor" />
-                <span>{SFX_LABELS[cue]}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
+      <SettingsCard title={t("settings.achievementUnlocks")}>
+        {UNLOCK_CUES.map((c) => (
+          <SettingsRow
+            key={c.cue}
+            icon={c.icon}
+            tone="accent"
+            label={t(c.labelKey)}
+            sub={t(c.subKey)}
+            control={renderPlay(c.cue)}
+          />
+        ))}
+      </SettingsCard>
+
+      <SettingsCard title={t("settings.lessonProgress")}>
+        {PROGRESS_CUES.map((c) => (
+          <SettingsRow
+            key={c.cue}
+            icon={c.icon}
+            label={t(c.labelKey)}
+            sub={t(c.subKey)}
+            control={renderPlay(c.cue)}
+          />
+        ))}
+      </SettingsCard>
+
+      <SettingsCard title={t("settings.streaks")}>
+        {STREAK_CUES.map((c) => (
+          <SettingsRow
+            key={c.cue}
+            icon={c.icon}
+            label={t(c.labelKey)}
+            sub={t(c.subKey)}
+            control={renderPlay(c.cue)}
+          />
+        ))}
+      </SettingsCard>
+
+      <SettingsCard title={t("settings.interfaceCard")}>
+        {INTERFACE_CUES.map((c) => (
+          <SettingsRow
+            key={c.cue}
+            icon={c.icon}
+            label={t(c.labelKey)}
+            sub={t(c.subKey)}
+            control={renderPlay(c.cue)}
+          />
+        ))}
+      </SettingsCard>
+    </SettingsPage>
   );
 }

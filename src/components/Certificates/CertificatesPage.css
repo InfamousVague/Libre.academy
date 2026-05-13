@@ -1,0 +1,182 @@
+/* Browse-all surface for earned certificates. Grid of holographic
+   ticket cards (see CertificateTicket.tsx / .css for the ticket
+   itself); this file owns the page chrome + grid layout + empty
+   state. */
+
+.libre-certs-page {
+  /* Each route page owns its own scroll container — the
+     surrounding `.libre__main` is intentionally `overflow:
+     hidden` so the cross-fade animation can't reveal a
+     bottom edge of a long page during route transitions.
+     Without `flex: 1` + `min-height: 0` + `overflow-y:
+     auto` here, the certs page laid out at its natural
+     content height (which exceeds the viewport once a few
+     tickets land) but had no scroll container, so the
+     bottom rows were unreachable. */
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  /* Keep the previous centred-column treatment: the content
+     itself stays inside a 1200px column via the inner header
+     + section rules (each carries `max-width: 1200px; margin:
+     0 auto` so the scroll happens on the full-width pane
+     while the cards stay centred). */
+  padding: 48px 32px 80px;
+  color: var(--color-text-primary, #f5f5f7);
+}
+
+/* Children get the max-width + auto-margin treatment that used
+   to live on the root. Pulled down here so the root can stretch
+   to fill the route slot (required for the scroll container
+   above to work) while content still reads as a centred 1200px
+   column. */
+.libre-certs-page__header,
+.libre-certs-page__section,
+.libre-certs-page__empty,
+.libre-certs-page__loading {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.libre-certs-page__header {
+  margin-bottom: 36px;
+}
+
+.libre-certs-page__title {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 10px;
+}
+
+.libre-certs-page__subtitle {
+  font-size: 15px;
+  color: var(--color-text-secondary, rgba(245, 245, 247, 0.72));
+  max-width: 640px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.libre-certs-page__loading {
+  padding: 40px 0;
+  color: var(--color-text-tertiary, rgba(245, 245, 247, 0.5));
+  font-size: 14px;
+}
+
+/* Section wrapper — used by both "In progress" and "Earned"
+   sections so each gets its own header + grid pair stacked
+   under the page title. */
+.libre-certs-page__section {
+  margin-bottom: 36px;
+}
+
+.libre-certs-page__section:last-child {
+  margin-bottom: 0;
+}
+
+.libre-certs-page__section-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-text-secondary, rgba(245, 245, 247, 0.7));
+  margin: 0 0 14px 4px;
+}
+
+.libre-certs-page__section-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.libre-certs-page__grid {
+  /* Tickets are 5:2 landscape, max-width 480px each. The minmax
+     here keeps two columns on any reasonably-sized window
+     (~840px page area gives 2 × 380px tracks + gap) and falls
+     back to one column on phone widths via the media query
+     below. */
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 16px;
+  justify-items: center;
+}
+
+/* Earned (completed) certificates get a wall-display treatment
+   instead of the compact 2-up grid. One ticket per row, full
+   content-column width — the page's `__section` parent already
+   caps at 1200px so this never sprawls past the prose column
+   even on huge screens. The inner `CertificateTicket`'s own
+   `max-width: 480px` is overridden below so the ticket can grow
+   into the wider row. In-progress tickets keep the 2-up grid
+   (they read as status, not achievement). */
+.libre-certs-page__grid--earned {
+  grid-template-columns: 1fr;
+  justify-items: stretch;
+}
+
+.libre-certs-page__grid--earned .libre-cert-ticket {
+  /* Lift the per-ticket cap so the cert stretches to the full
+     row width (capped by the 1200px section). 5:2 aspect ratio
+     means a row-width ticket renders taller too — that's the
+     intended "diploma pinned to a wall" presentation. */
+  max-width: none;
+  width: 100%;
+}
+
+@media (max-width: 540px) {
+  .libre-certs-page__grid {
+    /* Single column at phone widths — the 5:2 ticket starts
+       getting cramped under 380px and the auto-fill min would
+       force a horizontal scroll. */
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Empty state ───────────────────────────────────────────── */
+
+.libre-certs-page__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 80px 24px;
+  color: var(--color-text-secondary, rgba(245, 245, 247, 0.72));
+}
+
+.libre-certs-page__empty-seal {
+  font-size: 48px;
+  /* Theme-token-driven; the old parchment `#d4c5a1` fallback
+     belonged to the warm-cert era and is replaced with a neutral
+     white that matches the modern monochrome system if no
+     `--color-accent` is set. */
+  color: var(--color-accent, #ffffff);
+  margin-bottom: 12px;
+}
+
+.libre-certs-page__empty-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 12px;
+  color: var(--color-text-primary, #f5f5f7);
+}
+
+.libre-certs-page__empty-body {
+  font-size: 14px;
+  max-width: 560px;
+  line-height: 1.55;
+  margin: 0;
+}

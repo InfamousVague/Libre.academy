@@ -3,13 +3,12 @@
 /// the user CAN have, render the ones they don't yet have as
 /// placeholders" UX.
 ///
-/// Source format (the JSON written by `scripts/extract-starter-
-/// courses.mjs` to `public/starter-courses/manifest.json`):
+/// Source format (the JSON served at
+/// `libre.academy/starter-courses/manifest.json`):
 ///
 ///   {
 ///     "version": 2,
 ///     "generatedAt": "2026-04-30T...",
-///     "archiveBaseUrl": "https://mattssoftware.com/fishbones/courses",
 ///     "courses": [
 ///       {
 ///         "id": "the-rust-programming-language",
@@ -19,9 +18,8 @@
 ///         "language": "rust",
 ///         "file": "the-rust-programming-language.json",
 ///         "cover": "the-rust-programming-language.jpg",
-///         "sizeBytes": 1234567,         // unzipped course.json size
-///         "archiveSizeBytes": 234567,    // .libre archive size
-///         "archiveUrl": "https://...   /the-rust-programming-language.libre",
+///         "sizeBytes": 1234567,
+///         "archiveSizeBytes": 234567,
 ///         "tier": "core" | "remote",
 ///         "packType": "course" | "challenges",
 ///         "releaseStatus": "BETA" | "ALPHA" | "UNREVIEWED",
@@ -36,9 +34,7 @@
 /// installed set as `placeholder: true` Course objects.
 
 import type { Course, LanguageId } from "../data/types";
-import { isWeb } from "./platform";
 import { isHiddenCourse } from "./hiddenCourses";
-import { REMOTE_CATALOG_FALLBACK } from "./remoteCatalogFallback";
 
 export interface CatalogEntry {
   id: string;
@@ -46,27 +42,15 @@ export interface CatalogEntry {
   title: string;
   author?: string;
   language: LanguageId;
-  /// Filename of the course JSON inside `/starter-courses/`. Web
-  /// download path: fetch + storage.saveCourse. Empty string for
-  /// desktop-bundled entries (those install via `localPath`).
+  /// Filename of the course JSON inside `/starter-courses/`. The
+  /// install path on every platform is: fetch
+  /// `${MANIFEST_BASE}/${file}` and persist via `storage.saveCourse`.
   file: string;
   /// Filename of the cover JPEG inside `/starter-courses/`. We
   /// resolve to a real URL via `coverHref` below.
   cover?: string;
   sizeBytes: number;
   archiveSizeBytes: number;
-  /// Full URL to the .libre archive on the catalog host. Used
-  /// by the desktop downloader when `localPath` is unset (i.e.
-  /// remote catalogs). Empty string for entries that ship inside
-  /// the desktop binary's bundled-packs/ — those install from the
-  /// local archive without a network round-trip.
-  archiveUrl: string;
-  /// Filesystem path to the .libre archive when this entry is
-  /// already shipped inside the desktop binary (populated by the
-  /// `list_bundled_catalog_entries` Tauri command). The install
-  /// handler prefers this over `archiveUrl` — no network needed,
-  /// no server hosting required for the catalog to work on desktop.
-  localPath?: string;
   tier: "core" | "remote";
   packType?: "course" | "challenges";
   releaseStatus?: "BETA" | "ALPHA" | "UNREVIEWED" | "PRE-RELEASE";
@@ -81,25 +65,29 @@ export interface CatalogEntry {
 interface CatalogJson {
   version: number;
   generatedAt?: string;
-  archiveBaseUrl?: string;
   courses: CatalogEntry[];
 }
 
-/// Default catalog URLs by build target. Web fetches same-origin
-/// (the manifest sits next to the per-course JSON files); desktop
-/// hits a remote host. Override either with the
+/// Catalog URL — points at the static CDN manifest. Same URL on
+/// desktop and web; the manifest + per-course JSONs + cover JPEGs all
+/// live under `libre.academy/starter-courses/`. Override with the
 /// `LIBRE_CATALOG_URL` env var at build time.
 const CATALOG_URL_OVERRIDE = (
   import.meta.env.LIBRE_CATALOG_URL as string | undefined
 )?.trim();
 
+const DEFAULT_CATALOG_URL =
+  "https://libre.academy/starter-courses/manifest.json";
+
 function defaultCatalogUrl(): string {
-  if (CATALOG_URL_OVERRIDE) return CATALOG_URL_OVERRIDE;
-  if (isWeb) {
-    const base = (import.meta.env.BASE_URL ?? "/").replace(/\/?$/, "/");
-    return `${base}starter-courses/manifest.json`;
-  }
-  return "https://mattssoftware.com/fishbones/catalog/manifest.json";
+  return CATALOG_URL_OVERRIDE || DEFAULT_CATALOG_URL;
+}
+
+/// Base URL for fetching catalog assets (per-course JSON + cover JPG).
+/// Derived from the manifest URL by trimming the trailing `manifest.json`
+/// so the same `<id>.json` / `<id>.jpg` filenames work for both platforms.
+export function catalogAssetBase(): string {
+  return defaultCatalogUrl().replace(/\/manifest\.json$/, "");
 }
 
 let cachedPromise: Promise<CatalogEntry[]> | null = null;
@@ -202,16 +190,10 @@ function writePersistedCatalog(entries: CatalogEntry[]): void {
 /// the next cold start can paint from cache before the network has
 /// settled — see `readPersistedCatalog`.
 ///
-/// Desktop: invokes the Tauri `list_bundled_catalog_entries` command,
-/// which enumerates `.libre` archives shipped under
-/// `src-tauri/resources/bundled-packs/` and reads their per-archive
-/// metadata. No server needed — the catalog IS the bundled
-/// archives, every entry is already on disk and installs locally.
-///
-/// Web: fetches the manifest.json deployed alongside the per-course
-/// JSON files (same-origin under `/starter-courses/`). Falls back to
-/// an empty list on network failure so the Library still renders
-/// installed courses normally.
+/// Single code path on every platform: fetch the manifest from the
+/// libre.academy CDN. Falls back to an empty list on network failure
+/// so the Library still renders any courses the user has already
+/// installed.
 export function fetchCatalog(opts: { refresh?: boolean } = {}): Promise<
   CatalogEntry[]
 > {
@@ -222,22 +204,10 @@ export function fetchCatalog(opts: { refresh?: boolean } = {}): Promise<
   ) {
     return cachedPromise;
   }
-  // Always dedupe-by-id at the layer boundary. Desktop's
-  // `list_bundled_catalog_entries` is supposed to walk one directory,
-  // but a renamed archive (e.g. someone copied a .libre to a new
-  // filename without changing the inner course.json id) silently
-  // produces two rows with the same id — the Discover grid would
-  // then show two tiles for the same install. Web fetches a single
-  // manifest so this is a no-op there, but having one funnel keeps
-  // both surfaces honest.
-  cachedPromise = (isWeb ? fetchWebCatalog() : fetchDesktopCatalog())
-    // Merge the hardcoded remote-tier placeholders in BEFORE dedupe
-    // so any id that has a live archive (in bundled-packs/ on
-    // desktop or in the deployed manifest on web) wins, with the
-    // fallback row only filling slots the live source doesn't cover.
-    // This keeps Discover populated with the next-up books even
-    // when the user has installed everything we currently ship.
-    .then((entries) => [...entries, ...REMOTE_CATALOG_FALLBACK])
+  // Dedupe-by-id at the layer boundary as a safety net — the manifest
+  // generator shouldn't emit duplicates, but the cache snapshot we
+  // merge could carry a stale id under a renamed pack.
+  cachedPromise = fetchCatalogJson()
     .then(dedupeById)
     // Drop unlisted entries — they're shareable-by-link only, the
     // manifest still carries them so the on-demand fetch in
@@ -248,7 +218,7 @@ export function fetchCatalog(opts: { refresh?: boolean } = {}): Promise<
     // localStorage-cached catalog snapshots from before the flag
     // existed (a returning visitor whose previous fetchCatalog
     // wrote a cache without the hidden flag in any entry — without
-    // this second check the cache would silently leak hellotrade
+    // this second check the cache would silently leak hidden books
     // back onto the Discover grid until the SWR revalidation
     // finished).
     .then((entries) =>
@@ -284,7 +254,7 @@ function dedupeById(entries: CatalogEntry[]): CatalogEntry[] {
   return out;
 }
 
-async function fetchWebCatalog(): Promise<CatalogEntry[]> {
+async function fetchCatalogJson(): Promise<CatalogEntry[]> {
   const url = defaultCatalogUrl();
   try {
     const res = await fetch(url, { cache: "no-cache" });
@@ -299,93 +269,19 @@ async function fetchWebCatalog(): Promise<CatalogEntry[]> {
   }
 }
 
-/// Shape returned by the Rust `list_bundled_catalog_entries`
-/// command. Field names use snake_case in Rust's serde output (see
-/// the matching struct in `src-tauri/src/courses.rs`); we map them
-/// to camelCase CatalogEntry shape for the rest of the JS app.
-interface BundledCatalogEntryFromRust {
-  id: string;
-  title: string;
-  author?: string;
-  language: string;
-  pack_type?: string;
-  lesson_count: number;
-  size_bytes: number;
-  local_path: string;
-}
-
-/// Desktop-side mirror of `HIDDEN_PACK_IDS` from
-/// `scripts/course-tiers.mjs`. The web build reads `hidden: true` off
-/// the manifest entries (because extract-starter-courses.mjs stamps
-/// it from course-tiers.mjs at manifest-write time), but the desktop
-/// catalog comes from the Rust `list_bundled_catalog_entries` IPC,
-/// which currently doesn't surface the flag. Mirroring the set here
-/// is the smallest fix — adding a `hidden` field to the Rust struct
-/// + bumping the IPC schema would be cleaner long-term, but for the
-/// one-or-two-id scale this set lives at, parallel ownership in TS
-/// is fine. Keep in lockstep with course-tiers.mjs.
-const HIDDEN_DESKTOP_PACK_IDS: ReadonlySet<string> = new Set([
-  // (empty — hellotrade graduated to Discover. Add a pack id here
-  // when it needs to ship in the bundle but stay off the Discover
-  // shelf; mirror it into HIDDEN_PACK_IDS in scripts/course-tiers.mjs
-  // so the web build hides it too.)
-]);
-
-async function fetchDesktopCatalog(): Promise<CatalogEntry[]> {
-  try {
-    const { invoke } = await import("@tauri-apps/api/core");
-    const rows = await invoke<BundledCatalogEntryFromRust[]>(
-      "list_bundled_catalog_entries",
-    );
-    return rows.map((r) => ({
-      id: r.id,
-      packId: r.id,
-      title: r.title,
-      author: r.author,
-      language: r.language as LanguageId,
-      // No /starter-courses/ JSON file for bundled entries — install
-      // is via `local_path`, not URL fetch.
-      file: "",
-      sizeBytes: r.size_bytes,
-      archiveSizeBytes: r.size_bytes,
-      // archiveUrl is unused when localPath is set; keep an empty
-      // string so the type stays simple (required field).
-      archiveUrl: "",
-      localPath: r.local_path,
-      tier: "core",
-      packType: (r.pack_type as "course" | "challenges" | undefined) ?? "course",
-      lessonCount: r.lesson_count,
-      // Stamp `hidden: true` on entries the bundle ships but we don't
-      // want surfaced in Discover. The catalog's `.filter(e => !e.hidden)`
-      // step (in fetchCatalog above) drops them; install via direct
-      // lesson URL or `.libre` import still works.
-      ...(HIDDEN_DESKTOP_PACK_IDS.has(r.id) ? { hidden: true } : {}),
-    }));
-  } catch (e) {
-    console.warn(
-      `[catalog] failed to load bundled catalog: ${e instanceof Error ? e.message : String(e)}`,
-    );
-    return [];
-  }
-}
-
-/// Resolve a catalog entry's cover field into a full URL. The
-/// extract script writes `<id>.jpg` next to the manifest, so on
-/// web we serve from the same origin; on desktop we point at the
-/// CDN (assumed to host covers alongside archives at the catalog
-/// base URL).
+/// Resolve a catalog entry's cover field into a full URL. Same path
+/// on every platform — covers live alongside the manifest at
+/// `libre.academy/starter-courses/<id>.jpg`.
 export function coverHref(entry: CatalogEntry): string | undefined {
   if (!entry.cover) return undefined;
-  if (isWeb) {
-    const base = (import.meta.env.BASE_URL ?? "/").replace(/\/?$/, "/");
-    return `${base}starter-courses/${entry.cover}`;
-  }
-  // Desktop: covers live alongside archives on the catalog host.
-  // Strip the `/manifest.json` tail off the catalog URL to derive
-  // the base.
-  const catalogUrl = defaultCatalogUrl();
-  const base = catalogUrl.replace(/\/manifest\.json$/, "");
-  return `${base}/${entry.cover}`;
+  return `${catalogAssetBase()}/${entry.cover}`;
+}
+
+/// Resolve a catalog entry's `file` field into a full URL for the
+/// per-course JSON. The install handler fetches this URL and persists
+/// the parsed Course via `storage.saveCourse`.
+export function jsonHref(entry: CatalogEntry): string {
+  return `${catalogAssetBase()}/${entry.file}`;
 }
 
 /// Build a synthetic `Course` from a catalog entry — used as a
@@ -403,7 +299,7 @@ export function placeholderCourseFromCatalog(entry: CatalogEntry): Course {
     packType: entry.packType,
     releaseStatus: entry.releaseStatus,
     placeholder: true,
-    downloadUrl: entry.archiveUrl,
+    downloadUrl: jsonHref(entry),
     archiveSize: entry.archiveSizeBytes,
     tier: entry.tier,
     /// Cache-bust the placeholder cover URL using the catalog

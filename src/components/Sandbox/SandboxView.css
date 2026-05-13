@@ -1,0 +1,407 @@
+/* Root: takes the full main pane. Stacks a small header bar on top of
+   the workbench (editor + output). No reading column — the playground
+   is purely free-form code. */
+.libre-sandbox {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  margin: 10px 10px 10px 0;
+}
+
+.libre-sandbox-header {
+  display: flex;
+  align-items: center;
+  /* Slightly more breathing room between control clusters now
+     that each cluster's chrome is bigger. Keeps the segmented
+     pills from crowding the AI button cluster on the right. */
+  gap: 14px;
+  padding: 0 4px 12px;
+}
+
+.libre-sandbox-lang-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.libre-sandbox-lang-label {
+  /* One-tier bump (10 → 11) so the eyebrow stays a subordinate
+     label but reads at the larger header weight rather than
+     micro-text under the bigger controls beside it. */
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+.libre-sandbox-lang-select {
+  /* Strip OS-default `<select>` chrome — on macOS Chromium the
+     native caret tray + intrinsic inset padding rendered the
+     picker visibly taller AND wider than the flat AI buttons
+     beside it, no matter what min-height we set. With
+     `appearance: none` the select draws as a plain box that
+     respects our height / padding exactly; we then paint our
+     own chevron via a background SVG so the dropdown affordance
+     is still visible.
+     Pinned to a hard `height: 38px` (not just min-height) so
+     the select sits at the same baseline as the AI buttons +
+     segmented control row — `min-height` alone wouldn't stop
+     the UA stylesheet's intrinsic height from leaking through
+     in some configs. */
+  appearance: none;
+  -webkit-appearance: none;
+  height: 38px;
+  padding: 0 32px 0 14px;
+  background-color: var(--color-bg-secondary);
+  /* 12×12 chevron-down rendered as an inline SVG. Stroke colour
+     is `currentColor` via a CSS var so the chevron picks up the
+     `color` value below (and adapts cleanly when we change text
+     colour for hover / focus states). */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='%23ffffff' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><polyline points='3,4.5 6,8 9,4.5'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px 12px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 8px;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  box-sizing: border-box;
+  line-height: 1.2;
+  transition:
+    background-color var(--libre-motion-snappy),
+    border-color var(--libre-motion-snappy);
+}
+
+.libre-sandbox-lang-select:hover {
+  background-color: var(--color-bg-tertiary);
+  border-color: var(--color-border-strong);
+}
+
+.libre-sandbox-lang-select:focus-visible {
+  /* Inset focus ring (negative offset) rather than a 1px-outside
+     outline. The sandbox container has `overflow: hidden`, so any
+     outline extending OUTSIDE the select's border gets clipped on
+     the right edge — visible as a chopped-off rounded corner.
+     Painting the ring INSIDE the border avoids clipping entirely
+     while still meeting the "thicker visible focus state" bar. */
+  outline: 2px solid var(--color-text-secondary);
+  outline-offset: -2px;
+}
+
+.libre-sandbox-spacer {
+  flex: 1;
+}
+
+/* AI helpers cluster — Explain + Generate sit between the spacer and the
+   layout toggle. Same chrome as the language picker so they read as
+   first-class controls, not stickers. */
+.libre-sandbox-ai {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.libre-sandbox-ai-btn {
+  /* Bumped one tier (5×12 12px → 8×16 13.5px) so the AI helpers
+     match the language picker's new chrome + sit at the same
+     visual weight as the segmented layout toggle on the right.
+     Pinned to the same 38px min-height as the select + seg
+     track so all three controls in the header row align to a
+     single baseline. */
+  min-height: 38px;
+  padding: 0 16px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 8px;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background var(--libre-motion-snappy), border-color var(--libre-motion-snappy), opacity var(--libre-motion-snappy);
+}
+
+.libre-sandbox-ai-btn:hover:not(:disabled) {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border-strong);
+}
+
+.libre-sandbox-ai-btn--active,
+.libre-sandbox-ai-btn--active:hover {
+  background: var(--color-text-primary);
+  color: var(--color-bg-primary);
+  border-color: var(--color-text-primary);
+}
+
+.libre-sandbox-ai-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Inline "describe what you want" strip — sits below the header when
+   the Generate toggle is active. Mirrors the search bar shape so it
+   doesn't feel like a separate dialog. */
+.libre-sandbox-generate {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px 12px;
+}
+
+.libre-sandbox-generate-input {
+  flex: 1;
+  padding: 7px 12px;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 7px;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.libre-sandbox-generate-input:focus {
+  outline: none;
+  border-color: var(--color-border-strong);
+}
+
+.libre-sandbox-generate-submit {
+  padding: 7px 14px;
+  background: var(--color-text-primary);
+  color: var(--color-bg-primary);
+  border: 1px solid var(--color-text-primary);
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity var(--libre-motion-snappy);
+}
+
+.libre-sandbox-generate-submit:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.libre-sandbox-generate-submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.libre-sandbox-generate-cancel {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 1px solid var(--color-border-default);
+  border-radius: 7px;
+  color: var(--color-text-tertiary);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.libre-sandbox-generate-cancel:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-tertiary);
+}
+
+/* Segmented toggle group. One for device presets (web/threejs only) and
+   one for layout (split / editor / preview). Pills share chrome with
+   the language select so the header reads as a single row of controls. */
+.libre-sandbox-seg {
+  /* Track is a positioning context for the sliding active pill
+     (`.libre-sandbox-seg-pill`) — without `position: relative`
+     the pill's `position: absolute` would resolve against the
+     viewport / app root and end up far off-screen. */
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  /* Outer padding bumped 2→3 so the inner pills have room to
+     breathe at the new bigger size — without this the active
+     pill's edges touch the segmented track's border. */
+  padding: 3px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--libre-radius-md);
+  gap: 2px;
+  /* Pin the track to the same 38px the language select + AI
+     buttons render at, so the three controls share one
+     horizontal baseline. Without it the seg track was ~40px
+     (inner padding + button line-height), which left it a
+     hair taller than its neighbours. `box-sizing: border-box`
+     here so the 1px border participates in that 38px. */
+  height: 38px;
+  box-sizing: border-box;
+}
+
+/* Sliding active pill. JS measures the active toggle's
+   offsetLeft + offsetWidth on every viewMode change and writes
+   those into the inline `transform` + `width` here; the CSS
+   transition glides the pill between positions over 220ms with
+   the same `ease-out`-ish curve the NavigationRail's vertical
+   pill uses, so the two pill animations across the app feel
+   like the same motion family. */
+.libre-sandbox-seg-pill {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 0;
+  background: var(--color-text-primary);
+  border-radius: var(--libre-radius-sm);
+  pointer-events: none;
+  /* Clip the Hologram foil to the pill's rounded edges — without
+     overflow:hidden the foil's iridescent corners would spill
+     past the radius. */
+  overflow: hidden;
+  z-index: 0;
+  /* GPU-promote — the pill animates ~1× per click; will-change
+     eliminates the first-transition layout-pass without
+     committing to a permanent compositor layer. */
+  will-change: transform, width;
+  transition:
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.libre-sandbox-seg-pill > .libre-holo {
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Pill's hover-triggered shine sweep. The pill has
+   `pointer-events: none` so the Hologram's generic
+   `*:hover > .libre-holo` rule (in Hologram.css) can't fire on
+   it directly. We route the trigger through the active toggle
+   button via `:has()`: when the currently-active toggle is
+   hovered, the pill underneath kicks off the same 800ms shine
+   sweep every other holographic surface uses. */
+.libre-sandbox-seg:has(.libre-sandbox-seg-btn--active:hover)
+  > .libre-sandbox-seg-pill
+  > .libre-holo
+  > .libre-holo__shine {
+  animation: libre-holo-shine-hover 800ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .libre-sandbox-seg-pill {
+    transition: none;
+  }
+}
+
+.libre-sandbox-seg-btn {
+  /* `position: relative; z-index: 1` so the button sits ABOVE
+     the sliding active pill (`__seg-pill`, z-index: 0) — without
+     this the button's text would render behind the white pill
+     and the active label would be invisible. */
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  /* Padding 4×8 → 7×12, font 11.5 → 13. Brings the toggles up
+     to the same weight tier as the picker + AI buttons so the
+     header reads as one consistent control row. Icons inside
+     bumped from xs→sm in the TSX so the glyph next to each
+     label scales with the larger pill. */
+  padding: 7px 12px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--libre-radius-sm);
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  cursor: pointer;
+  /* `color` transition matches the pill-slide duration so the
+     text inverts at roughly the same time the pill arrives at
+     the new position. Without this they'd separate visually —
+     pill slides smoothly while text snap-flips its colour. */
+  transition: color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Hover on idle pills: TEXT colour only — no background fill.
+   The active pill carries the holographic white treatment; idle
+   neighbours just bump their text contrast so the pointer feels
+   responsive without two competing background tints reading at
+   once. */
+.libre-sandbox-seg-btn:hover:not([disabled]):not(.libre-sandbox-seg-btn--active) {
+  color: var(--color-text-primary);
+}
+
+/* Active toggle: text colour flips to bg-primary so it reads
+   against the sliding white pill underneath. The background +
+   foil are owned by `.libre-sandbox-seg-pill` (rendered as a
+   sibling of the buttons) — the button itself stays transparent
+   so the pill can slide UNDER it during the transition.
+   Identical idle / hover state because the Hologram's hover-
+   shine sweep is the interaction signal; no colour flash needed. */
+.libre-sandbox-seg-btn--active,
+.libre-sandbox-seg-btn--active:hover {
+  color: var(--color-bg-primary);
+  background: transparent;
+}
+
+.libre-sandbox-seg-btn[disabled] {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Label next to the icon. Hide on narrow widths so the header never
+   wraps — the icon alone still conveys intent at small sizes. */
+@media (max-width: 960px) {
+  .libre-sandbox-seg-label {
+    display: none;
+  }
+}
+
+/* The workbench card takes the full remaining height. Workbench's own
+   styles provide the 12px rounded border + subtle shadow; we just need
+   to override its lesson-pane width (48%) so it spans the whole pane. */
+.libre-sandbox-workbench {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.libre-sandbox-workbench > .libre-workbench {
+  width: 100%;
+  min-width: 0;
+  margin: 0; /* parent pane supplies the 10px margins */
+}
+
+/* Editor-only / preview-only modes: reuse the workbench card chrome (same
+   border + radius + shadow) but wrap a single pane instead of the split.
+   The inner EditorPane / OutputPane already fills its container. */
+.libre-sandbox-solo {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--libre-radius-lg);
+  overflow: hidden;
+}
+
+/* The direct child (EditorPane or OutputPane) needs `flex: 1` to fill
+   the solo wrapper vertically. Without this the EditorPane collapses to
+   just its header strip and the rest of the card shows its own gray
+   background — which looks like "a big gray box rendering over the
+   editor". The equivalent rule inside Workbench is scoped to
+   `.libre-workbench-pane`, so solo mode needs its own match. */
+.libre-sandbox-solo > .libre-editor,
+.libre-sandbox-solo > .libre-output {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+}
+

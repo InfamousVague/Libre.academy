@@ -20,15 +20,15 @@ import {
 } from "../../lib/celebrate";
 import ModalBackdrop from "../Shared/ModalBackdrop";
 import AchievementBadge from "./AchievementBadge";
+import { useT } from "../../i18n/i18n";
 import "./Achievements.css";
 
-/// How long the closing coin shower runs at 2× before being torn
-/// down. Long enough that the user perceives the speed-up as a
-/// closing flourish; short enough that nothing lingers after the
-/// modal is gone. Tuned so a typical 7 s video has time to flush
-/// the bottom 2/3 of its frames at the doubled rate before we
-/// pull the plug.
-const FAREWELL_FLUSH_MS = 700;
+/// How long the closing coin shower runs at the bumped rate before
+/// being torn down. Long enough that the user perceives the speed-up
+/// as a closing flourish; short enough that nothing lingers after
+/// the modal is gone. With the new 2× baseline + 4× dismiss bump,
+/// 350 ms covers the visible tail without dragging.
+const FAREWELL_FLUSH_MS = 350;
 
 interface Props {
   achievement: Achievement;
@@ -36,6 +36,7 @@ interface Props {
 }
 
 export default function AchievementModal({ achievement, onDismiss }: Props) {
+  const t = useT();
   const meta = TIER_META[achievement.tier];
 
   // Fire the primary celebrate burst on mount. Previously this fired
@@ -64,19 +65,20 @@ export default function AchievementModal({ achievement, onDismiss }: Props) {
 
   /// Wrap the parent's onDismiss with a closing flourish + tear-down
   /// pass on the coin shower. Without this the video keeps playing
-  /// for the rest of its ~7 s duration even after the modal vanishes
-  /// — the celebration outlived the thing it was celebrating, which
+  /// for the rest of its duration even after the modal vanishes —
+  /// the celebration outlived the thing it was celebrating, which
   /// reads as "stuck overlay" not "wrap-up". Sequence:
-  ///   1. Bump every active celebrate video to 2× so the remaining
-  ///      coin frames flush fast (audio also pitches up briefly,
-  ///      which itself reads as a clean "ending" cue).
+  ///   1. Bump every active celebrate video to 4× (the baseline is
+  ///      now 2× — see `lib/celebrate.ts` — so this still doubles
+  ///      the playback rate at dismiss time and the remaining coin
+  ///      frames flush fast.
   ///   2. Schedule a forced dismiss after FAREWELL_FLUSH_MS so the
   ///      overlay is guaranteed gone even if `ended` doesn't fire
   ///      on a malformed asset / paused decoder.
   ///   3. Call the parent's onDismiss so the modal unmounts in
   ///      parallel with the video's accelerated tail.
   const handleDismiss = useCallback(() => {
-    accelerateActiveCelebrations(2.0);
+    accelerateActiveCelebrations(4.0);
     window.setTimeout(() => {
       dismissActiveCelebrations();
     }, FAREWELL_FLUSH_MS);
@@ -101,43 +103,43 @@ export default function AchievementModal({ achievement, onDismiss }: Props) {
     // existing modal backdrops, but the achievement modal IS the
     // headline of the unlock — it has to sit on top of the coin shower
     // with the backdrop blur masking the video like any other modal
-    // cast. The `fb-ach-modal-backdrop` class also bumps the backdrop
+    // cast. The `libre-ach-modal-backdrop` class also bumps the backdrop
     // blur from the default 4 px → 10 px because the coin shower
     // underneath is a high-contrast moving target, and the standard
     // blur wasn't enough to keep the badge legible against it.
-    <ModalBackdrop onDismiss={handleDismiss} zIndex={10010} className="fb-ach-modal-backdrop">
+    <ModalBackdrop onDismiss={handleDismiss} zIndex={10010} className="libre-ach-modal-backdrop">
       <div
-        className={`fb-ach-modal fb-ach-modal--${achievement.tier}`}
+        className={`libre-ach-modal libre-ach-modal--${achievement.tier}`}
         style={
           {
-            "--fb-ach-tint": meta.color,
-            "--fb-ach-soft": meta.softColor,
+            "--libre-ach-tint": meta.color,
+            "--libre-ach-soft": meta.softColor,
           } as React.CSSProperties
         }
       >
-        <div className="fb-ach-modal__hero">
+        <div className="libre-ach-modal__hero">
           <AchievementBadge achievement={achievement} size="lg" />
         </div>
-        <div className="fb-ach-modal__body">
-          <span className="fb-ach-modal__eyebrow">
+        <div className="libre-ach-modal__body">
+          <span className="libre-ach-modal__eyebrow">
             {achievement.tier === "platinum"
-              ? "Platinum unlock"
-              : "Achievement unlocked"}
+              ? t("achievements.platinumUnlock2")
+              : t("achievements.unlocked2")}
           </span>
-          <h2 className="fb-ach-modal__title">{achievement.title}</h2>
-          <p className="fb-ach-modal__blurb">{achievement.blurb}</p>
+          <h2 className="libre-ach-modal__title">{achievement.title}</h2>
+          <p className="libre-ach-modal__blurb">{achievement.blurb}</p>
           {achievement.xpReward ? (
-            <span className="fb-ach-modal__xp">
-              +{achievement.xpReward} XP awarded
+            <span className="libre-ach-modal__xp">
+              {t("achievements.xpAwarded", { n: achievement.xpReward })}
             </span>
           ) : null}
         </div>
         <button
           type="button"
-          className="fb-ach-modal__cta"
+          className="libre-ach-modal__cta"
           onClick={handleDismiss}
         >
-          Keep going
+          {t("achievements.keepGoing")}
         </button>
       </div>
     </ModalBackdrop>

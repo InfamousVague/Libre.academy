@@ -1,0 +1,324 @@
+/* Sandbox sidebar — reuses the production `.libre__sidebar` shell
+   rule (frosted glass, 260px wide, rounded), then adds:
+     - Project switcher section (header + list of projects, each
+       with a delete affordance that two-tap-confirms)
+     - "Files" header + file tree for the active project
+   The brand strip on top is shared with the production sidebar. */
+
+.libre-sb-sidebar {
+  /* Inner layout differs from the production sidebar — switch to
+     column-flex with a min-height of 0 so the file tree can fill
+     remaining space below the project switcher and scroll
+     internally. */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* ── Eyebrow + count labels (shared by both sections) ─────────── */
+
+.libre-sb-sidebar__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+.libre-sb-sidebar__count {
+  font-size: 10.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-tertiary);
+  letter-spacing: 0.02em;
+}
+
+/* ── Projects section ──────────────────────────────────────── */
+
+.libre-sb-sidebar__projects {
+  display: flex;
+  flex-direction: column;
+  /* Header gets its own horizontal padding so the eyebrow + "+"
+     button stay readable, but the project list below spans
+     EDGE-TO-EDGE of the sidebar — VSCode-style — so the active
+     row's hologram + highlight reach the sidebar's outer border
+     without an inset gutter breaking the visual flow. */
+  padding: 10px 0 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 60%, transparent);
+  /* Cap the project switcher's height — at 30+ projects, the
+     switcher would otherwise push the file tree completely off-
+     screen. A scrollable max-height keeps both sections
+     reachable. */
+  max-height: 35vh;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+
+.libre-sb-sidebar__projects-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 14px 8px;
+}
+
+.libre-sb-sidebar__new-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Bumped 22→26 to host the larger sm-tier icon (13px) without
+     crowding. Matches the file tree's `__head-btn` chrome. */
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--libre-radius-sm, 6px);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.libre-sb-sidebar__new-btn:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-accent, #d4c5a1);
+  background: color-mix(in srgb, var(--color-accent, #d4c5a1) 10%, transparent);
+}
+
+.libre-sb-sidebar__project-list {
+  list-style: none;
+  margin: 0;
+  /* Side padding inset so the active row's squircle pill sits as
+     a discrete shape rather than slamming into the sidebar's
+     outer border. Matches the file tree's `__list` padding so
+     project + file selection treatments line up visually. */
+  padding: 0 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+/* ── Project row ──────────────────────────────────────────────
+   Row is now full-width (no horizontal padding on the parent
+   `.__projects` block). The delete × overlays the right edge of
+   the row rather than sitting in its own column — keeps the
+   hologram + active highlight visually unbroken, and the × only
+   surfaces on hover so it never crowds the layout. */
+
+.libre-sb-sidebar__project-row {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+
+.libre-sb-sidebar__project {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  background: transparent;
+  border: 0;
+  /* Tighter corner radius — the active state is now a small
+     holographic strip on the left edge plus a subtle background
+     wash, not a chunky pill, so the row can read squarer without
+     looking unfinished. Matches the file tree's active row. */
+  border-radius: 4px;
+  color: var(--color-text-secondary);
+  font: inherit;
+  /* Matched to the file tree's row font (14px) so project names
+     and file leaves read at the same weight tier — the sidebar
+     reads as one continuous information hierarchy rather than
+     two differently-sized columns of text. */
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: color 100ms ease, background 100ms ease;
+}
+
+.libre-sb-sidebar__project:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--color-text-primary);
+}
+
+/* Active project — subtle background wash + a holographic accent
+   strip on the LEFT edge (see `__project-accent` below). The
+   previous white-pill + full-foil treatment was retired so the
+   active row no longer dominates the project list; the
+   iridescent line on the left now carries the "you are here"
+   signal instead. */
+.libre-sb-sidebar__project--active,
+.libre-sb-sidebar__project--active:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-text-primary);
+}
+
+[data-theme="light"] .libre-sb-sidebar__project--active,
+[data-theme="light"] .libre-sb-sidebar__project--active:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Holographic accent strip on the active project row. Absolutely
+   positioned along the row's left edge with rounded corners on
+   both ends — reads as a small iridescent indicator line rather
+   than a full-row foil. The Hologram primitive inside inherits
+   the strip's border-radius so the rainbow paint stays clipped
+   to the rounded shape. */
+.libre-sb-sidebar__project-accent {
+  position: absolute;
+  /* Slimmer than the original 3×~28px so the sparkle pattern
+     inside doesn't stretch into oversized vertical streaks.
+     See the matching change in `.libre-sbft__row-accent` —
+     both selection markers stay visually identical, just
+     thinner now. */
+  top: 9px;
+  bottom: 9px;
+  left: 4px;
+  width: 2px;
+  border-radius: 1px;
+  /* White base so the indicator reads as a white strip; the
+     Hologram primitive inside lays `multiply`-blended rainbow
+     pigment INTO the white surface, producing the iridescent
+     identity used everywhere else (active file row + Run button
+     + nav-rail pill) rather than a rainbow line against the
+     sidebar's frosted-glass backdrop. */
+  background: var(--color-text-primary, #ffffff);
+  /* mix-blend-mode on the Hologram needs its own stacking context
+     to keep the blend confined to the strip; `isolation: isolate`
+     gives us that without committing to an explicit z-index. */
+  isolation: isolate;
+  /* Clip the foil to the strip's rounded shape — without
+     overflow:hidden the Hologram primitive would spill past the
+     border-radius corners. */
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.libre-sb-sidebar__project-accent > .libre-holo {
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Re-scale the inner sparkle mask so each holographic symbol
+   renders as a small dot proportional to the 2px-wide strip,
+   not a stretched vertical streak. Mirrors the override on the
+   file-tree row accent — same primitive, same problem when
+   applied to a hairline-shaped surface. */
+.libre-sb-sidebar__project-accent .libre-holo__foil {
+  /* `!important` for the same reason the file-tree row's
+     override carries it — see `SandboxFileTree.css`. The
+     snake-variant default mask-size would otherwise stretch
+     the silhouette into a streak inside the 2px hairline. */
+  mask-size: 4px 4px !important;
+  -webkit-mask-size: 4px 4px !important;
+}
+
+/* Lift the icon + label above the accent strip's stacking context
+   so they read normally. Without this, the accent's `z-index: 1`
+   would put it above the row's text content. */
+.libre-sb-sidebar__project > :not(.libre-sb-sidebar__project-accent) {
+  position: relative;
+  z-index: 2;
+}
+
+.libre-sb-sidebar__project-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* 20×20 to match the file tree's `__icon` slot exactly —
+     both selection rows now host identical icon containers so
+     the project + file row visuals line up. */
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.libre-sb-sidebar__project-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+/* Delete × — overlays the right edge of the row (absolute) so
+   the project button can span full width. Hidden by default,
+   fades in on row hover. First click flips to red "confirm"
+   state; second click within the same hover lifetime commits
+   the delete. */
+.libre-sb-sidebar__project-delete {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* 22→26 to host the larger sm-tier × icon (13px). */
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: var(--libre-radius-sm, 6px);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  opacity: 0;
+  z-index: 2;
+  transition: opacity 100ms ease, color 100ms ease, background 100ms ease;
+}
+
+.libre-sb-sidebar__project-row:hover .libre-sb-sidebar__project-delete,
+.libre-sb-sidebar__project-delete--confirm {
+  opacity: 1;
+}
+
+.libre-sb-sidebar__project-delete:hover {
+  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Active pill is white — flip the delete button's idle + hover
+   colours to dark so the × remains visible against the white
+   surface. Confirm state stays red so the destructive cue still
+   reads against either backdrop. */
+.libre-sb-sidebar__project-row--active .libre-sb-sidebar__project-delete {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.libre-sb-sidebar__project-row--active .libre-sb-sidebar__project-delete:hover {
+  color: var(--color-bg-primary, #000000);
+  background: rgba(0, 0, 0, 0.10);
+}
+
+.libre-sb-sidebar__project-delete--confirm,
+.libre-sb-sidebar__project-delete--confirm:hover,
+.libre-sb-sidebar__project-row--active .libre-sb-sidebar__project-delete--confirm,
+.libre-sb-sidebar__project-row--active .libre-sb-sidebar__project-delete--confirm:hover {
+  color: #fff;
+  background: var(--color-danger, #b04b4b);
+}
+
+/* ── Files section (tree wrapper) ─────────────────────────── */
+
+.libre-sb-sidebar__tree-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.libre-sb-sidebar__tree-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px 6px;
+}

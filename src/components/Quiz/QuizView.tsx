@@ -5,6 +5,7 @@ import "@base/primitives/icon/icon.css";
 import type { QuizLesson, QuizQuestion } from "../../data/types";
 import { normalizeAnswer } from "../../data/types";
 import { onCommand as onVerifierCommand } from "../../lib/verify/bus";
+import { fireHaptic } from "../../lib/haptics";
 import "./QuizView.css";
 
 interface Props {
@@ -29,12 +30,28 @@ export default function QuizView({ lesson, onComplete }: Props) {
   const allCorrect = state.every((s) => s.status === "correct");
 
   function setQuestionState(index: number, next: QuestionState) {
+    // Per-question haptic: success on correct, warning on wrong.
+    // Fires BEFORE the state commit so the buzz feels like cause-
+    // of-flip rather than reaction-to-flip. We don't haptic on
+    // unanswered (the "reset to try again" path) because the
+    // user didn't take a definitive action there.
+    if (next.status === "correct") {
+      void fireHaptic("notification-success");
+    } else if (next.status === "wrong") {
+      void fireHaptic("notification-warning");
+    }
     setState((prev) => {
       const copy = prev.slice();
       copy[index] = next;
       const done = copy.every((s) => s.status === "correct");
       if (done && !allCorrect) {
-        // All green — bubble completion up. Fire in a microtask so the state
+        // All green — bubble completion up. Fire a celebration
+        // haptic alongside; the engine throttle will collapse
+        // the success buzz above + this completion into a
+        // single perceptible event when the last answer is the
+        // one that completes the quiz.
+        void fireHaptic("completion");
+        // Bubble completion up in a microtask so the state
         // update commits first.
         queueMicrotask(onComplete);
       }

@@ -1,8 +1,10 @@
-/* Floating tutor button. 3D-styled disc with a thick gradient ring
-   wrapping a flat-white center, dark logo glyph, and a soft drop
-   shadow underneath. Pure CSS — no bundled image bytes. State
-   changes the gradient palette + animation speed; geometry stays
-   identical so transitions are cheap. */
+/* Floating tutor button. Black disc with a rainbow holographic
+   foil layered across it and the sparkles AI glyph punched
+   through as a hard silhouette so the icon reads as "missing
+   material in the foil." The ring border + white sparkle that
+   earlier versions wore have been retired — the holographic foil
+   is the orb's visual identity now, and a ring around it ended
+   up competing with the foil rather than framing it. */
 
 .libre-ai-character {
   position: fixed;
@@ -12,43 +14,192 @@
      modals (1000+). 90 keeps the button reachable while the user
      is in a lesson or the library. */
   z-index: 90;
-  /* Sized to host the doubled-up DNA helix (88px tall × ~35px wide
-     at the new font-size, sideways-rotated to ~88×35 visual area).
-     The 96×96 click target wraps that comfortably with breathing
-     room on every side. The orb is backgroundless so this is just
-     the click area + helix bounding box, not a visible disc. */
-  width: 96px;
-  height: 96px;
+  /* 52×52 click target — sized to feel like a primary
+     affordance without dominating the corner. Bigger than the
+     original 40px corner button so the snake silhouette inside
+     reads as the brand mark; smaller than the 72px first try
+     which crowded the bottom-right too aggressively. The
+     chat-panel positioning math in `AiChatPanel.css` reads
+     this height (still using the 72px constant there as a
+     conservative ceiling); the panel ends up with a slightly
+     larger gap above the orb at 52px, which is fine. */
+  width: 52px;
+  height: 52px;
   padding: 0;
   border: none;
-  border-radius: 50%;
+  /* No border-radius on the button itself — the inner `__disc`
+     owns the circular clip so the foil paints inside the circle
+     while the floating tooltip can still escape the disc edge.
+     The button's hit zone is square; that's fine since clicks on
+     the square corners outside the disc still land on the
+     button. */
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  /* 3D viewport for the DNA helix glyph inside. The helix uses
-     ±1-2px Z translations on its nodes + connecting bar; without a
-     perspective context those translations are flat and the spinner
-     looks 2D. ~80px keeps the depth subtle (the helix tilts a hint
-     in 3D rather than reading as a full holographic effect). */
-  perspective: 80px;
-  /* No background, no shadow disc — the helix floats free against
-     whatever's behind the orb (typically the bone-tinted dark
-     theme's `--color-bg-primary`). The 52×52 box is purely a click
-     target now; everything visible comes from the DNA component
-     inside. */
+  /* Transparent — the disc fill lives on the `__disc` child. The
+     button is just a positioned wrapper that owns interaction +
+     the soft drop shadow. */
   background: transparent;
-  box-shadow: none;
+  /* Glyph colour. Black sparkle on the white disc + holo so the
+     icon is clearly legible against the iridescent foil. The
+     `.libre-ai-character-icon` wrapper inherits this. */
+  color: #000;
+  /* Soft dark drop shadow below the disc so the orb still reads
+     as floating against the page. The static white ring that
+     used to sit above this is gone — the foil is the visual
+     signature now. */
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45));
   transition:
-    transform 0.18s ease-out,
-    filter 0.25s ease-out;
+    transform 0.18s ease-out;
   will-change: transform;
 }
 
-/* Streaming = thinking. Breathing scale + glow pulse so the button
-   visibly works on a reply. The DNA helix inside is already animated
-   (and accelerated via the `speed` prop in streaming mood); this
-   layered orb-level animation is the secondary signal. */
+/* Disc inner — circular white panel that hosts the holographic
+   foil + the icon. Owns the `overflow: hidden` clip so the foil
+   stays inside the circle while the button's tooltip (rendered
+   as a sibling of this disc) can still escape the disc edge.
+   `isolation: isolate` keeps the Hologram's multiply blend (for
+   `surface="light"`) from reaching out to siblings outside the
+   orb. Background is white because the foil's multiply blend
+   mode (the right mode for light surfaces) reads the rainbow as
+   dark pigment soaked into the underlying colour — on a white
+   disc that produces the iridescent foil look; on black the
+   multiply collapses to black. */
+.libre-ai-character__disc {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #ffffff;
+  border-radius: 50%;
+  overflow: hidden;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Hologram overlay inherits the disc's circular clip via the
+   primitive's `border-radius: inherit`. Sits BELOW the icon span
+   via the icon's explicit z-index. */
+.libre-ai-character__holo {
+  border-radius: 50%;
+}
+
+/* The shared Hologram primitive masks its foil with a sparkle
+   stencil — gorgeous at the certificate ticket's ~200×80px
+   size where each sparkle reads as iridescent dust, but at the
+   AI orb's 40×40px disc the default `mask-size: 5% 14%` shrinks
+   each sparkle to ~2×6px and the disc reads as plain black.
+   Override mask-size locally so each sparkle is roughly 8×11px
+   — the same VISUAL grain density the cert ticket has, just
+   tuned for the small surface. The sparkle treatment + rainbow
+   colours match the cert page exactly — there's no special
+   "AI orb" variant, just the same holographic effect at the
+   right scale for the orb's size. */
+.libre-ai-character__holo .libre-holo__foil {
+  mask-size: 20% 28%;
+  -webkit-mask-size: 20% 28%;
+}
+
+/* ─── Liquid-metal chromatic ring ───────────────────────────────
+ *
+ * Conic-gradient halo around the disc that gives the orb its
+ * "liquid metal" wrap. Ported from the paper-design liquid-metal
+ * demo's outline ring — the ORIGINAL uses a WebGL shader for the
+ * flowing-metal centre; we ship the defining piece (the
+ * chromatic ring) in pure CSS via the standard "gradient border
+ * with mask-composite: exclude" trick. The infinite rotation
+ * animation on the ring's `::before` provides the flowing-metal
+ * feel without dragging a shader runtime into the bundle for a
+ * 40px corner button.
+ *
+ * Geometry: the ring sits at `inset: -3px` so it extends 3px
+ * beyond the disc's 40×40 footprint on every side. Combined
+ * with the 2px ring thickness (the `padding` in the
+ * `::before`), the effective visual footprint reads as ~46px
+ * with a ~3px gap between disc and ring (the unmasked area
+ * inside the padding-box). Z-index sits BELOW the disc so the
+ * ring frames the orb rather than overlapping the foil + icon. */
+
+.libre-ai-character__ring {
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  pointer-events: none;
+  /* Behind the disc — the disc gets implicit z-index 0 via the
+     inline-flex layout context. */
+  z-index: -1;
+}
+
+.libre-ai-character__ring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  /* The padding here becomes the ring's THICKNESS — the
+     mask-composite trick below punches a hole the size of the
+     content-box, leaving only the padding ring visible. */
+  padding: 2px;
+  /* Conic chromatic gradient — same colour stop pattern as the
+     paper-design demo (blue → purple → red → purple → blue),
+     so the ring reads as a metallic spectrum sweep. The
+     starting angle is offset so the brightest band sits at the
+     orb's top edge at rest, which catches the eye first when
+     the user enters the corner. */
+  background: conic-gradient(
+    from 180deg,
+    #4f46e5,
+    #a855f7,
+    #ec4899,
+    #ef4444,
+    #ec4899,
+    #a855f7,
+    #4f46e5
+  );
+  /* Two-pass mask cuts a hole the size of the content-box,
+     leaving only the padding ring painted. `mask-composite:
+     exclude` (standard) + `-webkit-mask-composite: xor` (Safari
+     name for the same op) keep this working across engines. */
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  /* Slow rotation drives the "flowing metal" illusion — without
+     it the ring would be a static rainbow stripe. 8s at rest
+     is unhurried enough to read as ambient rather than busy. */
+  animation: libre-ai-character-ring-spin 8s linear infinite;
+}
+
+/* Streaming = faster spin, brighter chroma. Same "ramps up
+   while the AI is thinking" pattern the hologram's excited
+   prop uses — keeps the visual cues coordinated. */
+.libre-ai-character--streaming .libre-ai-character__ring::before {
+  animation-duration: 2.5s;
+  filter: saturate(1.4) brightness(1.1);
+}
+
+/* Hover lifts the ring's saturation a notch so a hovering
+   cursor visibly "warms" the metal. Subtle enough not to
+   compete with the existing hover scale, but a real signal. */
+.libre-ai-character:hover .libre-ai-character__ring::before {
+  filter: saturate(1.3) brightness(1.05);
+}
+
+@keyframes libre-ai-character-ring-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Streaming = thinking. Scale pulse only — the ring stays static
+   in `--color-accent` so the "thinking" signal reads as a subtle
+   lean-in rather than a competing colour shift. (Older builds
+   composed this with a pulsing `libre-ai-halo` keyframe; that
+   was retired alongside the static-ring refactor.) */
 .libre-ai-character--streaming {
   animation: libre-ai-thinking 1.4s ease-in-out infinite;
 }
@@ -75,22 +226,51 @@
   outline-offset: 4px;
 }
 
-/* DNA helix glyph wrapper. The component sizes itself in `em`, so
-   set `font-size` to drive the rendered size — 70px (~20% smaller
-   than the prior 88px) gives a 70px helix dimension along the long
-   axis with ~28px on the short. The 96×96 click target stays
-   generous around the smaller glyph; trimming the orb container
-   itself isn't worth it since the orb is anchored at fixed
-   bottom-right coordinates and a smaller hit-target on a corner-
-   docked control reads as cramped. Idle motion lives entirely
-   inside the helix's own strand-jump animation; the AiCharacter
-   passes a slow `speed` value (see Tsx) when in idle mood so the
-   helix reads as gently breathing rather than actively working. */
+/* Sparkles glyph wrapper. The base `Icon` component sizes itself
+   off `font-size` (its SVG uses `width: 1em` / `height: 1em` from
+   the `icon--<size>` class), so this span sets `font-size` to
+   drive the rendered glyph size. 10px (was 13px) so the sparkle
+   reads as a smaller, quieter identity mark — the disc itself
+   (white ring + holographic foil) carries the visual weight,
+   the icon is just the "AI" tell. Stays above the foil via
+   z-index so the sparkle paints on top of the rainbow rather
+   than getting blended into it. */
 .libre-ai-character-icon {
   position: relative;
-  z-index: 2;
-  font-size: 70px;
-  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.4));
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  line-height: 1;
+  color: currentColor;
+  pointer-events: none;
+}
+
+/* The legacy `.libre-ai-character-icon-img` styles lived here —
+   they sized the greyscale snake `<img>` overlay that used to
+   sit on top of the rainbow foil. Retired alongside the
+   <img> element in AiCharacter.tsx; the orb now uses the
+   single-snake hologram below as its visible mark. */
+
+/* Single big snake hologram. Override the primitive's tile
+   defaults so the snake mask renders ONCE, centered, sized to
+   fill ~75% of the disc (with breathing room around the
+   silhouette). The rule scopes to `.libre-ai-character__holo`
+   (className passed to <Hologram> in AiCharacter.tsx) so no
+   other Hologram consumer is affected. Specificity is 3
+   classes (`.libre-ai-character__holo` + `.libre-holo` is
+   implicit on the same node + `.libre-holo__foil` for the
+   inner span), which beats the primitive's 2-class
+   `.libre-holo--sparkle-snake.libre-holo--size-md
+   .libre-holo__foil` default. */
+.libre-ai-character__holo.libre-holo--sparkle-snake .libre-holo__foil {
+  mask-size: 75% 75%;
+  -webkit-mask-size: 75% 75%;
+  mask-position: center;
+  -webkit-mask-position: center;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
 }
 
 
@@ -99,11 +279,9 @@
 @keyframes libre-ai-thinking {
 
   /* Breathing pulse: the orb gently scales while a reply streams,
-     so the button visibly leans in. Compounds with the helix's
-     `speed` prop (which the AiCharacter cranks to 1.2s during
-     streaming) to multiply the "I am working" signal. Pure
-     transform animation — no shadow layers since the orb is
-     backgroundless. */
+     so the button visibly leans in. Pure transform animation so
+     the static accent ring (box-shadow) stays put — only the orb
+     itself breathes. */
   0%,
   100% {
     transform: scale(1);
@@ -114,10 +292,10 @@
   }
 }
 
-
-/* Reduced motion — kill all orb-level animations. The DnaHelix has
-   its own reduced-motion handler that flattens the helix to a
-   static colourful pattern. */
+/* Reduced motion — kill the streaming scale pulse + the hover/
+   active scale transitions. The orb stays a static disc with a
+   static glyph; clicks still register normally, only the motion
+   is suppressed. */
 @media (prefers-reduced-motion: reduce) {
   .libre-ai-character {
     animation: none !important;
@@ -150,7 +328,7 @@
   padding: 7px 12px;
   background: rgba(19, 19, 26, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--fb-radius-pill, 999px);
+  border-radius: var(--libre-radius-pill, 999px);
   backdrop-filter: blur(14px) saturate(135%);
   -webkit-backdrop-filter: blur(14px) saturate(135%);
   color: var(--color-text-primary, #f5f5f7);

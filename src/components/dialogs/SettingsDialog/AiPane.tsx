@@ -13,22 +13,23 @@ import {
 } from "../../../lib/aiHost";
 import { isMobile } from "../../../lib/platform";
 import QrScanner from "../../Shared/QrScanner";
+import { useT } from "../../../i18n/i18n";
 
-const MODEL_OPTIONS: Array<{ id: string; label: string; hint: string }> = [
+const MODEL_OPTIONS: Array<{ id: string; labelKey: string; hintKey: string }> = [
   {
     id: "claude-sonnet-4-5",
-    label: "Sonnet 4.5 (balanced)",
-    hint: "Default. ~$3 in / $15 out per 1M tokens. Great for most books.",
+    labelKey: "settings.sonnetLabel",
+    hintKey: "settings.sonnetHint",
   },
   {
     id: "claude-opus-4-5",
-    label: "Opus 4.5 (top quality)",
-    hint: "~$15 in / $75 out per 1M tokens. ~5× cost, best pedagogy + test design.",
+    labelKey: "settings.opusLabel",
+    hintKey: "settings.opusHint",
   },
   {
     id: "claude-haiku-4-5",
-    label: "Haiku 4.5 (fastest)",
-    hint: "~$1 in / $5 out per 1M tokens. Quick + cheap but weaker structured output.",
+    labelKey: "settings.haikuLabel",
+    hintKey: "settings.haikuHint",
   },
 ];
 
@@ -49,6 +50,7 @@ export default function AiPane({
   model,
   onModelChange,
 }: AiPaneProps) {
+  const t = useT();
   // Per-field "just copied" flash. Keyed so the Anthropic + OpenAI
   // copy buttons each get their own check-mark moment without
   // stomping each other.
@@ -73,14 +75,12 @@ export default function AiPane({
 
   return (
     <section>
-      <h3 className="libre-settings-section">AI-assisted ingest</h3>
+      <h3 className="libre-settings-section">{t("settings.aiSectionIngest")}</h3>
       <p className="libre-settings-blurb">
-        Paste an Anthropic API key to enable Claude-powered structuring
-        when you import a book. Without a key, the import falls back to
-        the deterministic splitter (chapter/section breaks only).
+        {t("settings.aiIngestBlurb")}
       </p>
       <label className="libre-settings-field">
-        <span className="libre-settings-label">Anthropic API key</span>
+        <span className="libre-settings-label">{t("settings.anthropicApiKey")}</span>
         <div className="libre-settings-input-row">
           <input
             type="password"
@@ -98,15 +98,15 @@ export default function AiPane({
             disabled={!apiKey}
             aria-label={
               copiedKey === "anthropic"
-                ? "Copied"
-                : "Copy Anthropic API key to clipboard"
+                ? t("settings.copiedLabel")
+                : t("settings.copyAnthropic")
             }
             title={
               apiKey
                 ? copiedKey === "anthropic"
-                  ? "Copied!"
-                  : "Copy to clipboard"
-                : "Add a key first"
+                  ? t("settings.copiedExclaim")
+                  : t("settings.copyClipboard")
+                : t("settings.addKeyFirst")
             }
           >
             <Icon
@@ -123,7 +123,7 @@ export default function AiPane({
       </p>
 
       <label className="libre-settings-field">
-        <span className="libre-settings-label">Model</span>
+        <span className="libre-settings-label">{t("settings.modelLabel")}</span>
         <div className="libre-settings-model-group">
           {MODEL_OPTIONS.map((opt) => (
             <label
@@ -138,8 +138,8 @@ export default function AiPane({
                 onChange={() => onModelChange(opt.id)}
               />
               <div>
-                <div className="libre-settings-model-label">{opt.label}</div>
-                <div className="libre-settings-model-hint">{opt.hint}</div>
+                <div className="libre-settings-model-label">{t(opt.labelKey)}</div>
+                <div className="libre-settings-model-hint">{t(opt.hintKey)}</div>
               </div>
             </label>
           ))}
@@ -152,7 +152,7 @@ export default function AiPane({
           cover-art button in Course Settings surfaces a
           friendly "add a key" message instead of crashing. */}
       <h3 className="libre-settings-section libre-settings-section--sub">
-        AI cover art
+        {t("settings.aiCoverSection")}
       </h3>
       <p className="libre-settings-blurb">
         Optional. When set, a <strong>Generate artwork with AI</strong>{" "}
@@ -162,7 +162,7 @@ export default function AiPane({
         visual language.
       </p>
       <label className="libre-settings-field">
-        <span className="libre-settings-label">OpenAI API key</span>
+        <span className="libre-settings-label">{t("settings.openaiApiKey")}</span>
         <div className="libre-settings-input-row">
           <input
             type="password"
@@ -180,15 +180,15 @@ export default function AiPane({
             disabled={!openaiKey}
             aria-label={
               copiedKey === "openai"
-                ? "Copied"
-                : "Copy OpenAI API key to clipboard"
+                ? t("settings.copiedLabel")
+                : t("settings.copyOpenai")
             }
             title={
               openaiKey
                 ? copiedKey === "openai"
-                  ? "Copied!"
-                  : "Copy to clipboard"
-                : "Add a key first"
+                  ? t("settings.copiedExclaim")
+                  : t("settings.copyClipboard")
+                : t("settings.addKeyFirst")
             }
           >
             <Icon
@@ -225,6 +225,7 @@ export default function AiPane({
 /// keystroke — saving partial hostnames triggers re-probes that
 /// will all fail until the field is complete).
 function AssistantHostField() {
+  const t = useT();
   const [enabled, setEnabled] = useState<boolean>(() => readAiEnabled());
   const [host, setHost] = useState<string>(() => readAiHost() ?? "");
   const [savedFlash, setSavedFlash] = useState(false);
@@ -330,7 +331,7 @@ function AssistantHostField() {
   return (
     <>
       <h3 className="libre-settings-section libre-settings-section--sub">
-        AI assistant
+        {t("settings.aiAssistantSection")}
       </h3>
       <p className="libre-settings-blurb">
         The in-app chat tutor — a floating orb in the bottom-right
@@ -346,7 +347,7 @@ function AssistantHostField() {
         />
         <span className="libre-settings-toggle-slider" aria-hidden />
         <span className="libre-settings-toggle-label">
-          {enabled ? "Enabled" : "Disabled"}
+          {enabled ? t("settings.enabledLabel") : t("settings.disabledLabel")}
         </span>
       </label>
 
@@ -358,7 +359,7 @@ function AssistantHostField() {
       {enabled && (
         <>
       <h3 className="libre-settings-section libre-settings-section--sub">
-        Assistant host (mobile / web)
+        {t("settings.assistantHostSection")}
       </h3>
       <p className="libre-settings-blurb">
         Hostname or IP of the machine running Ollama. The phone +
@@ -369,7 +370,7 @@ function AssistantHostField() {
         daemon via Tauri IPC.
       </p>
       <label className="libre-settings-field">
-        <span className="libre-settings-label">Hostname or IP</span>
+        <span className="libre-settings-label">{t("settings.hostnameIp")}</span>
         <div className="libre-settings-input-row">
           <input
             type="text"
@@ -395,7 +396,7 @@ function AssistantHostField() {
               transition: "opacity 220ms ease",
               pointerEvents: "none",
             }}
-            title={savedFlash ? "Saved" : ""}
+            title={savedFlash ? t("settings.savedLabel") : ""}
           >
             <Icon icon={checkIcon} size="xs" color="currentColor" />
           </span>
@@ -425,7 +426,7 @@ function AssistantHostField() {
           }
         >
           <Icon icon={qrCode} size="xs" color="currentColor" />
-          <span>Show QR for phone</span>
+          <span>{t("settings.showQrForPhone")}</span>
         </button>
         <button
           type="button"
@@ -438,7 +439,7 @@ function AssistantHostField() {
           }
         >
           <Icon icon={camera} size="xs" color="currentColor" />
-          <span>Scan QR from Mac</span>
+          <span>{t("settings.scanQrFromMac")}</span>
         </button>
       </div>
 
@@ -454,7 +455,7 @@ function AssistantHostField() {
         <div
           className="libre-settings-qr-modal"
           role="dialog"
-          aria-label="Assistant host QR code"
+          aria-label={t("settings.pairYourPhone")}
           onClick={() => setQrOpen(false)}
         >
           <div
@@ -462,7 +463,7 @@ function AssistantHostField() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="libre-settings-qr-title">
-              Pair your phone
+              {t("settings.pairYourPhone")}
             </div>
             <p className="libre-settings-qr-blurb">
               On the phone: open <strong>Settings → AI &amp; API →
@@ -477,7 +478,7 @@ function AssistantHostField() {
               />
             ) : (
               <div className="libre-settings-qr-placeholder">
-                Generating…
+                {t("settings.generating")}
               </div>
             )}
             <div className="libre-settings-qr-host">{host}</div>
@@ -486,7 +487,7 @@ function AssistantHostField() {
               className="libre-settings-pair-btn"
               onClick={() => setQrOpen(false)}
             >
-              Done
+              {t("settings.doneBtn")}
             </button>
           </div>
         </div>
@@ -494,7 +495,7 @@ function AssistantHostField() {
 
       {scanOpen && (
         <QrScanner
-          title="Scan the Mac's QR"
+          title={t("settings.scanMacQr")}
           hint="Open Settings → AI on your Mac, tap Show QR for phone, point this camera at it."
           onResult={handleScanResult}
           onCancel={() => setScanOpen(false)}

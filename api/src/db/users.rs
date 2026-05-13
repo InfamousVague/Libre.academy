@@ -400,7 +400,7 @@ impl Database {
 
     /// Wipe every progress row for `user_id`. Used by the "Start
     /// fresh" Settings action — the matching client call is
-    /// `DELETE /fishbones/progress`. Returns the number of rows
+    /// `DELETE /progress`. Returns the number of rows
     /// removed (for logging / response payload).
     pub fn clear_progress(&self, user_id: &str) -> anyhow::Result<usize> {
         let conn = self.conn_lock();

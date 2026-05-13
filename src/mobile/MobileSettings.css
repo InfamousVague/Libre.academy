@@ -46,7 +46,7 @@
   padding: 14px 16px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-lg);
+  border-radius: var(--libre-radius-lg);
   text-decoration: none;
   color: var(--color-text-primary);
 }
@@ -61,7 +61,7 @@
   font: inherit;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: background var(--fb-motion-quick), border-color var(--fb-motion-quick);
+  transition: background var(--libre-motion-quick), border-color var(--libre-motion-quick);
 }
 
 .m-set__row--button:active {
@@ -143,14 +143,14 @@
   padding: 12px 14px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-lg);
+  border-radius: var(--libre-radius-lg);
   font: inherit;
   text-align: left;
   color: var(--color-text-primary);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: background var(--fb-motion-quick),
-              border-color var(--fb-motion-quick);
+  transition: background var(--libre-motion-quick),
+              border-color var(--libre-motion-quick);
 }
 
 .m-set__theme-row:active {
@@ -171,7 +171,7 @@
   flex: 0 0 36px;
   width: 36px;
   height: 36px;
-  border-radius: var(--fb-radius-md, 8px);
+  border-radius: var(--libre-radius-md, 8px);
   border: 1px solid var(--color-border-default);
   background: linear-gradient(
     to right,
@@ -185,10 +185,12 @@
  * theme entries in src/theme/themes.css. Hardcoded RGB so the
  * swatch always shows the destination theme regardless of which
  * theme is currently active. */
-.m-set__theme-swatch[data-theme="default-dark"]      { --swatch-bg: #0e0f12; --swatch-fg: #e6e6ea; --swatch-accent: #b69b5e; }
+.m-set__theme-swatch[data-theme="default-dark"]      { --swatch-bg: #000000; --swatch-fg: #ffffff; --swatch-accent: #ffffff; }
+.m-set__theme-swatch[data-theme="cipher-light"]      { --swatch-bg: #ecedf3; --swatch-fg: #0f1324; --swatch-accent: #a85e1c; }
+.m-set__theme-swatch[data-theme="cipher-dark"]       { --swatch-bg: #0c0f15; --swatch-fg: #f5f6fa; --swatch-accent: #a85e1c; }
 .m-set__theme-swatch[data-theme="synthwave"]         { --swatch-bg: #1f1147; --swatch-fg: #ffffff; --swatch-accent: #ff77e1; }
 .m-set__theme-swatch[data-theme="claude-code-dark"]  { --swatch-bg: #1d1815; --swatch-fg: #f0e6d8; --swatch-accent: #d97757; }
-.m-set__theme-swatch[data-theme="ayu-light"]         { --swatch-bg: #fafafa; --swatch-fg: #1a1f29; --swatch-accent: #ff9940; }
+.m-set__theme-swatch[data-theme="ayu-light"]         { --swatch-bg: #fafafa; --swatch-fg: #1a1f29; --swatch-accent: #d4863a; }
 .m-set__theme-swatch[data-theme="ayu-mirage"]        { --swatch-bg: #1f2430; --swatch-fg: #cbccc6; --swatch-accent: #ffcc66; }
 .m-set__theme-swatch[data-theme="ayu-dark"]          { --swatch-bg: #0a0e14; --swatch-fg: #b3b1ad; --swatch-accent: #ff8f40; }
 .m-set__theme-swatch[data-theme="catppuccin-latte"]  { --swatch-bg: #eff1f5; --swatch-fg: #4c4f69; --swatch-accent: #8839ef; }

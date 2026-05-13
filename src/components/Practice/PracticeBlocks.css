@@ -1,4 +1,4 @@
-/* PracticeBlocks — visual sibling of `.fb-blocks`.
+/* PracticeBlocks — visual sibling of `.libre-blocks`.
  *
  * Goal: a learner reviewing a blocks puzzle in Practice should see
  * the SAME chrome they had in the lesson — dark `#0d1117` template
@@ -6,13 +6,13 @@
  * placed chip's code, monospace 13px / 1.65 line-height. Without
  * that visual continuity, review feels like a different app.
  *
- * Differences from `.fb-blocks`:
+ * Differences from `.libre-blocks`:
  *   - No DnD chrome (no drag cursor, no overlay hints).
  *   - Pool sits as a wrap-row of monospaced chips. No tray panel
  *     since practice doesn't need a drop-zone affordance.
  *   - Smaller surface gaps; the practice card already wraps it. */
 
-.fb-practice-blocks {
+.libre-practice-blocks {
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -20,7 +20,7 @@
   font-family: var(--font-body, system-ui);
 }
 
-.fb-practice-blocks__prompt {
+.libre-practice-blocks__prompt {
   margin: 0;
   font-size: 13px;
   color: var(--color-text-secondary);
@@ -29,7 +29,7 @@
 
 /* ── Template ──────────────────────────────────────────────────── */
 
-.fb-practice-blocks__template {
+.libre-practice-blocks__template {
   margin: 0;
   padding: 14px 16px;
   font-family: var(--font-mono, "SF Mono", Menlo, monospace);
@@ -40,19 +40,19 @@
    * tokens are tuned for this exact background. */
   background: #0d1117;
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md, 10px);
+  border-radius: var(--libre-radius-md, 10px);
   white-space: pre-wrap;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 
-.fb-practice-blocks__line {
+.libre-practice-blocks__line {
   display: inline;
 }
 
 /* ── Slot zones (inline buttons) ───────────────────────────────── */
 
-.fb-practice-blocks__slot {
+.libre-practice-blocks__slot {
   display: inline-block;
   vertical-align: baseline;
   min-width: 56px;
@@ -74,37 +74,37 @@
     box-shadow 120ms ease;
 }
 
-.fb-practice-blocks__slot:hover:not(:disabled) {
+.libre-practice-blocks__slot:hover:not(:disabled) {
   background: rgba(214, 185, 105, 0.08);
   border-color: rgba(214, 185, 105, 0.5);
 }
 
-.fb-practice-blocks__slot--filled {
+.libre-practice-blocks__slot--filled {
   border: 0;
   background: transparent;
   padding: 0;
   border-radius: 0;
 }
 
-.fb-practice-blocks__slot--filled:hover:not(:disabled) {
+.libre-practice-blocks__slot--filled:hover:not(:disabled) {
   background: rgba(214, 185, 105, 0.08);
   box-shadow: 0 0 0 1px rgba(214, 185, 105, 0.35);
   border-radius: 4px;
 }
 
-.fb-practice-blocks__slot--correct {
+.libre-practice-blocks__slot--correct {
   border-color: rgba(120, 200, 140, 0.6);
   box-shadow: inset 0 0 0 1px rgba(120, 200, 140, 0.35);
   background: rgba(120, 200, 140, 0.05);
 }
 
-.fb-practice-blocks__slot--wrong {
+.libre-practice-blocks__slot--wrong {
   border-color: rgba(220, 110, 110, 0.7);
   box-shadow: inset 0 0 0 1px rgba(220, 110, 110, 0.4);
   background: rgba(220, 110, 110, 0.05);
 }
 
-.fb-practice-blocks__slot-placeholder {
+.libre-practice-blocks__slot-placeholder {
   display: inline-block;
   font-size: 0.92em;
   color: var(--color-text-tertiary, var(--color-text-secondary));
@@ -112,19 +112,19 @@
   opacity: 0.7;
 }
 
-.fb-practice-blocks__slot-code {
+.libre-practice-blocks__slot-code {
   display: inline;
   font-family: inherit;
 }
 
 /* ── Pool (chip tray) ──────────────────────────────────────────── */
 
-.fb-practice-blocks__pool {
+.libre-practice-blocks__pool {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   padding: 12px;
-  border-radius: var(--fb-radius-md, 10px);
+  border-radius: var(--libre-radius-md, 10px);
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
   min-height: 56px;
@@ -134,14 +134,14 @@
 }
 
 /* Highlighted while a chip is being dragged over the pool. Same
- * gold tint the lesson's `.fb-blocks__pool--over` uses so "drop
+ * gold tint the lesson's `.libre-blocks__pool--over` uses so "drop
  * back to pool" reads identically. */
-.fb-practice-blocks__pool--over {
+.libre-practice-blocks__pool--over {
   background: rgba(214, 185, 105, 0.10);
   border-color: rgba(214, 185, 105, 0.45);
 }
 
-.fb-practice-blocks__pool-empty {
+.libre-practice-blocks__pool-empty {
   font-size: 12.5px;
   color: var(--color-text-tertiary);
   font-style: italic;
@@ -154,7 +154,7 @@
  * pool reads as code, and a chip placed in a slot reads continuously
  * with the surrounding line. */
 
-.fb-practice-blocks__chip {
+.libre-practice-blocks__chip {
   display: inline-block;
   padding: 4px 10px;
   border-radius: 6px;
@@ -171,7 +171,7 @@
   /* Don't add `transform` to the transition list — dnd-kit applies
    * a per-frame `transform: translate3d(...)` while dragging, and
    * if CSS interpolates it the chip lags ~80ms behind the cursor.
-   * Same constraint as `.fb-blocks__chip` in the lesson view. */
+   * Same constraint as `.libre-blocks__chip` in the lesson view. */
   transition:
     background-color 120ms ease,
     border-color 120ms ease,
@@ -179,30 +179,30 @@
   touch-action: none;
 }
 
-.fb-practice-blocks__chip:hover {
+.libre-practice-blocks__chip:hover {
   border-color: var(--color-border-strong, var(--color-border-default));
 }
 
-.fb-practice-blocks__chip:active,
-.fb-practice-blocks__chip--dragging {
+.libre-practice-blocks__chip:active,
+.libre-practice-blocks__chip--dragging {
   cursor: grabbing;
 }
 
-.fb-practice-blocks__chip.is-disabled {
+.libre-practice-blocks__chip.is-disabled {
   opacity: 0.5;
   cursor: default;
 }
 
 /* Tap-to-arm fallback ring — same gold the lesson's armed chip uses. */
-.fb-practice-blocks__chip--armed {
+.libre-practice-blocks__chip--armed {
   border-color: rgba(214, 185, 105, 0.7);
   box-shadow: 0 0 0 2px rgba(214, 185, 105, 0.25);
 }
 
 /* Placed chips read as continuous code — drop all chrome so the
  * tokens sit naturally inside the line. Same pattern as
- * `.fb-blocks__chip--placed`. */
-.fb-practice-blocks__chip--placed {
+ * `.libre-blocks__chip--placed`. */
+.libre-practice-blocks__chip--placed {
   background: transparent;
   border: 0;
   padding: 0;
@@ -210,14 +210,14 @@
   cursor: grab;
 }
 
-.fb-practice-blocks__chip--placed:active,
-.fb-practice-blocks__chip--placed.fb-practice-blocks__chip--dragging {
+.libre-practice-blocks__chip--placed:active,
+.libre-practice-blocks__chip--placed.libre-practice-blocks__chip--dragging {
   cursor: grabbing;
 }
 
 /* Floating ghost the DragOverlay renders. Slight elevation so the
- * learner sees what they're carrying. Mirrors `.fb-blocks__chip--ghost`. */
-.fb-practice-blocks__chip--ghost {
+ * learner sees what they're carrying. Mirrors `.libre-blocks__chip--ghost`. */
+.libre-practice-blocks__chip--ghost {
   box-shadow:
     0 6px 14px rgba(0, 0, 0, 0.35),
     0 0 0 1px rgba(214, 185, 105, 0.5);
@@ -225,7 +225,7 @@
   transform: scale(1.02);
 }
 
-.fb-practice-blocks__chip code {
+.libre-practice-blocks__chip code {
   font-family: inherit;
   background: transparent;
   border: 0;
@@ -236,38 +236,38 @@
 
 /* ── Action bar ────────────────────────────────────────────────── */
 
-.fb-practice-blocks__actions {
+.libre-practice-blocks__actions {
   display: flex;
   justify-content: flex-end;
   padding-top: 4px;
 }
 
-.fb-practice-blocks__check {
+.libre-practice-blocks__check {
   padding: 10px 18px;
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
   border: 0;
-  border-radius: var(--fb-radius-md, 10px);
+  border-radius: var(--libre-radius-md, 10px);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
   transition: opacity 120ms ease, transform 80ms ease;
 }
 
-.fb-practice-blocks__check:disabled {
+.libre-practice-blocks__check:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.fb-practice-blocks__check:hover:not(:disabled) {
+.libre-practice-blocks__check:hover:not(:disabled) {
   opacity: 0.88;
 }
 
-.fb-practice-blocks__check:active:not(:disabled) {
+.libre-practice-blocks__check:active:not(:disabled) {
   transform: translateY(1px);
 }
 
-.fb-practice-blocks.is-committed .fb-practice-blocks__check {
+.libre-practice-blocks.is-committed .libre-practice-blocks__check {
   background: var(--color-bg-secondary);
   color: var(--color-text-primary);
   border: 1px solid var(--color-border-default);
@@ -276,11 +276,11 @@
 /* ── Responsive ────────────────────────────────────────────────── */
 
 @media (max-width: 720px) {
-  .fb-practice-blocks__template {
+  .libre-practice-blocks__template {
     font-size: 12.5px;
     padding: 12px 14px;
   }
-  .fb-practice-blocks__chip {
+  .libre-practice-blocks__chip {
     font-size: 12.5px;
   }
 }

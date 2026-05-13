@@ -1,4 +1,5 @@
 import ModalBackdrop from "../../Shared/ModalBackdrop";
+import { useT } from "../../../i18n/i18n";
 import "./ConfirmDialog.css";
 
 interface Props {
@@ -23,12 +24,15 @@ interface Props {
 export default function ConfirmDialog({
   title,
   message,
-  confirmLabel = "Confirm",
-  cancelLabel = "Cancel",
+  confirmLabel,
+  cancelLabel,
   danger = false,
   onConfirm,
   onCancel,
 }: Props) {
+  const t = useT();
+  const resolvedConfirm = confirmLabel ?? t("common.ok");
+  const resolvedCancel = cancelLabel ?? t("common.cancel");
   return (
     <ModalBackdrop onDismiss={onCancel} zIndex={200}>
       <div
@@ -50,7 +54,7 @@ export default function ConfirmDialog({
             onClick={onCancel}
             autoFocus
           >
-            {cancelLabel}
+            {resolvedCancel}
           </button>
           <button
             type="button"
@@ -59,7 +63,7 @@ export default function ConfirmDialog({
             }`}
             onClick={onConfirm}
           >
-            {confirmLabel}
+            {resolvedConfirm}
           </button>
         </div>
       </div>

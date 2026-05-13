@@ -1,15 +1,29 @@
 /* Backdrop chrome lives in `Shared/ModalBackdrop.css`. */
 
 .libre-settings-panel {
-  /* Wider to fit the sidebar, capped at 85vh so long sections scroll inside
-     rather than growing the dialog off-screen. Column flex so the header +
-     columns row + footer stack with the columns taking the remaining space
-     and flowing into their own overflow. */
-  width: min(760px, 92vw);
-  max-height: 85vh;
+  /* Wider to fit the sidebar + iconified rail + the new search input.
+     Was 760px in the pre-rework layout; the bump to 900px gives the
+     rail enough breathing room for icons + label + hint without
+     crowding the body content column.
+
+     Height is FIXED at 85vh rather than max-height-capped so the
+     panel keeps a stable footprint when the learner switches
+     between panes. Earlier `max-height: 85vh` meant short panes
+     (Theme, Sounds) shrunk the panel to fit their content while
+     long ones (Sync, Resources) expanded it to the cap — every
+     pane switch caused a visible jump in the modal's overall
+     size, which read as the dialog "breathing" with each click.
+     A fixed 85vh keeps the chrome locked and lets the inner body
+     scroll for taller panes.
+
+     Column flex so the header + columns row + footer stack with the
+     columns taking the remaining space and flowing into their own
+     overflow. */
+  width: min(900px, 94vw);
+  height: 85vh;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-lg);
+  border-radius: var(--libre-radius-lg);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -24,85 +38,300 @@
   overflow: hidden;
 }
 
+/* ── Nav rail (data-driven, grouped, searchable) ─────────────────
+ *
+ * Three regions stacked top → bottom inside `.libre-settings-nav`:
+ *
+ *   1. `__search`  — search input + clear button
+ *   2. `__groups`  — one `<section>` per group, each with a
+ *                    small uppercase title above its `<ul>` of
+ *                    `__item` buttons
+ *   3. `__empty`   — fallback state when the search filter drops
+ *                    every pane. Shows the query verbatim + a
+ *                    one-click clear affordance.
+ *
+ * The rail is wider than the pre-rework version (220px vs 200px)
+ * to give icon + label + hint room to breathe without crowding
+ * the body content column. ───────────────────────────────────── */
+
 .libre-settings-nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 14px 10px;
-  width: 200px;
+  gap: 4px;
+  padding: 12px 8px;
+  width: 230px;
   flex-shrink: 0;
   border-right: 1px solid var(--color-border-default);
-  /* Match the panel background so hover/active (bg-tertiary) contrasts
-     clearly. On the primary surface the tertiary-only lift was only a few
-     lightness steps in Libre Dark and effectively invisible. */
   background: var(--color-bg-secondary);
   overflow-y: auto;
+  /* Reserve a thin gutter on the right so the active item's accent
+     stripe (rendered as `::before`) doesn't get clipped by the
+     border. */
+  padding-right: 10px;
 }
 
-.libre-settings-nav-item {
+/* ---- Search ---------------------------------------------------- */
+
+.libre-settings-nav__search {
   position: relative;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: 9px 12px;
+  align-items: center;
+  margin: 4px 4px 10px;
+  padding: 0 8px 0 28px;
+  height: 32px;
+  background: color-mix(in srgb, var(--color-bg-primary, #0a0a0a) 50%, transparent);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--libre-radius-md, 8px);
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.libre-settings-nav__search:focus-within {
+  border-color: var(--color-accent, #f3a93a);
+  background: color-mix(in srgb, var(--color-bg-primary, #0a0a0a) 70%, transparent);
+}
+
+.libre-settings-nav__search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-tertiary);
+  pointer-events: none;
+}
+
+.libre-settings-nav__search-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
   background: transparent;
   border: 0;
-  border-radius: var(--fb-radius-sm);
+  outline: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--color-text-primary);
+  /* Hide the UA's native search-clear "x" — we render our own
+     clear button so we control its position, sizing, and theme
+     compatibility. Without this you'd see two clear affordances
+     stacked on top of each other in Safari + Chrome. */
+  appearance: none;
+}
+.libre-settings-nav__search-input::-webkit-search-cancel-button,
+.libre-settings-nav__search-input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.libre-settings-nav__search-input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.libre-settings-nav__search-clear {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-left: 6px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: color 120ms ease, background 120ms ease;
+}
+
+.libre-settings-nav__search-clear:hover {
+  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ---- Groups ---------------------------------------------------- */
+
+.libre-settings-nav__groups {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.libre-settings-nav__group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.libre-settings-nav__group-title {
+  margin: 0 0 4px;
+  padding: 0 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary, rgba(255, 255, 255, 0.4));
+}
+
+.libre-settings-nav__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+/* ---- Item ------------------------------------------------------ */
+
+.libre-settings-nav__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px 8px 12px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--libre-radius-sm, 6px);
   color: var(--color-text-secondary);
   font-family: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy);
+  transition:
+    background var(--libre-motion-snappy, 120ms ease),
+    color var(--libre-motion-snappy, 120ms ease);
 }
 
-.libre-settings-nav-item:hover {
-  /* Uses white-alpha instead of bg-tertiary so the lift is visible on every
-     theme — Libre Dark's bg-tertiary is only ~10 lightness above secondary,
-     while a translucent white reads clearly regardless of base. */
+.libre-settings-nav__item:hover {
   background: rgba(255, 255, 255, 0.06);
   color: var(--color-text-primary);
 }
 
-.libre-settings-nav-item--active,
-.libre-settings-nav-item--active:hover {
-  background: rgba(255, 255, 255, 0.1);
+/* Active item — soft accent-tinted background + accent-coloured
+   text + icon. Mirrors the Cipher settings pattern (the messaging
+   app whose visual style this dialog was migrated to follow):
+   the active row is the only chip in the rail tinted with the
+   theme accent, so the cursor's current location is unambiguous
+   at a glance even with a long list of panes. The earlier
+   neutral-white-overlay + left-stripe combo got lost on panes
+   with similar grey backgrounds; the accent-soft fill cuts
+   through every theme cleanly. */
+.libre-settings-nav__item--active,
+.libre-settings-nav__item--active:hover {
+  background: color-mix(in srgb, var(--color-accent, #d4c5a1) 14%, transparent);
+  color: var(--color-accent, var(--color-text-primary));
+}
+
+[data-theme="light"] .libre-settings-nav__item:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+[data-theme="light"] .libre-settings-nav__item--active,
+[data-theme="light"] .libre-settings-nav__item--active:hover {
+  background: color-mix(in srgb, var(--color-accent, #a85e1c) 16%, transparent);
+  color: var(--color-accent, var(--color-text-primary));
+}
+
+.libre-settings-nav__item-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: var(--color-text-tertiary);
+  transition: color 120ms ease;
+}
+
+.libre-settings-nav__item:hover .libre-settings-nav__item-icon,
+.libre-settings-nav__item--active .libre-settings-nav__item-icon {
   color: var(--color-text-primary);
 }
 
-/* Left accent stripe on the active tab — color-agnostic (uses text-primary
-   which always contrasts the bg), so the active state is unmistakable
-   regardless of how close the hover/active bg alphas are to the panel. */
-.libre-settings-nav-item--active::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 6px;
-  bottom: 6px;
-  width: 3px;
-  border-radius: 2px;
-  background: var(--color-text-primary);
+.libre-settings-nav__item--active .libre-settings-nav__item-icon {
+  color: var(--color-accent, var(--color-text-primary));
 }
 
-/* Light themes invert the alpha so we don't get a washed-out lift. */
-[data-theme="light"] .libre-settings-nav-item:hover {
-  background: rgba(0, 0, 0, 0.05);
+.libre-settings-nav__item-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
 
-[data-theme="light"] .libre-settings-nav-item--active,
-[data-theme="light"] .libre-settings-nav-item--active:hover {
-  background: rgba(0, 0, 0, 0.08);
-}
-
-.libre-settings-nav-label {
+.libre-settings-nav__item-label {
   font-size: 13px;
   font-weight: 600;
+  line-height: 1.2;
 }
 
-.libre-settings-nav-hint {
+.libre-settings-nav__item-hint {
   font-size: 10.5px;
+  line-height: 1.3;
   color: var(--color-text-tertiary);
   letter-spacing: 0.2px;
+  /* Single-line ellipsis so a long hint doesn't wrap and make
+     the rail items inconsistent height. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Active-item hint reads in a translucent accent rather than the
+   muted tertiary grey — keeps the hint legible against the
+   accent-soft active background. Mirrors Cipher's pattern of
+   mixing accent at ~70% with the body text colour so the second
+   line stays softer than the label without disappearing. */
+.libre-settings-nav__item--active .libre-settings-nav__item-hint {
+  color: color-mix(in srgb, var(--color-accent, #d4c5a1) 70%, var(--color-text-secondary));
+}
+
+/* ---- Empty state ---------------------------------------------- */
+
+.libre-settings-nav__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 32px 12px;
+  text-align: center;
+  color: var(--color-text-tertiary);
+}
+
+.libre-settings-nav__empty-line1 {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.libre-settings-nav__empty-line2 {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--color-text-tertiary);
+  /* Long search queries shouldn't overflow the narrow rail. */
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.libre-settings-nav__empty-clear {
+  margin-top: 6px;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--libre-radius-md, 8px);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 11.5px;
+  font-weight: 500;
+  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.libre-settings-nav__empty-clear:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-accent, #f3a93a);
+  background: color-mix(in srgb, var(--color-accent, #f3a93a) 8%, transparent);
 }
 
 .libre-settings-footer {
@@ -154,11 +383,94 @@
   flex: 1;
   min-height: 0;
   min-width: 0;
-  padding: 20px 22px;
+  /* No outer padding any more — the body header has its own
+     horizontal padding + a bottom border, and the inner content
+     wrapper picks up the rest. This means the header reads as a
+     true page-header strip flush with the body's top edge instead
+     of floating with margin around it. */
+  padding: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  /* Deep / near-black surface so the inner cards (which now sit on
+     `bg-secondary`) pop forward. Previously the body inherited the
+     panel's `bg-secondary` and the cards used `bg-primary` — i.e.
+     the body was lighter than its own cards, which made the cards
+     read as "recessed wells" rather than elevated content blocks.
+     Inverting that relationship — dark canvas, lighter cards —
+     also gives the rail (still on `bg-secondary`) a clear contrast
+     boundary against the body. */
+  background: var(--color-bg-primary);
+}
+
+/* Body header — icon + title + hint for the active pane. Sits in a
+   thin strip flush against the body's top edge with a bottom
+   divider, giving every pane a consistent identity that mirrors
+   the iconography in the rail. */
+.libre-settings-body__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--color-border-default);
+  /* Sticky so it stays in view while the pane content scrolls
+     underneath — a learner scrolled to the bottom of a long pane
+     can still see "you are in: Shortcuts". The background matches
+     the body's `bg-primary` so the sticky header reads as a flush
+     extension of the body surface rather than a separate strip. */
+  position: sticky;
+  top: 0;
+  background: var(--color-bg-primary);
+  z-index: 2;
+  flex-shrink: 0;
+}
+
+.libre-settings-body__header-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--libre-radius-md, 8px);
+  background: color-mix(in srgb, var(--color-accent, #f3a93a) 14%, transparent);
+  color: var(--color-accent, #f3a93a);
+}
+
+.libre-settings-body__header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.libre-settings-body__header-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: -0.005em;
+}
+
+.libre-settings-body__header-hint {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  letter-spacing: 0.1px;
+}
+
+/* Inner wrapper for the actual pane content. Restores the padding
+   that used to live on `.libre-settings-body` itself so existing
+   pane CSS that assumes a 20×22 inset still looks right. */
+.libre-settings-body > :not(.libre-settings-body__header) {
+  padding-left: 22px;
+  padding-right: 22px;
+}
+
+.libre-settings-body > :not(.libre-settings-body__header):first-of-type {
+  padding-top: 18px;
+}
+
+.libre-settings-body > :not(.libre-settings-body__header):last-child {
+  padding-bottom: 22px;
 }
 
 .libre-settings-section {
@@ -205,7 +517,7 @@
   padding: 8px 10px;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   color: var(--color-text-primary);
   font-family: "SF Mono", ui-monospace, Menlo, monospace;
   font-size: 12.5px;
@@ -239,7 +551,7 @@
   justify-content: center;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   color: var(--color-text-secondary);
   cursor: pointer;
   transition:
@@ -335,7 +647,7 @@
   padding: 8px 10px;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   cursor: pointer;
 }
 
@@ -344,8 +656,20 @@
   background: var(--color-bg-tertiary);
 }
 
+/* Hide the native radio input — the mini-app preview on the
+   left + the `is-active` row outline communicate the selection
+   state without the redundant OS-styled dot. Position it
+   absolutely and zero its dimensions so it stays in the
+   accessibility tree (screen readers + keyboard navigation
+   still work via the wrapping <label>), but it takes no space
+   and renders nothing. */
 .libre-settings-model input[type="radio"] {
-  margin-top: 3px;
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+  margin: 0;
 }
 
 .libre-settings-model-label {
@@ -401,7 +725,7 @@
   background: transparent;
   color: #ef6f6f;
   border: 1px solid rgba(239, 111, 111, 0.5);
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
@@ -424,7 +748,7 @@
   background: transparent;
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   font-size: 12px;
   cursor: pointer;
 }
@@ -444,7 +768,7 @@
   padding: 10px 12px;
   background: rgba(239, 111, 111, 0.08);
   border: 1px solid rgba(239, 111, 111, 0.35);
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   color: #f1b5b5;
   font-size: 12px;
   white-space: pre-wrap;
@@ -458,7 +782,7 @@
 .libre-settings-update {
   margin-top: 10px;
   padding: 14px;
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   border: 1px solid color-mix(in srgb, var(--color-text-primary) 30%, transparent);
   background: color-mix(in srgb, var(--color-text-primary) 4%, transparent);
 }
@@ -513,7 +837,7 @@
   line-height: 1.5;
   color: var(--color-text-secondary);
   background: var(--color-bg-tertiary);
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
 }
 
 /* Account section — identity card. Avatar + display name + email +
@@ -527,7 +851,7 @@
   margin-bottom: 14px;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
 }
 
 .libre-settings-account-avatar {
@@ -611,7 +935,7 @@
   gap: 10px;
   padding: 8px 10px;
   background: var(--color-bg-tertiary);
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
 }
 
 .libre-diagnostics-dot {
@@ -620,7 +944,7 @@
   width: 8px;
   height: 8px;
   margin-top: 6px;
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
 }
 
 .libre-diagnostics-dot--pass { background: #4ade80; }
@@ -677,7 +1001,7 @@
   font-size: 11.5px;
   color: var(--color-text-secondary);
   background: var(--color-bg-tertiary);
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
 }
 
 /* QR pair affordances (Show QR / Scan QR) under the assistant-host
@@ -699,7 +1023,7 @@
   padding: 7px 12px;
   background: var(--color-bg-secondary, #1a1a1f);
   border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.1));
-  border-radius: var(--fb-radius-pill, 999px);
+  border-radius: var(--libre-radius-pill, 999px);
   color: var(--color-text-secondary, #a4a4ad);
   font-family: inherit;
   font-size: 12.5px;
@@ -707,9 +1031,9 @@
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition:
-    background var(--fb-motion-quick, 120ms ease),
-    color var(--fb-motion-quick, 120ms ease),
-    border-color var(--fb-motion-quick, 120ms ease);
+    background var(--libre-motion-quick, 120ms ease),
+    color var(--libre-motion-quick, 120ms ease),
+    border-color var(--libre-motion-quick, 120ms ease);
 }
 
 .libre-settings-pair-btn:hover:not(:disabled),
@@ -755,7 +1079,7 @@
   width: 100%;
   background: var(--color-bg-primary, #0a0a0d);
   border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.1));
-  border-radius: var(--fb-radius-lg, 14px);
+  border-radius: var(--libre-radius-lg, 14px);
   box-shadow: 0 20px 60px -12px rgba(0, 0, 0, 0.6);
 }
 
@@ -838,8 +1162,8 @@
   border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.1));
   border-radius: 999px;
   transition:
-    background var(--fb-motion-quick, 120ms ease),
-    border-color var(--fb-motion-quick, 120ms ease);
+    background var(--libre-motion-quick, 120ms ease),
+    border-color var(--libre-motion-quick, 120ms ease);
   flex-shrink: 0;
 }
 
@@ -853,8 +1177,8 @@
   background: var(--color-text-secondary, #a4a4ad);
   border-radius: 50%;
   transition:
-    transform var(--fb-motion-quick, 120ms ease),
-    background var(--fb-motion-quick, 120ms ease);
+    transform var(--libre-motion-quick, 120ms ease),
+    background var(--libre-motion-quick, 120ms ease);
 }
 
 .libre-settings-toggle input:checked + .libre-settings-toggle-slider {
@@ -881,3 +1205,792 @@
 .libre-settings-toggle input:checked ~ .libre-settings-toggle-label {
   color: var(--color-text-primary, #f5f5f7);
 }
+
+/* ─────────────────────────────────────────────────────────────────
+ * Cipher-style primitives (page / card / row / switch).
+ *
+ * New visual chrome adapted from the Cipher messaging app's
+ * settings surface. Lives alongside the older `libre-settings-*`
+ * classes so existing panes keep working; new + migrated panes
+ * compose `SettingsPage` + `SettingsCard` + `SettingsRow` +
+ * `SettingsToggle` for a more spacious card-and-row reading.
+ *
+ * Pattern:
+ *   .libre-settings-page         page wrapper with head + stack
+ *   .libre-settings-page__head   h2 + paragraph blurb
+ *   .libre-settings-card         rounded panel grouping rows
+ *   .libre-settings-card__title  small uppercase chip at the top
+ *   .libre-settings-row          one settings row (icon + body + ctl)
+ *   .libre-settings-row__icon    chip-shaped icon container
+ *   .libre-settings-row__body    label + sub
+ *   .libre-settings-row__control right-aligned widget
+ *   .libre-settings-switch       pill toggle
+ * ─────────────────────────────────────────────────────────────── */
+
+.libre-settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 720px;
+}
+
+.libre-settings-page__head h2 {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0 0 4px;
+  color: var(--color-text-primary, #f5f5f7);
+}
+
+.libre-settings-page__head p {
+  font-size: 14px;
+  color: var(--color-text-secondary, rgba(245, 245, 247, 0.7));
+  max-width: 540px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ─── Card ───────────────────────────────────────────────────── */
+
+.libre-settings-card {
+  /* Cards now sit on a deep `bg-primary` body — they're the lifted
+     surface, so they take `bg-secondary` (the lighter token) and
+     read as elevated content blocks on top of the dark canvas.
+     This is the inverse of the pre-rework palette where the body
+     was lighter than the cards; the previous direction had cards
+     reading as recessed wells rather than elevated tiles. */
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.08));
+  border-radius: var(--libre-radius-lg, 12px);
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 4px 10px rgba(0, 0, 0, 0.18);
+}
+
+[data-theme="light"] .libre-settings-card {
+  /* Light themes invert the relationship — the body is white-ish
+     `bg-primary` and the cards lift to the warmer `bg-secondary`
+     so they still pop forward, just within a lighter overall
+     palette. The shadow stack drops to the softer light-theme
+     values that were already tuned for this surface. */
+  background: var(--color-bg-secondary, #f5f5f7);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 4px 10px rgba(0, 0, 0, 0.04);
+}
+
+.libre-settings-card__title {
+  padding: 16px 20px 0;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-tertiary, rgba(245, 245, 247, 0.5));
+}
+
+/* First row after a card title gets a small top margin so the
+   uppercase chip doesn't crowd into it. */
+.libre-settings-card__title + .libre-settings-row {
+  margin-top: 12px;
+}
+
+/* ─── Row ────────────────────────────────────────────────────── */
+
+.libre-settings-row {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+  /* Hairline rule between rows in the same card. The first row
+     gets no border via the explicit override below; the
+     `:not(:first-child)` selector handles every subsequent row
+     including ones that follow the card title chip. */
+  border-top: 1px solid var(--color-border-subtle, rgba(255, 255, 255, 0.05));
+  text-align: left;
+  width: 100%;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  /* Reset for the <button> variant of the row (when `onClick` is
+     set in the React component). */
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.libre-settings-row:first-child,
+.libre-settings-card__title + .libre-settings-row {
+  border-top: 0;
+}
+
+.libre-settings-row--no-icon {
+  grid-template-columns: 1fr auto;
+}
+
+.libre-settings-row--clickable {
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.libre-settings-row--clickable:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="light"] .libre-settings-row--clickable:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.libre-settings-row__icon {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-text-secondary, rgba(245, 245, 247, 0.7));
+}
+
+[data-theme="light"] .libre-settings-row__icon {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--color-text-secondary, #4a4f5c);
+}
+
+/* Accent + danger tones for the icon chip. Tinted backgrounds
+   match the row's semantic intent — accent rows highlight a
+   primary affordance, danger rows flag destructive actions. */
+.libre-settings-row--accent .libre-settings-row__icon {
+  background: color-mix(in srgb, var(--color-accent, #d4c5a1) 18%, transparent);
+  color: var(--color-accent, #d4c5a1);
+}
+
+.libre-settings-row--danger .libre-settings-row__icon {
+  background: rgba(239, 111, 111, 0.14);
+  color: #ef6f6f;
+}
+
+.libre-settings-row--danger .libre-settings-row__label {
+  color: #ef6f6f;
+}
+
+.libre-settings-row__body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.libre-settings-row__label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary, #f5f5f7);
+  line-height: 1.3;
+}
+
+.libre-settings-row__sub {
+  font-size: 12.5px;
+  color: var(--color-text-tertiary, rgba(245, 245, 247, 0.55));
+  line-height: 1.4;
+}
+
+.libre-settings-row__control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-secondary, rgba(245, 245, 247, 0.7));
+  font-size: 13px;
+}
+
+/* Native <select> styling inside the row — match the row's
+   visual weight rather than the OS default chrome which clashes
+   with the parchment-card look. */
+.libre-settings-row__control select {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.1));
+  color: var(--color-text-primary, #f5f5f7);
+  font-size: 13px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+[data-theme="light"] .libre-settings-row__control select {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+/* ─── Switch (pill toggle) ──────────────────────────────────── */
+
+.libre-settings-switch {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 160ms ease;
+  padding: 0;
+}
+
+[data-theme="light"] .libre-settings-switch {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.libre-settings-switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background: #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.libre-settings-switch--on {
+  background: var(--color-accent, #d4c5a1);
+}
+
+.libre-settings-switch--on::after {
+  transform: translateX(16px);
+}
+
+.libre-settings-switch:focus-visible {
+  outline: 2px solid var(--color-accent, #d4c5a1);
+  outline-offset: 3px;
+}
+
+.libre-settings-switch:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── Cue preview controls (Sounds pane) ───────────────────── */
+
+/* Circular Play button used as the per-cue row control on the
+   redesigned Sounds page. Compact icon-only chip; the tooltip /
+   aria-label carries the cue name for screen readers. */
+.libre-settings-cue-play {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.1));
+  color: var(--color-text-primary, #f5f5f7);
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    transform 100ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+  padding: 0;
+}
+
+[data-theme="light"] .libre-settings-cue-play {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.libre-settings-cue-play:hover {
+  background: color-mix(in srgb, var(--color-accent, #d4c5a1) 18%, transparent);
+  border-color: color-mix(in srgb, var(--color-accent, #d4c5a1) 40%, transparent);
+  color: var(--color-accent, #d4c5a1);
+}
+
+.libre-settings-cue-play:active {
+  transform: scale(0.94);
+}
+
+.libre-settings-cue-play:focus-visible {
+  outline: 2px solid var(--color-accent, #d4c5a1);
+  outline-offset: 2px;
+}
+
+/* Slider that lives inside a settings row's control cell. Sized
+   to fit the column without forcing the row to grow vertically.
+   The track + thumb pick up the active theme's accent colour;
+   the disabled state mutes to 40% so a learner can see the
+   slider IS disabled (not just empty). */
+.libre-settings-cue-slider {
+  width: 180px;
+  height: 4px;
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  cursor: pointer;
+  outline: none;
+  transition: opacity 140ms ease;
+}
+
+[data-theme="light"] .libre-settings-cue-slider {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.libre-settings-cue-slider:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.libre-settings-cue-slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--color-accent, #d4c5a1);
+  border: 2px solid var(--color-bg-primary, #1a1427);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: transform 100ms ease;
+}
+
+.libre-settings-cue-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.12);
+}
+
+.libre-settings-cue-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--color-accent, #d4c5a1);
+  border: 2px solid var(--color-bg-primary, #1a1427);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+
+/* ─── Segmented control ─────────────────────────────────────── */
+
+/* Pill cluster: every option is visible, the active one has an
+   inner-card chrome that lifts it above the muted neighbours.
+   Mirrors the Cipher "Compact | Cozy | Spacious" pattern. */
+.libre-settings-segmented {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  gap: 0;
+}
+
+[data-theme="light"] .libre-settings-segmented {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.libre-settings-segmented__btn {
+  padding: 4px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--color-text-secondary, rgba(245, 245, 247, 0.7));
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.libre-settings-segmented__btn:hover:not(.libre-settings-segmented__btn--active) {
+  color: var(--color-text-primary, #f5f5f7);
+}
+
+.libre-settings-segmented__btn--active {
+  background: var(--color-bg-primary, #1a1427);
+  color: var(--color-text-primary, #f5f5f7);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+}
+
+[data-theme="light"] .libre-settings-segmented__btn--active {
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.libre-settings-segmented__btn:focus-visible {
+  outline: 2px solid var(--color-accent, #d4c5a1);
+  outline-offset: 2px;
+}
+
+/* ─── Account profile tile + identity strip ────────────────── */
+
+/* Larger profile row that opens the Account pane — same
+   styling as a regular row but with the avatar swap-in and a
+   slight extra top padding so the avatar reads as the focal
+   point. */
+.libre-settings-row__avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-accent, #d4c5a1) 80%, transparent),
+    color-mix(in srgb, var(--color-accent, #d4c5a1) 40%, transparent)
+  );
+  color: #fff;
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+/* Wider profile-row icon slot to accommodate the avatar. The
+   row's grid template overrides via inline style on the
+   .libre-settings-row--avatar variant. */
+.libre-settings-row--avatar {
+  grid-template-columns: 64px 1fr auto;
+  align-items: center;
+  padding: 18px 20px;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+ * Cipher-style nav rail chrome.
+ *
+ * Title header + profile tile + flat list + footer. Replaces the
+ * old "search input + grouped sections" layout. The active-item
+ * accent-soft background is kept (defined above) — these rules
+ * just add the surrounding header / tile / footer + bump the
+ * per-item icon size to match Cipher's 36×36 chip pattern.
+ * ─────────────────────────────────────────────────────────────── */
+
+/* Title bar — "Settings" header at the very top of the rail. */
+.libre-settings-nav__title-bar {
+  padding: 20px 20px 12px;
+  border-bottom: 0;
+}
+
+.libre-settings-nav__title {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary, #f5f5f7);
+  margin: 0;
+}
+
+/* Profile tile — drills into Account. Sits below the title; only
+   rendered when signed in. Avatar is a 40×40 gradient circle
+   with the user's initial. */
+.libre-settings-nav__profile-tile {
+  display: grid;
+  grid-template-columns: 40px 1fr 16px;
+  align-items: center;
+  gap: 12px;
+  margin: 0 12px 16px;
+  padding: 8px;
+  border-radius: 10px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.04);
+  text-align: left;
+  cursor: pointer;
+  transition: background 140ms ease;
+}
+
+[data-theme="light"] .libre-settings-nav__profile-tile {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.libre-settings-nav__profile-tile:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] .libre-settings-nav__profile-tile:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.libre-settings-nav__profile-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-accent, #d4c5a1) 90%, transparent),
+    color-mix(in srgb, var(--color-accent, #d4c5a1) 45%, transparent)
+  );
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.libre-settings-nav__profile-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
+.libre-settings-nav__profile-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary, #f5f5f7);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.libre-settings-nav__profile-sub {
+  font-size: 12px;
+  color: var(--color-text-tertiary, rgba(245, 245, 247, 0.5));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.libre-settings-nav__profile-chev {
+  color: var(--color-text-tertiary, rgba(245, 245, 247, 0.45));
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Flat nav list — replaces the old `__groups` + group-titles
+   structure. */
+.libre-settings-nav__list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 12px 16px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* Override the older `.libre-settings-nav__item` grid + icon
+   sizing so each row matches Cipher's pattern: 36×36 icon chip /
+   1fr text / 16px chevron. The active-state colour rules
+   (set further up in this file) still apply. */
+.libre-settings-nav__item {
+  display: grid;
+  grid-template-columns: 36px 1fr 16px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+
+.libre-settings-nav__item-icon {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.libre-settings-nav__item-chev {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-tertiary, rgba(245, 245, 247, 0.5));
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.libre-settings-nav__item:hover .libre-settings-nav__item-chev,
+.libre-settings-nav__item--active .libre-settings-nav__item-chev {
+  opacity: 1;
+}
+
+.libre-settings-nav__item--active .libre-settings-nav__item-chev {
+  color: var(--color-accent, var(--color-text-primary));
+}
+
+/* Footer — version + theme chip at the bottom of the rail. */
+.libre-settings-nav__footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.05));
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary, rgba(245, 245, 247, 0.45));
+}
+
+/* Floating × close button — replaces the old top-of-panel
+   `libre-settings-header` close. Sits in the panel's top-right
+   corner with a circular hover background. */
+.libre-settings-close-floating {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-text-secondary, rgba(245, 245, 247, 0.7));
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+[data-theme="light"] .libre-settings-close-floating {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.libre-settings-close-floating:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--color-text-primary, #f5f5f7);
+}
+
+[data-theme="light"] .libre-settings-close-floating:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.libre-settings-close-floating:focus-visible {
+  outline: 2px solid var(--color-accent, #d4c5a1);
+  outline-offset: 2px;
+}
+
+/* ─── Theme-row mini-app preview ───────────────────────────────
+ *
+ * Sits between the radio input and the label/description column
+ * in each theme-picker row (see ThemePane.tsx). Renders a tiny
+ * mockup of the actual app layout — nav rail / sidebar / top bar
+ * / code lines — using the destination theme's bg / fg / accent
+ * colours, so the learner sees what the theme will look like in
+ * context (not just a three-stripe colour swatch).
+ *
+ * Per-theme `[data-theme="..."]` selectors below set
+ * `--swatch-bg / --swatch-fg / --swatch-accent` so the preview
+ * renders the destination palette regardless of which theme is
+ * currently APPLIED to the app. Mobile picker still uses the
+ * simpler three-stripe swatch (`.m-set__theme-swatch`) since
+ * there's less canvas to play with on phone widths.
+ * ─────────────────────────────────────────────────────────────── */
+
+.libre-settings-theme-preview {
+  flex: 0 0 108px;
+  width: 108px;
+  height: 68px;
+  display: grid;
+  /* 8px rail | 22px sidebar | rest = main area */
+  grid-template-columns: 8px 22px 1fr;
+  border-radius: 6px;
+  border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.1));
+  overflow: hidden;
+  background: var(--swatch-bg, #1a1a1f);
+  /* `box-sizing: content-box` here would let the grid columns sit
+     against the border. We want the columns inside the radius. */
+  box-sizing: border-box;
+}
+
+.libre-settings-theme-preview__rail {
+  background: color-mix(in srgb, var(--swatch-fg, #fff) 12%, transparent);
+  border-right: 1px solid
+    color-mix(in srgb, var(--swatch-fg, #fff) 14%, transparent);
+}
+
+.libre-settings-theme-preview__sidebar {
+  background: color-mix(in srgb, var(--swatch-fg, #fff) 6%, transparent);
+  border-right: 1px solid
+    color-mix(in srgb, var(--swatch-fg, #fff) 12%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 5px 3px;
+}
+
+.libre-settings-theme-preview__sidebar-row {
+  height: 3px;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--swatch-fg, #fff) 28%, transparent);
+}
+
+.libre-settings-theme-preview__sidebar-row--active {
+  background: var(--swatch-accent, #b69b5e);
+}
+
+.libre-settings-theme-preview__main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.libre-settings-theme-preview__topbar {
+  height: 7px;
+  background: color-mix(in srgb, var(--swatch-fg, #fff) 8%, transparent);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--swatch-fg, #fff) 12%, transparent);
+}
+
+.libre-settings-theme-preview__code {
+  flex: 1;
+  padding: 6px 7px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+
+.libre-settings-theme-preview__line {
+  height: 3px;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--swatch-fg, #fff) 55%, transparent);
+}
+
+.libre-settings-theme-preview__line--accent {
+  background: var(--swatch-accent, #b69b5e);
+  opacity: 0.95;
+}
+
+/* Per-theme reference colours. Hardcoded (not pulled from the
+   live `--color-*` tokens) so the preview always shows what the
+   theme will look like, not what the CURRENT theme looks like. */
+.libre-settings-theme-preview[data-theme="default-dark"]      { --swatch-bg: #000000; --swatch-fg: #ffffff; --swatch-accent: #ffffff; }
+.libre-settings-theme-preview[data-theme="cipher-light"]      { --swatch-bg: #ecedf3; --swatch-fg: #0f1324; --swatch-accent: #a85e1c; }
+.libre-settings-theme-preview[data-theme="cipher-dark"]       { --swatch-bg: #0c0f15; --swatch-fg: #f5f6fa; --swatch-accent: #a85e1c; }
+.libre-settings-theme-preview[data-theme="synthwave"]         { --swatch-bg: #1f1147; --swatch-fg: #ffffff; --swatch-accent: #ff77e1; }
+.libre-settings-theme-preview[data-theme="claude-code-dark"]  { --swatch-bg: #1d1815; --swatch-fg: #f0e6d8; --swatch-accent: #d97757; }
+.libre-settings-theme-preview[data-theme="ayu-light"]         { --swatch-bg: #fafafa; --swatch-fg: #1a1f29; --swatch-accent: #d4863a; }
+.libre-settings-theme-preview[data-theme="ayu-mirage"]        { --swatch-bg: #1f2430; --swatch-fg: #cbccc6; --swatch-accent: #ffcc66; }
+.libre-settings-theme-preview[data-theme="ayu-dark"]          { --swatch-bg: #0a0e14; --swatch-fg: #b3b1ad; --swatch-accent: #ff8f40; }
+.libre-settings-theme-preview[data-theme="catppuccin-latte"]  { --swatch-bg: #eff1f5; --swatch-fg: #4c4f69; --swatch-accent: #8839ef; }
+.libre-settings-theme-preview[data-theme="catppuccin-frappe"] { --swatch-bg: #303446; --swatch-fg: #c6d0f5; --swatch-accent: #ca9ee6; }
+.libre-settings-theme-preview[data-theme="catppuccin-macchiato"] { --swatch-bg: #24273a; --swatch-fg: #cad3f5; --swatch-accent: #c6a0f6; }
+.libre-settings-theme-preview[data-theme="catppuccin-mocha"]  { --swatch-bg: #1e1e2e; --swatch-fg: #cdd6f4; --swatch-accent: #cba6f7; }
+.libre-settings-theme-preview[data-theme="tokyo-night"]       { --swatch-bg: #1a1b26; --swatch-fg: #c0caf5; --swatch-accent: #bb9af7; }
+.libre-settings-theme-preview[data-theme="rose-pine"]         { --swatch-bg: #191724; --swatch-fg: #e0def4; --swatch-accent: #ebbcba; }
+.libre-settings-theme-preview[data-theme="ubuntu-dark"]       { --swatch-bg: #2c001e; --swatch-fg: #eeeeec; --swatch-accent: #e95420; }
+.libre-settings-theme-preview[data-theme="absent-contrast"]   { --swatch-bg: #0d181d; --swatch-fg: #cbd5e1; --swatch-accent: #5eead4; }
+.libre-settings-theme-preview[data-theme="vesper"]            { --swatch-bg: #101010; --swatch-fg: #ffffff; --swatch-accent: #ffc799; }
+.libre-settings-theme-preview[data-theme="word"]              { --swatch-bg: #b1b1b1; --swatch-fg: #0000ee; --swatch-accent: #ff00ff; }
+
+/* Theme rows are bigger now that they carry a 108×68 preview
+   panel — pad them out a bit so the preview has breathing room
+   and the label/description column doesn't crowd against it. */
+.libre-settings-model-group--scroll .libre-settings-model,
+.libre-settings-model-group--scroll + .libre-settings-model {
+  padding: 12px 14px;
+  gap: 14px;
+}
+
+.libre-settings-model-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+  justify-content: center;
+}
+

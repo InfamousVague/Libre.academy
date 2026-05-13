@@ -1,6 +1,7 @@
 /* Floating install banner — bottom-right, web-only. Mirrors the
-   visual vocabulary of the marketing site's accent palette so a
-   user clicking through from mattssoftware.com feels continuity. */
+   visual vocabulary of the libre.academy marketing site's accent
+   palette so a learner clicking through from the marketing site
+   into /learn/ feels visual continuity. */
 
 .libre-install-banner {
   position: fixed;
@@ -49,11 +50,11 @@
   background: transparent;
   color: rgba(255, 255, 255, 0.45);
   cursor: pointer;
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: color var(--fb-motion-snappy), background var(--fb-motion-snappy);
+  transition: color var(--libre-motion-snappy), background var(--libre-motion-snappy);
 }
 .libre-install-banner__close:hover {
   color: rgba(255, 255, 255, 0.85);

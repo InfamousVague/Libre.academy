@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { UseLibreCloud } from "../../../hooks/useLibreCloud";
 import { isWeb } from "../../../lib/platform";
+import { track } from "../../../lib/track";
 import PasswordField, { PASSWORD_MIN_LENGTH, scorePassword } from "./PasswordField";
 import ModalBackdrop from "../../Shared/ModalBackdrop";
 import "./SignInDialog.css";
@@ -237,6 +238,12 @@ export default function SignInDialog({
   /// browser tab.
   const oauthPopupRef = useRef<Window | null>(null);
   const oauthSessionRef = useRef<string | null>(null);
+  /// Remembers which provider the user picked when starting the
+  /// web OAuth popup. The returned token doesn't carry provider
+  /// info, so we stash it here at click-time and read it back in
+  /// the postMessage handler to fire `track.signin(provider)` with
+  /// the right value. Cleared alongside the popup/session refs.
+  const oauthProviderRef = useRef<"apple" | "google" | null>(null);
 
   /// Web OAuth flow — we can't use `libre://` deep-links from a
   /// browser, so the relay redirects to a `/oauth/done` page on this
@@ -252,7 +259,7 @@ export default function SignInDialog({
   const startWebOAuth = (provider: "apple" | "google", sessionId: string): boolean => {
     const returnTo = `${window.location.origin}/oauth/done`;
     const url =
-      `${cloud.relayUrl}/fishbones/auth/${provider}/start` +
+      `${cloud.relayUrl}/auth/${provider}/start` +
       `?session=${encodeURIComponent(sessionId)}` +
       `&return_to=${encodeURIComponent(returnTo)}`;
     // Width/height roughly match Google's recommended OAuth popup
@@ -268,6 +275,7 @@ export default function SignInDialog({
     }
     oauthPopupRef.current = win;
     oauthSessionRef.current = sessionId;
+    oauthProviderRef.current = provider;
     return true;
   };
 
@@ -307,6 +315,15 @@ export default function SignInDialog({
       // arrives after the user opened a new attempt with a fresh id.
       if (oauthSessionRef.current && data.session !== oauthSessionRef.current) return;
       if (data.token) {
+        // Web-OAuth path: the desktop flow goes through
+        // `signInApple`/`signInGoogle` in `useLibreCloud` (which
+        // already fire `track.signin`), but the web popup hands a
+        // pre-minted token to `applyOAuthToken` directly — that
+        // call has no provider context. Fire here using the
+        // provider we stashed at click time so the dashboard sees
+        // the signin event with the correct method.
+        const provider = oauthProviderRef.current;
+        if (provider) track.signin(provider);
         void cloud.applyOAuthToken(data.token);
       } else if (data.error) {
         setOauthError(data.error);
@@ -320,6 +337,7 @@ export default function SignInDialog({
       }
       oauthPopupRef.current = null;
       oauthSessionRef.current = null;
+      oauthProviderRef.current = null;
     }
     window.addEventListener("message", onMessage);
 

@@ -34,7 +34,7 @@
     {
       "id": "narration",
       "page": "courses",
-      "target": ".fb-tts-pill",
+      "target": ".libre-tts-pill",
       "placement": "bottom",
       "icon": "book-headphones",
       "iconColor": "#e86ec4",
@@ -62,14 +62,14 @@
       "body": "If writing from scratch is too much friction, switch to Blocks. The lesson becomes a drag-and-drop puzzle. Pick the right pieces, and the same tests run against the assembled code."
     },
     {
-      "id": "trees",
+      "id": "tracks",
       "page": "tracks",
-      "target": ".libre-trees__section--tracks",
+      "target": ".libre-tracks__viewport",
       "placement": "bottom",
-      "icon": "trees",
+      "icon": "train-track",
       "iconColor": "#22c55e",
-      "title": "Trees and Tracks",
-      "body": "Don't know where to start? Trees show the prerequisite graph for a topic — leaves first, mastery later. Tracks are curated linear paths through one or more trees, for when you want a recipe to follow instead of a graph to navigate."
+      "title": "Tracks",
+      "body": "Don't know where to start? Tracks are curated linear paths — pick an outcome (e.g. Front-End Engineer, Smart-Contract Developer) and follow the sequence. Every step lands on a real lesson in one of your installed books. Scroll the catalogue to fly through your options."
     },
     {
       "id": "discover",

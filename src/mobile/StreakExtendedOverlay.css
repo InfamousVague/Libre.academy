@@ -1,0 +1,311 @@
+/* Streak-extension celebration overlay (mobile). Dimmed backdrop +
+   centred card with the new streak count, a 7-day pill row, and a
+   "Keep going" dismissal button. All sub-elements animate in with
+   a staggered cascade so the celebration reads as built up rather
+   than flashed all at once. */
+
+.m-streak-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  /* Dim backdrop fades in over 180ms — matches the tap-feedback
+     timing the rest of the mobile UI uses so the celebration
+     doesn't feel jarringly slower than the action that triggered
+     it. */
+  background: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: m-streak-fade-in 0.18s ease-out;
+}
+
+.m-streak-overlay__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 340px;
+  width: 100%;
+  padding: 28px 22px 22px;
+  background: var(--color-bg-secondary, #0f0f0f);
+  border: 1px solid var(--color-border-card-strong, rgba(255, 255, 255, 0.18));
+  border-radius: 22px;
+  box-shadow:
+    0 22px 60px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  color: var(--color-text-primary, #fff);
+  text-align: center;
+  /* Spring-in animation. Slight upward translate + scale-up so
+     the card reads as "popping up to celebrate" rather than
+     materialising in place. */
+  animation: m-streak-card-pop 0.42s cubic-bezier(0.22, 1.4, 0.36, 1);
+  transform-origin: center bottom;
+}
+
+/* ── Flame ────────────────────────────────────────────────────── */
+.m-streak-overlay__flame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  /* Streak gradient — amber → ember orange, matches the flame
+     iconography used on streak pills + the longest-streak stat
+     tile elsewhere in the app. */
+  background: radial-gradient(
+    circle at 50% 35%,
+    #ffb961 0%,
+    #ff7438 55%,
+    #b53a16 100%
+  );
+  color: #fff7d8;
+  /* Subtle glow ring + flame-coloured drop-shadow so the icon
+     reads as actually radiating warmth rather than being a flat
+     stamp. */
+  box-shadow:
+    0 0 0 4px rgba(255, 116, 56, 0.15),
+    0 12px 28px rgba(255, 116, 56, 0.35);
+  animation: m-streak-flame-bounce 0.6s cubic-bezier(0.22, 1.4, 0.36, 1);
+}
+
+/* The big streak number — 72px serif italic to mirror the
+   certificate's recipient line typography ("you earned this"). */
+.m-streak-overlay__count {
+  font-family: Georgia, "Times New Roman", Times, serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 64px;
+  line-height: 1;
+  margin: 4px 0 -2px;
+  /* Match the flame's gradient on the number itself — paints the
+     digits in the warm streak palette. */
+  background: linear-gradient(180deg, #ffd58a 0%, #ff7438 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: m-streak-count-pop 0.55s 0.1s cubic-bezier(0.22, 1.4, 0.36, 1) both;
+}
+
+.m-streak-overlay__caption {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-text-secondary, #b0b0b8);
+  margin-bottom: 4px;
+  animation: m-streak-rise 0.4s 0.2s ease-out both;
+}
+
+/* ── 7-day week row ──────────────────────────────────────────── */
+.m-streak-overlay__week {
+  list-style: none;
+  margin: 8px 0 4px;
+  padding: 14px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.m-streak-overlay__day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  /* Per-pill staggered slide-up. `--i` is set inline from the
+     React render (0..6) — multiplied by 70ms gives a wave that
+     covers ~500ms total so the row reads as filling in one day
+     at a time. `backwards` keeps the pre-animation state hidden
+     until each pill's turn rolls around. */
+  opacity: 0;
+  animation: m-streak-day-in 0.42s cubic-bezier(0.22, 1.4, 0.36, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 70ms + 0.25s);
+}
+
+.m-streak-overlay__day-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary, #888);
+}
+
+.m-streak-overlay__day-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: var(--color-text-tertiary, #888);
+  transition:
+    background 200ms ease,
+    border-color 200ms ease,
+    color 200ms ease,
+    transform 200ms ease;
+}
+
+/* Empty-day placeholder — a small low-contrast dot inside the
+   ring. Reads as "no activity" without the visual weight of an
+   X or strike. */
+.m-streak-overlay__day-dot {
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.5;
+}
+
+/* Active day — pill lights up with the streak gradient and the
+   flame glyph paints inside. The pill also scales up slightly
+   (1.08) so the active days visually pop out of the row. */
+.m-streak-overlay__day--active .m-streak-overlay__day-mark {
+  background: radial-gradient(
+    circle at 50% 35%,
+    #ffb961 0%,
+    #ff7438 55%,
+    #b53a16 100%
+  );
+  border-color: rgba(255, 116, 56, 0.5);
+  color: #fff;
+  transform: scale(1.08);
+  box-shadow: 0 4px 10px rgba(255, 116, 56, 0.35);
+}
+
+.m-streak-overlay__day--active .m-streak-overlay__day-label {
+  color: var(--color-text-primary, #fff);
+}
+
+/* Today — accent outline so the learner can see where on the
+   week ribbon they are even when the active state masks the
+   default ring. The dotted outline reads as "you are here"
+   distinct from the active-day fill. */
+.m-streak-overlay__day--today .m-streak-overlay__day-mark {
+  outline: 2px dashed rgba(255, 255, 255, 0.4);
+  outline-offset: 2px;
+}
+
+.m-streak-overlay__day--today .m-streak-overlay__day-label {
+  color: var(--color-text-primary, #fff);
+}
+
+/* ── Dismissal button ────────────────────────────────────────── */
+.m-streak-overlay__btn {
+  margin-top: 4px;
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--color-text-primary, #fff);
+  color: var(--color-bg-primary, #000);
+  border: 0;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: transform 100ms ease, opacity 100ms ease;
+  animation: m-streak-rise 0.4s 0.3s ease-out both;
+}
+
+.m-streak-overlay__btn:active {
+  transform: scale(0.98);
+  opacity: 0.92;
+}
+
+/* ── Keyframes ───────────────────────────────────────────────── */
+
+@keyframes m-streak-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes m-streak-card-pop {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes m-streak-flame-bounce {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-12deg);
+  }
+  60% {
+    transform: scale(1.12) rotate(4deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes m-streak-count-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  60% {
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes m-streak-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes m-streak-day-in {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.85);
+  }
+  60% {
+    transform: translateY(-2px) scale(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .m-streak-overlay,
+  .m-streak-overlay__card,
+  .m-streak-overlay__flame,
+  .m-streak-overlay__count,
+  .m-streak-overlay__caption,
+  .m-streak-overlay__day,
+  .m-streak-overlay__btn {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}

@@ -33,6 +33,7 @@ import type {
 } from "../../data/achievements";
 import type { UnlockedRecord } from "../../lib/achievements";
 import AchievementBadge from "./AchievementBadge";
+import { useT } from "../../i18n/i18n";
 import "./Achievements.css";
 
 interface Props {
@@ -46,6 +47,7 @@ export default function AchievementsPage({
   unlocked,
   unlockedRecords,
 }: Props) {
+  const t = useT();
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<
     AchievementCategory | "all"
@@ -111,34 +113,34 @@ export default function AchievementsPage({
   }, [query, categoryFilter, unlocked]);
 
   return (
-    <div className="fb-ach-page">
-      <div className="fb-ach-page__inner">
-      <header className="fb-ach-page__head">
-        <div className="fb-ach-page__head-row">
+    <div className="libre-ach-page">
+      <div className="libre-ach-page__inner">
+      <header className="libre-ach-page__head">
+        <div className="libre-ach-page__head-row">
           <Icon icon={trophy} size="2xl" color="currentColor" />
-          <div className="fb-ach-page__head-text">
-            <span className="fb-ach-page__eyebrow">Achievements</span>
-            <h1 className="fb-ach-page__title">
-              {totalUnlocked} / {totalAvailable} earned
+          <div className="libre-ach-page__head-text">
+            <span className="libre-ach-page__eyebrow">{t("achievements.title")}</span>
+            <h1 className="libre-ach-page__title">
+              {t("achievements.earnedHeadline", { done: totalUnlocked, total: totalAvailable })}
             </h1>
           </div>
         </div>
-        <ul className="fb-ach-page__tier-counts">
+        <ul className="libre-ach-page__tier-counts">
           {TIER_ORDER.map((tier) => {
             const c = tierCounts[tier];
             const meta = TIER_META[tier];
             return (
               <li
                 key={tier}
-                className="fb-ach-page__tier-count"
+                className="libre-ach-page__tier-count"
                 style={
                   {
-                    "--fb-ach-tint": meta.color,
+                    "--libre-ach-tint": meta.color,
                   } as React.CSSProperties
                 }
               >
-                <span className="fb-ach-page__tier-dot" />
-                <span className="fb-ach-page__tier-label">
+                <span className="libre-ach-page__tier-dot" />
+                <span className="libre-ach-page__tier-label">
                   {tier} · {c.unlocked} / {c.total}
                 </span>
               </li>
@@ -147,30 +149,30 @@ export default function AchievementsPage({
         </ul>
       </header>
 
-      <div className="fb-ach-page__filters">
-        <label className="fb-ach-page__search">
+      <div className="libre-ach-page__filters">
+        <label className="libre-ach-page__search">
           <Icon icon={searchIcon} size="sm" color="currentColor" />
           <input
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search achievements"
-            aria-label="Search achievements"
+            placeholder={t("achievements.searchPlaceholder")}
+            aria-label={t("achievements.searchPlaceholder")}
           />
         </label>
-        <div className="fb-ach-page__category-pills">
+        <div className="libre-ach-page__category-pills">
           <button
             type="button"
-            className={`fb-ach-page__pill ${categoryFilter === "all" ? "fb-ach-page__pill--active" : ""}`}
+            className={`libre-ach-page__pill ${categoryFilter === "all" ? "libre-ach-page__pill--active" : ""}`}
             onClick={() => setCategoryFilter("all")}
           >
-            All
+            {t("achievements.filterAll")}
           </button>
           {CATEGORY_ORDER.map((cat) => (
             <button
               key={cat}
               type="button"
-              className={`fb-ach-page__pill ${categoryFilter === cat ? "fb-ach-page__pill--active" : ""}`}
+              className={`libre-ach-page__pill ${categoryFilter === cat ? "libre-ach-page__pill--active" : ""}`}
               onClick={() => setCategoryFilter(cat)}
             >
               {CATEGORY_LABEL[cat]}
@@ -179,16 +181,16 @@ export default function AchievementsPage({
         </div>
       </div>
 
-      <div className="fb-ach-page__sections">
+      <div className="libre-ach-page__sections">
         {CATEGORY_ORDER.map((cat) => {
           const list = grouped[cat];
           if (list.length === 0) return null;
           return (
-            <section key={cat} className="fb-ach-page__section">
-              <h2 className="fb-ach-page__section-title">
+            <section key={cat} className="libre-ach-page__section">
+              <h2 className="libre-ach-page__section-title">
                 {CATEGORY_LABEL[cat]}
               </h2>
-              <ul className="fb-ach-page__grid">
+              <ul className="libre-ach-page__grid">
                 {list.map((a) => {
                   const isUnlocked = unlocked.has(a.id);
                   const isMystery = !isUnlocked && a.hidden === true;
@@ -196,7 +198,7 @@ export default function AchievementsPage({
                   return (
                     <li
                       key={a.id}
-                      className={`fb-ach-page__tile ${isUnlocked ? "fb-ach-page__tile--unlocked" : "fb-ach-page__tile--locked"} ${isMystery ? "fb-ach-page__tile--mystery" : ""}`}
+                      className={`libre-ach-page__tile ${isUnlocked ? "libre-ach-page__tile--unlocked" : "libre-ach-page__tile--locked"} ${isMystery ? "libre-ach-page__tile--mystery" : ""}`}
                     >
                       <AchievementBadge
                         achievement={a}
@@ -204,23 +206,23 @@ export default function AchievementsPage({
                         mystery={isMystery}
                         size="md"
                       />
-                      <div className="fb-ach-page__tile-text">
-                        <span className="fb-ach-page__tile-title">
-                          {isMystery ? "???" : a.title}
+                      <div className="libre-ach-page__tile-text">
+                        <span className="libre-ach-page__tile-title">
+                          {isMystery ? t("achievements.mysteryTitle") : a.title}
                           {a.retired ? (
-                            <span className="fb-ach-page__retired-pill">
-                              retired
+                            <span className="libre-ach-page__retired-pill">
+                              {t("achievements.retired")}
                             </span>
                           ) : null}
                         </span>
-                        <span className="fb-ach-page__tile-blurb">
+                        <span className="libre-ach-page__tile-blurb">
                           {isMystery
-                            ? "Hidden achievement. Keep going."
+                            ? t("achievements.mysteryBlurb")
                             : a.blurb}
                         </span>
                         {isUnlocked && unlockedAt ? (
-                          <span className="fb-ach-page__tile-when">
-                            {formatRelative(unlockedAt)}
+                          <span className="libre-ach-page__tile-when">
+                            {formatRelative(unlockedAt, t)}
                           </span>
                         ) : null}
                       </div>
@@ -241,20 +243,34 @@ export default function AchievementsPage({
 /// when each was unlocked. We don't need a full Intl.RelativeTimeFormat
 /// pass; coarse buckets are fine ("today", "yesterday", "5 days ago",
 /// "3 months ago", "last year").
-function formatRelative(unlockedAt: number): string {
+function formatRelative(
+  unlockedAt: number,
+  t: (key: string, params?: Record<string, string | number>) => string,
+): string {
   const now = Date.now();
   const diff = Math.max(0, now - unlockedAt);
   const sec = Math.floor(diff / 1000);
-  if (sec < 60) return "just now";
+  if (sec < 60) return t("achievements.justNow");
   const min = Math.floor(sec / 60);
-  if (min < 60) return `${min} minute${min === 1 ? "" : "s"} ago`;
+  if (min < 60)
+    return min === 1
+      ? t("achievements.minutesAgo", { n: min })
+      : t("achievements.minutesAgoPlural", { n: min });
   const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr} hour${hr === 1 ? "" : "s"} ago`;
+  if (hr < 24)
+    return hr === 1
+      ? t("achievements.hoursAgo", { n: hr })
+      : t("achievements.hoursAgoPlural", { n: hr });
   const day = Math.floor(hr / 24);
-  if (day === 1) return "yesterday";
-  if (day < 30) return `${day} days ago`;
+  if (day === 1) return t("achievements.yesterday");
+  if (day < 30) return t("achievements.daysAgo", { n: day });
   const month = Math.floor(day / 30);
-  if (month < 12) return `${month} month${month === 1 ? "" : "s"} ago`;
+  if (month < 12)
+    return month === 1
+      ? t("achievements.monthsAgo", { n: month })
+      : t("achievements.monthsAgoPlural", { n: month });
   const yr = Math.floor(day / 365);
-  return `${yr} year${yr === 1 ? "" : "s"} ago`;
+  return yr === 1
+    ? t("achievements.yearsAgo", { n: yr })
+    : t("achievements.yearsAgoPlural", { n: yr });
 }

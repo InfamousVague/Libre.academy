@@ -167,8 +167,8 @@ export default function PartnerKeyboard({
     const pk = pkRef.current;
     if (!target || !pk) return;
 
-    const tabsEl = pk.querySelector(".fb-pk__tabs") as HTMLDivElement;
-    const rowEl = pk.querySelector(".fb-pk__row") as HTMLDivElement;
+    const tabsEl = pk.querySelector(".libre-pk__tabs") as HTMLDivElement;
+    const rowEl = pk.querySelector(".libre-pk__row") as HTMLDivElement;
     if (!tabsEl || !rowEl) return;
 
     // pointerdown / mousedown / touchstart preventDefault is what
@@ -271,7 +271,7 @@ export default function PartnerKeyboard({
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className =
-          "fb-pk__tab" + (cat === activeCategoryRef.current ? " fb-pk__tab--active" : "");
+          "libre-pk__tab" + (cat === activeCategoryRef.current ? " libre-pk__tab--active" : "");
         btn.textContent = cat;
         preventBlur(btn);
         btn.addEventListener("click", () => {
@@ -289,20 +289,20 @@ export default function PartnerKeyboard({
       for (const item of items) {
         const key = document.createElement("button");
         key.type = "button";
-        key.className = "fb-pk__key";
+        key.className = "libre-pk__key";
         if (typeof item === "string") {
           key.textContent = item;
           preventBlur(key);
           key.addEventListener("click", () => insertAtCursor(item));
         } else if ("action" in item) {
           key.textContent = item.label;
-          key.className += " fb-pk__key--mod";
-          if (item.label.length > 2) key.className += " fb-pk__key--wide";
+          key.className += " libre-pk__key--mod";
+          if (item.label.length > 2) key.className += " libre-pk__key--wide";
           preventBlur(key);
           key.addEventListener("click", () => runAction(item.action));
         } else {
           key.textContent = item.label;
-          if (item.label.length > 2) key.className += " fb-pk__key--wide fb-pk__key--snippet";
+          if (item.label.length > 2) key.className += " libre-pk__key--wide libre-pk__key--snippet";
           preventBlur(key);
           key.addEventListener("click", () =>
             insertAtCursor(item.insert, item.after ?? ""),
@@ -325,7 +325,7 @@ export default function PartnerKeyboard({
     //     region so the bar paints on TOP of the strip's bottom
     //     edge. That requires a NEGATIVE bottom on the strip: −44 px
     //     (= − IOS_ACCESSORY_BAR_PX). The matching `padding-bottom`
-    //     of 44 px on .fb-pk keeps the keys + tabs above the bar.
+    //     of 44 px on .libre-pk keeps the keys + tabs above the bar.
     //   - Older Safari without the directive: inset reports the
     //     keyboard's height (sometimes + the bar's 44 px). Same
     //     formula `inset − shim` lands the strip on the bar's top
@@ -338,7 +338,7 @@ export default function PartnerKeyboard({
     const sync = () => {
       const focused = document.activeElement === target;
       const shim = IS_IOS && focused ? IOS_ACCESSORY_BAR_PX : 0;
-      pk.style.setProperty("--fb-pk-shim", `${shim}px`);
+      pk.style.setProperty("--libre-pk-shim", `${shim}px`);
       const vv = window.visualViewport;
       if (!vv) {
         pk.style.bottom = "0px";
@@ -355,7 +355,7 @@ export default function PartnerKeyboard({
     };
 
     const onFocus = () => {
-      pk.classList.add("fb-pk--active");
+      pk.classList.add("libre-pk--active");
       sync();
       requestAnimationFrame(() => requestAnimationFrame(sync));
     };
@@ -366,7 +366,7 @@ export default function PartnerKeyboard({
       // quirks.
       setTimeout(() => {
         if (document.activeElement !== target) {
-          pk.classList.remove("fb-pk--active");
+          pk.classList.remove("libre-pk--active");
           sync();
         }
       }, 120);
@@ -411,12 +411,12 @@ export default function PartnerKeyboard({
   return createPortal(
     <div
       ref={pkRef}
-      className="fb-pk"
+      className="libre-pk"
       role="toolbar"
       aria-label="Coding symbols"
     >
-      <div className="fb-pk__tabs" />
-      <div className="fb-pk__row" />
+      <div className="libre-pk__tabs" />
+      <div className="libre-pk__row" />
     </div>,
     document.body,
   );

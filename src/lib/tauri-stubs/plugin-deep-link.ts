@@ -3,7 +3,7 @@
 /// Deep links rely on the OS registering a custom scheme (`libre://`)
 /// for the app — not a thing browsers do. The web build uses standard
 /// HTTPS redirect URIs for OAuth instead (Phase 5 wires that up at the
-/// `mattssoftware.com/play/oauth/done` route).
+/// `libre.academy/oauth/done` route).
 ///
 /// Both functions return shapes that the existing call sites already
 /// handle gracefully (no URLs, no listeners), so App.tsx's deep-link

@@ -129,16 +129,25 @@ const LEGACY_STARTER_IDS: ReadonlyArray<string> = [
   // course. Listed here so returning visitors who had it seeded see
   // it removed on next launch.
   "learning-zig",
+  // V16 — The V14 / V15 ingest seeded these under their
+  // `<curriculum>` suffix ids. V16 renames to the short slugs
+  // (`rustlings` / `ziglings`) to match the `/courses/<slug>`
+  // public URLs; including the old ids here prunes them from
+  // IndexedDB on the V16 re-seed so visitors don't end up with
+  // two copies of each book.
+  "rustlings-curriculum",
+  "ziglings-curriculum",
 ];
 
-/// Resolve a starter-courses path relative to the active build's base
-/// URL. The path is `/starter-courses/*` rooted at the deployed base
-/// (which on the deployed build is `mattssoftware.com/fishbones/learn/`,
-/// not the page origin). Vite's `import.meta.env.BASE_URL` gives us
-/// the correct prefix in both dev and prod.
+/// Resolve a starter-courses path to its absolute URL on the CDN.
+/// All course content (manifest + per-course JSON + covers) lives at
+/// `libre.academy/starter-courses/*` regardless of where the SPA
+/// itself is hosted (the web build under `/learn/`, a local dev
+/// server, etc.). Using an absolute URL means the seeder works the
+/// same on `npm run dev`, the production embed, and any future
+/// host — single source of truth.
 function starterUrl(path: string): string {
-  const base = (import.meta.env.BASE_URL || "/").replace(/\/$/, "");
-  return `${base}${path}`;
+  return `https://libre.academy${path}`;
 }
 
 /// Bump this whenever the seed format changes meaningfully — adding
@@ -233,7 +242,102 @@ function starterUrl(path: string): string {
 /// have these IDB-cached from V12 — bumping forces a re-seed pass
 /// whose `currentIds` set excludes the dropped books, and the
 /// existing prune step removes the orphaned IDB rows.
-const SEED_VERSION = 13;
+///
+/// V14 — Rustlings + Ziglings ingest. Imported the upstream
+/// Rustlings (94 exercises) and Ziglings (116 exercises) curricula
+/// as two new starter courses (`rustlings-curriculum` /
+/// `ziglings-curriculum`), each shipped with a custom cover JPEG
+/// from the docs/cover-prompts.md style sheet. Bumping so returning
+/// visitors re-fetch the manifest and pick up the two new entries
+/// + their covers without waiting for the next seed-altering change.
+///
+/// V15 — Rustlings + Ziglings unit tests. The V14 ingest left
+/// every exercise's `tests` field empty, which on the Zig runner
+/// meant the workbench never lit up a pass pill — `runZig`'s
+/// legacy harness only synthesises a "program exited cleanly"
+/// result when KATA_TEST markers are absent, and the run-mode
+/// fallback returns an empty test list. Rustlings inherited the
+/// same gap. V15 fills `tests` for every exercise: Rustlings
+/// hoists the upstream `#[cfg(test)] mod tests { ... }` block
+/// into the lesson tests (52 exercises) with a synthetic
+/// `rustlings_compiles` fallback for compile-only ones (42
+/// exercises); Ziglings synthesises a `test "<name> — <expected
+/// output>" { ... }` block per file that gates on compilation
+/// and surfaces the expected stdout in the test title so the
+/// learner has a visible target to eyeball their Run output
+/// against. Bumping so returning visitors re-fetch.
+///
+/// V16 — Rustlings + Ziglings rename. Slug-renamed
+/// `rustlings-curriculum` → `rustlings` and `ziglings-curriculum`
+/// → `ziglings` to match the public URL slugs at
+/// `libre.academy/courses/rustlings` + `/courses/ziglings`. The
+/// old ids were added to `LEGACY_STARTER_IDS` above so the
+/// V16 re-seed pass prunes the IDB rows that the V14/V15 seed
+/// wrote, before installing the renamed copies. Without this
+/// step, returning visitors would end up with both ids — a
+/// "Rustlings curriculum" entry next to the new "Rustlings"
+/// entry in their library.
+///
+/// V17 — Verification + content fixes:
+///   • Rustlings `intro1`: solution now mirrors the upstream
+///     starter verbatim (the canonical "no edit needed" lesson)
+///     so the cargo test compile produces meaningful output
+///     instead of the trivial empty-main the importer emitted.
+///   • Rustlings `hashmaps3`: the test-suite's `RESULTS`
+///     const was a multi-line string literal; the runtime's
+///     `indent(testCode, 4)` was prepending 4 spaces to every
+///     continuation line and silently corrupting the string
+///     contents (team-name keys like "France" became
+///     "    France"). Single-line `\n`-escaped literal sidesteps
+///     the indenter entirely.
+///   • Rustlings `smart-pointers3`: starter ships
+///     `#![forbid(unused_imports)]`; `forbid` overrules `allow`,
+///     so the wrapper's `#[allow(unused_imports)] use super::*;`
+///     couldn't suppress the lint on the compile-only test.
+///     Fixed by having the test reference `main` via the glob,
+///     making the import genuinely used.
+///   • Ziglings: re-imported with a fuzz-locating unified-diff
+///     applier. The upstream patches were generated against an
+///     older starter snapshot with line offsets shifted ±1 in
+///     places; the naive splice was mis-positioning hunks and
+///     corrupting solutions (most visibly `050_no_value`'s
+///     duplicated `const Err` + missing closing `}`). All 116
+///     Ziglings lessons now verify cleanly under `zig test`.
+/// Bumping so returning web visitors re-fetch the manifest and
+/// pick up the corrected course bodies.
+///
+/// V18 — Rustlings runtime fix (no content change, but the
+/// in-app web bundle ships a fixed `joinCodeAndTests`). Two
+/// regressions surfaced after V17:
+///   • `smart-pointers3` was still failing with E0453
+///     ("allow(unused_imports) incompatible with previous
+///     forbid") because the test-code wrapper carried
+///     `#[allow(unused_imports)] use super::*;` — `forbid`
+///     overrules `allow`, so the annotation itself errored
+///     before the unused-import check ever ran. Fixed by
+///     dropping the `#[allow]` outright and making the
+///     compile-only test template reference `main` so the
+///     import is genuinely used.
+///   • The test-wrapper's `indent(testCode, 4)` call was
+///     prepending 4 spaces to every line of the test code,
+///     including continuation lines INSIDE multi-line string
+///     literals — corrupting `hashmaps3`'s `const RESULTS = "…"`
+///     so half the team-name keys had leading spaces baked in.
+///     Retired `indent()`; Rust doesn't care about indentation,
+///     and the per-line space prefix had no upside to weigh
+///     against the string-literal corruption.
+/// Manifest bumps so returning visitors re-fetch.
+///
+/// V19 — Golings ingest. New starter course `golings` (43
+/// exercises across 13 chapters: variables, functions, if,
+/// switch, primitive_types, arrays, slices, maps, range,
+/// structs, anonymous_functions, generics, concurrent),
+/// ported from mauricioabreu/golings with hand-crafted Go
+/// solutions + KATA_TEST harnesses. All 43 lessons verify
+/// green under the headless native Go runner. Bumping so
+/// returning web visitors pick up the new entry + cover
+/// without waiting for the next seed-altering change.
+const SEED_VERSION = 19;
 
 /// Run the web seed if it hasn't run yet OR if the persisted
 /// `SEED_VERSION` is older than the current build's. Idempotent +

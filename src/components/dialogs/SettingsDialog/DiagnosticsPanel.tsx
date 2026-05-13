@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { rotateCcw } from "@base/primitives/icon/icons/rotate-ccw";
 import LanguageChip from "../../LanguageChip/LanguageChip";
 import MissingToolchainBanner from "../../banners/MissingToolchain/MissingToolchainBanner";
 import { useToolchainStatus } from "../../../hooks/useToolchainStatus";
 import { languageForCheckId } from "./helpers";
+import SettingsCard, { SettingsPage } from "./SettingsCard";
+import SettingsRow from "./SettingsRow";
+import { useT } from "../../../i18n/i18n";
 
 // ─── Diagnostics ──────────────────────────────────────────────────
 //
@@ -31,7 +35,20 @@ interface CheckResult {
   remedy?: string | null;
 }
 
-export default function DiagnosticsPanel(): React.ReactElement {
+interface DiagnosticsPanelProps {
+  /// When set, skip the outer `SettingsPage` (title + description)
+  /// wrapper and just render the status + per-category cards. Used
+  /// when this panel is composed inside another pane's
+  /// `SettingsPage` (e.g. the combined Data & storage pane); the
+  /// parent provides the page-level title and we contribute only
+  /// the inner sections.
+  embedded?: boolean;
+}
+
+export default function DiagnosticsPanel({
+  embedded,
+}: DiagnosticsPanelProps = {}): React.ReactElement {
+  const t = useT();
   const [checks, setChecks] = useState<CheckResult[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -76,49 +93,54 @@ export default function DiagnosticsPanel(): React.ReactElement {
   const failCount = (checks ?? []).filter((c) => c.status === "fail").length;
   const warnCount = (checks ?? []).filter((c) => c.status === "warn").length;
 
-  return (
-    <section>
-      <h3 className="libre-settings-section">Resources</h3>
-      <p className="libre-settings-blurb">
-        Read-only probes for bundled assets and user data. If something on
-        the app is missing or broken, the cause usually shows up here as a
-        red row with a remedy hint. Send a screenshot of this pane when
-        filing a bug.
-      </p>
+  const statusLabel = loading
+    ? t("settings.runningChecks")
+    : checks
+      ? failCount > 0
+        ? t(failCount === 1 ? "settings.checksFailing" : "settings.checksFailingPlural", {
+            count: failCount,
+          })
+        : warnCount > 0
+          ? t(warnCount === 1 ? "settings.warningsCount" : "settings.warningsCountPlural", {
+              count: warnCount,
+            })
+          : t("settings.everythingGood")
+      : "";
 
-      <div className="libre-settings-data-row">
-        <div>
-          <div className="libre-settings-data-label">
-            {loading
-              ? "Running checks…"
-              : checks
-                ? failCount > 0
-                  ? `${failCount} ${failCount === 1 ? "check" : "checks"} failing`
-                  : warnCount > 0
-                    ? `${warnCount} ${warnCount === 1 ? "warning" : "warnings"}`
-                    : "Everything looks good"
-                : ""}
-          </div>
-          {error && (
-            <div className="libre-settings-data-hint">
-              Resource probes failed to run: {error}
-            </div>
-          )}
-        </div>
-        <button
-          className="libre-settings-secondary"
-          onClick={() => void run()}
-          disabled={loading}
-        >
-          {loading ? "…" : "Re-run"}
-        </button>
-      </div>
+  const body = (
+    <>
+      <SettingsCard title={t("settings.toolchainStatus")}>
+        <SettingsRow
+          icon={rotateCcw}
+          tone={
+            failCount > 0
+              ? "danger"
+              : warnCount > 0
+                ? "accent"
+                : "default"
+          }
+          label={statusLabel}
+          sub={
+            error
+              ? t("settings.resourceProbesFailed", { error })
+              : undefined
+          }
+          control={
+            <button
+              className="libre-settings-secondary"
+              onClick={() => void run()}
+              disabled={loading}
+            >
+              {loading ? t("settings.rerunEllipsis") : t("settings.rerun")}
+            </button>
+          }
+        />
+      </SettingsCard>
 
       {checks &&
         Array.from(byCategory.entries()).map(([cat, items]) => (
-          <div key={cat} className="libre-diagnostics-group">
-            <div className="libre-diagnostics-group-title">{cat}</div>
-            <ul className="libre-diagnostics-list">
+          <SettingsCard key={cat} title={cat}>
+            <ul className="libre-diagnostics-list" style={{ padding: 0 }}>
               {items.map((c) => {
                 const lang = languageForCheckId(c.id);
                 const canInstall = c.status !== "pass" && !!lang;
@@ -158,7 +180,7 @@ export default function DiagnosticsPanel(): React.ReactElement {
                               className="libre-settings-secondary"
                               onClick={() => setExpandedInstallId(c.id)}
                             >
-                              Install {capitalize(lang)}
+                              {t("settings.installLanguage", { language: capitalize(lang) })}
                             </button>
                           ) : (
                             <ToolchainInstallSlot
@@ -177,9 +199,19 @@ export default function DiagnosticsPanel(): React.ReactElement {
                 );
               })}
             </ul>
-          </div>
+          </SettingsCard>
         ))}
-    </section>
+    </>
+  );
+
+  if (embedded) return body;
+  return (
+    <SettingsPage
+      title={t("settings.diagnosticsTitle")}
+      description={t("settings.diagnosticsDescription")}
+    >
+      {body}
+    </SettingsPage>
   );
 }
 
@@ -197,13 +229,14 @@ function ToolchainInstallSlot({
   onInstalled: () => void;
   onDismiss: () => void;
 }): React.ReactElement {
+  const t = useT();
   // cacheBust=0 is fine here; the slot mounts on click, probes once,
   // and the parent unmounts it on `onInstalled`.
   const { status, loading } = useToolchainStatus(language, 0);
   if (loading) {
     return (
       <div className="libre-diagnostics-install-loading">
-        Probing {capitalize(language)} install hint…
+        {t("settings.probingInstallHint", { language: capitalize(language) })}
       </div>
     );
   }
@@ -213,8 +246,7 @@ function ToolchainInstallSlot({
     // the slot and trigger a re-probe so the row updates anyway.
     return (
       <div className="libre-diagnostics-install-loading">
-        No install recipe shipped for {capitalize(language)}. Try the
-        remedy hint above.
+        {t("settings.noInstallRecipe", { language: capitalize(language) })}
       </div>
     );
   }

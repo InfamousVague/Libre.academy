@@ -5,21 +5,21 @@
    (so clicking outside the tooltip dismisses); pointer-events:
    none on the mask + spotlight so they don't eat clicks meant
    for the highlighted UI underneath. */
-.fb-tour {
+.libre-tour {
   position: fixed;
   inset: 0;
   z-index: 9000;
   pointer-events: none;
 }
 
-.fb-tour__backdrop {
+.libre-tour__backdrop {
   position: absolute;
   inset: 0;
   pointer-events: auto;
   cursor: pointer;
 }
 
-.fb-tour__backdrop-full {
+.libre-tour__backdrop-full {
   position: absolute;
   inset: 0;
   background: rgba(8, 8, 12, 0.62);
@@ -32,7 +32,7 @@
    `mask-composite: exclude` so the spotlight rect is cut out of
    the dim. Everything outside the spotlight reads as a 62%
    black overlay; inside, the underlying UI shows clean. */
-.fb-tour__backdrop-mask {
+.libre-tour__backdrop-mask {
   position: absolute;
   inset: 0;
   background: rgba(8, 8, 12, 0.62);
@@ -44,7 +44,7 @@
    target. Pointer-events: none so the highlighted UI is still
    clickable (Tour is non-interactive on the target itself; we
    just point at it). */
-.fb-tour__spotlight {
+.libre-tour__spotlight {
   position: fixed;
   border-radius: 10px;
   box-shadow:
@@ -61,7 +61,7 @@
 
 /* ── Tooltip card ───────────────────────────────────────────── */
 
-.fb-tour__tooltip {
+.libre-tour__tooltip {
   position: fixed;
   width: 360px;
   max-width: calc(100vw - 32px);
@@ -83,10 +83,10 @@
   /* Slide-in entrance — the tooltip remounts every step (key
      prop in JSX), so this animation re-runs on each transition
      for a deliberate "now look here" cue. */
-  animation: fb-tour-slide-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: libre-tour-slide-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-@keyframes fb-tour-slide-in {
+@keyframes libre-tour-slide-in {
   from {
     opacity: 0;
     transform: translate3d(0, 6px, 0) scale(0.985);
@@ -102,24 +102,24 @@
    the entrance-animation transform. We compose by overriding
    `animation: none` for the centered case and using a softer
    fade instead. */
-.fb-tour__tooltip[style*="translate(-50%"] {
-  animation: fb-tour-fade-in 220ms ease both;
+.libre-tour__tooltip[style*="translate(-50%"] {
+  animation: libre-tour-fade-in 220ms ease both;
 }
-@keyframes fb-tour-fade-in {
+@keyframes libre-tour-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
 /* ── Progress bar (top edge of tooltip) ─────────────────────── */
 
-.fb-tour__progress-bar {
+.libre-tour__progress-bar {
   position: relative;
   height: 4px;
   background: rgba(212, 197, 161, 0.08);
   overflow: hidden;
 }
 
-.fb-tour__progress-fill {
+.libre-tour__progress-fill {
   position: absolute;
   inset: 0 auto 0 0;
   background: rgba(212, 197, 161, 0.45);
@@ -130,7 +130,7 @@
    axis, lighter colour, narrower so both layers are legible at a
    glance — wide bar = step progress, bright thin overlay =
    "where we are inside the current step's narration". */
-.fb-tour__progress-audio {
+.libre-tour__progress-audio {
   position: absolute;
   top: 1px;
   bottom: 1px;
@@ -142,14 +142,14 @@
 
 /* ── Header ─────────────────────────────────────────────────── */
 
-.fb-tour__header {
+.libre-tour__header {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 16px 18px 8px;
 }
 
-.fb-tour__icon {
+.libre-tour__icon {
   width: 36px;
   height: 36px;
   border-radius: 9px;
@@ -159,12 +159,12 @@
   flex: 0 0 auto;
 }
 
-.fb-tour__header-text {
+.libre-tour__header-text {
   flex: 1 1 auto;
   min-width: 0;
 }
 
-.fb-tour__step-label {
+.libre-tour__step-label {
   font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.6px;
@@ -172,7 +172,7 @@
   color: rgba(234, 234, 234, 0.55);
 }
 
-.fb-tour__title {
+.libre-tour__title {
   font-size: 15px;
   font-weight: 600;
   line-height: 1.25;
@@ -180,7 +180,7 @@
   margin-top: 2px;
 }
 
-.fb-tour__mute {
+.libre-tour__mute {
   flex: 0 0 auto;
   width: 28px;
   height: 28px;
@@ -195,14 +195,14 @@
   transition: background 120ms ease, color 120ms ease;
 }
 
-.fb-tour__mute:hover {
+.libre-tour__mute:hover {
   background: rgba(212, 197, 161, 0.08);
   color: rgba(234, 234, 234, 0.85);
 }
 
 /* ── Body ───────────────────────────────────────────────────── */
 
-.fb-tour__body {
+.libre-tour__body {
   padding: 4px 18px 14px;
   font-size: 13.5px;
   line-height: 1.55;
@@ -211,14 +211,14 @@
 
 /* ── Dot row (step indicator) ──────────────────────────────── */
 
-.fb-tour__dots {
+.libre-tour__dots {
   display: flex;
   justify-content: center;
   gap: 6px;
   padding: 0 18px 12px;
 }
 
-.fb-tour__dot {
+.libre-tour__dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
@@ -226,18 +226,18 @@
   transition: background 180ms ease, transform 180ms ease;
 }
 
-.fb-tour__dot--done {
+.libre-tour__dot--done {
   background: rgba(212, 197, 161, 0.55);
 }
 
-.fb-tour__dot--active {
+.libre-tour__dot--active {
   background: rgba(212, 197, 161, 0.95);
   transform: scale(1.4);
 }
 
 /* ── Footer + buttons ──────────────────────────────────────── */
 
-.fb-tour__footer {
+.libre-tour__footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -246,13 +246,13 @@
   border-top: 1px solid rgba(212, 197, 161, 0.08);
 }
 
-.fb-tour__actions {
+.libre-tour__actions {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.fb-tour__btn {
+.libre-tour__btn {
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 600;
@@ -263,17 +263,17 @@
   transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
 }
 
-.fb-tour__btn--ghost {
+.libre-tour__btn--ghost {
   background: transparent;
   color: rgba(234, 234, 234, 0.7);
 }
 
-.fb-tour__btn--ghost:hover {
+.libre-tour__btn--ghost:hover {
   background: rgba(212, 197, 161, 0.08);
   color: rgba(234, 234, 234, 0.95);
 }
 
-.fb-tour__btn--icon {
+.libre-tour__btn--icon {
   padding: 7px 8px;
   min-width: 32px;
   display: inline-flex;
@@ -281,19 +281,19 @@
   justify-content: center;
 }
 
-.fb-tour__btn--primary {
+.libre-tour__btn--primary {
   background: rgba(212, 197, 161, 0.92);
   color: #1a1a1f;
 }
 
-.fb-tour__btn--primary:hover {
+.libre-tour__btn--primary:hover {
   background: rgba(228, 215, 184, 0.98);
 }
 
 /* ── Mobile-narrow tweaks ──────────────────────────────────── */
 
 @media (max-width: 720px) {
-  .fb-tour__tooltip {
+  .libre-tour__tooltip {
     width: calc(100vw - 32px);
   }
 }

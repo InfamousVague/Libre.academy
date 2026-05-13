@@ -35,6 +35,8 @@ export type MonacoThemeName =
 /// editor disappears into the page in both modes.
 export const MONACO_THEME_BY_APP_THEME: Record<ThemeName, MonacoThemeName> = {
   "default-dark": "libre-dark",
+  "cipher-light": "libre-light",
+  "cipher-dark": "libre-dark",
   synthwave: "libre-synthwave",
   "claude-code-dark": "libre-claude-code-dark",
   "ayu-light": "libre-light",

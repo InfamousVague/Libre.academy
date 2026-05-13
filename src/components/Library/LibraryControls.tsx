@@ -22,6 +22,7 @@ import {
   type CourseCategory,
   type CryptoChain,
 } from "./categorize";
+import { useT } from "../../i18n/i18n";
 
 /// Single-row filter chips + popover + tools — replaced the earlier
 /// 4-row stack of pill bars (category / chain / language / kind) plus
@@ -51,6 +52,7 @@ export interface CategoryCountsShape {
 }
 export interface KindCountsShape {
   books: number;
+  tracks: number;
   challenges: number;
   all: number;
 }
@@ -59,11 +61,11 @@ export interface LibraryControlsProps {
   categoryFilter: "all" | CourseCategory;
   chainFilter: "all" | CryptoChain;
   langFilter: "all" | LanguageId;
-  kindFilter: "all" | "books" | "challenges";
+  kindFilter: "all" | "books" | "tracks" | "challenges";
   onSetCategory: (c: "all" | CourseCategory) => void;
   onSetChain: (c: "all" | CryptoChain) => void;
   onSetLang: (l: "all" | LanguageId) => void;
-  onSetKind: (k: "all" | "books" | "challenges") => void;
+  onSetKind: (k: "all" | "books" | "tracks" | "challenges") => void;
   categoryCounts: CategoryCountsShape;
   chainCounts: ChainCountsShape;
   countByLang: Map<string, number>;
@@ -78,6 +80,7 @@ export interface LibraryControlsProps {
 }
 
 export default function LibraryControls(p: LibraryControlsProps): ReactElement {
+  const t = useT();
   const [filterOpen, setFilterOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement | null>(null);
 
@@ -111,7 +114,7 @@ export default function LibraryControls(p: LibraryControlsProps): ReactElement {
   if (p.categoryFilter !== "all") {
     activeChips.push({
       key: "cat",
-      label: p.categoryFilter === "crypto" ? "Crypto" : "Programming",
+      label: p.categoryFilter === "crypto" ? t("library.chipCrypto") : t("library.chipProgramming"),
       clear: () => p.onSetCategory("all"),
     });
   }
@@ -134,7 +137,12 @@ export default function LibraryControls(p: LibraryControlsProps): ReactElement {
   if (p.kindFilter !== "all") {
     activeChips.push({
       key: "kind",
-      label: p.kindFilter === "books" ? "Books" : "Challenges",
+      label:
+        p.kindFilter === "books"
+          ? t("library.books")
+          : p.kindFilter === "tracks"
+            ? t("library.tracks")
+            : t("library.challenges"),
       clear: () => p.onSetKind("all"),
     });
   }
@@ -153,7 +161,7 @@ export default function LibraryControls(p: LibraryControlsProps): ReactElement {
               type="button"
               className="libre-library-filter-chip-x"
               onClick={c.clear}
-              aria-label={`Remove ${c.label} filter`}
+              aria-label={t("library.removeFilter", { label: c.label })}
             >
               <Icon icon={xIcon} size="xs" color="currentColor" />
             </button>
@@ -169,7 +177,7 @@ export default function LibraryControls(p: LibraryControlsProps): ReactElement {
           aria-expanded={filterOpen}
         >
           <Icon icon={filterIcon} size="xs" color="currentColor" />
-          <span>{activeChips.length === 0 ? "Filter" : "More"}</span>
+          <span>{activeChips.length === 0 ? t("library.filter") : t("library.more")}</span>
         </button>
 
         {filterOpen && (
@@ -204,14 +212,14 @@ export default function LibraryControls(p: LibraryControlsProps): ReactElement {
           <input
             type="search"
             className="libre-library-search"
-            placeholder="Search…"
+            placeholder={t("library.searchPlaceholder")}
             value={p.query}
             onChange={(e) => p.onSetQuery(e.target.value)}
           />
         </label>
         <label
           className="libre-library-sort libre-library-sort--compact"
-          title="Sort order"
+          title={t("library.sortOrderTitle")}
         >
           <Icon icon={arrowUpDown} size="xs" color="currentColor" />
           <select
@@ -219,15 +227,15 @@ export default function LibraryControls(p: LibraryControlsProps): ReactElement {
             value={p.sortBy}
             onChange={(e) => p.onSetSort(e.target.value as SortKey)}
           >
-            <option value="name">Name (A–Z)</option>
-            <option value="progress">Progress</option>
-            <option value="lessons">Lesson count</option>
+            <option value="name">{t("library.sortName")}</option>
+            <option value="progress">{t("library.sortProgress")}</option>
+            <option value="lessons">{t("library.sortLessonCount")}</option>
           </select>
         </label>
         <div
           className="libre-library-viewmode"
           role="tablist"
-          aria-label="View mode"
+          aria-label={t("library.viewMode")}
         >
           <button
             type="button"
@@ -239,8 +247,8 @@ export default function LibraryControls(p: LibraryControlsProps): ReactElement {
                 : ""
             }`}
             onClick={() => p.onSetViewMode("shelf")}
-            title="Shelf view — book covers"
-            aria-label="Shelf view"
+            title={t("library.shelfViewTitle")}
+            aria-label={t("library.shelfView")}
           >
             <Icon icon={rows3} size="xs" color="currentColor" />
           </button>
@@ -254,8 +262,8 @@ export default function LibraryControls(p: LibraryControlsProps): ReactElement {
                 : ""
             }`}
             onClick={() => p.onSetViewMode("grid")}
-            title="Grid view — info cards"
-            aria-label="Grid view"
+            title={t("library.gridViewTitle")}
+            aria-label={t("library.gridView")}
           >
             <Icon icon={layoutGrid} size="xs" color="currentColor" />
           </button>
@@ -286,7 +294,7 @@ interface FilterPopoverProps {
   categoryFilter: "all" | CourseCategory;
   chainFilter: "all" | CryptoChain;
   langFilter: "all" | LanguageId;
-  kindFilter: "all" | "books" | "challenges";
+  kindFilter: "all" | "books" | "tracks" | "challenges";
   categoryCounts: CategoryCountsShape;
   chainCounts: ChainCountsShape;
   countByLang: Map<string, number>;
@@ -295,17 +303,25 @@ interface FilterPopoverProps {
   onSetCategory: (c: "all" | CourseCategory) => void;
   onSetChain: (c: "all" | CryptoChain) => void;
   onSetLang: (l: "all" | LanguageId) => void;
-  onSetKind: (k: "all" | "books" | "challenges") => void;
+  onSetKind: (k: "all" | "books" | "tracks" | "challenges") => void;
 }
 
 function FilterPopover(p: FilterPopoverProps): ReactElement {
+  const t = useT();
   const showCategory =
     p.categoryCounts.crypto > 0 && p.categoryCounts.programming > 0;
   const showChain =
     p.categoryFilter === "crypto" &&
     p.chainCounts.all > 0 &&
     chainCountsHasMultiple(p.chainCounts.byChain);
-  const showKind = p.kindCounts.books > 0 && p.kindCounts.challenges > 0;
+  // Kind section visible when there are at least two distinct buckets
+  // to switch between. With three buckets (books / tracks / challenges)
+  // any pair-or-more non-zero count gives the user something to pick.
+  const kindBucketsPresent =
+    (p.kindCounts.books > 0 ? 1 : 0) +
+    (p.kindCounts.tracks > 0 ? 1 : 0) +
+    (p.kindCounts.challenges > 0 ? 1 : 0);
+  const showKind = kindBucketsPresent >= 2;
   const langPills = LANG_PILLS.filter(
     (l) =>
       l.id === "all" ||
@@ -318,10 +334,10 @@ function FilterPopover(p: FilterPopoverProps): ReactElement {
     <div
       className="libre-library-filter-pop"
       role="dialog"
-      aria-label="Filter courses"
+      aria-label={t("library.filterCourses")}
     >
       {showCategory && (
-        <FilterSection title="Category">
+        <FilterSection title={t("library.filterCategory")}>
           {CATEGORY_PILLS.map((cp) => {
             const count =
               cp.id === "all"
@@ -343,7 +359,7 @@ function FilterPopover(p: FilterPopoverProps): ReactElement {
       )}
 
       {showChain && (
-        <FilterSection title="Chain">
+        <FilterSection title={t("library.filterChain")}>
           {CHAIN_PILLS.filter(
             (cp) =>
               cp.id === "all" ||
@@ -368,7 +384,7 @@ function FilterPopover(p: FilterPopoverProps): ReactElement {
       )}
 
       {showLang && (
-        <FilterSection title="Language">
+        <FilterSection title={t("library.filterLanguage")}>
           {langPills.map((lp) => {
             const count =
               lp.id === "all"
@@ -388,25 +404,37 @@ function FilterPopover(p: FilterPopoverProps): ReactElement {
       )}
 
       {showKind && (
-        <FilterSection title="Kind">
+        <FilterSection title={t("library.filterKind")}>
           <FilterOption
-            label="All"
+            label={t("library.filterAll")}
             count={p.kindCounts.all}
             active={p.kindFilter === "all"}
             onSelect={() => p.onSetKind("all")}
           />
-          <FilterOption
-            label="Books"
-            count={p.kindCounts.books}
-            active={p.kindFilter === "books"}
-            onSelect={() => p.onSetKind("books")}
-          />
-          <FilterOption
-            label="Challenges"
-            count={p.kindCounts.challenges}
-            active={p.kindFilter === "challenges"}
-            onSelect={() => p.onSetKind("challenges")}
-          />
+          {p.kindCounts.books > 0 && (
+            <FilterOption
+              label={t("library.books")}
+              count={p.kindCounts.books}
+              active={p.kindFilter === "books"}
+              onSelect={() => p.onSetKind("books")}
+            />
+          )}
+          {p.kindCounts.tracks > 0 && (
+            <FilterOption
+              label={t("library.tracks")}
+              count={p.kindCounts.tracks}
+              active={p.kindFilter === "tracks"}
+              onSelect={() => p.onSetKind("tracks")}
+            />
+          )}
+          {p.kindCounts.challenges > 0 && (
+            <FilterOption
+              label={t("library.challenges")}
+              count={p.kindCounts.challenges}
+              active={p.kindFilter === "challenges"}
+              onSelect={() => p.onSetKind("challenges")}
+            />
+          )}
         </FilterSection>
       )}
     </div>

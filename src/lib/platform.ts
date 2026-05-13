@@ -4,7 +4,7 @@
 /// (see vite.config.ts) so dead-code elimination drops the wrong
 /// branch from each bundle. Use them everywhere a code path needs to
 /// differ between the Tauri shell and the static-hosted build at
-/// `mattssoftware.com/play`.
+/// `libre.academy/learn`.
 ///
 /// Phase 1 of the web-build rollout. Later phases consume this module
 /// for:
@@ -13,14 +13,14 @@
 ///     languages to a `desktopOnly` `RunResult`; library hides
 ///     ingest / Ollama / toolchain probes.
 ///   - Phase 4: `useAiChat` swaps Tauri streaming for a direct
-///     `fetch` against `api.mattssoftware.com`.
+///     `fetch` against `api.libre.academy`.
 ///   - Phase 5: `<InstallBanner>` mounts and uses `downloadUrl()` to
 ///     pick the OS-appropriate primary CTA.
 
 import type { LanguageId } from "../data/types";
 
 /// Build target — either "desktop" (the Tauri shell) or "web" (the
-/// static-hosted build on mattssoftware.com/play). Threaded through
+/// static-hosted build on libre.academy/learn). Threaded through
 /// Vite's `define` from the `LIBRE_TARGET` env var, so dev /
 /// preview / prod all resolve the same way.
 export const TARGET: "desktop" | "web" =
@@ -64,6 +64,27 @@ function detectMobile(): boolean {
     /Macintosh|Mac\s?OS\s?X/i.test(ua)
   ) {
     return true;
+  }
+  // Popout / dock / tray windows are intentionally narrow (400 ×
+  // ~620 for the menu-bar popover, ~360px for the chain docks)
+  // and should still resolve as DESKTOP — they're auxiliary
+  // surfaces of the desktop shell, not a phone-form-factor UI.
+  // Without this short-circuit, `useAiChat` swaps to the remote
+  // hook (mobile/web fallback) and the menu-bar popover stops
+  // talking to the user's local Ollama daemon. The `phone` param
+  // is the exception: that one IS the phone-preview surface and
+  // SHOULD route as mobile.
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const isAuxDesktopSurface =
+      params.get("tray") === "1" ||
+      params.get("popped") === "1" ||
+      params.get("evmDock") === "1" ||
+      params.get("btcDock") === "1" ||
+      params.get("svmDock") === "1";
+    if (isAuxDesktopSurface) return false;
+  } catch {
+    /* URL parsing failed somehow — fall through to viewport check. */
   }
   return window.innerWidth < 768;
 }
@@ -172,7 +193,7 @@ export function detectOS(): DetectedOS {
 ///
 /// If we later want one-click downloads (no release page in
 /// between), we'd add a small redirect proxy at
-/// api.mattssoftware.com that uses GitHub's API to look up the
+/// api.libre.academy that uses GitHub's API to look up the
 /// latest asset URL by suffix.
 export interface DownloadTarget {
   os: DetectedOS;

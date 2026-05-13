@@ -21,16 +21,25 @@
 /// "I'm gone" event.
 import type { LogLine } from "../runtimes/types";
 
-/// Discriminated union of every message type the main window can
-/// push to a popped phone. `running` clears the iframe back to a
-/// "running…" placeholder; `preview` swaps the iframe src to the new
-/// URL; `console` shows logs+error when a run produced no preview;
-/// `clear` resets to the initial empty state.
+/// Discriminated union of every message type that flows over the
+/// phone-preview bus. Most messages are MAIN → POPOUT:
+///   - `running` clears the iframe back to a "running…" placeholder
+///   - `preview` swaps the iframe src to the new URL
+///   - `console` shows logs+error when a run produced no preview
+///   - `clear` resets to the initial empty state
+/// Plus one POPOUT → MAIN message:
+///   - `request-state` — the popout asks the main window to re-emit
+///     whatever state it most recently sent. The popout fires this
+///     once after its listener is registered, so a fresh popout that
+///     opens AFTER the main window already emitted (e.g. user runs
+///     code, then opens the popout) immediately picks up the
+///     cached state instead of sitting on the empty placeholder.
 export type PhonePreviewMsg =
   | { type: "running" }
   | { type: "preview"; url: string }
   | { type: "console"; logs: LogLine[]; error?: string }
-  | { type: "clear" };
+  | { type: "clear" }
+  | { type: "request-state" };
 
 export interface PhonePreviewBus {
   /// Subscribe to incoming messages. Returns an unlisten function.
@@ -166,17 +175,20 @@ export async function openPhonePopout(
         await existing.setFocus();
         return;
       }
-      // Sized to comfortably hold a 380×760 phone frame plus a small
-      // title bar gutter from the OS. Resizable so the user can
-      // shrink it onto a secondary monitor or stretch for long
-      // scrollable previews.
+      // Sized to the phone's 9:19.5 aspect ratio (plus a small
+      // allowance for the OS title bar) so the phone bezels reach
+      // every edge of the popout window — no awkward letterboxing
+      // around the device. 380×852 ≈ 9:19.5 + 28px title bar.
+      // Resizable so the user can drag it onto a secondary monitor
+      // or stretch for long scrollable previews; the phone keeps
+      // its aspect ratio as the window resizes.
       new WebviewWindow(label, {
         url,
         title: `Libre · ${title}`,
-        width: 440,
-        height: 860,
-        minWidth: 320,
-        minHeight: 560,
+        width: 380,
+        height: 852,
+        minWidth: 280,
+        minHeight: 635,
         resizable: true,
       });
       return;
@@ -188,7 +200,7 @@ export async function openPhonePopout(
     }
   }
 
-  window.open(url, label, "width=440,height=860");
+  window.open(url, label, "width=380,height=852");
 }
 
 /// Close the popped phone window if one is open. Tauri path uses

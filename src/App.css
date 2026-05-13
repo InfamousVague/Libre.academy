@@ -41,11 +41,11 @@
  * theme. Theme-dependent tokens (`--color-*`, `--color-glass-*`)
  * live in `theme/themes.css`.
  *
- * Tokens are namespaced `--fb-*` so they don't collide with the
+ * Tokens are namespaced `--libre-*` so they don't collide with the
  * base kit's `--radius-*` / `--duration-*` / `--text-*-size`
  * (which use a different set of values + a Tailwind-style scale).
  * The base-kit tokens are still imported above and remain
- * available; the `--fb-*` ones below codify the in-between values
+ * available; the `--libre-*` ones below codify the in-between values
  * Libre actually uses across its 67 component stylesheets.
  *
  * Migrating to tokens lets us re-tune the entire app's motion or
@@ -57,17 +57,17 @@
      everywhere a hover or focus transition needs to feel responsive
      without being jumpy. 0.12s is the slightly-tighter "click feedback"
      variant; 0.2s is for larger panels (dialog open, popovers). */
-  --fb-motion-snappy: var(--fb-motion-snappy);
-  --fb-motion-quick: var(--fb-motion-quick);
-  --fb-motion-smooth: 0.2s ease;
+  --libre-motion-snappy: 0.15s ease;
+  --libre-motion-quick: 0.12s ease;
+  --libre-motion-smooth: 0.2s ease;
 
   /* Border radius. Discrete tiers so cards / chips / pills stay in
      visual lockstep regardless of who wrote the component. */
-  --fb-radius-xs: 4px;
-  --fb-radius-sm: 6px;
-  --fb-radius-md: 8px;
-  --fb-radius-lg: 12px;
-  --fb-radius-pill: 999px;
+  --libre-radius-xs: 4px;
+  --libre-radius-sm: 6px;
+  --libre-radius-md: 8px;
+  --libre-radius-lg: 12px;
+  --libre-radius-pill: 999px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -109,12 +109,14 @@
 }
 
 *::-webkit-scrollbar-thumb {
-  /* Default state: nearly invisible bone-white — `#d4c5a1`
-     (--fb-bone-color, the wordmark mid-stroke) at ~9% alpha.
-     Just enough to hint at scrollability without competing
-     with content. */
+  /* Default state: nearly invisible warm cream — `#d4c5a1`
+     (the wordmark mid-stroke, same value as `--color-accent`) at
+     ~9% alpha. Just enough to hint at scrollability without
+     competing with content. Hardcoded rgba so the alpha sweep
+     across :hover and :active states uses a single colour family
+     — variable-based rgba would need a custom interpolation. */
   background: rgba(212, 197, 161, 0.09);
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
   /* 2px transparent border = padding inside the track, so the thumb
      reads as a thin floating capsule rather than a wall-to-wall slab. */
   border: 2px solid transparent;
@@ -161,7 +163,7 @@ html, body, #root {
 }
 
 button {
-  transition: opacity var(--fb-motion-snappy), box-shadow var(--fb-motion-snappy), border-color var(--fb-motion-snappy);
+  transition: opacity var(--libre-motion-snappy), box-shadow var(--libre-motion-snappy), border-color var(--libre-motion-snappy);
 }
 
 /* Root layout: custom top bar (houses tabs + traffic lights) across the top,
@@ -209,10 +211,10 @@ button {
    after the 180ms cross-fade. Honor reduced-motion via the media
    query below. */
 .libre__main > * {
-  animation: fb-route-fade 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: libre-route-fade 0.18s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@keyframes fb-route-fade {
+@keyframes libre-route-fade {
   from {
     opacity: 0;
     transform: translateY(4px);
@@ -330,6 +332,21 @@ button {
 }
 
 .libre__lesson--challenge .libre__lesson-workbench-wrap {
+  /* Challenge mode: reader is capped at max-width 420px (see rule
+     above), so honoring the Workbench's persisted inline width
+     would leave a visible gap between reader and workbench when
+     the persisted percent doesn't happen to fill the remainder
+     (e.g. a learner who dragged 48% in a regular lesson then
+     opens a challenge — reader 420px + workbench 48% = 80% of
+     row, with 20% empty middle).
+     Fix: let the wrap flex-grow to fill whatever the capped
+     reader didn't claim. `min-width: 0` keeps the wrap shrinkable
+     under intrinsic content. The inline `width: NN%` the
+     Workbench writes in `widthControlsParent` mode still applies
+     as a flex-basis hint, but `flex: 1` overrides it so the wrap
+     visually fills regardless of the persisted percentage. The
+     drag handle is effectively a no-op in challenge mode — the
+     reader's cap drives the layout, not the wrap's width. */
   flex: 1;
   width: auto;
   min-width: 0;
@@ -376,7 +393,7 @@ button {
   padding: 2px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
 }
 
 .libre__lesson-mode-btn {
@@ -386,7 +403,7 @@ button {
   color: var(--color-text-secondary);
   background: transparent;
   border: 0;
-  border-radius: calc(var(--fb-radius-md) - 2px);
+  border-radius: calc(var(--libre-radius-md) - 2px);
   cursor: pointer;
   transition:
     background 120ms ease,
@@ -420,7 +437,7 @@ button {
   flex-direction: column;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-lg);
+  border-radius: var(--libre-radius-lg);
   overflow: hidden;
 }
 
@@ -496,13 +513,13 @@ button {
   padding: 5px 10px;
   background: var(--color-bg-tertiary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
   color: var(--color-text-secondary);
   font-family: inherit;
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
-  transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy), border-color var(--fb-motion-snappy);
+  transition: background var(--libre-motion-snappy), color var(--libre-motion-snappy), border-color var(--libre-motion-snappy);
 }
 
 .libre__workbench-popped-pill:hover {
@@ -538,7 +555,7 @@ button {
   background: var(--color-bg-secondary);
   margin: 10px 10px 10px 0;
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-lg);
+  border-radius: var(--libre-radius-lg);
 }
 
 .libre__welcome-inner {
@@ -584,7 +601,7 @@ button {
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
   border: 0;
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   font-family: inherit;
   font-size: 13px;
   font-weight: 600;
@@ -600,7 +617,7 @@ button {
   background: transparent;
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   font-family: inherit;
   font-size: 13px;
   cursor: pointer;

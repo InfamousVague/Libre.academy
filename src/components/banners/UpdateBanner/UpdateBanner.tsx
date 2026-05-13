@@ -22,6 +22,7 @@ import { downloadCloud } from "@base/primitives/icon/icons/download-cloud";
 import { x as xIcon } from "@base/primitives/icon/icons/x";
 import "@base/primitives/icon/icon.css";
 import { isDesktop } from "../../../lib/platform";
+import { useT } from "../../../i18n/i18n";
 import "./UpdateBanner.css";
 
 /// Size of the polling interval for "check again" — once an hour is
@@ -46,6 +47,7 @@ export function UpdateBanner(): React.ReactElement | null {
   // dynamic import below doesn't even run.
   if (!isDesktop) return null;
 
+  const t = useT();
   const [state, setState] = useState<State>({ kind: "idle" });
   const dismissedFor = useRef<string | null>(
     typeof localStorage !== "undefined"
@@ -111,7 +113,7 @@ export function UpdateBanner(): React.ReactElement | null {
       const { check } = await import("@tauri-apps/plugin-updater");
       const update = await check();
       if (!update) {
-        setState({ kind: "error", message: "Update no longer available." });
+        setState({ kind: "error", message: t("banners.updateNoLongerAvailable") });
         return;
       }
       // The downloadAndInstall API streams progress events. We use
@@ -193,17 +195,17 @@ export function UpdateBanner(): React.ReactElement | null {
         {state.kind === "available" && (
           <>
             <div className="libre-update-banner__title">
-              Libre {state.version} is ready to install
+              {t("banners.updateReady", { version: state.version })}
             </div>
             <div className="libre-update-banner__sub">
-              Click Install to download in the background.
+              {t("banners.updateReadySub")}
             </div>
           </>
         )}
         {state.kind === "downloading" && (
           <>
             <div className="libre-update-banner__title">
-              Downloading {state.version}…
+              {t("banners.updateDownloading", { version: state.version })}
             </div>
             <div className="libre-update-banner__progress" aria-hidden>
               <div
@@ -218,25 +220,30 @@ export function UpdateBanner(): React.ReactElement | null {
             </div>
             <div className="libre-update-banner__sub">
               {state.total > 0
-                ? `${formatBytes(state.downloaded)} / ${formatBytes(state.total)}`
-                : `${formatBytes(state.downloaded)} downloaded`}
+                ? t("banners.updateDownloadedFmt", {
+                    done: formatBytes(state.downloaded),
+                    total: formatBytes(state.total),
+                  })
+                : t("banners.updateDownloadedOnly", {
+                    done: formatBytes(state.downloaded),
+                  })}
             </div>
           </>
         )}
         {state.kind === "ready" && (
           <>
             <div className="libre-update-banner__title">
-              {state.version} downloaded — restart to apply
+              {t("banners.updateInstalled", { version: state.version })}
             </div>
             <div className="libre-update-banner__sub">
-              Your tabs and progress will be reopened automatically.
+              {t("banners.updateInstalledSub")}
             </div>
           </>
         )}
         {state.kind === "error" && (
           <>
             <div className="libre-update-banner__title">
-              Update failed
+              {t("banners.updateFailed")}
             </div>
             <div className="libre-update-banner__sub">{state.message}</div>
           </>
@@ -249,7 +256,7 @@ export function UpdateBanner(): React.ReactElement | null {
             className="libre-update-banner__btn libre-update-banner__btn--primary"
             onClick={() => void onDownload()}
           >
-            Install
+            {t("banners.install")}
           </button>
         )}
         {state.kind === "ready" && (
@@ -258,15 +265,15 @@ export function UpdateBanner(): React.ReactElement | null {
             className="libre-update-banner__btn libre-update-banner__btn--primary"
             onClick={() => void onRestart()}
           >
-            Restart now
+            {t("banners.restartNow")}
           </button>
         )}
         <button
           type="button"
           className="libre-update-banner__btn libre-update-banner__btn--ghost"
           onClick={onDismiss}
-          aria-label="Dismiss"
-          title="Dismiss"
+          aria-label={t("banners.dismiss")}
+          title={t("banners.dismiss")}
         >
           <Icon icon={xIcon} size="xs" color="currentColor" />
         </button>

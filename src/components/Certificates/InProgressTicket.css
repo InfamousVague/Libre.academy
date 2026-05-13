@@ -1,0 +1,121 @@
+/* In-progress companion ticket styling. The base ticket frame +
+   foil + perforation + hover behaviour all come from the
+   `.libre-cert-ticket` rules in CertificateTicket.css; this file
+   only carries the bits that distinguish an in-progress card
+   from an earned one — desaturated parchment, dimmer foil rest
+   state, the big progress bar that replaces the recipient
+   signature, and the "PROGRESS" stub treatment. */
+
+/* ─── In-progress modifier on the base ticket ───────────────── */
+
+.libre-cert-ticket--in-progress {
+  /* Cool off-white instead of the old warm parchment (#f4f2ed)
+     so the in-progress card reads as a "ghost of the earned
+     cert" within the same monochrome system — same paper, just
+     not yet stamped. The radial wash on the parent rule is
+     already dialled down so the ticket looks faded relative
+     to its earned siblings. */
+  background-color: #f6f6f6;
+}
+
+/* Restful foil opacity is lower on in-progress so the rainbow
+   doesn't compete with the earned tickets in the gallery. The
+   hover keyframe (defined in CertificateTicket.css) still
+   lights it up the same way — same shimmer treatment, same
+   wobble — because in-progress is a "you're getting closer"
+   surface, not a dormant one. */
+.libre-cert-ticket--in-progress {
+  --o: 0.08;
+}
+
+/* Recipient slot reuses the cert ticket's serif italic
+   treatment but at a smaller size (course titles are LONGER
+   than recipient names so they need more room for two-line
+   wrapping). Override the clamp to scale down. */
+.libre-cert-ticket__recipient--course {
+  font-size: clamp(18px, 3.6vw, 28px);
+  line-height: 1.18;
+  /* Allow up to two lines so longer course titles still fit
+     inside the body without the ellipsis the earned ticket
+     uses for single-line recipient names. */
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: clip;
+  margin-top: 6px;
+}
+
+/* ─── Big progress bar in the body ──────────────────────────── */
+
+.libre-progress-ticket__bar {
+  width: 70%;
+  height: 6px;
+  margin: 12px 0 8px;
+  border-radius: 999px;
+  /* Neutralized from `rgba(26, 20, 24, 0.12)` to a plain
+     black-alpha well — the track is a recessed shape on white
+     paper, not a coloured rail. */
+  background: rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.libre-progress-ticket__bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  /* Modernized fill: a graphite gradient instead of the old
+     amber → gold (`#a85e1c → #d4863a → #e6b15a`). Keeps the
+     "fill rising along the bar" visual idea but matches the
+     monochrome system the rest of the cert wears now. */
+  background: linear-gradient(
+    90deg,
+    #1a1a1a 0%,
+    #3a3a3a 60%,
+    #555555 100%
+  );
+  transition: width 0.5s ease;
+}
+
+/* ─── Stub: percentage + resume ─────────────────────────────── */
+
+/* Big percentage display where the QR sits on the earned cert.
+   Same vibe (centrepiece of the stub) but text-based since
+   there's nothing to scan yet. Modernized: dropped the
+   Georgia serif + warm `#1a1418` ink in favour of the app's
+   default sans + pure black, matching the earned cert's
+   modern recipient/course typography. Size pulled back one
+   notch from the previous `clamp(28px, 5vw, 44px)` — the old
+   ceiling was visually competing with the course title in the
+   body rather than reading as supporting data. */
+.libre-progress-ticket__pct {
+  font-family: inherit;
+  font-weight: 700;
+  font-size: clamp(22px, 4vw, 34px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: #111111;
+  font-variant-numeric: tabular-nums;
+  /* Auto top-margin pairs with stub-id's own auto top-margin
+     to centre the pct + resume cluster between the top-
+     anchored stub-eyebrow ("PROGRESS") and the bottom-anchored
+     stub-id. Mirrors the earned cert's .libre-cert-ticket__qr
+     centring trick. */
+  margin: auto 0 4px;
+}
+
+.libre-progress-ticket__lesson-count {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.55);
+  letter-spacing: 0.04em;
+}
+
+/* Resume CTA — uses the cert ticket's download-button shape so
+   the stub action affordance is consistent across earned + in-
+   progress cards (one is "save the artefact", the other is
+   "go finish earning it"). */
+.libre-progress-ticket__resume {
+  margin-top: 8px;
+}

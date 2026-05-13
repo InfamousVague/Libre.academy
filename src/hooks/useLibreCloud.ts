@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { track } from "../lib/track";
 
 /// Optional cloud-sync hook for the Libre relay.
 ///
@@ -20,7 +21,7 @@ const TOKEN_KEY = "libre:cloud:token-v1";
 const USER_KEY = "libre:cloud:user-v1";
 const URL_OVERRIDE_KEY = "libre:cloud:url-override-v1";
 
-const DEFAULT_RELAY_URL = "https://api.mattssoftware.com";
+const DEFAULT_RELAY_URL = "https://api.libre.academy";
 
 export interface LibreCloudUser {
   id: string;
@@ -222,7 +223,7 @@ export function useLibreCloud(): UseLibreCloud {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`${relayUrl}/libre/me`, {
+        const res = await fetch(`${relayUrl}/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error(`me failed: ${res.status}`);
@@ -306,44 +307,58 @@ export function useLibreCloud(): UseLibreCloud {
     return "desktop";
   })();
 
+  // Analytics: each successful auth path fires either `signup` or
+  // `signin` with the method that produced it. `runAuth` resolves
+  // on success and throws on failure, so the `track.*` calls land
+  // immediately after the await without an explicit try/catch —
+  // failed auths produce no event (the fetch throws before we get
+  // there). The signup-vs-signin distinction for the OAuth paths
+  // is approximate from the client (we don't yet get a "new user"
+  // flag back from /auth/apple|/auth/google); treating them as
+  // `signin` is the conservative read. A future server-side
+  // signup event from the relay can produce the precise count.
   const signUpEmail = useCallback(
     async (email: string, password: string, displayName?: string) => {
-      await runAuth("/libre/auth/signup", {
+      await runAuth("/auth/signup", {
         email,
         password,
         display_name: displayName,
         device_label: deviceLabel,
       });
+      track.signup("email");
     },
     [runAuth, deviceLabel],
   );
   const signInEmail = useCallback(
     async (email: string, password: string) => {
-      await runAuth("/libre/auth/login", {
+      await runAuth("/auth/login", {
         email,
         password,
         device_label: deviceLabel,
       });
+      track.signin("email");
     },
     [runAuth, deviceLabel],
   );
   const signInApple = useCallback(
     async (identityToken: string, displayName?: string) => {
-      await runAuth("/libre/auth/apple", {
+      await runAuth("/auth/apple", {
         identity_token: identityToken,
         display_name: displayName,
         device_label: deviceLabel,
       });
+      track.signin("apple");
     },
     [runAuth, deviceLabel],
   );
   const signInGoogle = useCallback(
     async (identityToken: string, displayName?: string) => {
-      await runAuth("/libre/auth/google", {
+      await runAuth("/auth/google", {
         identity_token: identityToken,
         display_name: displayName,
         device_label: deviceLabel,
       });
+      track.signin("google");
     },
     [runAuth, deviceLabel],
   );
@@ -357,7 +372,7 @@ export function useLibreCloud(): UseLibreCloud {
       setBusy(true);
       setError(null);
       try {
-        const res = await fetch(`${relayUrl}/libre/auth/password-reset/request`, {
+        const res = await fetch(`${relayUrl}/auth/password-reset/request`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email }),
@@ -391,7 +406,7 @@ export function useLibreCloud(): UseLibreCloud {
       setBusy(true);
       setError(null);
       try {
-        const res = await fetch(`${relayUrl}/libre/auth/password-reset/confirm`, {
+        const res = await fetch(`${relayUrl}/auth/password-reset/confirm`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token, new_password: newPassword }),
@@ -434,7 +449,7 @@ export function useLibreCloud(): UseLibreCloud {
       // Best-effort revoke. Even if the request fails (offline,
       // expired token), we still clear local state — the user clicked
       // "sign out" and shouldn't be left stuck on the dashboard.
-      await fetch(`${relayUrl}/libre/auth/logout`, {
+      await fetch(`${relayUrl}/auth/logout`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       }).catch(() => undefined);
@@ -450,7 +465,7 @@ export function useLibreCloud(): UseLibreCloud {
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch(`${relayUrl}/libre/auth/account`, {
+      const res = await fetch(`${relayUrl}/auth/account`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -483,7 +498,7 @@ export function useLibreCloud(): UseLibreCloud {
   );
 
   const pullProgress = useCallback(async (): Promise<ProgressRow[]> => {
-    const res = await authFetch("/libre/progress");
+    const res = await authFetch("/progress");
     if (!res.ok) throw new Error(`pull failed (${res.status})`);
     return (await res.json()) as ProgressRow[];
   }, [authFetch]);
@@ -495,7 +510,7 @@ export function useLibreCloud(): UseLibreCloud {
       // and smaller chunks make a partial-failure more recoverable.
       for (let i = 0; i < rows.length; i += 1000) {
         const slice = rows.slice(i, i + 1000);
-        const res = await authFetch("/libre/progress", {
+        const res = await authFetch("/progress", {
           method: "PUT",
           body: JSON.stringify({ rows: slice }),
         });
@@ -510,7 +525,7 @@ export function useLibreCloud(): UseLibreCloud {
   const resetProgress = useCallback(async (): Promise<boolean> => {
     if (!token) return false;
     try {
-      const res = await authFetch("/libre/progress", { method: "DELETE" });
+      const res = await authFetch("/progress", { method: "DELETE" });
       // 200 / 204 — relay wiped the rows. 404 / 405 — older relay
       // doesn't ship the route, fall back to "local-only reset". Any
       // other non-OK is an actual error worth surfacing.
@@ -528,7 +543,7 @@ export function useLibreCloud(): UseLibreCloud {
   }, [token, authFetch]);
 
   const pullSolutions = useCallback(async (): Promise<SolutionRow[]> => {
-    const res = await authFetch("/libre/solutions");
+    const res = await authFetch("/solutions");
     if (!res.ok) throw new Error(`pull-solutions failed (${res.status})`);
     return (await res.json()) as SolutionRow[];
   }, [authFetch]);
@@ -538,7 +553,7 @@ export function useLibreCloud(): UseLibreCloud {
       if (rows.length === 0) return;
       for (let i = 0; i < rows.length; i += 200) {
         const slice = rows.slice(i, i + 200);
-        const res = await authFetch("/libre/solutions", {
+        const res = await authFetch("/solutions", {
           method: "PUT",
           body: JSON.stringify({ rows: slice }),
         });
@@ -551,7 +566,7 @@ export function useLibreCloud(): UseLibreCloud {
   );
 
   const pullSettings = useCallback(async (): Promise<SettingRow[]> => {
-    const res = await authFetch("/libre/settings");
+    const res = await authFetch("/settings");
     if (!res.ok) throw new Error(`pull-settings failed (${res.status})`);
     return (await res.json()) as SettingRow[];
   }, [authFetch]);
@@ -559,7 +574,7 @@ export function useLibreCloud(): UseLibreCloud {
   const pushSettings = useCallback(
     async (rows: SettingRow[]) => {
       if (rows.length === 0) return;
-      const res = await authFetch("/libre/settings", {
+      const res = await authFetch("/settings", {
         method: "PUT",
         body: JSON.stringify({ rows }),
       });
@@ -602,7 +617,7 @@ export function useLibreCloud(): UseLibreCloud {
         // http(s) → ws(s); always preserve TLS so we don't downgrade.
         const base = relayUrlRef.current.replace(/^http/, "ws");
         const tok = encodeURIComponent(tokenRef.current ?? "");
-        return `${base}/libre/sync/ws?token=${tok}`;
+        return `${base}/sync/ws?token=${tok}`;
       };
 
       const connect = (): void => {
@@ -705,7 +720,7 @@ export function useLibreCloud(): UseLibreCloud {
         binary += String.fromCharCode(input.archive[i]);
       }
       const archive_b64 = btoa(binary);
-      const res = await authFetch("/libre/courses", {
+      const res = await authFetch("/courses", {
         method: "POST",
         body: JSON.stringify({
           course_slug: input.courseSlug,
@@ -723,20 +738,20 @@ export function useLibreCloud(): UseLibreCloud {
   );
 
   const listMyCourses = useCallback(async (): Promise<CourseMeta[]> => {
-    const res = await authFetch("/libre/courses");
+    const res = await authFetch("/courses");
     if (!res.ok) throw new Error(`list failed (${res.status})`);
     return (await res.json()) as CourseMeta[];
   }, [authFetch]);
 
   const listPublicCourses = useCallback(async (): Promise<CourseMeta[]> => {
-    const res = await fetch(`${relayUrl}/libre/courses/public`);
+    const res = await fetch(`${relayUrl}/courses/public`);
     if (!res.ok) throw new Error(`list-public failed (${res.status})`);
     return (await res.json()) as CourseMeta[];
   }, [relayUrl]);
 
   const downloadCourse = useCallback(
     async (courseId: string): Promise<ArrayBuffer> => {
-      const res = await authFetch(`/libre/courses/${encodeURIComponent(courseId)}`);
+      const res = await authFetch(`/courses/${encodeURIComponent(courseId)}`);
       if (!res.ok) throw new Error(`download failed (${res.status})`);
       return await res.arrayBuffer();
     },
@@ -745,7 +760,7 @@ export function useLibreCloud(): UseLibreCloud {
 
   const deleteCourse = useCallback(
     async (courseId: string) => {
-      const res = await authFetch(`/libre/courses/${encodeURIComponent(courseId)}`, {
+      const res = await authFetch(`/courses/${encodeURIComponent(courseId)}`, {
         method: "DELETE",
       });
       if (!res.ok && res.status !== 204) {

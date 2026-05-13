@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
 import "./AiCharacter.css";
-import DnaHelix from "./DnaHelix";
+import Hologram from "../Shared/Hologram";
+import { useT } from "../../i18n/i18n";
 
 interface Props {
   /// Whether the chat panel is open. Drives a subtle "pressed" pose so
@@ -20,41 +20,20 @@ interface Props {
   alert?: boolean;
 }
 
-/// Floating bottom-right entry point to the local AI tutor. Renders as
-/// a gradient-filled disc with the Libre logo, anchored absolutely
-/// to the viewport. State drives palette + animation speed, not asset
-/// swaps — the disc is pure CSS so the whole assistant ships with zero
-/// bundled image bytes.
+/// Floating bottom-right entry point to the local AI tutor. A small
+/// black disc with the universal "sparkles" AI glyph inside, wrapped
+/// in a thin accent ring so the orb reads as a piece with the rest
+/// of the chrome whichever theme is active.
+///
+/// Mood drives a CSS class on the wrapper for any future per-mood
+/// outline tinting; the icon glyph itself stays identical across
+/// moods.
 ///
 /// Mood priority (top wins):
-///   alert       → red palette + jittery glow + alert dot
-///   celebrating → warm gold/pink palette + faster spin
-///   streaming   → cyan/violet palette + medium spin (matches "thinking")
-///   idle        → neutral cool palette + slow drift
-/// Boost duration in ms after the orb is clicked. The DNA helix
-/// runs at the rapid-spin speed for the full minute, then snaps
-/// back to the mood baseline.
-///
-/// Why a snap back rather than a smooth ramp: the helix's strands
-/// each carry a per-strand `--fb-dna-delay` computed against the
-/// active speed (so the wave staggers correctly across the helix
-/// length). Continuously changing `--fb-dna-speed` over time
-/// forces every node + connecting bar's CSS animation to RESTART
-/// at frame 0 — which reads as flickering every render. Snapping
-/// the speed at exactly two moments (click, +60s) means just two
-/// restarts per boost cycle: imperceptible at the click moment
-/// (the user just initiated the boost so motion change is
-/// expected), and fairly subtle at the 60s mark (the user is
-/// almost certainly looking somewhere else by then).
-const CLICK_BOOST_MS = 60_000;
-/// Speed (in seconds per strand-jump cycle) while boosted —
-/// immediately after a click and for the full duration. Lower =
-/// faster. 2.0s is comfortably faster than the 16s idle baseline
-/// (8× the rate, so the orb clearly reads as "active") without
-/// crossing into frenetic-pulsing territory; the previous 0.5s
-/// felt more anxious than alive.
-const CLICK_BOOST_SPEED = 2.0;
-
+///   alert       → alert palette + alert dot
+///   celebrating → warm gold/pink palette
+///   streaming   → cyan/violet palette
+///   idle        → neutral cool palette
 export default function AiCharacter({
   open,
   streaming,
@@ -62,96 +41,12 @@ export default function AiCharacter({
   onClick,
   alert,
 }: Props) {
+  const t = useT();
   let mood: "idle" | "streaming" | "celebrating" | "alert";
   if (alert) mood = "alert";
   else if (celebrating) mood = "celebrating";
   else if (streaming) mood = "streaming";
   else mood = "idle";
-
-  // Mood-based baseline strand-jump cycle. The DNA helix's `speed`
-  // prop reads in seconds per cycle (lower = faster).
-  const baselineSpeed =
-    mood === "streaming"
-      ? 1.2
-      : mood === "celebrating"
-        ? 1
-        : mood === "alert"
-          ? 4
-          : 16;
-
-  // Click-boost state. `boostedAt` is the timestamp of the most
-  // recent tap (or null when the boost has expired). State only
-  // changes at exactly two moments per boost cycle:
-  //
-  //   1. The click itself (boostedAt: null → Date.now())
-  //   2. 60s later (boostedAt: number → null)
-  //
-  // No continuous re-renders in between — the CSS animations on the
-  // helix nodes + connecting bars stay running uninterrupted for
-  // the full minute. Earlier versions of this component ticked at
-  // 1Hz to interpolate the speed gradually; that re-rendered the
-  // speed prop every second, which forced every animation in the
-  // helix to restart at frame 0. The visible flicker — including
-  // when hovering, since hover landed on freshly-restarted frames
-  // — was that interpolation, not anything inherent to hover.
-  const [boostedAt, setBoostedAt] = useState<number | null>(null);
-  useEffect(() => {
-    if (boostedAt == null) return;
-    const id = window.setTimeout(() => {
-      setBoostedAt(null);
-    }, CLICK_BOOST_MS);
-    return () => window.clearTimeout(id);
-  }, [boostedAt]);
-
-  // Two-state speed: boosted = 0.5s, otherwise mood-baseline. The
-  // user perceives a click → fast spin → snap back to normal at the
-  // minute mark. Hover doesn't enter into this — `:hover` only
-  // changes parent scale + tooltip opacity at the CSS layer; it
-  // never re-renders this component, and the helix animations don't
-  // restart on a parent transform.
-  const speed = boostedAt != null ? CLICK_BOOST_SPEED : baselineSpeed;
-
-  // Wrap the consumer's onClick. Two paths depending on which way
-  // the click is about to push the panel:
-  //
-  //   - Closed → Open: stamp a fresh boost. The orb spins quickly
-  //     for the next minute as visible feedback that the assistant
-  //     is "listening." Re-clicking during an active boost
-  //     extends it — feels right when the user is actively
-  //     poking around.
-  //   - Open → Close: drop the boost immediately. The user is
-  //     stepping back from the assistant; the orb should slow
-  //     to its mood-baseline (idle = ~3s / breath) so it's no
-  //     longer demanding visual attention. Without this, the
-  //     orb kept spinning at 0.5s for the full minute even after
-  //     the panel closed — felt frantic when the user had clearly
-  //     moved on.
-  //
-  // `open` is the CURRENT state (true = panel currently visible);
-  // a click flips it, so reading `open` here tells us whether
-  // we're about to close.
-  const handleClick = useCallback(() => {
-    if (open) {
-      setBoostedAt(null);
-    } else {
-      setBoostedAt(Date.now());
-    }
-    onClick();
-  }, [onClick, open]);
-
-  // Belt-and-brace: also drop the boost if the panel closes by
-  // ANY mechanism (click-outside, Escape, programmatic close from
-  // the parent), not just a click on the orb itself. We diff
-  // against the previous `open` value via a ref so this only
-  // fires on the actual true → false transition (and not on
-  // first mount when `open` is already false).
-  const wasOpenRef = useRef(open);
-  useEffect(() => {
-    if (wasOpenRef.current && !open) {
-      setBoostedAt(null);
-    }
-    wasOpenRef.current = open;
-  }, [open]);
 
   return (
     <button
@@ -159,45 +54,83 @@ export default function AiCharacter({
       className={`libre-ai-character libre-ai-character--${mood} ${
         open ? "is-open" : ""
       }`}
-      onClick={handleClick}
-      aria-label={open ? "Close assistant" : "Open assistant"}
+      onClick={onClick}
+      aria-label={open ? t("ai.closeAssistant") : t("ai.openAssistant")}
       aria-expanded={open}
       title={
         streaming
-          ? "Thinking…"
+          ? t("ai.thinking")
           : alert
-            ? "Local assistant needs setup"
+            ? t("ai.needsSetup")
             : open
-              ? "Close assistant"
-              : "How can I assist?"
+              ? t("ai.closeAssistant")
+              : t("ai.howCanIAssist")
       }
     >
-      {/* "How can I assist?" tooltip floating to the LEFT of the
-          orb. Hidden by default; revealed on hover via the CSS
-          rule on the parent button (`:hover .libre-ai-character-tip`
-          fades opacity 0 → 1). Mounted only when none of the
-          state moods (open / streaming / alert / celebrating)
-          would be telling a different story — those moods carry
-          their own visual signal and the tooltip would compete
-          with them. aria-hidden because the button's aria-label
+      {/* "How can I assist?" tooltip floating to the LEFT of the orb.
+          Hidden by default; revealed on hover via the CSS rule on the
+          parent button. Mounted only when none of the state moods
+          (open / streaming / alert / celebrating) would be telling a
+          different story. aria-hidden because the button's aria-label
           already carries the canonical text for screen readers. */}
       {!open && !streaming && !alert && !celebrating && (
         <span className="libre-ai-character-tip" aria-hidden>
-          How can I assist?
+          {t("ai.howCanIAssist")}
         </span>
       )}
-      {/* DNA double-helix glyph. Mood drives the baseline `speed`
-          (thinking + celebrating push faster, alert slows to "locked
-          / waiting on human", idle settles to the slowest 16s
-          rhythm). Click-boost layers on top with a hard switch:
-          tap the orb and the helix snaps to a 0.5s cycle for the
-          next 60s, then snaps back. Two state changes per boost
-          (click + 60s expiry), no continuous interpolation —
-          continuous updates would restart the underlying CSS
-          animations on every render and look glitchy. The helix
-          itself is colour-randomised at mount time — see DnaHelix
-          for the palette + per-strand stagger maths. */}
-      <DnaHelix className="libre-ai-character-icon" speed={speed} />
+      {/* Liquid-metal chromatic ring wrapping the disc — ported
+          from the paper-design liquid-metal demo's outline
+          treatment. The original uses a WebGL shader for the
+          flowing-metal effect inside the disc; we render the
+          DEFINING piece — the chromatic ring around the disc —
+          in pure CSS via a conic-gradient masked into a ring
+          shape (see `__ring::before` in AiCharacter.css), and
+          rotate it continuously to give the "liquid flowing
+          around the orb" feel without bundling a shader runtime
+          for a 40px corner button. Sits behind the disc in DOM
+          order; `position: absolute` + negative inset on the
+          element puts it slightly OUTSIDE the disc's bounds so
+          the ring frames the orb rather than sitting inside it. */}
+      <span className="libre-ai-character__ring" aria-hidden />
+
+      {/* Disc inner — owns the circular clip + the hologram foil.
+          Lives inside the button (so click + focus + the streaming
+          scale pulse still apply to the whole orb) but clips with
+          `overflow: hidden` so the foil only paints inside the
+          disc shape. The button itself keeps overflow visible so
+          the floating tooltip + the liquid-metal ring above can
+          escape the disc edge. */}
+      <span className="libre-ai-character__disc" aria-hidden>
+        {/* Rainbow foil overlay. `surface="light"` uses the
+            primitive's multiply blend mode — correct for the
+            white disc base, where multiply soaks the rainbow in
+            as DARK pigment (the same treatment the parchment
+            cert ticket uses). `surface="dark"` would compose
+            via plus-lighter, which on a white base saturates
+            every channel to 1 and erases the rainbow entirely.
+            `excited` flips on while the AI is thinking so the
+            foil swings faster — visual echo of the existing
+            scale-pulse. Sits below the icon glyph via z-index
+            (icon span has `z-index: 1`). */}
+        <Hologram
+          surface="light"
+          intensity="vivid"
+          excited={streaming}
+          sparkle="snake"
+          className="libre-ai-character__holo"
+        />
+        {/* The greyscale `<img>` overlay used to live here, layered
+            on top of the rainbow foil to give the orb a solid snake
+            silhouette. Retired in favour of letting the Hologram
+            itself BE the snake — see the
+            `.libre-ai-character__holo` overrides in AiCharacter.css
+            that force the snake mask to render as ONE big centered
+            silhouette (mask-size: 100%, mask-repeat: no-repeat)
+            instead of the primitive's default tiled sparkle. Net
+            effect: the visible snake on the orb IS the rainbow
+            (not a solid grey silhouette overlaid on it), which
+            reads more "alive" against the white disc base. */}
+      </span>
     </button>
   );
 }

@@ -123,7 +123,7 @@ export default function AchievementOverlay({ pending, onPresented }: Props) {
   return (
     <>
       {visibleToasts.length > 0 ? (
-        <div className="fb-ach-toast-column" aria-live="polite">
+        <div className="libre-ach-toast-column" aria-live="polite">
           {visibleToasts.map((a) => (
             <AchievementToast
               key={a.id}

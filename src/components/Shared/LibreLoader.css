@@ -19,8 +19,10 @@
   gap: 10px;
   /* Held for backwards compatibility — components that read this
      colour for the optional inline label still work, even though
-     the spinner itself no longer uses currentColor. */
-  color: var(--fb-bone-color, #d4c5a1);
+     the spinner itself no longer uses currentColor. Was routed
+     through the retired --fb-bone-color; --color-accent carries
+     the same warm-cream value post-rebrand. */
+  color: var(--color-accent, #d4c5a1);
 }
 
 .libre-loader-stack {

@@ -1,0 +1,43 @@
+/* Inline shortcut chip — a small <kbd> badge attached to or
+   embedded in a button so the user discovers the bound chord.
+   Two variants share the same shape; "muted" backs off the
+   contrast for already-busy surfaces. */
+
+.libre-shortcut-hint {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, monospace);
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  color: var(--color-text-secondary, rgba(255, 255, 255, 0.55));
+  background: color-mix(in srgb, var(--color-bg-elevated, rgba(255, 255, 255, 0.06)) 100%, transparent);
+  border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.1));
+  border-radius: 4px;
+  /* Reset the browser's default <kbd> mono-italic + bottom-shadow
+     so the chip matches our design tokens rather than the UA's
+     idea of what a key cap looks like. */
+  vertical-align: baseline;
+  white-space: nowrap;
+  user-select: none;
+  /* Sit a hair below the surrounding text's baseline so the chip
+     reads as a small annotation rather than competing with the
+     label for visual weight. */
+  transform: translateY(-0.5px);
+}
+
+.libre-shortcut-hint--muted {
+  color: var(--color-text-tertiary, rgba(255, 255, 255, 0.4));
+  background: transparent;
+  border-color: color-mix(in srgb, var(--color-border-default, rgba(255, 255, 255, 0.08)) 70%, transparent);
+}
+
+/* Buttons with hints want a small gap between the label and the
+   chip. We don't mandate it via the chip itself (some callers
+   prefer flush layout, e.g. inside a tight icon-button row), but
+   provide a utility class for the common case. */
+.libre-shortcut-hint--gap {
+  margin-left: 8px;
+}

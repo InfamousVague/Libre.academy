@@ -34,6 +34,7 @@
 /// users get a single bloom + fade that respects their preference.
 
 import { confettiBurst, type ConfettiPreset } from "./confetti";
+import { fireHapticSequence } from "./haptics";
 
 export type CelebrationEffect = "coin-burst";
 
@@ -217,6 +218,15 @@ function playVideo(srcBase: string): Promise<void> {
     video.autoplay = true;
     video.controls = false;
     video.preload = "auto";
+    // 2× baseline playback. The source coin-burst is ~7 s at 1×, which
+    // is long enough that the celebration starts feeling like padding
+    // rather than punctuation. 2× takes the shower to ~3.5 s — a
+    // crisper "ka-ching!" beat that still has enough frame budget for
+    // the gold to read. The dismiss-time `accelerateActiveCelebrations`
+    // helper layers on TOP of this (bumping to the higher
+    // CLOSE_ACCEL_RATE) so closing the modal flushes the remaining
+    // coins faster still.
+    video.playbackRate = 2;
     video.setAttribute("aria-hidden", "true");
     video.style.position = "fixed";
     video.style.inset = "0";
@@ -347,6 +357,20 @@ export function celebrate(
   target?: { x: number; y: number } | HTMLElement,
   opts: CelebrateOptions = {},
 ): Promise<void> {
+  // Haptic accompaniment timed to the coin-burst video keyframes:
+  //   t = 0ms     — medium impact as the coins erupt from centre
+  //   t = 320ms   — light impact as the cascade peaks
+  //   t = 720ms   — soft success pulse as the pile settles
+  // Three beats so the haptic "tells the story" of the visual,
+  // not a single buzz that fires before the eye catches up. Fire
+  // even under reduced motion (the static puff has its own
+  // shorter rhythm) since haptic-aware users still benefit from
+  // the feedback even when the visual is dimmed.
+  fireHapticSequence([
+    ["impact-medium", 0],
+    ["impact-light", 320],
+    ["notification-success", 720],
+  ]);
   if (reducedMotion()) return staticPuff(target);
   if (opts.src) return playVideo(opts.src);
   const weights: Record<CelebrationEffect, number> = {

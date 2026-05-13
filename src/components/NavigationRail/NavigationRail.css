@@ -31,7 +31,7 @@
   -webkit-backdrop-filter: blur(28px) saturate(160%);
   backdrop-filter: blur(28px) saturate(160%);
   border: 1px solid var(--color-glass-border);
-  border-radius: var(--fb-radius-lg);
+  border-radius: var(--libre-radius-lg);
   /* Lift the rail's stacking context above the sidebar's. Without
      this, child tooltips that extend rightward across the gap into
      the sidebar's bounds get painted UNDER the sidebar (the sidebar
@@ -84,7 +84,12 @@
   width: 40px;
   height: 40px;
   background: var(--color-text-primary);
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
+  /* Clip the inner Hologram primitive's foil + shine to the
+     pill's rounded edges. Without this the absolutely-positioned
+     `.libre-holo` would spill its iridescent corners past the
+     pill's border-radius. */
+  overflow: hidden;
   pointer-events: none;
   transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
   z-index: 0;
@@ -92,6 +97,28 @@
      change, so will-change is cheap enough and eliminates a brief
      pre-animation layout pass on first transition. */
   will-change: transform;
+}
+
+/* Pill's hover-triggered shine sweep. The pill carries
+   `pointer-events: none` so the Hologram's generic hover rule
+   (`*:hover > .libre-holo > ...` in Hologram.css) can never fire
+   on the pill directly — it never receives `:hover` itself. We
+   route the trigger through the active rail item via `:has()`:
+   when the currently-active button is being hovered, the pill
+   underneath it kicks off the same 800ms shine sweep every other
+   holographic surface uses, so the rail's "you are here" marker
+   participates in the same hover language as the Sandbox sidebar
+   + Run button + cert stamps.
+
+   `> *` chains because the foil-shine layers sit two levels deep
+   (.libre-holo > .libre-holo__shine), and we want the rule to
+   stay direct-child-restricted so it can't over-match unrelated
+   holograms that might one day live elsewhere on the rail. */
+.libre-nav-rail__top:has(.libre-nav-rail__item--active:hover)
+  > .libre-nav-rail__pill
+  > .libre-holo
+  > .libre-holo__shine {
+  animation: libre-holo-shine-hover 800ms ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -108,7 +135,7 @@
   justify-content: center;
   background: transparent;
   border: 0;
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   color: var(--color-text-secondary);
   cursor: pointer;
   /* `position: relative` + `z-index: 1` lifts the button above the
@@ -161,4 +188,27 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+/* ── Light-theme active-pill override ───────────────────────────
+   The pill's default `background: var(--color-text-primary)` was
+   chosen back when light themes set `text-primary` to a near-black
+   bone tint (~#5c6166); on the refreshed light themes (ayu-light
+   + catppuccin-latte + cipher-light/Libre Light) text-primary is
+   either a slate gray or pure black, but the rail reads more
+   crisply with the active item locked to pure `#000` regardless.
+   Force black bg + white glyph on every light theme so the rail's
+   "you are here" marker matches the monochrome CTA family that
+   the rest of the chrome (Run button, primary imports, library
+   pills) now paints with. */
+[data-theme-name="ayu-light"] .libre-nav-rail__pill,
+[data-theme-name="catppuccin-latte"] .libre-nav-rail__pill,
+[data-theme-name="cipher-light"] .libre-nav-rail__pill {
+  background: #000000;
+}
+
+[data-theme-name="ayu-light"] .libre-nav-rail__item--active,
+[data-theme-name="catppuccin-latte"] .libre-nav-rail__item--active,
+[data-theme-name="cipher-light"] .libre-nav-rail__item--active {
+  color: #ffffff;
 }

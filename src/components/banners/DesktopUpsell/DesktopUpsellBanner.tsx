@@ -3,6 +3,7 @@ import { download as downloadIcon } from "@base/primitives/icon/icons/download";
 import { monitor } from "@base/primitives/icon/icons/monitor";
 import "@base/primitives/icon/icon.css";
 import { downloadUrl } from "../../../lib/platform";
+import { useT } from "../../../i18n/i18n";
 import "./DesktopUpsellBanner.css";
 
 interface Props {
@@ -41,6 +42,7 @@ const NAMES: Record<string, string> = {
 /// include a secondary "all platforms" link so the button isn't
 /// load-bearing for users on an OS we mis-detected.
 export function DesktopUpsellBanner({ language, reason }: Props) {
+  const t = useT();
   const { primary, all } = downloadUrl();
   const niceName = NAMES[language] ?? language;
 
@@ -52,7 +54,7 @@ export function DesktopUpsellBanner({ language, reason }: Props) {
         </span>
         <div className="libre-desktop-upsell__heading">
           <div className="libre-desktop-upsell__title">
-            Run {niceName} on the desktop app
+            {t("banners.desktopUpsellTitle", { language: niceName })}
           </div>
           <div className="libre-desktop-upsell__reason">{reason}</div>
         </div>
@@ -66,7 +68,7 @@ export function DesktopUpsellBanner({ language, reason }: Props) {
           {primary.label}
         </a>
         <details className="libre-desktop-upsell__more">
-          <summary>Other platforms</summary>
+          <summary>{t("banners.otherPlatforms")}</summary>
           <ul>
             {all
               .filter((t) => t.os !== primary.os)
@@ -80,8 +82,7 @@ export function DesktopUpsellBanner({ language, reason }: Props) {
       </div>
 
       <div className="libre-desktop-upsell__foot">
-        You can keep reading the lesson — only the Run button is
-        gated on web.
+        {t("banners.keepReading")}
       </div>
     </div>
   );

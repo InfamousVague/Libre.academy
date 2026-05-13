@@ -2,103 +2,31 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  background: var(--color-bg-primary);
+  /* Match the Monaco editor's bg so the console reads as one
+     continuous code surface with the editor above. Token is
+     defined in theme/themes.css and tracks each theme's paired
+     Monaco theme (vs-dark = #1e1e1e for almost everything,
+     vs = white for cipher-light). */
+  background: var(--color-code-surface);
 }
 
-/* Web-runtime preview card. Shown instead of an embedded iframe — the
-   rendered page lives in the user's real browser (via the local
-   tiny_http preview server in the Tauri backend). Card styling matches
-   the workbench chrome so it reads as "the output, just somewhere
-   else" rather than a notification. */
-.libre-output-preview {
-  margin: 0 0 12px;
-  padding: 12px 14px;
-  background: var(--color-bg-tertiary);
-  border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md);
-}
-
-.libre-output-preview-head {
+/* Web-runtime preview — full-bleed iframe. No card chrome, no inner
+   padding, no URL row underneath; the iframe IS the body when a
+   preview is active. The action cluster (Open in browser / Copy
+   link / Reload) lives in the shared output header alongside the
+   duration pill, mirroring how the editor's header carries the
+   per-file tabs + Run cluster. */
+.libre-output-preview-fill {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-bottom: 10px;
-}
-
-.libre-output-preview-label {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  color: var(--color-text-tertiary);
-}
-
-.libre-output-preview-link {
-  display: inline-block;
-  font-family: "SF Mono", ui-monospace, Menlo, monospace;
-  font-size: 12px;
-  color: var(--color-text-primary);
-  text-decoration: none;
-  word-break: break-all;
-  cursor: pointer;
-}
-
-.libre-output-preview-link:hover {
-  text-decoration: underline;
-}
-
-.libre-output-preview-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.libre-output-preview-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  background: transparent;
-  border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-sm);
-  color: var(--color-text-primary);
-  font-family: inherit;
-  font-size: 11.5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background var(--fb-motion-quick), border-color var(--fb-motion-quick);
-}
-
-.libre-output-preview-btn:hover {
-  background: var(--color-bg-secondary);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-.libre-output-preview-btn--primary,
-.libre-output-preview-btn--primary:hover {
-  background: var(--color-text-primary);
-  color: var(--color-bg-primary);
-  border-color: var(--color-text-primary);
-}
-
-/* In-app preview iframe wrapper. Sits at the top of the preview card
-   so the rendered page is the first thing the learner sees. White
-   background matches how most web pages render — the iframe draws
-   the user's actual background on top. The wrapper has no border:
-   most rendered pages have their own white canvas, so the previous
-   1-px `--color-border-default` rim read as "weird white border"
-   floating around the preview against the dark workbench. The
-   border-radius alone clips the iframe cleanly. */
-.libre-output-preview-frame {
-  margin: 0 0 12px;
-  height: 360px;
+  width: 100%;
+  height: 100%;
   background: #ffffff;
-  border-radius: var(--fb-radius-sm);
-  overflow: hidden;
 }
 
 .libre-output-preview-iframe {
   display: block;
+  flex: 1;
   width: 100%;
   height: 100%;
   border: 0;
@@ -106,18 +34,134 @@
 }
 
 /* React Native preview renders its own dark chrome (the preview HTML
-   sets body background to #0b0b10). The default white frame + white
-   iframe background peek around the edges and look like a bright
-   border against the RN theme — swap both to match the dark preview
-   so the frame blends into the card. Border goes transparent so the
-   card's own border is the only visible edge. */
-.libre-output-preview-frame--rn {
+   sets body background to #0b0b10). Match the wrapper + iframe so
+   nothing peeks through around the rounded body edges. */
+.libre-output-preview-fill--rn {
   background: #0b0b10;
-  border-color: transparent;
 }
 
 .libre-output-preview-iframe--rn {
   background: #0b0b10;
+}
+
+/* Console-tab override: hide the preview iframe via display:none
+   so toggling between Preview and Console doesn't lose the
+   iframe's loaded state. CSS-only hide instead of unmounting
+   keeps the React app's session (state, scroll position, focus)
+   alive while the user inspects logs. */
+.libre-output-preview-fill--hidden {
+  display: none;
+}
+
+/* Browser / Console segmented toggle — used in the header when
+   a run produced a previewUrl. Matches the editor's
+   Editor/Blocks mode toggle (`.libre-editor-mode`) so the two
+   surfaces read as the same control vocabulary. Active button
+   inverts on the brand accent. */
+.libre-output-mode-toggle {
+  display: inline-flex;
+  gap: 0;
+  padding: 2px;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--libre-radius-sm);
+}
+
+.libre-output-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  letter-spacing: 0.2px;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: 0;
+  border-radius: calc(var(--libre-radius-sm) - 2px);
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    color 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.libre-output-mode-btn:hover:not(.libre-output-mode-btn--active) {
+  color: var(--color-text-primary);
+}
+
+.libre-output-mode-btn--active {
+  background: var(--color-accent, var(--color-text-primary));
+  color: var(--color-accent-fg, var(--color-bg-primary));
+}
+
+/* Badge with the log count — same chrome family as the tab
+   badges (`.libre-output-tab-badge`) just sized for the smaller
+   segmented buttons. */
+.libre-output-mode-btn-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  padding: 0 5px;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--color-text-tertiary);
+  background: var(--color-bg-secondary);
+  border-radius: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.libre-output-mode-btn--active .libre-output-mode-btn-badge {
+  color: var(--color-accent, var(--color-text-primary));
+  background: color-mix(in srgb, var(--color-accent-fg, var(--color-bg-primary)) 88%, transparent);
+}
+
+/* Error-tinted badge — fires when at least one of the captured
+   logs is at the `error` level. Drives the user's eye to the
+   console toggle when the preview shows a red error overlay
+   instead of the expected render. */
+.libre-output-mode-btn-badge--error {
+  background: rgba(239, 111, 111, 0.18);
+  color: #ef6f6f;
+}
+
+.libre-output-mode-btn--active .libre-output-mode-btn-badge--error {
+  background: rgba(239, 111, 111, 0.85);
+  color: #fff;
+}
+
+/* Header-slotted preview action cluster. Sits inside
+   `.libre-output-header-right` next to the duration pill. Each
+   button is a compact pill with icon + short label — same chrome
+   weight as the duration pill / running pill, so the row reads as
+   one cohesive control strip. */
+.libre-output-preview-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.libre-output-preview-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--libre-radius-sm);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--libre-motion-quick), border-color var(--libre-motion-quick);
+}
+
+.libre-output-preview-btn:hover {
+  background: var(--color-bg-secondary);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .libre-output-header {
@@ -125,7 +169,10 @@
   align-items: center;
   justify-content: space-between;
   padding: 6px 12px;
-  background: var(--color-bg-secondary);
+  /* Header sits on the same code surface as the body and editor —
+     just the "CONSOLE" label + run-meta floating above the code
+     bg, with the border-bottom giving the structural cue. */
+  background: var(--color-code-surface);
   border-bottom: 1px solid var(--color-border-default);
 }
 
@@ -207,7 +254,18 @@
   font-size: 12.5px;
   line-height: 1.55;
   overflow: auto;
-  background: var(--color-bg-primary);
+  background: var(--color-code-surface);
+}
+
+/* Preview mode strips the body's padding + overflow + monospace
+   font defaults so the iframe truly fills edge-to-edge without
+   the body acting as a card around it. The iframe carries its
+   own scrolling, so the body's `overflow: auto` would add a
+   double scrollbar if left on. */
+.libre-output-body--preview {
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
 }
 
 .libre-output-empty {
@@ -225,7 +283,7 @@
   padding: 2px 8px 2px 7px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
   font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.3px;
@@ -348,7 +406,7 @@
   padding: 4px 10px;
   background: transparent;
   border: 0;
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   color: var(--color-text-tertiary);
   font-family: inherit;
   font-size: 12px;
@@ -375,7 +433,7 @@
   justify-content: center;
   min-width: 18px;
   padding: 1px 6px;
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
   background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.06));
   color: var(--color-text-tertiary);
   font-size: 10px;
@@ -424,7 +482,7 @@
   background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.06));
   color: var(--color-text-secondary);
   padding: 1px 6px;
-  border-radius: var(--fb-radius-xs);
+  border-radius: var(--libre-radius-xs);
   font-size: 11.5px;
   font-family: "SF Mono", ui-monospace, Menlo, monospace;
 }
@@ -457,7 +515,7 @@
   padding: 10px 12px;
   border: 1px solid rgba(239, 111, 111, 0.35);
   background: rgba(239, 111, 111, 0.08);
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
 }
 
 .libre-output-error-title {

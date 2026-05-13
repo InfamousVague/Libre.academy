@@ -3,13 +3,11 @@ import { invoke } from "@tauri-apps/api/core";
 import { isWeb } from "../lib/platform";
 
 /// Public CDN base for cover JPEGs the deployed Libre site serves.
-/// Used as a desktop fallback when `load_course_cover` returns null —
-/// a course has no installed cover.jpg AND no bundled archive (the
-/// case for remoteCatalogFallback placeholder books, which exist in
-/// the catalog but whose archives haven't been authored yet). The
-/// Tauri WebView fetches HTTPS by default so an `<img src=...>` with
-/// this URL just works as long as Caddy serves the JPEG.
-const COVER_CDN_BASE = "https://libre.academy/learn/starter-courses";
+/// Used as the canonical cover source on every platform now that
+/// course content all flows from libre.academy. The Tauri WebView
+/// fetches HTTPS by default so an `<img src=...>` with this URL just
+/// works as long as Caddy serves the JPEG.
+const COVER_CDN_BASE = "https://libre.academy/starter-courses";
 
 /// Build the CDN fallback URL. Returns null for empty ids so the
 /// caller can short-circuit without rendering a broken image. The
@@ -28,7 +26,7 @@ function desktopCdnCoverUrl(
 
 /// Web-build cover URL. Resolves against the page's BASE_URL so the
 /// cover loads correctly regardless of whether the app is mounted at
-/// the page root (`/`), a subpath (`/fishbones/learn/`), or the
+/// the page root (`/`), a subpath (`/learn/`), or the
 /// libre.academy `/learn/` embed. Returns null when courseId is
 /// empty so the caller can skip rendering.
 ///
@@ -42,8 +40,11 @@ function desktopCdnCoverUrl(
 /// even after the JPEG is fixed on the server.
 function webCoverUrl(courseId: string, cacheBust?: number): string | null {
   if (!courseId) return null;
-  const base = (import.meta.env.BASE_URL || "/").replace(/\/$/, "");
-  const path = `${base}/starter-courses/${courseId}.jpg`;
+  // Single absolute base so the cover URL is the same on every host —
+  // dev server, the production embed at libre.academy/learn/, or any
+  // future location. Mirrors `COVER_CDN_BASE` used in the desktop
+  // fallback path below.
+  const path = `${COVER_CDN_BASE}/${courseId}.jpg`;
   return cacheBust ? `${path}?v=${cacheBust}` : path;
 }
 

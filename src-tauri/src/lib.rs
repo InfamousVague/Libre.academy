@@ -22,15 +22,23 @@ mod ingest_cache;
 // hard-fails on those targets. Gating the module here AND the
 // `hidapi` crate in Cargo.toml keeps the mobile builds clean.
 #[cfg(not(any(target_os = "ios", target_os = "android")))]
+mod haptics;
 mod ledger;
 mod llm;
 mod mobile_dev;
 mod native_runners;
 mod preview_server;
 mod progress_db;
+mod sandbox;
 mod settings;
 mod sveltekit_runner;
 mod toolchain;
+// Tray (menu-bar icon + popover window) is a desktop-only feature —
+// iOS / Android lack the system tray surface entirely. Gate the
+// module + its command registrations so mobile builds don't try to
+// link tray-icon symbols.
+#[cfg(not(any(target_os = "ios", target_os = "android")))]
+mod tray;
 mod widget_snapshot;
 
 use std::io::Write;
@@ -97,7 +105,7 @@ async fn run_swift(code: String) -> SubprocessResult {
     }
 }
 
-/// Open the relay's `/fishbones/auth/{provider}/start` URL in the
+/// Open the relay's `/auth/{provider}/start` URL in the
 /// system browser. The relay redirects through the provider's OAuth
 /// flow and finally back to `libre://oauth/done?...`, which the
 /// deep-link plugin delivers to the frontend `onOpenUrl` listener.
@@ -146,7 +154,7 @@ async fn start_oauth<R: tauri::Runtime>(
         return Err("invalid session id (expected url-safe alphanumeric)".into());
     }
     let url = format!(
-        "https://api.mattssoftware.com/fishbones/auth/{provider}/start?session={session_id}"
+        "https://api.libre.academy/auth/{provider}/start?session={session_id}"
     );
     app.opener()
         .open_url(url, None::<&str>)
@@ -223,11 +231,27 @@ pub fn run() {
             app.manage(std::sync::Arc::new(parking_lot::Mutex::new(
                 chains::bitcoin::BitcoinState::new(),
             )) as chains::bitcoin::SharedBtc);
+
+            // Menu-bar (tray) icon — desktop only. Wraps the
+            // `TrayIconBuilder` setup + click→popover logic. macOS
+            // is the primary target (the user asked for "menu bar
+            // icon on mac"); Linux + Windows will also light up
+            // because the Tauri API is cross-platform, though the
+            // window-positioning math is calibrated for macOS's
+            // top-of-screen menu bar.
+            #[cfg(not(any(target_os = "ios", target_os = "android")))]
+            {
+                if let Err(e) = tray::setup_tray(app.handle()) {
+                    eprintln!("[libre] tray setup failed: {e}");
+                }
+            }
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             run_swift,
             start_oauth,
+            haptics::haptic_fire,
             progress_db::list_completions,
             progress_db::mark_completion,
             progress_db::clear_completions,
@@ -303,6 +327,23 @@ pub fn run() {
             sveltekit_runner::current_sveltekit_url,
             ai_chat::ai_chat_start_ollama,
             ai_chat::ai_chat_pull_model,
+            // Agentic loop: non-streaming turn that supports the
+            // `tools` parameter. The frontend `useAiAgent` hook
+            // calls this once per tool-call iteration.
+            ai_chat::ai_chat_agent_turn,
+            // Sandbox project filesystem + git operations. Desktop
+            // build only — the web build's storage layer falls back
+            // to localStorage when these commands aren't present.
+            sandbox::sandbox_list_projects,
+            sandbox::sandbox_load_project,
+            sandbox::sandbox_save_project,
+            sandbox::sandbox_delete_project,
+            sandbox::sandbox_git_status,
+            sandbox::sandbox_git_init,
+            sandbox::sandbox_git_add_all,
+            sandbox::sandbox_git_commit,
+            sandbox::sandbox_git_log,
+            sandbox::sandbox_reveal_project,
             // Ledger HID transport — desktop-only (the module + the
             // hidapi crate are gated to non-iOS/Android targets in
             // Cargo.toml + lib.rs above). Mobile builds register
@@ -368,6 +409,12 @@ pub fn run() {
             chains::bitcoin::btc_get_tx,
             chains::bitcoin::btc_get_height,
             chains::bitcoin::btc_mempool,
+            // Menu-bar (tray) popover plumbing — see `tray.rs`.
+            // Same desktop-only gating as the module declaration.
+            #[cfg(not(any(target_os = "ios", target_os = "android")))]
+            tray::tray_hide,
+            #[cfg(not(any(target_os = "ios", target_os = "android")))]
+            tray::tray_focus_main,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

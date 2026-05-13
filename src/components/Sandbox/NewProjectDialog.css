@@ -1,0 +1,112 @@
+/* Backdrop chrome lives in `Shared/ModalBackdrop.css`. This file
+   styles the dialog panel itself: a compact two-field form
+   (project name + language) wrapped in the same border + radius
+   chrome the other Libre dialogs use, so it slots into the rest
+   of the modal-set without feeling like a different surface. */
+
+.libre-newproj {
+  /* Compact — the dialog only carries two fields, so a wide panel
+     would feel empty. 380px reads as "small focused prompt" and
+     matches the visual weight of "What's the name?" rather than
+     "Here is a settings page". */
+  width: min(380px, 92vw);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--libre-radius-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.libre-newproj__head {
+  padding: 14px 18px 8px;
+}
+
+.libre-newproj__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.libre-newproj__body {
+  padding: 4px 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.libre-newproj__field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.libre-newproj__label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+.libre-newproj__input,
+.libre-newproj__select {
+  padding: 7px 10px;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--libre-radius-sm, 6px);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.libre-newproj__input:focus,
+.libre-newproj__select:focus {
+  outline: none;
+  border-color: var(--color-border-strong);
+}
+
+.libre-newproj__select {
+  cursor: pointer;
+}
+
+.libre-newproj__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 18px 14px;
+  border-top: 1px solid var(--color-border-default);
+  background: color-mix(in srgb, var(--color-bg-primary) 35%, transparent);
+}
+
+.libre-newproj__btn {
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid var(--color-border-default);
+  border-radius: 7px;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--libre-motion-snappy), border-color var(--libre-motion-snappy), color var(--libre-motion-snappy);
+}
+
+.libre-newproj__btn:hover:not(:disabled) {
+  background: var(--color-bg-tertiary);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.libre-newproj__btn--primary,
+.libre-newproj__btn--primary:hover {
+  background: var(--color-text-primary);
+  color: var(--color-bg-primary);
+  border-color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.libre-newproj__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

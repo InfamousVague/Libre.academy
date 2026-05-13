@@ -1,0 +1,646 @@
+/* Horizontal certificate ticket — single view, no flip. The
+   layout mirrors the downloadable PNG: cert body on the left,
+   tear-off stub with the QR on the right, separated by a
+   perforation line + two semicircular notches punched into the
+   top + bottom edges where the perforation crosses. Hovering the
+   ticket triggers a subtle holographic shimmer + slow wobble; the
+   Download button on the stub saves a print-quality PNG. */
+
+/* Hologram props are @property-registered so their values can
+   interpolate via `transition` — that's what bridges the gap
+   between "animation just stopped" and "back at resting" when
+   the user un-hovers. Without the typed declarations the
+   transition wouldn't fire and the values would snap.
+   initial-values mirror the resting values on `.libre-cert-ticket`
+   so the registration is self-consistent (a future consumer
+   reading these declarations sees the same baseline the element
+   rule sets). */
+@property --o {
+  syntax: "<number>";
+  initial-value: 0.15;
+  inherits: true;
+}
+
+@property --p {
+  syntax: "<percentage>";
+  initial-value: 50%;
+  inherits: true;
+}
+
+@property --h {
+  syntax: "<percentage>";
+  initial-value: 50%;
+  inherits: true;
+}
+
+@property --r {
+  syntax: "<angle>";
+  initial-value: -2deg;
+  inherits: true;
+}
+
+/* ─── Stage + ticket frame ─────────────────────────────────── */
+
+.libre-cert-ticket-stage {
+  /* Perspective context for the 3D wobble. Per-stage perspective
+     means tickets in a grid tilt independently rather than all
+     sharing a single vanishing point. */
+  perspective: 1800px;
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+  width: 100%;
+}
+
+.libre-cert-ticket {
+  -webkit-tap-highlight-color: transparent;
+
+  /* Resting values for the holographic CSS custom props. Tuned
+     low + flat so the resting ticket reads as parchment first,
+     foil second — the rainbow flake should only hint at being
+     holographic until the learner interacts with it. The hover
+     keyframe lifts these much higher and wobbles --r wider than
+     the resting tilt suggests, so the "wake the hologram up"
+     moment is a clear visual lift rather than a small breath. */
+  --r: -2deg;
+  --o: 0.15;
+  --p: 50%;
+  --h: 50%;
+
+  /* Geometry: 5:2 landscape. Bumped from 480px → 560px max so
+     the stub on the right has enough room to render the Resume
+     → CTA on one line (it was newlining on cards whose stub
+     showed `Resume →` instead of a QR). Two tickets still fit
+     per row on the certificates page (page gutter caps at
+     ~1136px; 2 × 560 + a 24px gap = 1144px which fits with the
+     standard 16px page padding). At 560px wide the 5:2 ratio
+     renders the ticket at 224px tall — extra vertical room for
+     the centered cluster too. */
+  width: 100%;
+  max-width: 560px;
+  aspect-ratio: 5 / 2;
+
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  transform-style: preserve-3d;
+  transform: rotateY(var(--r));
+
+  /* Ticket-shape mask — rounded rectangle with two semicircular
+     notches at x ≈ 71.2% (where the body meets the stub on the
+     perforation line). SVG sweep flag 0 puts both notches
+     curving INTO the ticket. Painted inline so the mask has no
+     network dependency. */
+  --ticket-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 400'%3E%3Cpath d='M20 0 L692 0 A20 20 0 0 0 732 0 L980 0 A20 20 0 0 1 1000 20 L1000 380 A20 20 0 0 1 980 400 L732 400 A20 20 0 0 0 692 400 L20 400 A20 20 0 0 1 0 380 L0 20 A20 20 0 0 1 20 0 Z' fill='black'/%3E%3C/svg%3E");
+  mask-image: var(--ticket-mask);
+  -webkit-mask-image: var(--ticket-mask);
+  mask-size: 100% 100%;
+  -webkit-mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+
+  /* Modern white base + soft cool radial wash. Replaces the
+     warm parchment-cream (#fbfaf6) + amber haze the cert used
+     to wear; the certificate now reads as a clean, paper-white
+     diploma fitted to the rest of the app's monochrome theme
+     rather than a Victorian artefact. */
+  background-color: #ffffff;
+  background-image: radial-gradient(
+    circle at var(--p) 35%,
+    rgba(0, 0, 0, 0.04) 0%,
+    transparent 65%
+  );
+
+  filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.45));
+
+  /* Smooth ease-back to rest values when hover ends. All four
+     holographic props are `@property`-registered (see top of
+     file), so when the hover keyframe animation is removed the
+     props' computed values transition from wherever the wobble
+     left them to the resting values defined on this rule —
+     instead of snapping.
+     Long durations (3.5s on the rotation, 2.8s on the foil
+     props) so the return reads as the ticket "settling down"
+     rather than recovering quickly. The earlier 1.6s felt
+     close to a snap when --r was deep in its swing (12° → -2°
+     in a beat-and-a-half is quick); 3.5s gives the rotation
+     room to glide. Foil props ease back faster than --r so the
+     rainbow has finished resettling before the rotation does
+     — the eye reads the foil first, the tilt second.
+     ease-out quartic curve so each prop decelerates into rest
+     without overshooting. */
+  transition:
+    --r 3.5s cubic-bezier(0.22, 1, 0.36, 1),
+    --o 2.8s cubic-bezier(0.22, 1, 0.36, 1),
+    --p 2.8s cubic-bezier(0.22, 1, 0.36, 1),
+    --h 2.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ─── Holographic foil overlay ────────────────────────────── */
+
+.libre-cert-ticket__holo {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  /* Rainbow band running -45° across the ticket. */
+  --space: 5%;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    hsl(0, 95%, 60%) 0%,
+    hsl(30, 95%, 60%) calc(var(--space) * 1),
+    hsl(60, 95%, 60%) calc(var(--space) * 2),
+    hsl(120, 90%, 55%) calc(var(--space) * 3),
+    hsl(180, 90%, 55%) calc(var(--space) * 4),
+    hsl(222, 95%, 60%) calc(var(--space) * 5),
+    hsl(258, 95%, 60%) calc(var(--space) * 6),
+    hsl(300, 95%, 60%) calc(var(--space) * 7),
+    hsl(0, 95%, 60%) calc(var(--space) * 8)
+  );
+  background-size: 200% 200%;
+  background-position: var(--h) var(--h);
+  background-repeat: no-repeat;
+
+  /* Brand-mark sparkle stencil, tiled across the cert surface.
+     Uses the padded tile at `/new-logo-tile.png` (greyscale
+     brand mark recentred inside a 3200×3200 canvas — the
+     transparent gutter becomes natural inter-snake spacing
+     when the mask repeats). Same source the Hologram
+     primitive's snake variant uses, so the iridescent-dust
+     pattern reads as one unified visual thread across the
+     cert and the rest of the app.
+     Mask-size 7% × 17.5%. The asymmetric percentages are
+     deliberate: the ticket is 5:2 landscape (aspect 2.5), so
+     equal `X% Y%` produces cells that are 2.5× wider than
+     tall, and the square logo gets stretched horizontally
+     inside them. Height% = width% × 2.5 cancels the
+     ticket's aspect out, giving square absolute cells (84×84
+     at the 1200×480 full-width render) so the silhouette
+     renders at its natural 1:1 ratio. Same trick the
+     Hologram primitive sidesteps entirely by using fixed-px
+     `mask-size`, but the cert wants `%` so the pattern
+     density tracks the ticket's scale rather than disappearing
+     when the cert renders smaller in the sidebar. */
+  --sparkle-mask: url("/new-logo-tile.png");
+  mask-image: var(--sparkle-mask);
+  -webkit-mask-image: var(--sparkle-mask);
+  mask-size: 7% 17.5%;
+  -webkit-mask-size: 7% 17.5%;
+  mask-repeat: repeat;
+  -webkit-mask-repeat: repeat;
+
+  /* Multiply blend works on the parchment base — `plus-lighter`
+     would erase the foil entirely on white. */
+  mix-blend-mode: multiply;
+  filter: brightness(0.95) contrast(0.85) saturate(1.15);
+  opacity: var(--o);
+}
+
+/* ─── Diagonal shine overlay ──────────────────────────────── */
+
+.libre-cert-ticket__shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* Modern monochrome diagonal sweep — replaces the old warm
+     amber gold (`rgba(212, 176, 107, 0.4)`) with a neutral
+     graphite band. With multiply blend on the white base, this
+     reads as a soft shadow band passing over the cert rather
+     than a Victorian gold-leaf shimmer. */
+  background-image: linear-gradient(
+    -70deg,
+    transparent 42%,
+    rgba(0, 0, 0, 0.18) 50%,
+    transparent 58%
+  );
+  background-size: 220% 220%;
+  background-position: var(--p) var(--p);
+  background-repeat: no-repeat;
+  mix-blend-mode: multiply;
+  opacity: calc(var(--o) * 0.55);
+}
+
+/* ─── Body (left ~71%) ────────────────────────────────────── */
+
+.libre-cert-ticket__body {
+  /* Flex proportion: body is 71.2% wide, leaving the stub at
+     28.8% — matches the PNG layout's PERF_X / W ratio. */
+  flex: 0 0 71.2%;
+  position: relative;
+  z-index: 2;
+  /* Tightened vertical padding (was 4.5% all around). The body
+     stacks 7 elements (head / eyebrow / recipient / rule / for
+     / course / badges / foot) and the previous gutters were
+     eating ~12% of the height before any content rendered.
+     3.2% top / 3.6% bottom buys back room for the badges row
+     + footer without crowding the recipient line. */
+  padding: 3.2% 4.5% 3.6% 5%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Layout strategy: header pinned to TOP, footer pinned to
+     BOTTOM, middle cluster (eyebrow → badges) vertically
+     centered between them. Implementation uses paired
+     `margin-top: auto` on the eyebrow + body-foot — flexbox
+     splits the remaining free space evenly across both auto-
+     margins, which puts equal padding above the cluster and
+     between the cluster and the foot. */
+  text-align: center;
+  color: #111111;
+  /* Hard-clip any overshoot rather than letting the badges row
+     or course title spill outside the ticket mask. With
+     content this constrained, an overflow elsewhere should be
+     visible as a cut element rather than a leak past the
+     dashed perforation. */
+  overflow: hidden;
+}
+
+.libre-cert-ticket__body-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  /* Wordmark image was retired in CertificateTicket.tsx, so the
+     row now only carries the daterange. Right-align so it sits
+     in the same visual spot it did when the wordmark occupied
+     the left half. */
+  justify-content: flex-end;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+}
+
+/* Brand + sparkle + wordmark classes retired with the
+   wordmark image. Kept as empty stubs so any historical
+   consumer still matching them resolves to no-op. */
+.libre-cert-ticket__brand,
+.libre-cert-ticket__sparkle,
+.libre-cert-ticket__wordmark {
+  display: none;
+}
+
+.libre-cert-ticket__daterange {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+/* Type system retired the Georgia / Times serif stack the cert
+   wore as a Victorian artefact. Every text-bearing class now
+   inherits the app's primary font (system-ui via the page-
+   root font-family), with a tracked-out uppercase eyebrow +
+   tight modern weights for the hero text. Reads as a clean
+   contemporary diploma rather than a museum reproduction. */
+
+.libre-cert-ticket__eyebrow {
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(26, 26, 26, 0.5);
+  /* Paired with `.libre-cert-ticket__body-foot { margin-top:
+     auto }` — flexbox splits the body's free vertical space
+     evenly between these two auto-margins, which centres the
+     eyebrow→badges cluster between the top-anchored date row
+     and the bottom-anchored stats foot. */
+  margin-top: auto;
+}
+
+.libre-cert-ticket__recipient {
+  font-family: inherit;
+  font-style: normal;
+  font-weight: 700;
+  font-size: clamp(20px, 3.6vw, 32px);
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  color: #111111;
+  margin-top: 4px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.libre-cert-ticket__rule {
+  width: 36%;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.14);
+  margin: 10px 0 6px;
+}
+
+.libre-cert-ticket__for {
+  font-family: inherit;
+  font-size: clamp(9px, 1.05vw, 11px);
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.libre-cert-ticket__course {
+  font-family: inherit;
+  font-weight: 600;
+  font-size: clamp(13px, 1.9vw, 18px);
+  line-height: 1.1;
+  color: #111111;
+  margin-top: 4px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.libre-cert-ticket__body-foot {
+  /* Pinned to the bottom of the body via auto-margin — pairs
+     with eyebrow's own `margin-top: auto` to split the body's
+     free space evenly, which keeps the foot anchored against
+     the bottom edge while still centring the middle cluster. */
+  margin-top: auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: clamp(10px, 1.1vw, 12px);
+  color: rgba(0, 0, 0, 0.55);
+  font-weight: 500;
+}
+
+.libre-cert-ticket__stats {
+  letter-spacing: 0.02em;
+}
+
+.libre-cert-ticket__lang {
+  /* Switched from the warm-amber `#a85e1c` to a near-black
+     uppercase-tracked treatment — same monochrome system the
+     rest of the modern cert uses. The language identity is
+     still visually distinct from the stats on the other side
+     of the footer thanks to the bolder weight + wide tracking. */
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: rgba(0, 0, 0, 0.85);
+  text-transform: uppercase;
+}
+
+/* ─── Chapter badges row ──────────────────────────────────────
+ *
+ * One badge per chapter, painted as a hard icon silhouette in
+ * the cert's ink colour. The fill-every-shape rule below
+ * upgrades each Lucide icon's strokes-only SVG into a solid
+ * cookie-cutter silhouette (same technique the MiniCertBanner
+ * uses) so the row reads as hand-stamped marks pressed into the
+ * parchment. Each badge gets a small inline rotation from
+ * `chapterRotation(chapter.id)` so the stamps don't line up
+ * mechanically.
+ * ──────────────────────────────────────────────────────────── */
+
+.libre-cert-ticket__badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  /* Tighter top/bottom margin + a narrower badge size below so
+     the row + the body foot underneath both fit inside the 5:2
+     ticket. Previously the 18+14px stacked gaps pushed the
+     stats / language footer below the cert's bottom edge. */
+  margin: 8px 0 6px;
+  padding-top: 8px;
+  /* Dashed perforation line above the badges — echoes the
+     full ticket's tear-off stub vocabulary so the badge row
+     reads as a stamped band rather than another text row. */
+  border-top: 1px dashed rgba(0, 0, 0, 0.12);
+}
+
+.libre-cert-ticket__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  color: #111111;
+  filter:
+    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.7))
+    drop-shadow(0 0 1px rgba(0, 0, 0, 0.35));
+}
+
+/* Cookie-cutter silhouette: fill every shape inside an earned
+   badge's SVG with the current colour. The base Icon primitive
+   sets `fill="none"` as a presentation attribute on the SVG;
+   the CSS rule targeting the child elements wins because their
+   own `fill` is unset. Combined with the bumped stroke-width
+   below + the Icon's own `weight="bold"` (stroke 3), each glyph
+   paints as a single connected blob rather than line art. */
+.libre-cert-ticket__badge svg path,
+.libre-cert-ticket__badge svg circle,
+.libre-cert-ticket__badge svg rect,
+.libre-cert-ticket__badge svg ellipse,
+.libre-cert-ticket__badge svg polygon,
+.libre-cert-ticket__badge svg polyline,
+.libre-cert-ticket__badge svg line {
+  fill: currentColor;
+}
+
+.libre-cert-ticket__badge svg {
+  width: 100%;
+  height: 100%;
+  stroke-width: 4;
+}
+
+/* ─── Stub (right ~29%) ───────────────────────────────────── */
+
+.libre-cert-ticket__stub {
+  /* Match the body's complement so the perforation lands exactly
+     at the notch x position from the ticket-mask SVG. */
+  flex: 0 0 28.8%;
+  position: relative;
+  z-index: 2;
+  padding: 5% 4.5%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Same layout strategy as the body: stub-eyebrow pinned to
+     the TOP, stub-id pinned to the BOTTOM, the QR (earned) or
+     percent + resume (in-progress) cluster vertically centred
+     between them. The centring lives on the cluster's first
+     element (`.libre-cert-ticket__qr` or
+     `.libre-progress-ticket__pct`) — paired with stub-id's
+     `margin-top: auto`. */
+  text-align: center;
+
+  /* Dashed perforation rule on the left edge of the stub —
+     visually mirrors the notches the ticket-mask carved out at
+     the top + bottom of this same line. Swapped the warm
+     `rgba(26, 20, 24, 0.55)` ink for a neutral black-alpha so
+     the perforation tracks with the rest of the modernized
+     monochrome cert. */
+  background-image: repeating-linear-gradient(
+    180deg,
+    transparent 0px,
+    transparent 6px,
+    rgba(0, 0, 0, 0.35) 6px,
+    rgba(0, 0, 0, 0.35) 12px
+  );
+  background-size: 1.5px 100%;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+}
+
+.libre-cert-ticket__stub-eyebrow {
+  /* Modernized to match the body-side eyebrow: app-default sans
+     instead of Georgia serif, neutral grey instead of the warm
+     amber `#a85e1c`. Same tracked-out uppercase rhythm so the
+     two eyebrows read as one typographic system across the
+     perforation. */
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(26, 26, 26, 0.5);
+  margin-bottom: 8px;
+}
+
+.libre-cert-ticket__qr {
+  width: 64%;
+  aspect-ratio: 1;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+  /* Auto top-margin pairs with stub-id's auto top-margin to
+     centre the QR + download cluster between the top-anchored
+     stub-eyebrow and the bottom-anchored stub-id. */
+  margin-top: auto;
+}
+
+.libre-cert-ticket__qr--loading {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.libre-cert-ticket__qr img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+.libre-cert-ticket__download {
+  /* Retired the warm amber chip palette
+     (`rgba(168, 94, 28, 0.14)` bg / `rgba(168, 94, 28, 0.45)`
+     border) for a neutral black-on-white pill. Sits inside the
+     ticket frame so we use a black-alpha fill rather than the
+     app's accent token — the cert is meant to read as
+     stationery, not as a theme-tinted UI surface. */
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.22);
+  border-radius: 999px;
+  color: #111111;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  /* `Resume →` was wrapping onto two lines on in-progress cards
+     with a narrow stub — the arrow glyph counts as its own
+     break opportunity. Force nowrap so the label and arrow stay
+     on a single line regardless of stub width. */
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    transform 0.12s ease;
+}
+
+.libre-cert-ticket__download:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+}
+
+.libre-cert-ticket__download:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.libre-cert-ticket__download:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.libre-cert-ticket__stub-id {
+  /* Pinned to the bottom of the stub via auto-margin — pairs
+     with the cluster's first-element auto-margin (qr / pct) to
+     split the stub's free space evenly. */
+  margin-top: auto;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 9px;
+  font-weight: 500;
+  /* Neutralized from warm `rgba(26, 20, 24, 0.65)` to a
+     plain black-alpha so the monospace ID reads as paper-ink
+     rather than parchment-ink. */
+  color: rgba(0, 0, 0, 0.55);
+  letter-spacing: 0.04em;
+}
+
+/* ─── Hover animation: dramatic hologram shimmer ──────────── */
+
+@keyframes libre-cert-ticket-shimmer {
+  /* Wobble both directions of the resting tilt (-10° at 25%,
+     +12° at 50%) so the ticket swings left before swinging
+     right and "catching the light" — much more energetic than
+     the previous one-direction lean. Foil + shine SWEEP across
+     via `--p` / `--h` so the rainbow position moves over the
+     ticket as it wobbles.
+     `--o` is intentionally NOT animated — the resting opacity
+     defined on the `.libre-cert-ticket` rule stays in effect
+     throughout the cycle, so hovering changes the foil's
+     POSITION but not its strength. This matches the rest of the
+     app's holographic surfaces, which use the position sweep
+     alone as the "you're interacting" signal. */
+  0% {
+    --r: -2deg;
+    --p: 50%;
+    --h: 50%;
+  }
+  25% {
+    --r: -10deg;
+    --p: 20%;
+    --h: 30%;
+  }
+  50% {
+    --r: 12deg;
+    --p: 95%;
+    --h: 90%;
+  }
+  75% {
+    --r: 4deg;
+    --p: 70%;
+    --h: 70%;
+  }
+  100% {
+    --r: -2deg;
+    --p: 50%;
+    --h: 50%;
+  }
+}
+
+.libre-cert-ticket:hover {
+  /* Slightly faster cycle (5.5s, was 7s) so the bigger wobble
+     reads as energetic shimmer rather than a slow swing. */
+  animation: libre-cert-ticket-shimmer 5.5s ease-in-out infinite;
+}
+
+/* Reduced motion — kill the shimmer keyframe. The ticket sits
+   flat (no wobble, no foil oscillation) but the resting --o /
+   --r values still apply so the foil + tilt are visible. */
+@media (prefers-reduced-motion: reduce) {
+  .libre-cert-ticket,
+  .libre-cert-ticket:hover {
+    animation: none !important;
+  }
+  .libre-cert-ticket {
+    transition: none;
+  }
+}

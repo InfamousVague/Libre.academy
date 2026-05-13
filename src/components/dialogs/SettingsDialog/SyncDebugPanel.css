@@ -1,26 +1,26 @@
 /* SyncDebugPanel — used inside both desktop SettingsDialog and the
  * mobile Settings screen. Visual language matches the surrounding
- * settings shell: --color-* tokens, --fb-radius-*, monospace for
+ * settings shell: --color-* tokens, --libre-radius-*, monospace for
  * URLs / IDs, color-toned tiles for the live counts. */
 
-.fb-sync-debug {
+.libre-sync-debug {
   display: flex;
   flex-direction: column;
   gap: 16px;
   width: 100%;
 }
 
-.fb-sync-debug__head {
+.libre-sync-debug__head {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.fb-sync-debug__signed-out {
+.libre-sync-debug__signed-out {
   padding: 16px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md, 10px);
+  border-radius: var(--libre-radius-md, 10px);
   color: var(--color-text-secondary);
   font-size: 13.5px;
   text-align: center;
@@ -28,24 +28,24 @@
 
 /* ── Status block ──────────────────────────────────────────────── */
 
-.fb-sync-debug__status {
+.libre-sync-debug__status {
   display: flex;
   flex-direction: column;
   gap: 8px;
   padding: 14px 16px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md, 10px);
+  border-radius: var(--libre-radius-md, 10px);
 }
 
-.fb-sync-debug__status-row {
+.libre-sync-debug__status-row {
   display: flex;
   align-items: center;
   gap: 12px;
   font-size: 12.5px;
 }
 
-.fb-sync-debug__label {
+.libre-sync-debug__label {
   flex: 0 0 110px;
   font-weight: 600;
   text-transform: uppercase;
@@ -54,12 +54,12 @@
   color: var(--color-text-tertiary);
 }
 
-.fb-sync-debug__value {
+.libre-sync-debug__value {
   font-variant-numeric: tabular-nums;
   color: var(--color-text-secondary);
 }
 
-.fb-sync-debug__url {
+.libre-sync-debug__url {
   font-family: var(--font-mono, "SF Mono", Menlo, monospace);
   font-size: 12px;
   color: var(--color-text-secondary);
@@ -72,7 +72,7 @@
   white-space: nowrap;
 }
 
-.fb-sync-debug__badge {
+.libre-sync-debug__badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -81,41 +81,41 @@
   color: var(--color-text-secondary);
 }
 
-.fb-sync-debug__dot {
+.libre-sync-debug__dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--color-text-tertiary);
 }
 
-.fb-sync-debug__badge--live .fb-sync-debug__dot {
+.libre-sync-debug__badge--live .libre-sync-debug__dot {
   background: #7cd97c;
   box-shadow: 0 0 0 3px rgba(124, 217, 124, 0.18);
 }
 
-.fb-sync-debug__badge--syncing .fb-sync-debug__dot {
+.libre-sync-debug__badge--syncing .libre-sync-debug__dot {
   background: #fcd34d;
   box-shadow: 0 0 0 3px rgba(252, 211, 77, 0.18);
 }
 
-.fb-sync-debug__badge--error .fb-sync-debug__dot {
+.libre-sync-debug__badge--error .libre-sync-debug__dot {
   background: #e87c6e;
   box-shadow: 0 0 0 3px rgba(232, 124, 110, 0.18);
 }
 
-.fb-sync-debug__badge--error {
+.libre-sync-debug__badge--error {
   color: #e87c6e;
 }
 
-.fb-sync-debug__badge--live {
+.libre-sync-debug__badge--live {
   color: #7cd97c;
 }
 
-.fb-sync-debug__badge--syncing {
+.libre-sync-debug__badge--syncing {
   color: #fcd34d;
 }
 
-.fb-sync-debug__badge-err {
+.libre-sync-debug__badge-err {
   color: var(--color-text-tertiary);
   font-weight: 400;
   margin-left: 4px;
@@ -123,26 +123,26 @@
 
 /* ── Count tiles ───────────────────────────────────────────────── */
 
-.fb-sync-debug__counts {
+.libre-sync-debug__counts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 10px;
 }
 
-.fb-sync-debug__tile {
+.libre-sync-debug__tile {
   display: flex;
   flex-direction: column;
   gap: 4px;
   padding: 14px 16px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md, 10px);
+  border-radius: var(--libre-radius-md, 10px);
   position: relative;
   --tile-tone: var(--color-text-primary);
   overflow: hidden;
 }
 
-.fb-sync-debug__tile::before {
+.libre-sync-debug__tile::before {
   content: "";
   position: absolute;
   left: 0;
@@ -153,12 +153,12 @@
   opacity: 0.85;
 }
 
-.fb-sync-debug__tile--local  { --tile-tone: #7cd9d3; }
-.fb-sync-debug__tile--server { --tile-tone: #c79bff; }
-.fb-sync-debug__tile--ok     { --tile-tone: #7cd97c; }
-.fb-sync-debug__tile--drift  { --tile-tone: #f59e3b; }
+.libre-sync-debug__tile--local  { --tile-tone: #7cd9d3; }
+.libre-sync-debug__tile--server { --tile-tone: #c79bff; }
+.libre-sync-debug__tile--ok     { --tile-tone: #7cd97c; }
+.libre-sync-debug__tile--drift  { --tile-tone: #f59e3b; }
 
-.fb-sync-debug__tile-value {
+.libre-sync-debug__tile-value {
   font-size: 24px;
   font-weight: 800;
   letter-spacing: -0.015em;
@@ -167,7 +167,7 @@
   line-height: 1.1;
 }
 
-.fb-sync-debug__tile-label {
+.libre-sync-debug__tile-label {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -175,7 +175,7 @@
   color: var(--color-text-tertiary);
 }
 
-.fb-sync-debug__tile-err {
+.libre-sync-debug__tile-err {
   font-size: 11px;
   color: #e87c6e;
   margin-top: 2px;
@@ -184,22 +184,22 @@
 
 /* ── Per-endpoint pills ────────────────────────────────────────── */
 /* Each pill represents one relay route's availability. Older relays
- * only ship `/fishbones/progress`; the auxiliary routes 404. We
+ * only ship `/progress`; the auxiliary routes 404. We
  * show that as "unavailable" — it's a deployment fact, not a
  * sync failure. Three states share the pill shape; tone diverges. */
 
-.fb-sync-debug__endpoints {
+.libre-sync-debug__endpoints {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-.fb-sync-debug__endpoint {
+.libre-sync-debug__endpoint {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  border-radius: var(--fb-radius-pill, 999px);
+  border-radius: var(--libre-radius-pill, 999px);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -208,7 +208,7 @@
   color: var(--color-text-secondary);
 }
 
-.fb-sync-debug__endpoint--ok {
+.libre-sync-debug__endpoint--ok {
   color: #7cd97c;
   border-color: rgba(124, 217, 124, 0.4);
   background: rgba(124, 217, 124, 0.08);
@@ -216,7 +216,7 @@
 
 /* Legacy variant kept for any caller still using the old enum;
  * new code uses --empty / --muted. */
-.fb-sync-debug__endpoint--unavailable {
+.libre-sync-debug__endpoint--unavailable {
   color: var(--color-text-tertiary);
   border-color: var(--color-border-default);
 }
@@ -224,7 +224,7 @@
 /* No data yet — same neutral tone as the unavailable variant but
  * intentionally separate so future copy can diverge. Used for
  * "Library: no devices have published yet". */
-.fb-sync-debug__endpoint--empty {
+.libre-sync-debug__endpoint--empty {
   color: var(--color-text-tertiary);
   border-color: var(--color-border-default);
   background: var(--color-bg-secondary);
@@ -232,25 +232,25 @@
 
 /* Feature isn't supported by this relay — softer visual than an
  * error since nothing the user does is blocked by it. */
-.fb-sync-debug__endpoint--muted {
+.libre-sync-debug__endpoint--muted {
   color: var(--color-text-tertiary);
   border-color: var(--color-border-default);
   background: var(--color-bg-secondary);
   opacity: 0.7;
 }
 
-.fb-sync-debug__endpoint--error {
+.libre-sync-debug__endpoint--error {
   color: #e87c6e;
   border-color: rgba(232, 124, 110, 0.45);
   background: rgba(232, 124, 110, 0.08);
 }
 
-.fb-sync-debug__endpoint-name {
+.libre-sync-debug__endpoint-name {
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
-.fb-sync-debug__endpoint-state {
+.libre-sync-debug__endpoint-state {
   font-weight: 500;
   opacity: 0.85;
   font-variant: small-caps;
@@ -258,28 +258,28 @@
 
 /* ── Drift note (informational footer) ─────────────────────────── */
 
-.fb-sync-debug__drift-note {
+.libre-sync-debug__drift-note {
   padding: 10px 14px;
   background: var(--color-bg-inset, rgba(255, 255, 255, 0.04));
   border: 1px dashed var(--color-border-default);
-  border-radius: var(--fb-radius-md, 10px);
+  border-radius: var(--libre-radius-md, 10px);
   font-size: 12px;
   line-height: 1.5;
   color: var(--color-text-secondary);
 }
 
-.fb-sync-debug__drift-note strong {
+.libre-sync-debug__drift-note strong {
   color: var(--color-text-primary);
   font-weight: 700;
 }
 
 /* ── In-sync flag ──────────────────────────────────────────────── */
 
-.fb-sync-debug__inline-ok {
+.libre-sync-debug__inline-ok {
   padding: 10px 14px;
   background: rgba(124, 217, 124, 0.08);
   border: 1px solid rgba(124, 217, 124, 0.4);
-  border-radius: var(--fb-radius-md, 10px);
+  border-radius: var(--libre-radius-md, 10px);
   color: #7cd97c;
   font-size: 13px;
   font-weight: 600;
@@ -287,23 +287,23 @@
 
 /* ── Diff sections ─────────────────────────────────────────────── */
 
-.fb-sync-debug__diff {
+.libre-sync-debug__diff {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.fb-sync-debug__diff-section {
+.libre-sync-debug__diff-section {
   padding: 12px 14px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md, 10px);
+  border-radius: var(--libre-radius-md, 10px);
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.fb-sync-debug__diff-head {
+.libre-sync-debug__diff-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -311,7 +311,7 @@
   flex-wrap: wrap;
 }
 
-.fb-sync-debug__diff-title {
+.libre-sync-debug__diff-title {
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
@@ -319,11 +319,11 @@
   color: var(--color-text-secondary);
 }
 
-.fb-sync-debug__diff-cta {
+.libre-sync-debug__diff-cta {
   padding: 6px 12px;
   background: transparent;
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md, 8px);
+  border-radius: var(--libre-radius-md, 8px);
   font: inherit;
   font-size: 12px;
   color: var(--color-text-secondary);
@@ -331,27 +331,27 @@
   transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
 }
 
-.fb-sync-debug__diff-cta:hover:not(:disabled) {
+.libre-sync-debug__diff-cta:hover:not(:disabled) {
   background: var(--color-bg-inset, rgba(255, 255, 255, 0.04));
   color: var(--color-text-primary);
 }
 
-.fb-sync-debug__diff-cta.is-primary {
+.libre-sync-debug__diff-cta.is-primary {
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
   border-color: var(--color-text-primary);
 }
 
-.fb-sync-debug__diff-cta.is-primary:hover:not(:disabled) {
+.libre-sync-debug__diff-cta.is-primary:hover:not(:disabled) {
   opacity: 0.88;
 }
 
-.fb-sync-debug__diff-cta:disabled {
+.libre-sync-debug__diff-cta:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.fb-sync-debug__diff-list {
+.libre-sync-debug__diff-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -360,7 +360,7 @@
   gap: 4px;
 }
 
-.fb-sync-debug__diff-list li {
+.libre-sync-debug__diff-list li {
   display: flex;
   flex-direction: column;
   gap: 1px;
@@ -370,7 +370,7 @@
   border-radius: 6px;
 }
 
-.fb-sync-debug__diff-label {
+.libre-sync-debug__diff-label {
   font-size: 12.5px;
   color: var(--color-text-primary);
   white-space: nowrap;
@@ -378,13 +378,13 @@
   text-overflow: ellipsis;
 }
 
-.fb-sync-debug__diff-sub {
+.libre-sync-debug__diff-sub {
   font-size: 10.5px;
   color: var(--color-text-tertiary);
   font-variant-numeric: tabular-nums;
 }
 
-.fb-sync-debug__diff-more {
+.libre-sync-debug__diff-more {
   font-size: 11px;
   color: var(--color-text-tertiary);
   font-style: italic;
@@ -393,21 +393,21 @@
 
 /* ── Action bar ────────────────────────────────────────────────── */
 
-.fb-sync-debug__actions {
+.libre-sync-debug__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   padding-top: 4px;
 }
 
-.fb-sync-debug__action {
+.libre-sync-debug__action {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 8px 14px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md, 10px);
+  border-radius: var(--libre-radius-md, 10px);
   font: inherit;
   font-size: 12.5px;
   font-weight: 600;
@@ -416,32 +416,32 @@
   transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
 }
 
-.fb-sync-debug__action:hover:not(:disabled) {
+.libre-sync-debug__action:hover:not(:disabled) {
   background: var(--color-bg-inset, rgba(255, 255, 255, 0.04));
   color: var(--color-text-primary);
 }
 
-.fb-sync-debug__action:disabled {
+.libre-sync-debug__action:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.fb-sync-debug__msg {
+.libre-sync-debug__msg {
   font-size: 12.5px;
   color: var(--color-text-secondary);
   padding: 8px 12px;
   background: var(--color-bg-inset, rgba(255, 255, 255, 0.03));
-  border-radius: var(--fb-radius-md, 8px);
+  border-radius: var(--libre-radius-md, 8px);
   font-style: italic;
 }
 
 /* Mobile shrinks status row to one column so 320px wide screens
  * still read cleanly. */
 @media (max-width: 640px) {
-  .fb-sync-debug__status-row {
+  .libre-sync-debug__status-row {
     flex-wrap: wrap;
   }
-  .fb-sync-debug__label {
+  .libre-sync-debug__label {
     flex: 0 0 100%;
   }
 }

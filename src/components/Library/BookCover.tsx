@@ -76,7 +76,7 @@ interface Props {
   /// stops propagation so the card's `onOpen` doesn't also fire.
   onUpdate?: () => void;
   /// Optional inline style — used by CourseLibrary to set the
-  /// `--fb-ripple-i` custom property per card so the mount-time
+  /// `--libre-ripple-i` custom property per card so the mount-time
   /// ripple animation staggers across the shelf in index order.
   /// Spread onto the root button; the library's CSS reads the
   /// custom property as `animation-delay`.

@@ -1,0 +1,635 @@
+/* Hyper-scroll Tracks surface. The page is two stacked layers:
+   1. A frosted header strip at the top with title + search.
+   2. A 3D viewport underneath that fills the rest of the pane,
+      with cards arranged along the Z axis. The world container
+      sits at the viewport's center via `top/left: 50%` + child
+      `translate(-50%, -50%)` on each card — that way the
+      `translate3d(x, y, z)` written by the rAF loop is relative
+      to a real "camera at origin" rather than the viewport's
+      top-left corner. Cards inherit the same chrome the rest of
+      Libre uses (libre-radius-lg, color-bg-secondary, etc.) so
+      the surface reads as part of the app rather than a
+      cyberpunk break.
+
+   Tooth-and-nail rule: NO scanlines, NO neon, NO chromatic
+   aberration. The physics carry the drama; the cards should
+   look exactly like the cards the learner has been clicking on
+   in the Library + Discover surfaces. */
+
+.libre-tracks {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Pure black backdrop so the cards float against a clean
+     field. The main-pane bg-primary is already #000 in default
+     dark; this rule keeps the look identical in lighter themes
+     by hard-anchoring to bg-primary rather than inheriting a
+     potential ancestor tint. */
+  background: var(--color-bg-primary);
+  /* Disable user-select on the whole surface — a wheel scroll
+     across selectable text was selecting random card body copy
+     while scrolling. The hyper-scroll is the primary
+     interaction; selection isn't useful here. Card detail view
+     (TrackDetail) opts back in for itself. */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ─── Header strip ─────────────────────────────────────────── */
+
+.libre-tracks__header {
+  position: relative;
+  /* Sits ABOVE the grid-overlay (z 5) so the title strip + search
+     stay visible during the hyper → grid crossfade at the end of
+     the carousel. Bumped from 5 → 10 after the overlay landed —
+     equal-z siblings let the later-rendered element win, which
+     was hiding the header behind the overlay's last 25% of fade. */
+  z-index: 10;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 28px 40px 18px;
+  flex-shrink: 0;
+  /* Subtle backdrop-blur fade so the cards bleed slightly under
+     the header instead of being clipped by a hard horizontal
+     line. The mask gradient runs the alpha to 0 over the last
+     12px so the bottom edge feathers into the scroll surface. */
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  background: linear-gradient(
+    to bottom,
+    var(--color-bg-primary) 0%,
+    var(--color-bg-primary) 70%,
+    color-mix(in srgb, var(--color-bg-primary) 80%, transparent) 100%
+  );
+}
+
+.libre-tracks__header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 520px;
+}
+
+.libre-tracks__title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.libre-tracks__blurb {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+
+.libre-tracks__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 260px;
+  max-width: 40vw;
+}
+
+.libre-tracks__search-input {
+  width: 100%;
+  padding: 9px 32px 9px 12px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.08));
+  border-radius: var(--libre-radius-md);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--libre-motion-snappy);
+}
+
+.libre-tracks__search-input:focus {
+  border-color: var(--color-text-primary);
+}
+
+.libre-tracks__search-input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.libre-tracks__search-clear {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  background: transparent;
+  border-radius: 4px;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: background var(--libre-motion-snappy);
+}
+
+.libre-tracks__search-clear:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+/* ─── 3D viewport ──────────────────────────────────────────── */
+
+.libre-tracks__viewport {
+  position: relative;
+  flex: 1;
+  /* Perspective is mutated by the rAF loop based on scroll
+     velocity — the value here is just a sensible mounting
+     baseline so the surface looks reasonable before the first
+     frame fires. */
+  perspective: 1400px;
+  perspective-origin: 50% 50%;
+  overflow: hidden;
+  cursor: ns-resize;
+}
+
+.libre-tracks__world {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-style: preserve-3d;
+  /* `will-change: transform` warns the compositor that this
+     element is going to move; the browser keeps it on its own
+     layer so per-frame transform writes don't trigger a paint. */
+  will-change: transform;
+  /* Width/height zero — the world is a coordinate origin, not
+     a container. All visual cards descend with absolute
+     positioning relative to this 0x0 point. */
+  width: 0;
+  height: 0;
+}
+
+/* ─── Card slot (the 3D-transformed wrapper) ──────────────── */
+
+.libre-tracks__card-slot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* Width is fixed so the per-frame transform doesn't have to
+     account for content-driven sizing. Translating by -50% on
+     both axes inside the inner `.libre-tracks__card` rule
+     centers the visual on the world's origin point.
+     Narrower-than-tall portrait sizing — 266×360 gives a ~1:1.35
+     aspect that reads as a "book cover" rather than a landscape
+     placard, and the smaller absolute size lets more cards live
+     comfortably in the viewport at once. */
+  width: 266px;
+  /* `backface-visibility: hidden` would help on Safari but
+     also causes the cards to disappear at near-zero alpha on
+     some configs — leaving the default so the fade-in / fade-
+     out alpha drives visibility instead. */
+  pointer-events: auto;
+  /* The rAF loop sets transform + opacity. We start at 0
+     opacity so the FIRST paint (before rAF runs) doesn't flash
+     every card stacked on top of itself at world origin. */
+  opacity: 0;
+  /* `transform-style: preserve-3d` propagates the parent's 3D
+     context into the inner card so rotateZ on the slot stacks
+     with rotateY on the world. */
+  transform-style: preserve-3d;
+  /* Smooth the per-property fallback transitions so a card
+     mounted/unmounted (search filter changing) eases rather
+     than pops. Doesn't interfere with the rAF transform writes
+     because the rAF writes inline styles every frame, which
+     overrides any transition baseline. */
+  transition: opacity 0.4s ease-out;
+}
+
+/* ─── Card body ────────────────────────────────────────────── */
+
+.libre-tracks__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 266px;
+  min-height: 360px;
+  padding: 16px 18px 14px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.08));
+  border-radius: var(--libre-radius-lg);
+  /* Soft shadow gives the card weight against the black
+     backdrop. The shadow is independent of the 3D z so close
+     cards don't get a comically large drop — perceived depth
+     comes from the perspective transform, not from shadow
+     size. */
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 28px 60px rgba(0, 0, 0, 0.55);
+  color: var(--color-text-primary);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  /* Hover lifts the card visually — pure CSS, the rAF loop
+     doesn't know about hover. Transition timing must be longer
+     than a single rAF frame so the hover lift doesn't fight
+     the per-frame transform writes (which only set
+     `transform`, not `box-shadow` or `border-color`). */
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.libre-tracks__card:hover {
+  border-color: var(--track-accent, var(--color-text-primary));
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 32px 70px rgba(0, 0, 0, 0.65),
+    0 0 0 1px var(--track-accent, transparent);
+}
+
+/* Hyper-mode card variant. The translate(-50%, -50%) centers
+   the card on its slot's origin (the point the rAF loop's
+   translate3d positions). Without this the card would render
+   from the slot's top-left, which sits at the world origin,
+   leaving the card offset by half its dimensions. */
+.libre-tracks__card--hyper {
+  transform: translate(-50%, -50%);
+}
+
+/* Grid-mode card variant. Natural-flow positioning — the parent
+   `.libre-tracks__grid` lays out cards via CSS grid, so no
+   self-translate is needed. Hover lifts the card a few pixels
+   instead, since there's no per-frame transform competing for
+   the property.
+   Height: NO `min-height` in grid mode. The base rule pins the
+   card to 360px so hyper mode's Z-stack reads as a consistent
+   shape regardless of content; in grid mode that produced
+   stretched-tall cards with a big empty middle when the
+   description was only a couple lines. `min-height: 0` here
+   undoes the base value so the card sizes to its content. The
+   body's `flex: 1` is also undone below so it doesn't fight the
+   collapse. */
+.libre-tracks__card--grid {
+  width: 100%;
+  min-height: 0;
+  /* Tighter inner padding too — the card is shorter overall so
+     16/18 of breathing room reads as proportional. */
+  padding: 14px 16px 12px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+.libre-tracks__card--grid .libre-tracks__card-body {
+  /* Let the body collapse to its content rather than push the
+     footer to the bottom of a 360px box. */
+  flex: 0 0 auto;
+}
+.libre-tracks__card--grid:hover {
+  transform: translateY(-3px);
+}
+
+.libre-tracks__card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.libre-tracks__card-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: color-mix(
+    in srgb,
+    var(--track-accent, var(--color-text-primary)) 18%,
+    transparent
+  );
+  color: var(--track-accent, var(--color-text-primary));
+  border-radius: var(--libre-radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.libre-tracks__card-tag-icon {
+  display: inline-flex;
+}
+
+.libre-tracks__card-index {
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  letter-spacing: 0.08em;
+}
+
+.libre-tracks__card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.libre-tracks__card-title {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.18;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary);
+}
+
+.libre-tracks__card-outcome {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.libre-tracks__card-desc {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--color-text-tertiary);
+  /* Clamp to keep cards visually consistent — long descriptions
+     would otherwise stretch a card past the next one's position
+     and break the perfect Z-axis stack. */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.libre-tracks__card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.libre-tracks__card-meta {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  text-transform: capitalize;
+}
+
+.libre-tracks__card-pct {
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.libre-tracks__card-progress {
+  position: relative;
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.libre-tracks__card-progress-fill {
+  display: block;
+  height: 100%;
+  background: var(--track-accent, var(--color-text-primary));
+  transition: width 0.4s ease;
+}
+
+/* ─── HUD ──────────────────────────────────────────────────── */
+
+.libre-tracks__hud {
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.55);
+  pointer-events: none;
+}
+
+.libre-tracks__hud-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.libre-tracks__hud-key {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.libre-tracks__hud-val {
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+  min-width: 4ch;
+}
+
+/* ─── Empty state (no search results) ──────────────────────── */
+
+.libre-tracks__empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+/* ─── Grid mode ────────────────────────────────────────────── */
+
+/* Grid-mode container. Replaces the 3D viewport once the user
+   has scrolled to the end of the hyper view (or on subsequent
+   loads after the `libre:tracks-mode` flag flipped to "grid").
+   Standard CSS grid with `auto-fill` so the layout adapts to
+   whatever width the main pane has — 3 columns on a typical
+   desktop, 2 on a sidebar-collapsed view, 1 on phone-width.
+   The wrapper handles its own overflow so the grid scrolls
+   the page rather than the document. */
+.libre-tracks__grid-wrap {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 40px 40px;
+  /* Re-enable selection inside the grid (the parent
+     `.libre-tracks` disables it for the hyper viewport, where
+     wheel-scroll across text was selecting random card body
+     copy). The grid is a normal browsable surface — users can
+     copy track titles / descriptions like any other page. */
+  user-select: auto;
+  -webkit-user-select: auto;
+}
+
+.libre-tracks__grid {
+  display: grid;
+  /* Explicit 3-column layout to match the hyper carousel's
+     3-up row. Scales down via the breakpoints below so
+     mid-range laptops + tablets still get a comfortable card
+     size. */
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1300px) {
+  .libre-tracks__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .libre-tracks__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.libre-tracks__grid-cell {
+  display: flex;
+  /* Quiet fade-in for the hand-off from the hyper view. Each
+     cell's `animation-delay` is set inline from the TSX
+     (`Math.min(idx, 16) * 35ms`) so the grid materialises in a
+     wave instead of all-at-once. Cap at index 16 to keep the
+     last delay sane on large catalogues. */
+  animation: libre-tracks-grid-fade-in 360ms ease-out backwards;
+  will-change: opacity, transform;
+}
+
+@keyframes libre-tracks-grid-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Toggle the `cursor: ns-resize` baseline off when the page
+   is in grid mode — the wheel no longer drives the 3D scroll,
+   so the resize-cursor would mislead the user. */
+.libre-tracks--grid .libre-tracks__viewport {
+  cursor: default;
+}
+
+/* ─── Grid overlay fade-in ──────────────────────────────────
+ *
+ * Sits on top of the hyper-scroll surface during the FINAL
+ * stretch of scroll. Opacity is driven by `--tracks-end-progress`
+ * — a 0..1 value the hyper-scroll's rAF loop writes onto the
+ * `.libre-tracks` root every frame based on how far through
+ * maxScroll the camera has flown.
+ *
+ * Below 70% progress: opacity 0 — overlay is invisible and the
+ * hyper view owns the surface.
+ * 70% → 100%: opacity ramps 0 → 1 so the grid layer crossfades
+ * in as the learner reaches the end of the carousel.
+ * At 100%: `onReachedEnd` fires in TracksHyperScroll and the
+ * parent flips `mode` to "grid"; the hyper view unmounts, this
+ * overlay is replaced by the canonical grid view in the
+ * `mode === "grid"` branch.
+ *
+ * `pointer-events: none` until fully faded in — clicks during
+ * the crossfade should still hit the hyper card behind, since
+ * the user is in the middle of finishing the fly-through. By
+ * the time the overlay is at full opacity the parent has
+ * already flipped to grid mode (which unmounts this overlay
+ * anyway), so there's no in-between state where pointer-events
+ * need to switch on. */
+
+.libre-tracks {
+  /* Resting value — the rAF loop overwrites this per frame
+     once the hyper-scroll mounts. Declaring it on the root
+     ensures CSS reads a numeric (not "initial") value before
+     the first rAF tick. */
+  --tracks-end-progress: 0;
+}
+
+/* Content wrapper — sits BELOW the header in the flex column
+   layout of `.libre-tracks`. Hosts the hyper-scroll viewport
+   AND the grid overlay as positioned siblings. The wrapper
+   reserves the post-header space (`flex: 1` claims the
+   remaining height; `position: relative` provides the
+   coordinate context for the overlay's `inset: 0`, so the
+   overlay no longer covers the header). Inner children use
+   the wrapper's `display: flex; flex-direction: column` so
+   each one's own `flex: 1` (e.g. `.libre-tracks__grid-wrap`'s)
+   resolves against a flex parent. */
+.libre-tracks__content {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.libre-tracks__grid-overlay {
+  position: absolute;
+  inset: 0;
+  /* Linear ramp: 0% until progress hits 0.7, then climbs to 1
+     by progress = 1.0. The `max(0, …)` clamps the ramp so
+     progress below 0.7 stays invisible. */
+  opacity: max(0, calc((var(--tracks-end-progress, 0) - 0.7) / 0.3));
+  pointer-events: none;
+  /* Above the hyper surface but below the header strip (which
+     was bumped to z 10 to outrank this overlay). The hyper
+     viewport itself doesn't set a z-index, so the overlay
+     wins via stacking-context order. */
+  z-index: 5;
+  /* Flex column so the inner `.libre-tracks__grid-wrap`'s
+     `flex: 1` resolves against the overlay (rather than
+     falling back to its intrinsic content height, which made
+     the grid look zoomed-in / clipped during the crossfade —
+     cards stretched to a tall column that overflowed the
+     visible area). The wrapper above already excludes the
+     header from the overlay's box, so we no longer need to
+     hand-pad the grid-wrap to dodge the header. */
+  display: flex;
+  flex-direction: column;
+  /* The CSS variable changes every frame, which means opacity
+     also recomputes every frame — but the value moves
+     smoothly with the lerp'd scroll, so we don't need a
+     transition. Without the rAF cadence (e.g. if a future
+     change drove progress in discrete steps from state) a
+     short transition would smooth out the jump; left off
+     here because rAF already provides 60fps interpolation. */
+}
+
+/* ─── Reduced motion ───────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  /* Strip the parallax / perspective theatrics for learners
+     who've requested reduced motion. The cards still scroll
+     and the search still works, but the rAF transforms become
+     near-noops at the visual level — perspective stays flat,
+     world rotation stays identity. We can't disable the rAF
+     loop entirely without breaking the scroll position; we
+     CAN disable the per-frame visual flourishes by neutering
+     the parent transforms with a high-specificity override. */
+  .libre-tracks__viewport {
+    perspective: 4000px !important;
+  }
+  .libre-tracks__world {
+    transform: none !important;
+  }
+  /* Grid cells also drop their fade-in for motion-sensitive
+     users — no slide, no stagger. They just appear. */
+  .libre-tracks__grid-cell {
+    animation: none;
+  }
+}

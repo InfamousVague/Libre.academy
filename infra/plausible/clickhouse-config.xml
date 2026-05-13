@@ -1,0 +1,25 @@
+<!--
+  ClickHouse logging tuning for the Plausible events store.
+
+  Default ClickHouse logs are extremely verbose (hundreds of
+  MB/day on a quiet instance). Plausible's official self-host
+  ships with these overrides to keep disk usage sane.
+-->
+<clickhouse>
+    <logger>
+        <level>warning</level>
+        <console>true</console>
+    </logger>
+
+    <!-- Query log retention — Plausible doesn't need historical
+         query traces; cap at 1 hour so the system table doesn't
+         grow unbounded. -->
+    <query_thread_log remove="remove"/>
+    <query_log remove="remove"/>
+    <text_log remove="remove"/>
+    <trace_log remove="remove"/>
+    <metric_log remove="remove"/>
+    <asynchronous_metric_log remove="remove"/>
+    <session_log remove="remove"/>
+    <part_log remove="remove"/>
+</clickhouse>

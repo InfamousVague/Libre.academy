@@ -5,6 +5,8 @@ import { isExerciseKind } from "../../data/types";
 import { runFiles, isPassing, type RunResult } from "../../runtimes";
 import { decodeFiles, makeBus } from "../../lib/workbenchSync";
 import { deriveSolutionFiles, deriveStarterFiles } from "../../lib/workbenchFiles";
+import { useKeybinding } from "../../hooks/useKeybinding";
+import { setRunStatus } from "../../hooks/useRunStatus";
 import EditorPane from "../Editor/EditorPane";
 import OutputPane from "../Output/OutputPane";
 import Workbench from "./Workbench";
@@ -114,9 +116,25 @@ export default function PoppedWorkbench() {
     });
   }
 
+  // Run-lesson shortcut works inside the popped window too. The
+  // chip rendered by EditorPane shows the same combo, so the
+  // popped UI's hint isn't lying about what ⌘R does here.
+  useKeybinding("lesson.run", () => void handleRun(), {
+    enabled: !!lesson && !running,
+    allowInInput: true,
+  });
+  useKeybinding("lesson.run.alt", () => void handleRun(), {
+    enabled: !!lesson && !running,
+    allowInInput: true,
+  });
+
   async function handleRun() {
     if (!lesson) return;
     setRunning(true);
+    // Broadcast to the global is-running signal so the sidebar's
+    // ChapterGrid (and other subscribers) light up while a run is
+    // executing — same lifecycle as the local `setRunning` flag.
+    setRunStatus(true);
     setResult(null);
     const bus = makeBus(courseId, lessonId);
     bus.emit({ type: "running" }, "popped");
@@ -136,6 +154,7 @@ export default function PoppedWorkbench() {
       if (isPassing(r)) bus.emit({ type: "complete" }, "popped");
     } finally {
       setRunning(false);
+      setRunStatus(false);
     }
   }
 

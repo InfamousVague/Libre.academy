@@ -1,0 +1,263 @@
+/* In-course chapter grid renderer. Mounts INSIDE the production
+   Sidebar's `libre__course-body` slot, so no positioning chrome
+   here — just the chapter list + cells. The surrounding sidebar
+   shell (brand strip, carousel, frosted-glass frame, fixed left
+   rail) is the same as Classic. */
+
+.libre-chgrid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  /* No padding — the parent `libre__course-body` already insets
+     the chapter content from the sidebar edges. Adding more here
+     would double-pad and crowd the cells. */
+}
+
+/* ---- Chapter section ---- */
+
+.libre-chgrid__chapters {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.libre-chgrid__chapter {
+  /* No card chrome — the chapter is just a header row stacked
+     over its (optionally rendered) cell grid. The surrounding
+     sidebar already provides the visual frame; piling a tinted
+     card on top crowded the sidebar and made every chapter look
+     like a separate panel. */
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* The chapter head is a clickable affordance — clicking it toggles
+   the open/closed state of the chapter's cell grid. It's rendered
+   as a `<button>` so keyboard activation + aria-expanded come for
+   free; the chrome stays flat so it doesn't read as a chunky
+   button — just a flat row with a chevron, title, mini-bar, and
+   count. */
+.libre-chgrid__chapter-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+  padding: 4px 2px;
+  margin: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 100ms ease;
+}
+
+.libre-chgrid__chapter-head:hover {
+  background: color-mix(
+    in srgb,
+    var(--color-text-primary, #fff) 6%,
+    transparent
+  );
+}
+
+.libre-chgrid__chapter-head:focus-visible {
+  outline: 2px solid var(--color-accent, #d4c5a1);
+  outline-offset: 1px;
+}
+
+/* Chevron sits before the title — `chevronRight` when collapsed,
+   `chevronDown` when open. Tinted to text-tertiary so it reads as
+   structural chrome rather than competing for attention with the
+   title. The icon SVG itself swaps between the two states (it's
+   set via the React Icon prop) so we don't need a CSS rotation;
+   keeps the chrome obviously interactive without overloading the
+   transform-origin / will-change properties on every chapter row. */
+.libre-chgrid__chapter-chevron {
+  flex-shrink: 0;
+  color: var(--color-text-tertiary, #888);
+}
+
+.libre-chgrid__chapter-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+/* Thin horizontal progress bar between the chapter title and the
+   "done/total" count. Width is fixed so the bar acts as a
+   benchmark across chapters rather than a fluid percentage. */
+.libre-chgrid__chapter-bar {
+  display: inline-block;
+  position: relative;
+  flex-shrink: 0;
+  width: 36px;
+  height: 3px;
+  background: color-mix(in srgb, var(--color-border-default) 90%, transparent);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.libre-chgrid__chapter-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--color-accent, #d4c5a1);
+  border-radius: 2px;
+  transition: width 200ms ease;
+}
+
+.libre-chgrid__chapter-count {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-tertiary);
+}
+
+/* ---- Cell grid ---- */
+
+.libre-chgrid__cells {
+  display: grid;
+  /* Auto-fill at 28px min cell width. Bigger than the 22px first
+     pass (which left the lesson-kind glyph + cell padding cramped)
+     while still letting the grid pack ~6 cells per row at the
+     production sidebar's content width. `minmax(28px, 1fr)` lets
+     the grid stretch each row to fill so the right edge stays
+     clean. */
+  grid-template-columns: repeat(auto-fill, minmax(28px, 1fr));
+  gap: 4px;
+}
+
+.libre-chgrid__cell {
+  /* Required positioning context for the optional Hologram
+     overlay rendered inside completed cells (see
+     `.libre-chgrid__cell-holo` rule below). overflow:hidden +
+     isolation:isolate clip the foil to the cell shape and keep
+     its blend modes from leaking out to siblings. */
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Generous interior padding so the lesson-kind icon (rendered at
+     Icon size="xs" ≈ 12px) has breathing room inside the cell
+     instead of butting against the border. Combined with the
+     `aspect-ratio: 1/1` rule, padding effectively shrinks the
+     icon's visual size relative to the cell — exactly the look
+     the user asked for. */
+  padding: 4px;
+  aspect-ratio: 1 / 1;
+  /* Subtle lifted fill so the cell reads against the dark chapter
+     card. The earlier `background: transparent` left the cells
+     near-invisible against the bg-primary-tinted card background;
+     a translucent bg-secondary fill (15-20%) pushes the cell up a
+     contrast notch without committing to a hardcoded grey. */
+  background: color-mix(in srgb, var(--color-bg-secondary, #1a1a1a) 60%, transparent);
+  /* Stronger border than the rail's default — the chapter card's
+     own border already uses border-default, so the cells need
+     something a hair brighter to read as distinct elements rather
+     than vanishing into the card outline. */
+  border: 1px solid color-mix(in srgb, var(--color-text-primary) 14%, transparent);
+  border-radius: 5px;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 10.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    background 100ms ease,
+    border-color 100ms ease,
+    color 100ms ease,
+    transform 100ms ease;
+}
+
+/* Hover state — slight scale-up only. The earlier
+   `translateY(-1px)` lift caused each cell to bump up and down as
+   the cursor glided across a row, which read as nervous; a small
+   uniform scale ticks the focused cell out from its neighbours
+   without any directional motion. `transform-origin: center` is
+   implicit (default), so the cell expands evenly inside its
+   reserved grid slot — the surrounding cells don't shift.
+
+   NOTE: this rule deliberately does NOT change `color` on hover.
+   Completed cells (--done) carry their text/glyph in dark
+   bg-primary on the accent fill; pushing them to text-primary on
+   hover flipped the inside contents to light-on-light and washed
+   the icon out. We let each state's resting colour stand on hover
+   and let the scale + border-colour do the visual work. */
+.libre-chgrid__cell:hover {
+  border-color: var(--color-accent, #d4c5a1);
+  transform: scale(1.12);
+}
+
+/* Pending cells DO get the text bump on hover — pending cells
+   show a faint numeral on a transparent fill, so lifting to
+   text-primary actually helps readability when the cursor is
+   resting on them. Scoped explicitly so the rule doesn't reach
+   --done or --current cells. */
+.libre-chgrid__cell--pending:hover {
+  color: var(--color-text-primary);
+}
+
+.libre-chgrid__cell--done {
+  background: var(--color-accent, #d4c5a1);
+  border-color: var(--color-accent, #d4c5a1);
+  color: var(--color-bg-primary, #0a0a0a);
+}
+
+/* Current cell — accent-tinted background + accent border. No
+   outer halo / box-shadow ring; the previous version of this rule
+   stamped a 2px translucent accent shadow around the cell which
+   read as a noisy orange glow at the new smaller cell size. The
+   tinted fill + solid border are enough on their own to mark the
+   current lesson without competing with the surrounding cells. */
+.libre-chgrid__cell--current {
+  background: color-mix(in srgb, var(--color-accent, #d4c5a1) 20%, transparent);
+  border-color: var(--color-accent, #d4c5a1);
+  color: var(--color-accent, #d4c5a1);
+}
+
+.libre-chgrid__cell-num {
+  display: inline-block;
+  line-height: 1;
+  /* Sit above the optional hologram overlay so the lesson
+     number remains crisp on completed cells. */
+  position: relative;
+  z-index: 1;
+}
+
+/* Lift the icon glyph above the hologram on completed cells so
+   the lesson-kind icon paints on top of the foil instead of
+   underneath. */
+.libre-chgrid__cell .icon,
+.libre-chgrid__cell svg {
+  position: relative;
+  z-index: 1;
+}
+
+/* Hologram overlay slot on completed cells — the white --done
+   background still sits below as the base; the foil composites
+   on top via plus-lighter. Inherits the cell's 5px corner
+   rounding via the Hologram primitive's `border-radius:
+   inherit` rule. */
+.libre-chgrid__cell-holo {
+  border-radius: 5px;
+}
+
+/* The bottom "peek" strip that used to summarise the hovered
+   cell's lesson title was retired in favour of per-cell <Tooltip>
+   wrappers (see ChapterGrid.tsx). The tooltip floats next to the
+   cell on hover/focus and disappears with the cursor, so the
+   chapter card no longer needs a permanent caption row. */

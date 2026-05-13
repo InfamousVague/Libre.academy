@@ -114,7 +114,7 @@
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.01em;
@@ -182,7 +182,7 @@
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy);
+  transition: background var(--libre-motion-snappy), color var(--libre-motion-snappy);
 }
 
 /* First segment has no left border — the outer group border already owns
@@ -213,12 +213,12 @@
   background: transparent;
   color: var(--color-text-primary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy);
+  transition: background var(--libre-motion-snappy), color var(--libre-motion-snappy);
 }
 
 .libre-library-bulk-export:hover:not(:disabled) {
@@ -293,12 +293,12 @@
   padding: 5px 10px;
   background: transparent;
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
   color: var(--color-text-secondary);
   font-family: inherit;
   font-size: 12px;
   cursor: pointer;
-  transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy), border-color var(--fb-motion-snappy);
+  transition: background var(--libre-motion-snappy), color var(--libre-motion-snappy), border-color var(--libre-motion-snappy);
 }
 
 .libre-library-pill:hover {
@@ -322,7 +322,7 @@
   padding: 6px 10px;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   color: var(--color-text-primary);
   font-family: inherit;
   font-size: 12px;
@@ -346,7 +346,7 @@
   padding: 5px 8px;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   color: var(--color-text-primary);
   font-family: inherit;
   font-size: 12px;
@@ -391,7 +391,7 @@
   padding: 3px 4px 3px 10px;
   background: var(--color-bg-tertiary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
   color: var(--color-text-primary);
   font-size: 11.5px;
   font-weight: 500;
@@ -406,11 +406,11 @@
   height: 18px;
   padding: 0;
   border: 0;
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
   background: transparent;
   color: var(--color-text-tertiary);
   cursor: pointer;
-  transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy);
+  transition: background var(--libre-motion-snappy), color var(--libre-motion-snappy);
 }
 
 .libre-library-filter-chip-x:hover {
@@ -427,14 +427,14 @@
   padding: 5px 12px;
   background: transparent;
   border: 1px dashed var(--color-border-default);
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
   color: var(--color-text-secondary);
   font-family: inherit;
   font-size: 11.5px;
   font-weight: 600;
   letter-spacing: 0.1px;
   cursor: pointer;
-  transition: background var(--fb-motion-snappy), border-color var(--fb-motion-snappy), color var(--fb-motion-snappy);
+  transition: background var(--libre-motion-snappy), border-color var(--libre-motion-snappy), color var(--libre-motion-snappy);
 }
 
 .libre-library-filter-trigger:hover,
@@ -493,12 +493,12 @@
   padding: 4px 10px;
   background: transparent;
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
   color: var(--color-text-secondary);
   font-family: inherit;
   font-size: 11.5px;
   cursor: pointer;
-  transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy), border-color var(--fb-motion-snappy);
+  transition: background var(--libre-motion-snappy), color var(--libre-motion-snappy), border-color var(--libre-motion-snappy);
 }
 
 .libre-library-filter-opt:hover {
@@ -539,9 +539,9 @@
   padding: 4px 10px;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   color: var(--color-text-tertiary);
-  transition: border-color var(--fb-motion-snappy), color var(--fb-motion-snappy);
+  transition: border-color var(--libre-motion-snappy), color var(--libre-motion-snappy);
 }
 
 .libre-library-search-wrap:focus-within {
@@ -575,7 +575,7 @@
   padding: 4px 8px;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   color: var(--color-text-tertiary);
 }
 
@@ -668,7 +668,7 @@
    a book sitting on a shelf. Without it the squash would compress
    from the centre and look like a balloon pop instead of an impact.
 
-   The per-card index lives in the `--fb-ripple-i` custom property
+   The per-card index lives in the `--libre-ripple-i` custom property
    set inline from CourseLibrary.tsx; `animation-delay` resolves it
    via `calc()` with a `min()` cap so giant shelves (200+ items)
    don't produce a multi-second tail — beyond 32 the cards land
@@ -687,8 +687,8 @@
    re-trigger the cascade. */
 .libre-library-shelf > *,
 .libre-library-grid > * {
-  animation: fb-library-spring-land 720ms cubic-bezier(0.2, 0.65, 0.3, 1) backwards;
-  animation-delay: calc(min(var(--fb-ripple-i, 0), 32) * 38ms);
+  animation: libre-library-spring-land 720ms cubic-bezier(0.2, 0.65, 0.3, 1) backwards;
+  animation-delay: calc(min(var(--libre-ripple-i, 0), 32) * 38ms);
   transform-origin: 50% 90%;
   /* Hint the browser so the multi-stage transform stays on the GPU
      compositor — keeps the cascade smooth on lower-end iPads where
@@ -696,7 +696,7 @@
   will-change: transform, opacity;
 }
 
-@keyframes fb-library-spring-land {
+@keyframes libre-library-spring-land {
   0% {
     opacity: 0;
     transform: translateY(-44px) scale(0.78);
@@ -726,12 +726,12 @@
 @media (prefers-reduced-motion: reduce) {
   .libre-library-shelf > *,
   .libre-library-grid > * {
-    animation: fb-library-spring-land-reduced 120ms ease-out backwards;
+    animation: libre-library-spring-land-reduced 120ms ease-out backwards;
     animation-delay: 0ms;
     transform-origin: 50% 50%;
     will-change: auto;
   }
-  @keyframes fb-library-spring-land-reduced {
+  @keyframes libre-library-spring-land-reduced {
     from { opacity: 0; }
     to { opacity: 1; }
   }
@@ -819,7 +819,7 @@
   min-width: 22px;
   height: 20px;
   padding: 0 7px;
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid var(--color-border-default);
   color: var(--color-text-tertiary);
@@ -841,7 +841,7 @@
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
   font-family: inherit;
   font-size: 12px;
   font-weight: 600;
@@ -889,7 +889,7 @@
   display: inline-flex;
   align-items: stretch;
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   overflow: hidden;
   background: var(--color-bg-primary);
 }
@@ -904,7 +904,7 @@
   font-weight: 600;
   letter-spacing: 0.2px;
   cursor: pointer;
-  transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy);
+  transition: background var(--libre-motion-snappy), color var(--libre-motion-snappy);
 }
 
 .libre-library-viewmode-btn + .libre-library-viewmode-btn {
@@ -928,22 +928,33 @@
   display: flex;
   flex-direction: column;
   background: var(--color-bg-primary);
-  border: 1px solid var(--color-border-default);
+  /* Subtle card border — `--color-border-card` resolves to about
+     0.16-alpha white on dark themes, which is just enough to draw
+     the silhouette against the same-colour backdrop without the
+     border itself becoming visual furniture. The strong variant
+     (`--color-border-card-strong`, ~0.32 alpha) is reserved for
+     hover and for surfaces that genuinely need to assert (e.g.
+     a card floating over a busier backdrop). */
+  border: 1px solid var(--color-border-card);
   border-radius: 10px;
   overflow: hidden;
   transition:
-    border-color var(--fb-motion-snappy),
+    border-color var(--libre-motion-snappy),
     transform 0.16s cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 0.18s ease;
   /* Mount animation — short fade + slight rise from below. Each
      card runs through this once on first paint; subsequent re-renders
      don't re-trigger because the animation is `forwards` and only
      plays on initial mount via the keyframes' from-state. */
-  animation: fb-library-card-rise 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: libre-library-card-rise 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .libre-library-card:hover {
-  border-color: var(--color-border-strong);
+  /* Hover steps up one tier — from `--color-border-card` (idle,
+     ~0.16) to `--color-border-card-strong` (~0.32) — so the
+     focused card stands apart from its idle neighbours without
+     resorting to a hardcoded value. */
+  border-color: var(--color-border-card-strong);
   /* Subtle lift on hover — communicates clickability without the
      loud Material-style elevation jump. */
   transform: translateY(-1px);
@@ -957,7 +968,7 @@
   transition-duration: 0.06s;
 }
 
-@keyframes fb-library-card-rise {
+@keyframes libre-library-card-rise {
   from {
     opacity: 0;
     transform: translateY(8px);
@@ -1041,7 +1052,7 @@
   background: rgba(214, 185, 105, 0.95);
   box-shadow: 0 0 0 0 rgba(214, 185, 105, 0.55);
   flex-shrink: 0;
-  animation: fb-card-update-pulse 2.4s ease-in-out infinite;
+  animation: libre-card-update-pulse 2.4s ease-in-out infinite;
   /* Push it next to the status text rather than far-right with the
      header's space-between — it should read as "update tag on the
      status" not "secondary chip on the language". */
@@ -1049,7 +1060,7 @@
   margin-right: 2px;
 }
 
-@keyframes fb-card-update-pulse {
+@keyframes libre-card-update-pulse {
   0%, 100% {
     box-shadow: 0 0 0 0 rgba(214, 185, 105, 0.55);
   }
@@ -1108,7 +1119,7 @@
   gap: 4px;
   padding: 0 10px 10px;
   opacity: 0;
-  transition: opacity var(--fb-motion-snappy);
+  transition: opacity var(--libre-motion-snappy);
 }
 
 .libre-library-card:hover .libre-library-card-actions {
@@ -1240,4 +1251,20 @@
 .libre-library-empty-secondary:hover {
   background: var(--color-bg-tertiary);
   border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ── Light-theme card surfaces ───────────────────────────────────
+   The card body's `--color-bg-primary` resolves to slight-off-
+   white (`#fcfcfc` etc.) on light themes — visually fine on its
+   own, but next to the now-pure-white sidebar + nav rail it
+   reads as a tinted plate rather than a clean card. Force pure
+   `#ffffff` for card surfaces in every light theme so the card,
+   sidebar, and rail share one chrome value.
+   Targeted by data-theme-name rather than via a token so the
+   dark themes' card-color decision (sit ~6% above the page bg
+   for visible silhouette) is untouched. */
+[data-theme-name="ayu-light"] .libre-library-card,
+[data-theme-name="catppuccin-latte"] .libre-library-card,
+[data-theme-name="cipher-light"] .libre-library-card {
+  background: #ffffff;
 }

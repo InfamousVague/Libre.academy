@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react";
+import { logOut } from "@base/primitives/icon/icons/log-out";
+import { trash2 } from "@base/primitives/icon/icons/trash-2";
+import { rotateCcw } from "@base/primitives/icon/icons/rotate-ccw";
+
 import { describeAuthProvider } from "./helpers";
 import { resetAccount } from "../../../lib/resetAccount";
 import type { UseLibreCloud } from "../../../hooks/useLibreCloud";
+import { useT } from "../../../i18n/i18n";
+
+import SettingsCard, { SettingsPage } from "./SettingsCard";
+import SettingsRow from "./SettingsRow";
 
 interface AccountSectionProps {
   user: {
@@ -26,10 +34,11 @@ interface AccountSectionProps {
   cloud: UseLibreCloud;
 }
 
-/// Account/Profile section. Rendered only when signed in. Surfaces the
-/// learner's identity (display name + email + provider), a sign-out
-/// button, and a click-to-confirm delete-account flow that mirrors the
-/// destructive-action UX used by `confirmClearCourses` above.
+/// Account/Profile section, Cipher-style. Top card is the profile
+/// hero — avatar + display name + email + provider. Following
+/// cards group destructive affordances by escalation: sign-out
+/// (reversible) → start-fresh (wipes progress, keeps account) →
+/// delete-account (irreversible).
 export default function AccountSection({
   user,
   signingOut,
@@ -41,10 +50,11 @@ export default function AccountSection({
   onConfirmDelete,
   cloud,
 }: AccountSectionProps) {
+  const t = useT();
   const displayName = user.display_name?.trim() || null;
-  // Avatar initial — first character of the display name, falling back
-  // to the email's local part. Always uppercase for visual consistency.
-  // If neither is available we fall through to a generic person glyph.
+  // Avatar initial — first character of the display name, falling
+  // back to the email's local part. Always uppercase for visual
+  // consistency. If neither is available we fall through to "?".
   const initialSource = displayName || user.email || "";
   const initial = initialSource ? initialSource.charAt(0).toUpperCase() : "?";
   const providerLabel = describeAuthProvider(user);
@@ -53,8 +63,7 @@ export default function AccountSection({
   /// a 5 s auto-disarm; second click within that window commits.
   /// Lots of friction on purpose — this nukes courses, completions,
   /// achievements, streaks, practice history, AND the cloud-side
-  /// rows in one shot. Reload after the reset so the empty state
-  /// renders against the freshly-seeded course set.
+  /// rows in one shot.
   const [freshArmed, setFreshArmed] = useState(false);
   const [freshBusy, setFreshBusy] = useState(false);
   const [freshMsg, setFreshMsg] = useState<string | null>(null);
@@ -64,147 +73,152 @@ export default function AccountSection({
     return () => window.clearTimeout(id);
   }, [freshArmed]);
 
+  const handleStartFresh = async () => {
+    if (!freshArmed) {
+      setFreshArmed(true);
+      setFreshMsg(null);
+      return;
+    }
+    setFreshArmed(false);
+    setFreshBusy(true);
+    setFreshMsg(t("settings.resetting"));
+    try {
+      const report = await resetAccount(cloud);
+      setFreshMsg(t("settings.resetReloading", { message: report.message }));
+      setTimeout(() => window.location.reload(), 700);
+    } catch (e) {
+      setFreshMsg(
+        t("settings.resetFailed", {
+          error: e instanceof Error ? e.message : String(e),
+        }),
+      );
+      setFreshBusy(false);
+    }
+  };
+
   return (
-    <section>
-      <h3 className="libre-settings-section">Account</h3>
-      <p className="libre-settings-blurb">
-        Your Libre cloud account. Lesson progress syncs across
-        devices when signed in; nothing is uploaded otherwise.
-      </p>
-
-      <div className="libre-settings-account-card">
-        <div className="libre-settings-account-avatar" aria-hidden>
-          {initial}
-        </div>
-        <div className="libre-settings-account-meta">
-          <div className="libre-settings-account-name">
-            {displayName || user.email || "Signed in"}
-          </div>
-          {user.email && displayName && (
-            <div className="libre-settings-account-email">{user.email}</div>
-          )}
-          <div className="libre-settings-account-provider">
-            {providerLabel}
-          </div>
-        </div>
-      </div>
-
-      <div className="libre-settings-data-row">
-        <div>
-          <div className="libre-settings-data-label">Sign out</div>
-          <div className="libre-settings-data-hint">
-            Removes the cloud token from this device. Your local courses
-            and progress stay; you can sign back in any time.
-          </div>
-        </div>
-        <button
-          className="libre-settings-secondary"
-          onClick={onSignOut}
-          disabled={signingOut || deletingAccount}
+    <SettingsPage
+      title={t("settings.account")}
+      description={t("settings.accountDescription")}
+    >
+      {/* ── Profile card ──────────────────────────────────────── */}
+      <SettingsCard title={t("settings.profileCard")}>
+        <div
+          className="libre-settings-row libre-settings-row--avatar"
+          style={{ alignItems: "center" }}
         >
-          {signingOut ? "Signing out…" : "Sign out"}
-        </button>
-      </div>
-
-      {/* ── Start fresh ────────────────────────────────────────
-          The single consolidated reset surface. Replaces the four
-          scattered buttons that used to live across Settings:
-            - Data → Clear cache (ingest)
-            - Data → Clear all courses
-            - Developer → Reset unlocked achievements
-            - Developer → Reset account to default
-          One click here arms the action; a second click within 5 s
-          commits. The reset wipes courses, completions, achievements,
-          streak, shields, practice history, AND the cloud-side
-          progress rows so other signed-in devices see the empty
-          state on their next pull. Sign-in token, theme, and other
-          preferences survive. Window reloads after success so the
-          freshly-emptied state seeds cleanly on next mount.
-      */}
-      <div className="libre-settings-data-row">
-        <div>
-          <div className="libre-settings-data-label">Start fresh</div>
-          <div className="libre-settings-data-hint">
-            {freshArmed
-              ? "Tap Confirm within 5 s to wipe every course, completion, achievement, streak, and cached progress on this device, plus the matching cloud rows. The page will reload with a freshly-seeded library."
-              : freshBusy
-              ? freshMsg ?? "Resetting…"
-              : freshMsg
-              ? freshMsg
-              : "Wipes every course, completion, achievement, streak, and cached progress on this device, plus the matching cloud rows. Sign-in, theme, and preferences stay. Use Delete account below if you want to remove the account entirely."}
-          </div>
+          <span className="libre-settings-row__avatar" aria-hidden>
+            {initial}
+          </span>
+          <span className="libre-settings-row__body">
+            <span className="libre-settings-row__label">
+              {displayName || user.email || t("settings.signedIn")}
+            </span>
+            <span className="libre-settings-row__sub">
+              {user.email && displayName
+                ? user.email
+                : providerLabel}
+            </span>
+          </span>
+          <span className="libre-settings-row__control">
+            <span style={{ fontSize: 11, color: "var(--color-text-tertiary)" }}>
+              {providerLabel}
+            </span>
+          </span>
         </div>
-        <button
-          className="libre-settings-danger"
-          disabled={freshBusy || signingOut || deletingAccount}
-          onClick={async () => {
-            if (!freshArmed) {
-              setFreshArmed(true);
-              setFreshMsg(null);
-              return;
-            }
-            setFreshArmed(false);
-            setFreshBusy(true);
-            setFreshMsg("Resetting…");
-            try {
-              const report = await resetAccount(cloud);
-              setFreshMsg(report.message + " Reloading…");
-              // Brief delay so the user sees the success line before
-              // the window blanks for the reload. Same pattern the
-              // sync-courses path uses elsewhere.
-              setTimeout(() => window.location.reload(), 700);
-            } catch (e) {
-              setFreshMsg(
-                `Reset failed: ${e instanceof Error ? e.message : String(e)}`,
-              );
-              setFreshBusy(false);
-            }
-          }}
-        >
-          {freshBusy
-            ? "Resetting…"
-            : freshArmed
-            ? "Confirm"
-            : "Start fresh"}
-        </button>
-      </div>
+      </SettingsCard>
 
-      <div className="libre-settings-data-row">
-        <div>
-          <div className="libre-settings-data-label">Delete account</div>
-          <div className="libre-settings-data-hint">
-            Permanently deletes your Libre cloud account, all synced
-            progress, and any uploaded courses. Local files on this
-            device are not affected. Cannot be undone.
-          </div>
-        </div>
-        {confirmDeleteAccount ? (
-          <div className="libre-settings-confirm">
+      {/* ── Sign out ─────────────────────────────────────────── */}
+      <SettingsCard title={t("settings.sessionCard")}>
+        <SettingsRow
+          icon={logOut}
+          label={t("settings.signOutOfDevice")}
+          sub={t("settings.signOutSub")}
+          control={
             <button
               className="libre-settings-secondary"
-              onClick={onCancelDelete}
-              disabled={deletingAccount}
+              onClick={onSignOut}
+              disabled={signingOut || deletingAccount}
             >
-              Cancel
+              {signingOut ? t("settings.signingOut") : t("auth.signOut")}
             </button>
+          }
+        />
+      </SettingsCard>
+
+      {/* ── Start fresh ──────────────────────────────────────── */}
+      <SettingsCard title={t("settings.resetCard")}>
+        <SettingsRow
+          icon={rotateCcw}
+          tone="danger"
+          label={t("settings.startFresh")}
+          sub={
+            freshArmed
+              ? t("settings.startFreshCloudArmedBody")
+              : freshBusy
+                ? freshMsg ?? t("settings.resetting")
+                : freshMsg
+                  ? freshMsg
+                  : t("settings.startFreshCloudBody")
+          }
+          control={
             <button
               className="libre-settings-danger"
-              onClick={onConfirmDelete}
-              disabled={deletingAccount}
+              disabled={freshBusy || signingOut || deletingAccount}
+              onClick={handleStartFresh}
             >
-              {deletingAccount ? "Deleting…" : "Really delete"}
+              {freshBusy
+                ? t("settings.resetting")
+                : freshArmed
+                  ? t("settings.confirm")
+                  : t("settings.startFresh")}
             </button>
-          </div>
-        ) : (
-          <button
-            className="libre-settings-danger"
-            onClick={onRequestDeleteConfirm}
-            disabled={signingOut}
-          >
-            Delete account
-          </button>
-        )}
-      </div>
-    </section>
+          }
+        />
+      </SettingsCard>
+
+      {/* ── Delete account ──────────────────────────────────── */}
+      <SettingsCard title={t("settings.dangerZone")}>
+        <SettingsRow
+          icon={trash2}
+          tone="danger"
+          label={t("settings.deleteAccount")}
+          sub={t("settings.deleteAccountSub")}
+          control={
+            confirmDeleteAccount ? (
+              <span
+                style={{
+                  display: "inline-flex",
+                  gap: 6,
+                }}
+              >
+                <button
+                  className="libre-settings-secondary"
+                  onClick={onCancelDelete}
+                  disabled={deletingAccount}
+                >
+                  {t("settings.cancelBtn")}
+                </button>
+                <button
+                  className="libre-settings-danger"
+                  onClick={onConfirmDelete}
+                  disabled={deletingAccount}
+                >
+                  {deletingAccount ? t("settings.deleting") : t("settings.reallyDelete")}
+                </button>
+              </span>
+            ) : (
+              <button
+                className="libre-settings-danger"
+                onClick={onRequestDeleteConfirm}
+                disabled={signingOut}
+              >
+                {t("settings.deleteAccount")}
+              </button>
+            )
+          }
+        />
+      </SettingsCard>
+    </SettingsPage>
   );
 }

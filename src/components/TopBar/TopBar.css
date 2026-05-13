@@ -80,10 +80,10 @@
   padding: 0;
   background: transparent;
   border: 0;
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   color: var(--color-text-secondary);
   cursor: pointer;
-  transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy);
+  transition: background var(--libre-motion-snappy), color var(--libre-motion-snappy);
 }
 
 .libre__topbar-sidebar-toggle:hover,
@@ -136,13 +136,13 @@
   max-width: 240px;
   background: var(--color-bg-tertiary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   color: var(--color-text-tertiary);
   font: inherit;
   font-size: 12px;
   cursor: pointer;
   text-align: left;
-  transition: background var(--fb-motion-snappy), border-color var(--fb-motion-snappy), color var(--fb-motion-snappy);
+  transition: background var(--libre-motion-snappy), border-color var(--libre-motion-snappy), color var(--libre-motion-snappy);
 }
 
 .libre__topbar-search:hover,
@@ -175,7 +175,7 @@
   font-size: 10px;
   letter-spacing: 0.4px;
   padding: 1px 5px;
-  border-radius: var(--fb-radius-xs);
+  border-radius: var(--libre-radius-xs);
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--color-text-tertiary);
@@ -218,7 +218,7 @@
   padding: 3px 8px 3px 10px;
   background: var(--color-bg-tertiary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
   color: var(--color-text-secondary);
   font-family: inherit;
   font-size: 11px;
@@ -226,7 +226,7 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.3px;
   cursor: pointer;
-  transition: background var(--fb-motion-snappy), border-color var(--fb-motion-snappy), color var(--fb-motion-snappy);
+  transition: background var(--libre-motion-snappy), border-color var(--libre-motion-snappy), color var(--libre-motion-snappy);
 }
 
 .libre__topbar-stats-trigger:hover,
@@ -241,7 +241,7 @@
   align-items: center;
   gap: 3px;
   color: var(--color-text-tertiary);
-  transition: color var(--fb-motion-snappy);
+  transition: color var(--libre-motion-snappy);
 }
 
 .libre__topbar-streak--active {
@@ -516,8 +516,14 @@
   padding: 8px 12px;
   background: linear-gradient(90deg, rgba(252, 211, 77, 0.08), transparent 90%);
   border: 1px solid rgba(252, 211, 77, 0.2);
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   font-size: 12px;
+  /* Breathing room above the teaser so it doesn't crash into the
+     "bank for upgrades…" hint text below the Coins block. The
+     mini-heatmap (sibling above when wired) uses the same 18px
+     top-gap pattern; this picks up the slack on accounts that
+     don't have any history yet and so don't render the heatmap. */
+  margin-top: 18px;
 }
 
 .libre__topbar-stats-next-label {
@@ -564,7 +570,7 @@
   padding: 9px 12px 10px;
   background: linear-gradient(90deg, rgba(127, 200, 255, 0.08), transparent 90%);
   border: 1px solid rgba(127, 200, 255, 0.22);
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -613,7 +619,7 @@
   border-radius: 50%;
   background: transparent;
   border: 1.5px solid rgba(127, 200, 255, 0.55);
-  transition: background var(--fb-motion-snappy);
+  transition: background var(--libre-motion-snappy);
 }
 
 .libre__topbar-stats-freeze-pip--used {
@@ -649,7 +655,7 @@
   letter-spacing: 0.1px;
   line-height: 1.2;
   cursor: pointer;
-  transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy);
+  transition: background var(--libre-motion-snappy), color var(--libre-motion-snappy);
 }
 
 .libre__topbar-stats-freeze-btn:hover {
@@ -682,13 +688,13 @@
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
   border: 1px solid var(--color-text-primary);
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 600;
   letter-spacing: 0.1px;
   cursor: pointer;
-  transition: opacity var(--fb-motion-snappy);
+  transition: opacity var(--libre-motion-snappy);
 }
 
 .libre__topbar-stats-view-profile:hover {
@@ -811,7 +817,7 @@
   color: var(--color-bg-primary);
   border: 1px solid var(--color-text-primary);
   font-weight: 600;
-  transition: opacity var(--fb-motion-snappy);
+  transition: opacity var(--libre-motion-snappy);
 }
 .libre__topbar-stats-signin:hover {
   opacity: 0.9;
@@ -824,7 +830,7 @@
   color: var(--color-text-secondary, rgba(127, 127, 127, 0.85));
   border: 1px solid var(--color-border, rgba(127, 127, 127, 0.3));
   font-weight: 500;
-  transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy);
+  transition: background var(--libre-motion-snappy), color var(--libre-motion-snappy);
 }
 .libre__topbar-stats-signout:hover {
   background: var(--color-bg-hover, rgba(127, 127, 127, 0.08));
@@ -844,7 +850,7 @@
   font-size: 12.5px;
   white-space: nowrap;
   cursor: pointer;
-  transition: color var(--fb-motion-snappy), background var(--fb-motion-snappy), border-color var(--fb-motion-snappy);
+  transition: color var(--libre-motion-snappy), background var(--libre-motion-snappy), border-color var(--libre-motion-snappy);
 }
 
 .libre__tab:hover {
@@ -916,7 +922,7 @@
 /* ── Tab groups ──────────────────────────────────────────────────
    Tabs sharing a `groupId` render a 2px coloured underline + a
    subtle tinted background so the eye can identify the run at a
-   glance. The colour comes from the inline `--fb-tab-group-color`
+   glance. The colour comes from the inline `--libre-tab-group-color`
    custom property set in TopBar.tsx, which references one of the
    palette tokens defined below. Run leaders (the leftmost tab in
    each contiguous group run) also render a small group-name badge
@@ -927,23 +933,23 @@
      Mixed against the existing `.libre__tab` background so an
      active tab still reads as active (its base bg is bg-secondary,
      which dominates over the 8% tint). */
-  background: color-mix(in srgb, var(--fb-tab-group-color, transparent) 8%, transparent);
+  background: color-mix(in srgb, var(--libre-tab-group-color, transparent) 8%, transparent);
   /* The 2px coloured underline sits on the bottom edge of the tab.
      Box-shadow rather than border so we don't disturb the tab's
      vertical alignment with neighbouring ungrouped tabs. */
-  box-shadow: inset 0 -2px 0 0 var(--fb-tab-group-color, transparent);
+  box-shadow: inset 0 -2px 0 0 var(--libre-tab-group-color, transparent);
 }
 
 .libre__tab--grouped:hover {
-  background: color-mix(in srgb, var(--fb-tab-group-color, transparent) 14%, transparent);
+  background: color-mix(in srgb, var(--libre-tab-group-color, transparent) 14%, transparent);
 }
 
 .libre__tab--grouped.libre__tab--active {
   /* Active grouped tab — keep the active treatment but bump the
      underline opacity so the group affiliation still shows. */
   background: var(--color-bg-secondary);
-  border-color: color-mix(in srgb, var(--fb-tab-group-color, transparent) 60%, var(--color-border-default));
-  box-shadow: inset 0 -2px 0 0 var(--fb-tab-group-color, transparent);
+  border-color: color-mix(in srgb, var(--libre-tab-group-color, transparent) 60%, var(--color-border-default));
+  box-shadow: inset 0 -2px 0 0 var(--libre-tab-group-color, transparent);
 }
 
 .libre__tab-group-badge {
@@ -958,7 +964,7 @@
   letter-spacing: 0.3px;
   text-transform: uppercase;
   color: var(--color-bg-primary);
-  background: var(--fb-tab-group-color, var(--color-text-primary));
+  background: var(--libre-tab-group-color, var(--color-text-primary));
   /* Cap the badge width so a long group name doesn't push the
      tab's title off the strip. Truncation via ellipsis. */
   max-width: 80px;
@@ -970,15 +976,15 @@
 /* Group colour palette. Each token is a 5-stop saturation curve
    tuned to read distinctly on both the dark + light themes. The
    right-click "Add to group" menu's swatches and grouped-tab
-   underlines both consume these via `--fb-tab-group-color-<token>`.
+   underlines both consume these via `--libre-tab-group-color-<token>`.
    Adding a new colour: append a token here AND its palette name
    to `TAB_GROUP_PALETTE` in App.tsx. */
 :root {
-  --fb-tab-group-color-gold: #d6b969;
-  --fb-tab-group-color-coral: #e08a78;
-  --fb-tab-group-color-mint: #78c896;
-  --fb-tab-group-color-sky: #7aa6d6;
-  --fb-tab-group-color-lavender: #b08fd0;
+  --libre-tab-group-color-gold: #d6b969;
+  --libre-tab-group-color-coral: #e08a78;
+  --libre-tab-group-color-mint: #78c896;
+  --libre-tab-group-color-sky: #7aa6d6;
+  --libre-tab-group-color-lavender: #b08fd0;
 }
 
 /* ── Tab right-click menu ────────────────────────────────────────
@@ -994,7 +1000,7 @@
   max-width: 280px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   box-shadow:
     0 8px 20px rgba(0, 0, 0, 0.45),
     0 2px 6px rgba(0, 0, 0, 0.25);
@@ -1039,7 +1045,7 @@
   padding: 6px 10px;
   background: transparent;
   border: 0;
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   color: var(--color-text-primary);
   cursor: pointer;
   font-size: 12px;

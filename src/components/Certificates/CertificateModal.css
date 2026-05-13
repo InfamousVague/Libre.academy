@@ -1,0 +1,325 @@
+/* Full-screen preview of a certificate. The on-screen card mirrors
+   the canvas-painted PNG layout so the user gets a true WYSIWYG
+   before downloading. The outer modal chrome is the standard
+   ModalBackdrop dimming the page; the card itself sits at the
+   centre with a close button + download CTA below it. */
+
+.libre-cert-modal {
+  width: min(960px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  position: relative;
+  padding: 32px 28px 28px;
+  background: var(--color-bg-primary, #1a1427);
+  border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.08));
+  border-radius: 14px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+.libre-cert-modal__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-text-secondary, rgba(245, 245, 247, 0.72));
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.libre-cert-modal__close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--color-text-primary, #f5f5f7);
+}
+
+/* ─── Card (on-screen preview of the PNG) ───────────────────── */
+
+.libre-cert-card {
+  /* 4:3 aspect ratio to match the PNG layout. Width capped at the
+     modal width; height derives from `aspect-ratio` so the card
+     scales proportionally on narrower viewports. Modernized: a
+     flat white base instead of the old parchment gradient
+     (`#fbf8f0 → #f3eede`), and a neutral thin border instead of
+     the heavy amber `#a85e1c` frame. The cert reads as a clean
+     contemporary diploma on white paper rather than a Victorian
+     ornament. */
+  aspect-ratio: 4 / 3;
+  width: 100%;
+  background: #ffffff;
+  color: #111111;
+  border-radius: 8px;
+  /* Nested-border ornament — the inner ::before fakes a quiet
+     inner rule; the outer border is a hairline graphite frame
+     instead of the old amber slab. */
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 14px 30px rgba(0, 0, 0, 0.4),
+    inset 0 0 0 8px transparent;
+}
+
+.libre-cert-card::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.libre-cert-card__inner {
+  /* Fill the card with absolute positioning grid; using percentages
+     keeps the on-screen layout proportional to the PNG layout
+     across viewport sizes. */
+  position: absolute;
+  inset: 4%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.libre-cert-card__brand {
+  text-align: center;
+  margin-top: 2%;
+}
+
+/* Modernized type system: app-default sans throughout (was the
+   full Georgia / Times serif stack), pure-black ink with alpha
+   for hierarchy (was warm `#1a1418` + parchment `#4a4147`),
+   and a hairline neutral divider instead of the amber gold rule. */
+
+.libre-cert-card__wordmark {
+  font-family: inherit;
+  font-weight: 700;
+  font-size: clamp(18px, 2.4vw, 32px);
+  letter-spacing: -0.01em;
+}
+
+.libre-cert-card__tagline {
+  font-size: clamp(10px, 1.1vw, 14px);
+  color: rgba(0, 0, 0, 0.55);
+  margin-top: 4px;
+}
+
+.libre-cert-card__divider {
+  width: clamp(180px, 30%, 320px);
+  height: 1px;
+  background: rgba(0, 0, 0, 0.14);
+  margin: 14px auto 0;
+}
+
+.libre-cert-card__title {
+  font-family: inherit;
+  font-weight: 600;
+  font-size: clamp(22px, 4.2vw, 56px);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  margin: clamp(18px, 4%, 38px) 0 0;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.libre-cert-card__presented {
+  font-family: inherit;
+  font-size: clamp(11px, 1.3vw, 15px);
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.5);
+  margin-top: clamp(16px, 3.5%, 32px);
+}
+
+.libre-cert-card__recipient {
+  font-family: inherit;
+  font-style: normal;
+  font-weight: 700;
+  font-size: clamp(30px, 6vw, 72px);
+  letter-spacing: -0.02em;
+  color: #111111;
+  text-align: center;
+  margin-top: clamp(6px, 1.2%, 14px);
+  max-width: 92%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.libre-cert-card__recipient-underline {
+  width: clamp(220px, 36%, 400px);
+  height: 1px;
+  background: rgba(0, 0, 0, 0.18);
+  margin-top: clamp(8px, 1.4%, 16px);
+}
+
+.libre-cert-card__for {
+  font-family: inherit;
+  font-size: clamp(11px, 1.3vw, 15px);
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.5);
+  margin-top: clamp(14px, 3%, 28px);
+}
+
+.libre-cert-card__course {
+  font-family: inherit;
+  font-weight: 600;
+  font-size: clamp(18px, 3vw, 36px);
+  letter-spacing: -0.01em;
+  color: #111111;
+  margin-top: clamp(6px, 1.2%, 14px);
+  text-align: center;
+  max-width: 92%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.libre-cert-card__stats {
+  font-size: clamp(11px, 1.4vw, 17px);
+  color: rgba(0, 0, 0, 0.55);
+  margin-top: clamp(14px, 3%, 28px);
+  font-weight: 500;
+}
+
+.libre-cert-card__lang {
+  font-size: clamp(9px, 1vw, 12px);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.85);
+  margin-top: 8px;
+}
+
+.libre-cert-card__footer {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  bottom: 3%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.libre-cert-card__footer-left {
+  text-align: left;
+}
+
+.libre-cert-card__date {
+  font-family: inherit;
+  font-weight: 600;
+  font-size: clamp(12px, 1.5vw, 18px);
+  color: #111111;
+}
+
+.libre-cert-card__date-label {
+  font-size: clamp(9px, 1vw, 12px);
+  color: rgba(0, 0, 0, 0.5);
+  margin-top: 2px;
+}
+
+.libre-cert-card__issuer {
+  font-family: inherit;
+  font-size: clamp(11px, 1.2vw, 14px);
+  font-weight: 600;
+  color: #111111;
+  margin-top: clamp(8px, 1.6%, 18px);
+}
+
+.libre-cert-card__certid {
+  font-size: clamp(8px, 0.9vw, 11px);
+  color: rgba(0, 0, 0, 0.5);
+  margin-top: 3px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+.libre-cert-card__footer-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.libre-cert-card__qr-placeholder {
+  width: clamp(60px, 12%, 140px);
+  height: clamp(60px, 12%, 140px);
+  background: repeating-conic-gradient(#111111 0% 25%, transparent 0% 50%) 50% / 8px 8px;
+  border: 1px solid #111111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  border-radius: 2px;
+}
+
+.libre-cert-card__qr-caption {
+  font-size: clamp(9px, 1vw, 12px);
+  color: rgba(0, 0, 0, 0.55);
+  margin-top: 6px;
+}
+
+/* ─── Actions ──────────────────────────────────────────────── */
+
+.libre-cert-modal__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.libre-cert-modal__download {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: var(--color-accent, #ffffff);
+  color: var(--color-accent-fg, #111111);
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.libre-cert-modal__download:hover {
+  transform: translateY(-1px);
+}
+
+.libre-cert-modal__download:active {
+  transform: translateY(0);
+}
+
+.libre-cert-modal__download:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.libre-cert-modal__verify-hint {
+  font-size: 11px;
+  color: var(--color-text-tertiary, rgba(245, 245, 247, 0.5));
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  word-break: break-all;
+  max-width: 100%;
+  text-align: center;
+}
+
+.libre-cert-modal__error {
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: rgba(239, 111, 111, 0.12);
+  border: 1px solid rgba(239, 111, 111, 0.4);
+  border-radius: 8px;
+  font-size: 13px;
+  color: #ff9a9a;
+  text-align: center;
+}

@@ -1,10 +1,10 @@
 /* PracticeSession — single-card review surface. Uses the same
  * design tokens as ProfileView / LessonView so the session feels
  * native to the rest of the app: --color-* for surfaces and text,
- * --fb-radius-* for chrome, the same pip + tile vocabulary the
+ * --libre-radius-* for chrome, the same pip + tile vocabulary the
  * lesson Quiz uses. */
 
-.fb-practice-session {
+.libre-practice-session {
   flex: 1;
   display: flex;
   min-height: 0;
@@ -15,12 +15,12 @@
 /* The session uses the same outer/scroll/inner shell as PracticeView
  * for parity. The session itself only needs scroll for very long
  * blocks templates; everything else fits without scrolling. */
-.fb-practice-session__scroll {
+.libre-practice-session__scroll {
   flex: 1;
   overflow-y: auto;
 }
 
-.fb-practice-session__inner {
+.libre-practice-session__inner {
   max-width: 880px;
   margin: 0 auto;
   padding: 20px 32px 56px;
@@ -30,7 +30,7 @@
 }
 
 /* Empty / done states */
-.fb-practice-session--empty .fb-practice-session__inner {
+.libre-practice-session--empty .libre-practice-session__inner {
   align-items: center;
   text-align: center;
   padding-top: 96px;
@@ -38,7 +38,7 @@
   gap: 14px;
 }
 
-.fb-practice-session__empty-icon {
+.libre-practice-session__empty-icon {
   width: 72px;
   height: 72px;
   border-radius: 50%;
@@ -49,27 +49,27 @@
   color: var(--color-text-tertiary);
 }
 
-.fb-practice-session__empty-icon + h2 {
+.libre-practice-session__empty-icon + h2 {
   margin: 0;
   font-size: 20px;
   font-weight: 700;
   color: var(--color-text-primary);
 }
 
-.fb-practice-session__exit {
+.libre-practice-session__exit {
   margin-top: 8px;
   padding: 10px 18px;
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
   border: 0;
-  border-radius: var(--fb-radius-md, 10px);
+  border-radius: var(--libre-radius-md, 10px);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
 }
 
 /* ---- Header --------------------------------------------------------- */
-.fb-practice-session__header {
+.libre-practice-session__header {
   display: flex;
   align-items: center;
   gap: 16px;
@@ -77,14 +77,14 @@
   border-bottom: 1px solid var(--color-border-default);
 }
 
-.fb-practice-session__back {
+.libre-practice-session__back {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 6px 10px;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: var(--fb-radius-md, 10px);
+  border-radius: var(--libre-radius-md, 10px);
   color: var(--color-text-secondary);
   font: inherit;
   font-size: 13px;
@@ -92,12 +92,12 @@
   transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
 }
 
-.fb-practice-session__back:hover {
+.libre-practice-session__back:hover {
   background: var(--color-bg-secondary);
   color: var(--color-text-primary);
 }
 
-.fb-practice-session__progress {
+.libre-practice-session__progress {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -105,12 +105,12 @@
   min-width: 0;
 }
 
-.fb-practice-session__pip-row {
+.libre-practice-session__pip-row {
   display: flex;
   gap: 4px;
 }
 
-.fb-practice-session__pip {
+.libre-practice-session__pip {
   flex: 1;
   height: 4px;
   border-radius: 2px;
@@ -118,26 +118,26 @@
   transition: background 120ms ease;
 }
 
-.fb-practice-session__pip.is-current {
+.libre-practice-session__pip.is-current {
   background: var(--color-text-primary);
 }
 
-.fb-practice-session__pip.is-correct {
+.libre-practice-session__pip.is-correct {
   background: #7cd97c;
 }
 
-.fb-practice-session__pip.is-wrong {
+.libre-practice-session__pip.is-wrong {
   background: #e87c6e;
 }
 
-.fb-practice-session__progress-label {
+.libre-practice-session__progress-label {
   font-size: 11.5px;
   font-weight: 600;
   letter-spacing: 0.04em;
   color: var(--color-text-tertiary);
 }
 
-.fb-practice-session__score {
+.libre-practice-session__score {
   display: inline-flex;
   align-items: center;
   gap: 12px;
@@ -146,25 +146,25 @@
   color: var(--color-text-secondary);
 }
 
-.fb-practice-session__score-correct,
-.fb-practice-session__score-wrong {
+.libre-practice-session__score-correct,
+.libre-practice-session__score-wrong {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   font-weight: 700;
 }
 
-.fb-practice-session__score-correct {
+.libre-practice-session__score-correct {
   color: #7cd97c;
 }
 
-.fb-practice-session__score-wrong {
+.libre-practice-session__score-wrong {
   color: #e87c6e;
 }
 
 /* ---- Card ----------------------------------------------------------- */
 
-.fb-practice-session__card {
+.libre-practice-session__card {
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -174,7 +174,7 @@
   border-radius: 16px;
 }
 
-.fb-practice-session__card-meta {
+.libre-practice-session__card-meta {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -185,21 +185,21 @@
   letter-spacing: 0.06em;
 }
 
-.fb-practice-session__sep {
+.libre-practice-session__sep {
   color: var(--color-border-default);
 }
 
-.fb-practice-session__lang {
+.libre-practice-session__lang {
   margin-left: auto;
   padding: 2px 8px;
   background: var(--color-bg-tertiary, var(--color-bg-inset, rgba(255, 255, 255, 0.04)));
-  border-radius: var(--fb-radius-pill, 999px);
+  border-radius: var(--libre-radius-pill, 999px);
   font-size: 10px;
   color: var(--color-text-secondary);
   letter-spacing: 0.06em;
 }
 
-.fb-practice-session__card-error {
+.libre-practice-session__card-error {
   padding: 32px;
   text-align: center;
   color: var(--color-text-tertiary);
@@ -207,33 +207,33 @@
 
 /* ---- Quiz card ------------------------------------------------------ */
 
-.fb-practice-quiz {
+.libre-practice-quiz {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-.fb-practice-quiz__prompt {
+.libre-practice-quiz__prompt {
   font-size: 18px;
   font-weight: 600;
   line-height: 1.5;
   color: var(--color-text-primary);
 }
 
-.fb-practice-quiz__options {
+.libre-practice-quiz__options {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.fb-practice-quiz__option {
+.libre-practice-quiz__option {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md, 10px);
+  border-radius: var(--libre-radius-md, 10px);
   cursor: pointer;
   text-align: left;
   font: inherit;
@@ -242,28 +242,28 @@
   transition: background 140ms ease, border-color 140ms ease, transform 80ms ease;
 }
 
-.fb-practice-quiz__option:hover:not(:disabled) {
+.libre-practice-quiz__option:hover:not(:disabled) {
   background: var(--color-bg-tertiary, var(--color-bg-inset, rgba(255, 255, 255, 0.04)));
   border-color: var(--color-border-strong, var(--color-border-default));
 }
 
-.fb-practice-quiz__option:active:not(:disabled) {
+.libre-practice-quiz__option:active:not(:disabled) {
   transform: translateY(1px);
 }
 
-.fb-practice-quiz__option.is-correct {
+.libre-practice-quiz__option.is-correct {
   background: rgba(124, 217, 124, 0.12);
   border-color: rgba(124, 217, 124, 0.45);
   color: var(--color-text-primary);
 }
 
-.fb-practice-quiz__option.is-wrong {
+.libre-practice-quiz__option.is-wrong {
   background: rgba(232, 124, 110, 0.12);
   border-color: rgba(232, 124, 110, 0.45);
   color: var(--color-text-primary);
 }
 
-.fb-practice-quiz__option-letter {
+.libre-practice-quiz__option-letter {
   flex: 0 0 24px;
   height: 24px;
   border-radius: 6px;
@@ -275,56 +275,56 @@
   color: var(--color-text-secondary);
 }
 
-.fb-practice-quiz__option.is-correct .fb-practice-quiz__option-letter {
+.libre-practice-quiz__option.is-correct .libre-practice-quiz__option-letter {
   background: rgba(124, 217, 124, 0.22);
   color: #7cd97c;
 }
 
-.fb-practice-quiz__option.is-wrong .fb-practice-quiz__option-letter {
+.libre-practice-quiz__option.is-wrong .libre-practice-quiz__option-letter {
   background: rgba(232, 124, 110, 0.22);
   color: #e87c6e;
 }
 
-.fb-practice-quiz__short {
+.libre-practice-quiz__short {
   display: flex;
   gap: 8px;
 }
 
-.fb-practice-quiz__short-input {
+.libre-practice-quiz__short-input {
   flex: 1;
   padding: 12px 14px;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md, 10px);
+  border-radius: var(--libre-radius-md, 10px);
   font: inherit;
   font-size: 14px;
   color: var(--color-text-primary);
 }
 
-.fb-practice-quiz__short-input:focus {
+.libre-practice-quiz__short-input:focus {
   outline: none;
   border-color: var(--color-text-primary);
 }
 
-.fb-practice-quiz__short-submit {
+.libre-practice-quiz__short-submit {
   padding: 12px 20px;
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
   border: 0;
-  border-radius: var(--fb-radius-md, 10px);
+  border-radius: var(--libre-radius-md, 10px);
   cursor: pointer;
   font: inherit;
   font-weight: 700;
 }
 
-.fb-practice-quiz__short-submit:disabled {
+.libre-practice-quiz__short-submit:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
 /* ---- Feedback panel ------------------------------------------------- */
 
-.fb-practice-feedback {
+.libre-practice-feedback {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -334,17 +334,17 @@
   background: var(--color-bg-primary);
 }
 
-.fb-practice-feedback--correct {
+.libre-practice-feedback--correct {
   background: rgba(124, 217, 124, 0.08);
   border-color: rgba(124, 217, 124, 0.4);
 }
 
-.fb-practice-feedback--wrong {
+.libre-practice-feedback--wrong {
   background: rgba(232, 124, 110, 0.08);
   border-color: rgba(232, 124, 110, 0.4);
 }
 
-.fb-practice-feedback__verdict {
+.libre-practice-feedback__verdict {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -353,21 +353,21 @@
   color: var(--color-text-primary);
 }
 
-.fb-practice-feedback--correct .fb-practice-feedback__verdict {
+.libre-practice-feedback--correct .libre-practice-feedback__verdict {
   color: #7cd97c;
 }
 
-.fb-practice-feedback--wrong .fb-practice-feedback__verdict {
+.libre-practice-feedback--wrong .libre-practice-feedback__verdict {
   color: #e87c6e;
 }
 
-.fb-practice-feedback__explain {
+.libre-practice-feedback__explain {
   font-size: 13.5px;
   line-height: 1.5;
   color: var(--color-text-secondary);
 }
 
-.fb-practice-feedback__actions {
+.libre-practice-feedback__actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -375,7 +375,7 @@
   padding-top: 4px;
 }
 
-.fb-practice-feedback__lesson-link {
+.libre-practice-feedback__lesson-link {
   background: transparent;
   border: 0;
   color: var(--color-text-secondary);
@@ -383,16 +383,16 @@
   font-size: 12.5px;
   cursor: pointer;
   padding: 6px 10px;
-  border-radius: var(--fb-radius-md, 10px);
+  border-radius: var(--libre-radius-md, 10px);
   transition: background 140ms ease, color 140ms ease;
 }
 
-.fb-practice-feedback__lesson-link:hover {
+.libre-practice-feedback__lesson-link:hover {
   background: var(--color-bg-tertiary, var(--color-bg-inset, rgba(255, 255, 255, 0.04)));
   color: var(--color-text-primary);
 }
 
-.fb-practice-feedback__next {
+.libre-practice-feedback__next {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -400,19 +400,19 @@
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
   border: 0;
-  border-radius: var(--fb-radius-md, 10px);
+  border-radius: var(--libre-radius-md, 10px);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
 }
 
-.fb-practice-feedback__next:hover {
+.libre-practice-feedback__next:hover {
   opacity: 0.9;
 }
 
 /* ---- Summary -------------------------------------------------------- */
 
-.fb-practice-summary {
+.libre-practice-summary {
   max-width: 560px;
   margin: 0 auto;
   padding: 56px 32px;
@@ -423,14 +423,14 @@
   text-align: center;
 }
 
-.fb-practice-summary__hero {
+.libre-practice-summary__hero {
   display: flex;
   flex-direction: column;
   gap: 8px;
   align-items: center;
 }
 
-.fb-practice-summary__big {
+.libre-practice-summary__big {
   font-size: 64px;
   font-weight: 800;
   letter-spacing: -0.03em;
@@ -439,23 +439,23 @@
   line-height: 1;
 }
 
-.fb-practice-summary__caption {
+.libre-practice-summary__caption {
   font-size: 16px;
   color: var(--color-text-primary);
 }
 
-.fb-practice-summary__sub {
+.libre-practice-summary__sub {
   font-size: 13px;
   color: var(--color-text-tertiary);
   font-variant-numeric: tabular-nums;
 }
 
-.fb-practice-summary__missed {
+.libre-practice-summary__missed {
   width: 100%;
   text-align: left;
 }
 
-.fb-practice-summary__missed h3 {
+.libre-practice-summary__missed h3 {
   margin: 0 0 12px;
   font-size: 12px;
   font-weight: 700;
@@ -464,7 +464,7 @@
   letter-spacing: 0.06em;
 }
 
-.fb-practice-summary__missed ul {
+.libre-practice-summary__missed ul {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -473,7 +473,7 @@
   gap: 8px;
 }
 
-.fb-practice-summary__missed li {
+.libre-practice-summary__missed li {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -481,27 +481,27 @@
   padding: 12px 14px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md, 10px);
+  border-radius: var(--libre-radius-md, 10px);
   font-size: 13.5px;
   color: var(--color-text-primary);
 }
 
-.fb-practice-summary__missed-meta {
+.libre-practice-summary__missed-meta {
   display: flex;
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
 }
 
-.fb-practice-summary__missed-course {
+.libre-practice-summary__missed-course {
   font-weight: 600;
 }
 
-.fb-practice-summary__missed-sep {
+.libre-practice-summary__missed-sep {
   color: var(--color-border-default);
 }
 
-.fb-practice-summary__missed li button {
+.libre-practice-summary__missed li button {
   background: transparent;
   border: 0;
   color: var(--color-text-secondary);
@@ -509,20 +509,20 @@
   font-size: 12.5px;
   cursor: pointer;
   padding: 4px 8px;
-  border-radius: var(--fb-radius-md, 10px);
+  border-radius: var(--libre-radius-md, 10px);
 }
 
-.fb-practice-summary__missed li button:hover {
+.libre-practice-summary__missed li button:hover {
   color: var(--color-text-primary);
   background: var(--color-bg-tertiary, var(--color-bg-inset, rgba(255, 255, 255, 0.04)));
 }
 
-.fb-practice-summary__exit {
+.libre-practice-summary__exit {
   padding: 12px 24px;
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
   border: 0;
-  border-radius: var(--fb-radius-md, 10px);
+  border-radius: var(--libre-radius-md, 10px);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
@@ -531,23 +531,23 @@
 /* ---- Responsive ----------------------------------------------------- */
 
 @media (max-width: 720px) {
-  .fb-practice-session {
+  .libre-practice-session {
     margin: 0;
   }
-  .fb-practice-session__inner {
+  .libre-practice-session__inner {
     padding: 16px 16px 96px;
   }
-  .fb-practice-session__card {
+  .libre-practice-session__card {
     padding: 16px;
     border-radius: 14px;
   }
-  .fb-practice-quiz__prompt {
+  .libre-practice-quiz__prompt {
     font-size: 16px;
   }
-  .fb-practice-summary {
+  .libre-practice-summary {
     padding: 40px 20px;
   }
-  .fb-practice-summary__big {
+  .libre-practice-summary__big {
     font-size: 48px;
   }
 }

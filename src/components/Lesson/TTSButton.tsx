@@ -72,13 +72,13 @@ export default function TTSButton({
     if (typeof estimatedReadMinutes === "number" && estimatedReadMinutes > 0) {
       return (
         <span
-          className={`fb-tts-pill fb-tts-pill--static${
+          className={`libre-tts-pill libre-tts-pill--static${
             className ? ` ${className}` : ""
           }`}
           aria-label={`${estimatedReadMinutes} minute read`}
         >
           <Icon icon={clockIcon} size="xs" color="currentColor" />
-          <span className="fb-tts-pill__text">
+          <span className="libre-tts-pill__text">
             {estimatedReadMinutes} min read
           </span>
         </span>
@@ -133,9 +133,9 @@ export default function TTSButton({
   return (
     <button
       type="button"
-      className={`fb-tts-pill${audio.isPlaying ? " fb-tts-pill--playing" : ""}${
-        audio.isLoading ? " fb-tts-pill--loading" : ""
-      }${idle ? "" : " fb-tts-pill--mid"}${className ? ` ${className}` : ""}`}
+      className={`libre-tts-pill${audio.isPlaying ? " libre-tts-pill--playing" : ""}${
+        audio.isLoading ? " libre-tts-pill--loading" : ""
+      }${idle ? "" : " libre-tts-pill--mid"}${className ? ` ${className}` : ""}`}
       onClick={audio.toggle}
       aria-label={ariaLabel}
       aria-pressed={audio.isPlaying}
@@ -145,13 +145,13 @@ export default function TTSButton({
           circles: a faint track + a foreground arc proportional to
           progress. Rotated -90° via CSS so the arc grows from 12
           o'clock clockwise. */}
-      <span className="fb-tts-pill__ring" aria-hidden>
-        <svg viewBox="0 0 32 32" width="32" height="32" className="fb-tts-pill__ring-svg">
+      <span className="libre-tts-pill__ring" aria-hidden>
+        <svg viewBox="0 0 32 32" width="32" height="32" className="libre-tts-pill__ring-svg">
           <circle
             cx="16"
             cy="16"
             r={RADIUS}
-            className="fb-tts-pill__ring-track"
+            className="libre-tts-pill__ring-track"
             fill="none"
             strokeWidth={2}
           />
@@ -159,7 +159,7 @@ export default function TTSButton({
             cx="16"
             cy="16"
             r={RADIUS}
-            className="fb-tts-pill__ring-fill"
+            className="libre-tts-pill__ring-fill"
             fill="none"
             strokeWidth={2}
             strokeLinecap="round"
@@ -172,11 +172,11 @@ export default function TTSButton({
             the static variant + the Glossary chip's icon size — the
             playable pill is now chip-sized rather than its prior
             32×32-ring affordance, so the icon scales accordingly. */}
-        <span className="fb-tts-pill__icon">
+        <span className="libre-tts-pill__icon">
           <Icon icon={icon} size="xs" color="currentColor" />
         </span>
       </span>
-      <span className="fb-tts-pill__text">{label}</span>
+      <span className="libre-tts-pill__text">{label}</span>
     </button>
   );
 }

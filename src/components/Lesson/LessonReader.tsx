@@ -23,6 +23,7 @@ import { estimateReadingMinutes } from "./readingTime";
 import { stopLessonAudio, useLessonAudio } from "../../hooks/useLessonAudio";
 import { useLessonReadCursor } from "../../hooks/useLessonReadCursor";
 import DeviceAction from "../Ledger/DeviceAction";
+import { useT } from "../../i18n/i18n";
 import LedgerStatusPill from "../Ledger/LedgerStatusPill";
 import "./LessonReader.css";
 
@@ -65,6 +66,7 @@ export default function LessonReader({
   onRetryLesson,
   requiresDevice,
 }: Props) {
+  const t = useT();
   const [html, setHtml] = useState<string>("");
 
   // Detect demoted-exercise state so we can render the inline retry CTA.
@@ -135,7 +137,7 @@ export default function LessonReader({
   // ── TTS narration cursor ─────────────────────────────────────────
   // Walks the rendered article's `data-tts-block` annotations (added
   // by markdown.ts step 6), maps the audio's progress fraction to a
-  // current block index, and applies the `.fb-tts-current` class on
+  // current block index, and applies the `.libre-tts-current` class on
   // the matching DOM element. The hook keys boundary recomputation
   // and class re-application off the `html` string identity rather
   // than a MutationObserver — the v1 design used MOs and froze the
@@ -593,7 +595,7 @@ export default function LessonReader({
                 <span className="libre-reader-meta-glossary-icon" aria-hidden>
                   <Icon icon={bookOpen} size="xs" color="currentColor" />
                 </span>
-                Glossary
+                {t("lesson.glossary")}
                 <span className="libre-reader-meta-glossary-count">
                   {enrichment!.glossary!.length}
                 </span>
@@ -611,18 +613,15 @@ export default function LessonReader({
             <div className="libre-reader-retry" role="note">
               <div className="libre-reader-retry-head">
                 <span className="libre-reader-retry-label">
-                  Exercise needs another pass
+                  {t("lesson.exerciseNeedsAnotherPass")}
                 </span>
               </div>
               <div className="libre-reader-retry-body">
-                The generator couldn't build a working exercise for this
-                lesson on the first run — it failed validation 3 times
-                and demoted the lesson to a reading. Hit retry to run
-                just this one lesson again with the latest prompt.
+                {t("lesson.exerciseDemotedBody")}
               </div>
               <div className="libre-reader-retry-reason" title={demotedReason}>
                 <span className="libre-reader-retry-reason-label">
-                  First failure
+                  {t("lesson.firstFailure")}
                 </span>
                 <span className="libre-reader-retry-reason-text">
                   {demotedReason.length > 160
@@ -635,7 +634,7 @@ export default function LessonReader({
                 className="libre-reader-retry-btn"
                 onClick={() => onRetryLesson(lesson.id)}
               >
-                Retry this exercise
+                {t("lesson.retryExercise")}
               </button>
             </div>
           )}
@@ -643,7 +642,7 @@ export default function LessonReader({
           {/* Objectives — shown only when the generator supplied them. */}
           {objectives && objectives.length > 0 && (
             <div className="libre-reader-objectives" role="note">
-              <div className="libre-reader-objectives-label">You'll learn</div>
+              <div className="libre-reader-objectives-label">{t("lesson.youWillLearn")}</div>
               <ul className="libre-reader-objectives-list">
                 {objectives.map((o, i) => (
                   <li key={i}>{o}</li>
@@ -672,14 +671,14 @@ export default function LessonReader({
       {/* Glossary side sheet. Conditionally rendered so it doesn't eat
           DOM weight when the feature isn't in play. */}
       {hasGlossary && glossaryOpen && (
-        <aside className="libre-reader-glossary" role="dialog" aria-label="Glossary">
+        <aside className="libre-reader-glossary" role="dialog" aria-label={t("lesson.glossary")}>
           <div className="libre-reader-glossary-head">
-            <span>Glossary</span>
+            <span>{t("lesson.glossary")}</span>
             <button
               type="button"
               className="libre-reader-glossary-close"
               onClick={() => setGlossaryOpen(false)}
-              aria-label="Close glossary"
+              aria-label={t("lesson.closeGlossary")}
             >
               <Icon icon={xIcon} size="xs" color="currentColor" />
             </button>

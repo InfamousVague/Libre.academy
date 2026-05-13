@@ -78,3 +78,4 @@ vite.config.js
 
 # LLM blocks-data authoring cache (one entry per exercise, sha-keyed)
 .cache/blocks/
+.cache/

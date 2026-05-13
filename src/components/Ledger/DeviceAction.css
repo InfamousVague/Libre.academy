@@ -1,7 +1,7 @@
 /* Inline interactive Ledger button used inside reading lessons. The
  * markdown fence ```device-action ``` renders into one of these. */
 
-.fb-device-action {
+.libre-device-action {
   margin: 12px 0;
   padding: 10px 12px;
   border: 1px solid var(--color-border-default);
@@ -12,14 +12,14 @@
   gap: 8px;
 }
 
-.fb-device-action__row {
+.libre-device-action__row {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
 }
 
-.fb-device-action__button {
+.libre-device-action__button {
   padding: 6px 12px;
   border-radius: 6px;
   border: 1px solid var(--color-border-strong);
@@ -29,30 +29,30 @@
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: var(--fb-motion-snappy);
+  transition: var(--libre-motion-snappy);
 }
 
-.fb-device-action__button:hover:not(:disabled) {
+.libre-device-action__button:hover:not(:disabled) {
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
 }
 
-.fb-device-action__button:disabled {
+.libre-device-action__button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-.fb-device-action__hint {
+.libre-device-action__hint {
   font-size: 11px;
   color: var(--color-text-tertiary);
   font-style: italic;
 }
 
-.fb-device-action__custom {
+.libre-device-action__custom {
   display: flex;
 }
 
-.fb-device-action__input {
+.libre-device-action__input {
   flex: 1;
   padding: 5px 8px;
   border-radius: 5px;
@@ -63,12 +63,12 @@
   font-size: 11px;
 }
 
-.fb-device-action__input:focus {
+.libre-device-action__input:focus {
   outline: none;
   border-color: var(--color-border-strong);
 }
 
-.fb-device-action__output {
+.libre-device-action__output {
   margin: 0;
   padding: 8px 10px;
   border-radius: 5px;
@@ -83,11 +83,11 @@
   overflow: auto;
 }
 
-.fb-device-action__output--ok {
+.libre-device-action__output--ok {
   border-color: rgba(67, 178, 92, 0.4);
 }
 
-.fb-device-action__output--err {
+.libre-device-action__output--err {
   border-color: rgba(239, 111, 111, 0.4);
   color: rgba(239, 111, 111, 0.95);
 }

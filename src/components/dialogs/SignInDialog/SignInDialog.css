@@ -24,7 +24,7 @@
    gesture bar. Triggered by coarse-pointer + narrow viewport — same
    heuristic as `isMobile` in lib/platform.ts. */
 @media (pointer: coarse) and (max-width: 768px) {
-  .fb-modal-backdrop.libre-signin-backdrop-mobile {
+  .libre-modal-backdrop.libre-signin-backdrop-mobile {
     place-items: end center;
   }
   .libre-signin-panel {
@@ -59,7 +59,7 @@
   font-size: 22px;
   line-height: 1;
   cursor: pointer;
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
 }
 .libre-signin-close:hover {
   color: var(--color-text-primary);
@@ -88,20 +88,20 @@
   padding: 2px;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
   margin-bottom: 6px;
 }
 .libre-signin-mode-btn {
   padding: 6px 14px;
   background: transparent;
   border: 0;
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
   color: var(--color-text-tertiary);
   font: inherit;
   font-size: 11.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy);
+  transition: background var(--libre-motion-snappy), color var(--libre-motion-snappy);
 }
 .libre-signin-mode-btn--active {
   background: var(--color-text-primary);
@@ -138,7 +138,7 @@
   text-underline-offset: 3px;
   text-decoration-thickness: 1px;
   text-decoration-color: rgba(155, 166, 237, 0.45);
-  transition: color var(--fb-motion-quick), text-decoration-color var(--fb-motion-quick);
+  transition: color var(--libre-motion-quick), text-decoration-color var(--libre-motion-quick);
 }
 .libre-signin-switch__link:hover {
   color: var(--color-text-primary);
@@ -234,7 +234,7 @@
   padding: 9px 11px;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   color: var(--color-text-primary);
   font: inherit;
   font-size: 13px;
@@ -260,7 +260,7 @@
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
   border: 0;
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   font: inherit;
   font-size: 13px;
   font-weight: 700;
@@ -281,7 +281,7 @@
   color: #ef6f6f;
   background: rgba(239, 111, 111, 0.08);
   border: 1px solid rgba(239, 111, 111, 0.3);
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
 }
 
 /* OAuth panel — replaces the old paste-mode form for Apple + Google.
@@ -308,13 +308,13 @@
   justify-content: center;
   gap: 10px;
   padding: 11px 18px;
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
   font: inherit;
   font-size: 14px;
   font-weight: 600;
   letter-spacing: -0.1px;
   cursor: pointer;
-  transition: opacity var(--fb-motion-snappy), transform 0.05s ease;
+  transition: opacity var(--libre-motion-snappy), transform 0.05s ease;
 }
 .libre-signin-oauth-btn:hover:not(:disabled) {
   opacity: 0.92;
@@ -363,7 +363,7 @@
   color: var(--color-text-secondary);
   background: var(--color-bg-primary);
   border: 1px dashed var(--color-border-default);
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   padding: 9px 12px;
   text-align: center;
 }
@@ -378,7 +378,7 @@
   font-size: 12px;
   cursor: pointer;
   padding: 6px 10px;
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
 }
 .libre-signin-skip:hover {
   color: var(--color-text-primary);
@@ -397,7 +397,7 @@
   padding: 8px 14px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
   font-size: 12px;
   color: var(--color-text-secondary);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);

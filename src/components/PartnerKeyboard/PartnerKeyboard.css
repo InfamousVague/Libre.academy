@@ -5,7 +5,7 @@
    theme tokens the rest of the app uses so it sits naturally in
    any palette. */
 
-.fb-pk {
+.libre-pk {
   position: fixed;
   left: 0;
   right: 0;
@@ -15,13 +15,13 @@
   bottom: 0;
   background: var(--color-bg-secondary, #15161c);
   border-top: 1px solid var(--color-border-default, #2a2c36);
-  /* --fb-pk-shim is set by the React component to 44 px when the
+  /* --libre-pk-shim is set by the React component to 44 px when the
      target has focus on iOS — pushes the strip down so its bottom
      edge hides behind iOS's form accessory bar, plus matching
      bottom padding so the keys + tabs stay above the bar's draw
      region. See PartnerKeyboard.tsx for the full rationale. */
   padding-bottom: calc(
-    env(safe-area-inset-bottom, 0px) + var(--fb-pk-shim, 0px)
+    env(safe-area-inset-bottom, 0px) + var(--libre-pk-shim, 0px)
   );
   /* Above the mobile tab bar (z-index 100) AND above the
      achievement modal backdrop (z-index 10010) — the strip must
@@ -33,12 +33,12 @@
   display: none;
 }
 
-.fb-pk--active {
+.libre-pk--active {
   display: block;
 }
 
 /* Tab strip — categories. Horizontal scroll for overflow. */
-.fb-pk__tabs {
+.libre-pk__tabs {
   display: flex;
   gap: 2px;
   padding: 6px 6px 0;
@@ -46,11 +46,11 @@
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
-.fb-pk__tabs::-webkit-scrollbar {
+.libre-pk__tabs::-webkit-scrollbar {
   display: none;
 }
 
-.fb-pk__tab {
+.libre-pk__tab {
   flex: 0 0 auto;
   padding: 5px 12px;
   background: transparent;
@@ -65,13 +65,13 @@
   transition: background 100ms ease, color 100ms ease;
   font-family: inherit;
 }
-.fb-pk__tab--active {
+.libre-pk__tab--active {
   background: var(--color-bg-tertiary, #1f2028);
-  color: var(--color-text-primary, #f4eedd);
+  color: var(--color-text-primary, #ffffff);
 }
 
 /* Key row — horizontal scrollable strip of symbols / snippets. */
-.fb-pk__row {
+.libre-pk__row {
   display: flex;
   gap: 4px;
   padding: 6px;
@@ -83,11 +83,11 @@
      pixels and look detached from the keyboard. */
   overscroll-behavior-x: contain;
 }
-.fb-pk__row::-webkit-scrollbar {
+.libre-pk__row::-webkit-scrollbar {
   display: none;
 }
 
-.fb-pk__key {
+.libre-pk__key {
   flex: 0 0 auto;
   /* 44 px is Apple's minimum touch target. Keys narrower than
      this become hard to hit reliably under thumb. */
@@ -97,7 +97,7 @@
   background: var(--color-bg-tertiary, #1f2028);
   border: 1px solid var(--color-border-default, #2a2c36);
   border-radius: 8px;
-  color: var(--color-text-primary, #f4eedd);
+  color: var(--color-text-primary, #ffffff);
   font-family: "SF Mono", "Monaco", "Cascadia Code", monospace;
   font-size: 15px;
   font-weight: 500;
@@ -110,18 +110,18 @@
   touch-action: manipulation;
   transition: background 80ms ease, transform 80ms ease;
 }
-.fb-pk__key:active {
+.libre-pk__key:active {
   background: var(--color-bg-secondary, #2a2c36);
   transform: scale(0.96);
 }
-.fb-pk__key--wide {
+.libre-pk__key--wide {
   min-width: 60px;
   padding: 0 12px;
 }
-.fb-pk__key--snippet {
+.libre-pk__key--snippet {
   font-size: 13px;
 }
-.fb-pk__key--mod {
+.libre-pk__key--mod {
   color: var(--color-accent-warm, #f37239);
   font-weight: 600;
 }

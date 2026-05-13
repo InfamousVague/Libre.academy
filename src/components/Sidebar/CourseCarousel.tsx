@@ -2,6 +2,7 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 import type { Course } from "../../data/types";
 import { useCourseCover } from "../../hooks/useCourseCover";
 import { carouselGlyph, courseProgress } from "./labels";
+import { useT } from "../../i18n/i18n";
 
 /// FLIP animation constants. Must stay in sync with
 /// `.libre__carousel-item` width (74) and `.libre__carousel-scroll`
@@ -39,6 +40,7 @@ export default function CourseCarousel({
   onSelectCourse: (courseId: string) => void;
   onContextMenu?: (course: Course, e: React.MouseEvent) => void;
 }) {
+  const t = useT();
   const scrollRef = useRef<HTMLDivElement>(null);
   /// Each course's index at the END of the previous render. We compare
   /// against the current sort to figure out which cards moved and by
@@ -132,7 +134,7 @@ export default function CourseCarousel({
   if (sorted.length < 2) return null;
 
   return (
-    <div className="libre__carousel" aria-label="Recent courses">
+    <div className="libre__carousel" aria-label={t("sidebar.ariaCarousel")}>
       <div className="libre__carousel-scroll" ref={scrollRef}>
         {sorted.map((c) => (
           <CarouselItem

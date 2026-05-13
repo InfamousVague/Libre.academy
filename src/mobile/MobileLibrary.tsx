@@ -25,6 +25,7 @@ import type { Completion } from "../hooks/useProgress";
 import { isChallengePack } from "../data/types";
 import { prefetchCovers } from "../hooks/useCourseCover";
 import { useLocalStorageState } from "../hooks/useLocalStorageState";
+import { haptics } from "../lib/haptics";
 import { Icon } from "@base/primitives/icon";
 import { search as searchIcon } from "@base/primitives/icon/icons/search";
 import { layoutGrid as gridIcon } from "@base/primitives/icon/icons/layout-grid";
@@ -392,7 +393,15 @@ export default function MobileLibrary({
                       total={total}
                       done={done}
                       pct={pct}
-                      onOpen={() => onOpenLesson(c, ch, ls)}
+                      onOpen={() => {
+                        // Medium impact on course open — the
+                        // "diving into something significant"
+                        // moment. Heavier than a chrome tap so
+                        // the transition reads as a deliberate
+                        // commitment.
+                        void haptics.medium();
+                        onOpenLesson(c, ch, ls);
+                      }}
                     />
                   </li>
                 );
@@ -410,7 +419,10 @@ export default function MobileLibrary({
                     <BookCover
                       course={c}
                       progress={pct}
-                      onOpen={() => onOpenLesson(c, ch, ls)}
+                      onOpen={() => {
+                        void haptics.medium();
+                        onOpenLesson(c, ch, ls);
+                      }}
                     />
                   </li>
                 );

@@ -22,16 +22,16 @@ export default function LedgerStatusPill() {
   if (error) {
     return (
       <div
-        className="fb-ledger-pill fb-ledger-pill--error"
+        className="libre-ledger-pill libre-ledger-pill--error"
         role="status"
         aria-live="polite"
       >
-        <span className="fb-ledger-pill__label" title={error}>
+        <span className="libre-ledger-pill__label" title={error}>
           {error.length > 60 ? error.slice(0, 57) + "…" : error}
         </span>
         <button
           type="button"
-          className="fb-ledger-pill__dismiss"
+          className="libre-ledger-pill__dismiss"
           onClick={clearError}
           aria-label="Dismiss error"
         >
@@ -43,9 +43,9 @@ export default function LedgerStatusPill() {
 
   if (connecting) {
     return (
-      <div className="fb-ledger-pill fb-ledger-pill--connecting">
-        <span className="fb-ledger-pill__spinner" aria-hidden />
-        <span className="fb-ledger-pill__label">Connecting…</span>
+      <div className="libre-ledger-pill libre-ledger-pill--connecting">
+        <span className="libre-ledger-pill__spinner" aria-hidden />
+        <span className="libre-ledger-pill__label">Connecting…</span>
       </div>
     );
   }
@@ -54,12 +54,12 @@ export default function LedgerStatusPill() {
     return (
       <button
         type="button"
-        className="fb-ledger-pill fb-ledger-pill--connected"
+        className="libre-ledger-pill libre-ledger-pill--connected"
         onClick={() => void disconnect()}
         title="Click to disconnect"
       >
-        <span className="fb-ledger-pill__dot" aria-hidden />
-        <span className="fb-ledger-pill__label">{device.model} connected</span>
+        <span className="libre-ledger-pill__dot" aria-hidden />
+        <span className="libre-ledger-pill__label">{device.model} connected</span>
       </button>
     );
   }
@@ -67,14 +67,14 @@ export default function LedgerStatusPill() {
   return (
     <button
       type="button"
-      className="fb-ledger-pill fb-ledger-pill--disconnected"
+      className="libre-ledger-pill libre-ledger-pill--disconnected"
       onClick={() => void connect()}
       title="Plug in your Ledger and click to connect"
     >
-      <span className="fb-ledger-pill__icon" aria-hidden>
+      <span className="libre-ledger-pill__icon" aria-hidden>
         ◯
       </span>
-      <span className="fb-ledger-pill__label">Connect Ledger</span>
+      <span className="libre-ledger-pill__label">Connect Ledger</span>
     </button>
   );
 }

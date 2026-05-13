@@ -14,6 +14,7 @@ import TipDropdown from "../TipDropdown/TipDropdown";
 import TopBarSearch from "../TopBarSearch/TopBarSearch";
 import StatsChip from "./StatsChip";
 import { isWeb } from "../../lib/platform";
+import { useT } from "../../i18n/i18n";
 import "./TopBar.css";
 
 export interface Tab {
@@ -30,7 +31,7 @@ export interface Tab {
   groupName?: string;
   /// Palette token suffix ("gold" / "coral" / "mint" / "sky" /
   /// "lavender"). Resolved by CSS into the active theme's accent
-  /// hue via `--fb-tab-group-color-<token>` custom properties.
+  /// hue via `--libre-tab-group-color-<token>` custom properties.
   groupColorToken?: string;
 }
 
@@ -163,6 +164,7 @@ export default function TopBar({
   courses,
   onOpenLesson,
 }: Props) {
+  const t = useT();
   // Always show the chip when stats are wired — the dropdown carries
   // both the level/streak detail and the cloud-sync sign-in path, so
   // hiding it for fresh learners would orphan the latter.
@@ -295,10 +297,12 @@ export default function TopBar({
           onClick={onToggleSidebar}
           title={
             sidebarCollapsed
-              ? "Show sidebar (⌘\\)"
-              : "Hide sidebar (⌘\\)"
+              ? t("topBar.showSidebarTitle")
+              : t("topBar.hideSidebarTitle")
           }
-          aria-label={sidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
+          aria-label={
+            sidebarCollapsed ? t("nav.showSidebar") : t("nav.hideSidebar")
+          }
           aria-pressed={sidebarCollapsed}
         >
           <Icon
@@ -332,7 +336,7 @@ export default function TopBar({
           // base `.libre__tab` rule render its default chrome.
           const styleVars = tab.groupColorToken
             ? ({
-                "--fb-tab-group-color": `var(--fb-tab-group-color-${tab.groupColorToken})`,
+                "--libre-tab-group-color": `var(--libre-tab-group-color-${tab.groupColorToken})`,
               } as React.CSSProperties)
             : undefined;
           return (
@@ -361,7 +365,7 @@ export default function TopBar({
               {isFirstOfGroup && (
                 <span
                   className="libre__tab-group-badge"
-                  title={`Group: ${tab.groupName}`}
+                  title={t("topBar.groupTitle", { name: tab.groupName ?? "" })}
                 >
                   {tab.groupName}
                 </span>
@@ -401,7 +405,7 @@ export default function TopBar({
             style={{ left: tabMenu.x, top: tabMenu.y }}
             onClick={(e) => e.stopPropagation()}
             role="menu"
-            aria-label="Tab actions"
+            aria-label={t("topBar.tabActions")}
           >
             <div className="libre__tab-menu-label">{tab.label}</div>
             <button
@@ -413,7 +417,7 @@ export default function TopBar({
                 onClose(tabMenu.tabIndex);
               }}
             >
-              Close tab
+              {t("topBar.closeTab")}
             </button>
             <div className="libre__tab-menu-sep" aria-hidden />
             {!tab.groupId && (
@@ -430,13 +434,13 @@ export default function TopBar({
                   onCreateGroup?.(tabMenu.tabIndex, fallback);
                 }}
               >
-                New group with this tab…
+                {t("topBar.newGroupWithTab")}
               </button>
             )}
             {!tab.groupId && otherGroups.length > 0 && (
               <>
                 <div className="libre__tab-menu-section">
-                  Add to group
+                  {t("topBar.addToGroup")}
                 </div>
                 {otherGroups.map((g) => (
                   <button
@@ -452,7 +456,7 @@ export default function TopBar({
                     <span
                       className="libre__tab-menu-swatch"
                       style={{
-                        background: `var(--fb-tab-group-color-${g.colorToken})`,
+                        background: `var(--libre-tab-group-color-${g.colorToken})`,
                       }}
                       aria-hidden
                     />
@@ -472,7 +476,7 @@ export default function TopBar({
                     onSetTabGroup?.(tabMenu.tabIndex, null);
                   }}
                 >
-                  Remove from group
+                  {t("topBar.removeFromGroup")}
                 </button>
                 {onRenameGroup && (
                   <button
@@ -482,7 +486,7 @@ export default function TopBar({
                     onClick={() => {
                       setTabMenu(null);
                       const next = window.prompt(
-                        "Group name",
+                        t("topBar.groupNamePrompt"),
                         tab.groupName ?? "",
                       );
                       if (next != null && next.trim().length > 0) {
@@ -490,13 +494,13 @@ export default function TopBar({
                       }
                     }}
                   >
-                    Rename group…
+                    {t("topBar.renameGroup")}
                   </button>
                 )}
                 {otherGroups.length > 0 && (
                   <>
                     <div className="libre__tab-menu-section">
-                      Move to group
+                      {t("topBar.moveToGroup")}
                     </div>
                     {otherGroups.map((g) => (
                       <button
@@ -512,7 +516,7 @@ export default function TopBar({
                         <span
                           className="libre__tab-menu-swatch"
                           style={{
-                            background: `var(--fb-tab-group-color-${g.colorToken})`,
+                            background: `var(--libre-tab-group-color-${g.colorToken})`,
                           }}
                           aria-hidden
                         />

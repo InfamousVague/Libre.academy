@@ -20,6 +20,7 @@ import type { Achievement } from "../../data/achievements";
 import { TIER_META } from "../../data/achievements";
 import { resolveAchievementIcon } from "../../lib/achievementIcons";
 import { resolveAchievementImage } from "../../data/achievementImages";
+import Hologram from "../Shared/Hologram";
 import "./Achievements.css";
 
 interface Props {
@@ -38,9 +39,9 @@ interface Props {
 }
 
 const SIZE_PX: Record<NonNullable<Props["size"]>, string> = {
-  sm: "fb-ach-badge--sm",
-  md: "fb-ach-badge--md",
-  lg: "fb-ach-badge--lg",
+  sm: "libre-ach-badge--sm",
+  md: "libre-ach-badge--md",
+  lg: "libre-ach-badge--lg",
 };
 
 const ICON_SIZE: Record<NonNullable<Props["size"]>, "sm" | "lg" | "2xl"> = {
@@ -71,28 +72,44 @@ export default function AchievementBadge({
   // tier colour through CSS custom properties on the wrapping
   // element; the .css file handles the rest.
   const styleVars = {
-    "--fb-ach-tint": meta.color,
-    "--fb-ach-soft": meta.softColor,
+    "--libre-ach-tint": meta.color,
+    "--libre-ach-soft": meta.softColor,
   } as React.CSSProperties;
   const cls = [
-    "fb-ach-badge",
+    "libre-ach-badge",
     SIZE_PX[size],
-    showLock ? "fb-ach-badge--locked" : "",
-    imageSrc ? "fb-ach-badge--has-image" : "",
-    `fb-ach-badge--${achievement.tier}`,
+    showLock ? "libre-ach-badge--locked" : "",
+    imageSrc ? "libre-ach-badge--has-image" : "",
+    `libre-ach-badge--${achievement.tier}`,
     className ?? "",
   ]
     .filter(Boolean)
     .join(" ");
   return (
     <div className={cls} style={styleVars} aria-hidden>
-      <span className="fb-ach-badge__disc" />
-      <span className="fb-ach-badge__icon">
+      <span className="libre-ach-badge__disc" />
+      {/* Holographic foil overlay — only on UNLOCKED badges so
+          locked silhouettes stay flat and the rainbow announces
+          "this is yours". The badge's tier-tinted disc shows
+          through at the foil's `plus-lighter` blend, so a gold
+          tier still reads as gold + holo on top, not as a flat
+          rainbow. The Hologram primitive handles its own
+          ambient drift and never transforms its parent — the
+          badge's disc, icon, and ring stay in place. */}
+      {!showLock && (
+        <Hologram
+          surface="dark"
+          intensity="vivid"
+          sparkle="snake"
+          className="libre-ach-badge__holo"
+        />
+      )}
+      <span className="libre-ach-badge__icon">
         {imageSrc ? (
           <img
             src={imageSrc}
             alt=""
-            className="fb-ach-badge__image"
+            className="libre-ach-badge__image"
             draggable={false}
             loading="lazy"
           />
@@ -105,7 +122,7 @@ export default function AchievementBadge({
           />
         )}
       </span>
-      <span className="fb-ach-badge__ring" />
+      <span className="libre-ach-badge__ring" />
     </div>
   );
 }

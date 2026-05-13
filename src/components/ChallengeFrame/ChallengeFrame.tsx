@@ -45,15 +45,6 @@ const DIFFICULTY_META: Record<string, { label: string; cls: string }> = {
 };
 
 export default function ChallengeFrame({ course, lesson }: Props) {
-  // Diagnostic — temporary: confirm the component mounts and that
-  // the gate matches the parent course's packType. Remove once the
-  // "challenge frame doesn't render" issue is closed out.
-  console.log("[ChallengeFrame] mount", {
-    courseId: course.id,
-    packType: course.packType,
-    isChallenge: isChallengePack(course),
-    lessonId: lesson.id,
-  });
   if (!isChallengePack(course)) return null;
 
   // Position within the current difficulty tier — find the chapter

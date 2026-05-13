@@ -9,20 +9,28 @@
   aspect-ratio: 2 / 3;
   padding: 0;
   background: var(--color-bg-primary);
-  border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-sm);
+  /* Card border uses the floating-card token (--color-border-card)
+     instead of --color-border-default. On default-dark the generic
+     border token is transparent (chrome stays calm); the card
+     variant is intentionally apparent (rgba 0.16 white) so book
+     covers sitting on the pure-black backdrop have a visible edge
+     to separate them from the surround. Light themes resolve the
+     card token to the generic border via :root, so they get
+     identical treatment to before. */
+  border: 1px solid var(--color-border-card);
+  border-radius: var(--libre-radius-sm);
   overflow: hidden;
   cursor: pointer;
   font-family: inherit;
   transition:
     transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
-    border-color var(--fb-motion-snappy),
+    border-color var(--libre-motion-snappy),
     box-shadow 0.22s ease-out;
   /* Mount animation — same fade-rise the grid cards use, slightly
      longer dwell because covers are visually denser and the eye
      needs a beat to register them. `both` keeps the resting state
      at full opacity once the keyframes finish. */
-  animation: fb-book-rise 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: libre-book-rise 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
   /* Container-query root. Children that need to scale with the
    * card's actual rendered size (the percent-complete number, the
    * cartouche offset) read from `cqw` (1cqw = 1% of the card's
@@ -30,12 +38,16 @@
    * the percent text drifts off the cartouche when the same card
    * renders at shelf vs grid sizes, mobile vs desktop. */
   container-type: inline-size;
-  container-name: fb-book;
+  container-name: libre-book;
 }
 
 .libre-book:hover {
   transform: translateY(-3px) scale(1.012);
-  border-color: var(--color-border-strong);
+  /* Hover state escalates to the strong card border so the
+     "lifting" cue is reinforced visually as well as via
+     translate. Dark theme bumps this to rgba 0.32 white;
+     light themes resolve to the generic border-strong. */
+  border-color: var(--color-border-card-strong);
   /* Soft lift shadow, scaled with the translate so the elevation
      reads physically. Using `-8px` Y on the inset radius keeps the
      shadow tight on top + open at the bottom — the card looks
@@ -48,7 +60,7 @@
   transition-duration: 0.08s;
 }
 
-@keyframes fb-book-rise {
+@keyframes libre-book-rise {
   from {
     opacity: 0;
     transform: translateY(10px);
@@ -61,11 +73,11 @@
 
 /* Suppress the per-cover rise when the card sits inside a library
    shelf/grid — the parent wrapper is already running the spring-
-   landing cascade (see `fb-library-spring-land` in CourseLibrary.css),
+   landing cascade (see `libre-library-spring-land` in CourseLibrary.css),
    and stacking the two transforms layered the cover's small +10px
    rise on top of the wrapper's -44px drop, producing a visible
    "wobble inside a wobble" instead of a clean impact. The shelf-
-   level animation owns the entrance now. The standalone `fb-book-
+   level animation owns the entrance now. The standalone `libre-book-
    rise` stays as the default for any context where the cover renders
    outside a library container (recents strip, search-result row,
    etc.) so those still get a soft fade-in. */
@@ -167,10 +179,15 @@
   right: 0;
   bottom: 0;
   padding: 10px 12px 14px;
-  /* Sits over the dark gradient (`.libre-book-shadow`); the
-     bone-tinted text-primary keeps the title legible AND on-brand
-     instead of stark white that fights the warm wordmark. */
-  color: var(--color-text-primary, #fff);
+  /* Sits over the dark gradient (`.libre-book-shadow`) which
+     dims the lower half of the cover image to ~rgba(0,0,0,0.7).
+     ALWAYS paint the title in pure white — the gradient is the
+     same regardless of app theme, so the legibility contract
+     is "white on dark gradient" everywhere. Earlier this rule
+     read from `--color-text-primary` which broke on light
+     themes (text-primary became dark gray / black, illegible
+     against the dark gradient). */
+  color: #ffffff;
 }
 
 .libre-book-title {
@@ -385,7 +402,7 @@
   align-items: center;
   gap: 4px;
   padding: 3px 9px 3px 7px;
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
   font-size: 9.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -456,7 +473,7 @@
   align-items: center;
   gap: 4px;
   padding: 3px 9px 3px 7px;
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
   font-size: 9.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -498,7 +515,7 @@
   align-items: center;
   gap: 4px;
   padding: 3px 8px 3px 6px;
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
   font-size: 9.5px;
   font-weight: 700;
   letter-spacing: 0.08em;

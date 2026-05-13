@@ -5,7 +5,7 @@
    Components that need a non-centered layout (mobile bottom-sheet,
    command palette, etc.) can override `place-items` via a
    `className` prop on `<ModalBackdrop>`. */
-.fb-modal-backdrop {
+.libre-modal-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
@@ -24,6 +24,6 @@
 /* Inner wrapper exists so the click-stop handler has a definite
    target. Plays no visual role — children control their own width /
    height / chrome. */
-.fb-modal-backdrop__panel {
+.libre-modal-backdrop__panel {
   display: contents;
 }

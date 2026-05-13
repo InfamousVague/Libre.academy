@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { UseLibreCloud } from "../../../hooks/useLibreCloud";
+import { useT } from "../../../i18n/i18n";
 import SignInDialog from "./SignInDialog";
 
 /// First-launch sign-in nudge.
@@ -43,6 +44,7 @@ interface Props {
 }
 
 export default function FirstLaunchPrompt({ cloud }: Props) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [dontShowAgain, setDontShowAgain] = useState(false);
 
@@ -82,8 +84,8 @@ export default function FirstLaunchPrompt({ cloud }: Props) {
         onClose={handleClose}
         showSkipButton
         onSkip={handleSkip}
-        headline="Save your progress with a Libre account"
-        blurb="Optional. Sign in to sync streaks and lesson progress between devices, upload your imported books, and share courses with friends. Skip to keep using Libre entirely on this machine — everything still runs locally."
+        headline={t("auth.firstLaunchHeadline")}
+        blurb={t("auth.firstLaunchBlurb")}
       />
       {/* "Don't show again" sits inside the modal flow rather than
           as a separate widget so the user sees it before deciding to
@@ -95,7 +97,7 @@ export default function FirstLaunchPrompt({ cloud }: Props) {
             checked={dontShowAgain}
             onChange={(e) => setDontShowAgain(e.target.checked)}
           />
-          <span>Don't show this again</span>
+          <span>{t("auth.dontShowAgain")}</span>
         </label>
       </div>
     </>

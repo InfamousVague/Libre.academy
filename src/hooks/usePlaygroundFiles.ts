@@ -51,6 +51,13 @@ export interface UsePlaygroundFilesResult {
   /// Revert the current language's playground to its default template
   /// AND clear the saved snippet so the next visit also starts fresh.
   resetToTemplate: () => void;
+  /// Index of the currently-focused file in `files`. The editor's
+  /// tab strip + the sidebar's file tree both highlight whichever
+  /// row matches this index; both also use `setActiveFileIdx` to
+  /// change focus, which is why this state belongs on the hook
+  /// rather than buried inside the editor or the tree.
+  activeFileIdx: number;
+  setActiveFileIdx: React.Dispatch<React.SetStateAction<number>>;
 }
 
 export function usePlaygroundFiles(
@@ -62,6 +69,13 @@ export function usePlaygroundFiles(
   const [files, setFiles] = useState<WorkbenchFile[]>(() => {
     return readStored(initialLanguage) ?? templateFiles(initialLanguage);
   });
+
+  // Active file index, shared with both the editor's tab strip
+  // and the sidebar's file tree. Reset to 0 on language switch
+  // since the new language's file list usually has a different
+  // count and a stale index would point at the wrong file (or
+  // out of bounds entirely).
+  const [activeFileIdx, setActiveFileIdx] = useState<number>(0);
 
   /// Keep a ref to the latest files so the debounce + unmount flush
   /// always see the current value even if the closure's `files` snapshot
@@ -102,6 +116,10 @@ export function usePlaygroundFiles(
     latestFilesRef.current = restored;
     setLanguageState(next);
     setFiles(restored);
+    // Reset the active file index — the new language's file list
+    // is almost certainly a different length, and an out-of-range
+    // index would render the editor against an undefined file.
+    setActiveFileIdx(0);
   }, []);
 
   const resetToTemplate = useCallback(() => {
@@ -115,5 +133,13 @@ export function usePlaygroundFiles(
     }
   }, []);
 
-  return { language, setLanguage, files, setFiles, resetToTemplate };
+  return {
+    language,
+    setLanguage,
+    files,
+    setFiles,
+    resetToTemplate,
+    activeFileIdx,
+    setActiveFileIdx,
+  };
 }

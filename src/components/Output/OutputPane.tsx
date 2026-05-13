@@ -12,6 +12,7 @@ import ReactNativeDevTools from "./ReactNativeDevTools";
 import MissingToolchainBanner from "../banners/MissingToolchain/MissingToolchainBanner";
 import { DesktopUpsellBanner } from "../banners/DesktopUpsell/DesktopUpsellBanner";
 import { useToolchainStatus } from "../../hooks/useToolchainStatus";
+import { useT } from "../../i18n/i18n";
 import "./OutputPane.css";
 
 interface Props {
@@ -107,6 +108,7 @@ export default function OutputPane({
   language,
   testsExpected,
 }: Props) {
+  const t = useT();
   const passedCount = result?.tests?.filter((t) => t.passed).length ?? 0;
   const totalTests = result?.tests?.length ?? 0;
   // `allPassed` was used by the now-retired summary chip in the
@@ -180,6 +182,60 @@ export default function OutputPane({
   const [reloadTick, setReloadTick] = useState(0);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
+  // Live console output from the preview iframe. The web / react /
+  // threejs / reactnative runtimes inject a CONSOLE_SHIM into their
+  // HTML that intercepts `console.*` calls + window 'error' +
+  // 'unhandledrejection' events and posts them to the parent
+  // window via `postMessage({ __libre: true, level, text })`. We
+  // listen here, accumulate the logs into a per-iframe buffer,
+  // and render them in the Console tab so the user can SEE their
+  // `console.log` output, runtime exceptions, syntax errors from
+  // Babel/createRoot — everything that used to vanish into the
+  // void because nothing was listening for these messages.
+  //
+  // Buffer resets on every `reloadTick` change because that's
+  // when a fresh iframe mounts and we want a clean slate.
+  const [liveLogs, setLiveLogs] = useState<
+    Array<{ level: "log" | "info" | "warn" | "error"; text: string; ts: number }>
+  >([]);
+  useEffect(() => {
+    setLiveLogs([]);
+  }, [reloadTick, previewUrl]);
+  useEffect(() => {
+    if (!previewUrl) return;
+    const onMessage = (ev: MessageEvent) => {
+      const d = ev.data as {
+        __libre?: boolean;
+        level?: string;
+        text?: string;
+      } | null;
+      if (!d || !d.__libre) return;
+      const level = (
+        ["log", "info", "warn", "error"].includes(d.level ?? "")
+          ? d.level
+          : "log"
+      ) as "log" | "info" | "warn" | "error";
+      setLiveLogs((prev) => [
+        ...prev,
+        { level, text: d.text ?? "", ts: Date.now() },
+      ]);
+      // Also broadcast to the rest of the app — the agent's
+      // console pane subscribes to this so it can see runtime
+      // errors emitted AFTER the run tool completed (createRoot
+      // failures, useEffect throws, etc.). Without this the
+      // agent thinks its build succeeded just because runFiles
+      // returned without an error, but the iframe is actually
+      // showing a red error overlay.
+      window.dispatchEvent(
+        new CustomEvent("libre:preview-log", {
+          detail: { level, text: d.text ?? "" },
+        }),
+      );
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [previewUrl]);
+
   // ── Console / Tests tab split ─────────────────────────────────────
   // Two tabs in the body when the run produced both: console output
   // (logs / debug prints / error traces) and test pills. Tabs only
@@ -206,6 +262,15 @@ export default function OutputPane({
   const failingCount = result?.tests?.filter((t) => !t.passed).length ?? 0;
   useEffect(() => {
     if (!result) return;
+    // Preview-with-logs case: keep the user on Preview by default
+    // (that's what they expect to see for a React / Three.js run).
+    // The Console tab stays available via the toggle in the header
+    // but doesn't auto-claim focus the way it does for log-only
+    // runs.
+    if (previewUrl) {
+      setActiveTab("tests");
+      return;
+    }
     if (hasTests && (testsExpected || failingCount > 0)) {
       setActiveTab("tests");
     } else if (hasLogs && !hasTests) {
@@ -266,7 +331,7 @@ export default function OutputPane({
           <div
             className="libre-output-tabs"
             role="tablist"
-            aria-label="Output"
+            aria-label={t("output.ariaLabel")}
           >
             <button
               type="button"
@@ -277,7 +342,7 @@ export default function OutputPane({
               }`}
               onClick={() => setActiveTab("console")}
             >
-              <span>Console</span>
+              <span>{t("output.consoleTab")}</span>
               {hasLogs && (
                 <span className="libre-output-tab-badge">
                   {result?.logs?.length ?? 0}
@@ -297,7 +362,7 @@ export default function OutputPane({
               }`}
               onClick={() => setActiveTab("tests")}
             >
-              <span>Tests</span>
+              <span>{t("output.testsTab")}</span>
               {hasTests && (
                 <span
                   className={`libre-output-tab-badge ${
@@ -311,9 +376,64 @@ export default function OutputPane({
               )}
             </button>
           </div>
+        ) : previewUrl ? (
+          // Preview mode — surface a Browser / Console segmented
+          // toggle so the user isn't blind to `console.log` output
+          // their React (or other web-runtime) code emitted. The
+          // toggle is rendered for EVERY preview-producing run
+          // (not just ones with existing logs) because users
+          // commonly add `console.log` after first paint, see the
+          // preview render, then want to flip to console without
+          // re-running. The Console tab shows a per-run empty
+          // state when nothing was logged.
+          //
+          // The console badge counts EITHER tool-result logs
+          // (synchronous output captured at run time) OR live
+          // postMessage logs streaming in from the iframe (async
+          // — `console.log` from a click handler, an uncaught
+          // exception 2 seconds after mount, etc.). Both are
+          // visible in the Console tab; the badge sums both so
+          // the user has one number to glance at.
+          <div
+            className="libre-output-mode-toggle"
+            role="group"
+            aria-label={t("output.ariaLabel")}
+          >
+            <button
+              type="button"
+              aria-pressed={activeTab !== "console"}
+              className={`libre-output-mode-btn ${
+                activeTab !== "console" ? "libre-output-mode-btn--active" : ""
+              }`}
+              onClick={() => setActiveTab("tests")}
+            >
+              browser
+            </button>
+            <button
+              type="button"
+              aria-pressed={activeTab === "console"}
+              className={`libre-output-mode-btn ${
+                activeTab === "console" ? "libre-output-mode-btn--active" : ""
+              }`}
+              onClick={() => setActiveTab("console")}
+            >
+              console
+              {(hasLogs || liveLogs.length > 0) && (
+                <span
+                  className={`libre-output-mode-btn-badge ${
+                    liveLogs.some((l) => l.level === "error")
+                      ? "libre-output-mode-btn-badge--error"
+                      : ""
+                  }`}
+                >
+                  {(result?.logs?.length ?? 0) + liveLogs.length}
+                </span>
+              )}
+            </button>
+          </div>
         ) : (
           <span className="libre-output-label">
-            {previewUrl ? "preview" : "console"}
+            {previewUrl ? t("output.previewLabel") : t("output.consoleLabel")}
           </span>
         )}
         <div className="libre-output-header-right">
@@ -326,12 +446,67 @@ export default function OutputPane({
               {currentPhase.label}
             </span>
           )}
+          {/* Preview action cluster — slotted into the same header
+              as console/tests so the controls match the editor's
+              header treatment. Only renders when the current run
+              produced a previewUrl. Buttons are icon-only here
+              (with title/aria for affordance) so all three fit
+              compactly next to the duration pill. */}
+          {previewUrl && (
+            <div className="libre-output-preview-actions">
+              <button
+                type="button"
+                className="libre-output-preview-btn"
+                onClick={openInBrowser}
+                title={previewUrl}
+                aria-label="Open preview in browser"
+              >
+                <Icon icon={externalLink} size="xs" color="currentColor" />
+                <span>Open in browser</span>
+              </button>
+              <button
+                type="button"
+                className="libre-output-preview-btn"
+                onClick={copyLink}
+                aria-label={copied ? "Copied" : "Copy preview link"}
+              >
+                <Icon
+                  icon={copied ? check : copyIcon}
+                  size="xs"
+                  color="currentColor"
+                />
+                <span>{copied ? "Copied" : "Copy link"}</span>
+              </button>
+              <button
+                type="button"
+                className="libre-output-preview-btn"
+                onClick={() => setReloadTick((n) => n + 1)}
+                title={t("output.reloadPreviewTitle")}
+                aria-label="Reload preview"
+              >
+                <Icon icon={refreshCw} size="xs" color="currentColor" />
+                <span>Reload</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="libre-output-body">
-        {!result && !running && (
-          <div className="libre-output-empty">run your code to see output here</div>
+      <div
+        className={`libre-output-body ${
+          previewUrl && activeTab !== "console" ? "libre-output-body--preview" : ""
+        }`}
+      >
+        {/* Generic "no run yet" placeholder is only useful when
+            there are NO tabs to show their own per-pane empty
+            messages. With tabs visible (lesson runs, prior
+            output, prior tests), each tab renders its own context-
+            specific empty state ("No console output. Add …",
+            "Run your code — test results will appear here.") and
+            doubling that with this generic line read as
+            duplicated copy. */}
+        {!result && !running && !showTabs && (
+          <div className="libre-output-empty">{t("output.outputPlaceholder")}</div>
         )}
 
         {running && (
@@ -348,78 +523,37 @@ export default function OutputPane({
           </div>
         )}
 
-        {/* Web-runtime preview. Two parts stacked: an in-app iframe
-            window so the learner sees their render without leaving
-            Libre, plus a URL card with "Open in browser" for when
-            they want real DevTools. Both point at the same local
-            tiny_http URL — the iframe just embeds it. */}
+        {/* Web-runtime preview. The iframe fills the entire output
+            body — no inner card, no URL row, no actions row. The
+            Open-in-browser / Copy-link / Reload buttons live in the
+            shared output header alongside the duration pill, mirroring
+            the editor's header treatment. Both point at the same local
+            tiny_http URL — the iframe just embeds it.
+            Hidden when the user toggled to the Console tab so the
+            log list takes over the body. The iframe element stays
+            in the React tree (we just hide via CSS) so toggling
+            back to Preview doesn't reload the page. */}
         {previewUrl && (
-          <div className="libre-output-preview" role="status">
-            <div
-              className={`libre-output-preview-frame ${
+          <div
+            className={`libre-output-preview-fill ${
+              previewKind === "reactnative"
+                ? "libre-output-preview-fill--rn"
+                : ""
+            } ${activeTab === "console" ? "libre-output-preview-fill--hidden" : ""}`}
+            role="status"
+          >
+            <iframe
+              ref={iframeRef}
+              key={`${previewUrl}#${reloadTick}`}
+              className={`libre-output-preview-iframe ${
                 previewKind === "reactnative"
-                  ? "libre-output-preview-frame--rn"
+                  ? "libre-output-preview-iframe--rn"
                   : ""
               }`}
-            >
-              <iframe
-                ref={iframeRef}
-                key={`${previewUrl}#${reloadTick}`}
-                className={`libre-output-preview-iframe ${
-                  previewKind === "reactnative"
-                    ? "libre-output-preview-iframe--rn"
-                    : ""
-                }`}
-                title="Rendered preview"
-                src={previewUrl}
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
-              />
-            </div>
-            <div className="libre-output-preview-head">
-              <span className="libre-output-preview-label">Preview URL</span>
-              <a
-                className="libre-output-preview-link"
-                href={previewUrl}
-                onClick={(e) => {
-                  e.preventDefault();
-                  openInBrowser();
-                }}
-                title={previewUrl}
-              >
-                {previewUrl}
-              </a>
-            </div>
-            <div className="libre-output-preview-actions">
-              <button
-                type="button"
-                className="libre-output-preview-btn libre-output-preview-btn--primary"
-                onClick={openInBrowser}
-              >
-                <Icon icon={externalLink} size="xs" color="currentColor" />
-                <span>Open in browser</span>
-              </button>
-              <button
-                type="button"
-                className="libre-output-preview-btn"
-                onClick={copyLink}
-              >
-                <Icon
-                  icon={copied ? check : copyIcon}
-                  size="xs"
-                  color="currentColor"
-                />
-                <span>{copied ? "Copied" : "Copy link"}</span>
-              </button>
-              <button
-                type="button"
-                className="libre-output-preview-btn"
-                onClick={() => setReloadTick((n) => n + 1)}
-                title="Reload the in-app preview iframe"
-              >
-                <Icon icon={refreshCw} size="xs" color="currentColor" />
-                <span>Reload</span>
-              </button>
-            </div>
+              title={t("output.previewIframeTitle")}
+              src={previewUrl}
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+            />
             {previewKind === "reactnative" && (
               <ReactNativeDevTools previewUrl={previewUrl} />
             )}
@@ -430,26 +564,55 @@ export default function OutputPane({
             - tabs not shown AND there are logs (single-section run)
             - tabs shown AND user picked the Console tab — even if
               empty, so they can confirm "no output" rather than
-              wondering whether the section is hiding. */}
-        {((!showTabs && hasLogs) || (showTabs && activeTab === "console")) && (
+              wondering whether the section is hiding.
+            Now merges TWO sources:
+            - `result.logs` — synchronous output captured by the
+              runner before it returned (`console.log` during top-
+              level execution, build errors).
+            - `liveLogs` — async output streamed in from the live
+              preview iframe (`console.log` from click handlers,
+              runtime exceptions, the SyntaxError that fires
+              AFTER the runtime resolved its previewUrl). Without
+              merging both buckets the user can't see why their
+              React preview shows a blank page when the iframe
+              threw `createRoot is not found`. */}
+        {((!showTabs && hasLogs) ||
+          (showTabs && activeTab === "console") ||
+          (previewUrl && activeTab === "console")) && (
           <div className="libre-output-console">
-            {hasLogs ? (
-              (result?.logs ?? []).map((line, i) => (
-                <div
-                  key={`log-${i}`}
-                  className={`libre-output-line libre-output-line--${line.level}`}
-                >
-                  {line.text}
-                </div>
-              ))
+            {hasLogs || liveLogs.length > 0 ? (
+              <>
+                {(result?.logs ?? []).map((line, i) => (
+                  <div
+                    key={`log-${i}`}
+                    className={`libre-output-line libre-output-line--${line.level}`}
+                  >
+                    {line.text}
+                  </div>
+                ))}
+                {liveLogs.map((line, i) => (
+                  <div
+                    key={`live-${i}`}
+                    className={`libre-output-line libre-output-line--${line.level}`}
+                  >
+                    {line.text}
+                  </div>
+                ))}
+              </>
             ) : (
               <div className="libre-output-pane-empty">
-                No console output. Add{" "}
-                <code>std.debug.print(...)</code>{" "}
-                <span className="libre-output-pane-empty-hint">
-                  (or your language's print) inside your code to see
-                  output here.
-                </span>
+                {previewUrl
+                  ? "No console output yet. Anything your preview's code logs (or any runtime errors) will appear here."
+                  : (
+                    <>
+                      No console output. Add{" "}
+                      <code>std.debug.print(...)</code>{" "}
+                      <span className="libre-output-pane-empty-hint">
+                        (or your language's print) inside your code to see
+                        output here.
+                      </span>
+                    </>
+                  )}
               </div>
             )}
           </div>

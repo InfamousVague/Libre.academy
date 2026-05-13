@@ -1,0 +1,59 @@
+# Caddy v2 config for stats.libre.academy.
+#
+# Caddy handles:
+#   - Automatic Let's Encrypt TLS certificate issuance + renewal.
+#     (DNS-01 + HTTP-01 are both supported; HTTP-01 works here
+#     because we expose port 80/443 to the public internet.)
+#   - HTTPS redirect from :80 → :443.
+#   - Reverse proxy to the Plausible app server on :8000.
+#   - Gzip / brotli compression for the dashboard assets.
+#   - CORS headers so the libre.academy frontend can POST events
+#     to /api/event without a preflight failure.
+#
+# After editing this file, reload Caddy with:
+#   docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
+
+stats.libre.academy {
+	encode zstd gzip
+
+	# CORS — allow the production web app (libre.academy + the
+	# www variant) to POST events to /api/event. Plausible's
+	# direct-POST path uses `keepalive` + `Content-Type:
+	# application/json` so the browser sends a preflight; without
+	# these headers the preflight fails and events get dropped.
+	#
+	# Local-dev origins are intentionally NOT in this list — set
+	# `Access-Control-Allow-Origin: *` temporarily if you need to
+	# test analytics from `localhost:1420`, but DON'T ship the
+	# wildcard to prod (it lets any site fire events at your
+	# instance).
+	@analytics_api path /api/event /api/event/*
+	header @analytics_api {
+		Access-Control-Allow-Origin "https://libre.academy"
+		Access-Control-Allow-Methods "POST, OPTIONS"
+		Access-Control-Allow-Headers "Content-Type"
+		Access-Control-Max-Age "86400"
+	}
+
+	# Health-check endpoint — bare 200 OK without hitting the app
+	# server. Lets uptime monitors (Better Stack, Pingdom, etc.)
+	# ping the host cheaply.
+	handle /healthz {
+		respond "ok" 200
+	}
+
+	# Everything else — reverse-proxy to the Plausible app
+	# server. `transport http` (Caddy's default) speaks HTTP/1.1
+	# to the upstream; the Plausible Phoenix app handles
+	# WebSocket upgrades natively for the live-dashboard view.
+	reverse_proxy plausible:8000 {
+		# Pass the real client IP + scheme so Plausible logs
+		# requests with the originating address rather than the
+		# Caddy container's internal IP. Plausible reads
+		# X-Forwarded-* by default; no extra config needed on
+		# the app side.
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+		header_up X-Real-IP {remote_host}
+	}
+}

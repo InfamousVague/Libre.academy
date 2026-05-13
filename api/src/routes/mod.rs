@@ -1,47 +1,44 @@
 //! Top-level router.
 //!
-//! Every product endpoint is registered under BOTH `/fishbones/...`
-//! (the legacy prefix) AND `/libre/...` (the new prefix) so the
-//! brand-rename cutover is backward-compatible: already-deployed
-//! clients keep hitting `/fishbones/*`, new client builds switch to
-//! `/libre/*`, and both work simultaneously against the same handler.
-//! Public endpoints (signup, login, OAuth start/callback, public
-//! course feed) and protected endpoints (everything that needs a
-//! bearer token) are each defined once as inner routers, then mounted
-//! twice via `Router::nest`. `/health` and Apple's `.well-known` file
-//! stay at the literal root — health is the uptime monitor's path
-//! and Apple insists on the root for domain verification.
+//! Every product endpoint mounts at the bare root — the host itself
+//! (`api.libre.academy`) is already scoped to this product, so adding
+//! a `/libre/` path prefix would be redundant. Public endpoints
+//! (signup, login, OAuth start/callback, public course feed) and
+//! protected endpoints (everything that needs a bearer token) are
+//! defined as inner routers and merged-mounted once. `/health` and
+//! Apple's `.well-known` file are uptime/domain-verification paths
+//! that have always lived at the root.
 //!
-//! Endpoint summary (each available under BOTH `/fishbones/<path>`
-//! and `/libre/<path>` — only one prefix shown):
-//!   POST   /libre/auth/signup                    — email + password
-//!   POST   /libre/auth/login                     — email + password
-//!   POST   /libre/auth/password-reset/request    — email link
-//!   POST   /libre/auth/password-reset/confirm    — token + new password
-//!   POST   /libre/auth/apple                     — Apple identity_token
-//!   POST   /libre/auth/google                    — Google id_token
-//!   GET    /libre/auth/google/start              — browser OAuth
-//!   GET    /libre/auth/google/callback           — provider redirect
-//!   GET    /libre/auth/apple/start               — browser OAuth
-//!   POST   /libre/auth/apple/callback            — provider form_post
-//!   GET    /libre/auth/apple/callback            —   (also tolerated)
-//!   GET    /libre/me                             — current user
-//!   POST   /libre/auth/logout                    — revoke this device
-//!   DELETE /libre/auth/account                   — delete account
-//!   GET    /libre/progress                       — full dump
-//!   PUT    /libre/progress                       — bulk upsert
-//!   GET    /libre/solutions                      — full dump
-//!   PUT    /libre/solutions                      — bulk upsert (LWW)
-//!   GET    /libre/settings                       — full dump
-//!   PUT    /libre/settings                       — bulk upsert (LWW)
-//!   GET    /libre/sync/ws?token=…                — realtime fan-out
-//!   POST   /libre/courses                        — upload .libre
-//!   GET    /libre/courses                        — own courses
-//!   GET    /libre/courses/public                 — public feed
-//!   GET    /libre/courses/:id                    — download archive
-//!   DELETE /libre/courses/:id                    — delete
-//!   GET    /health                                — liveness (root)
-//!   GET    /.well-known/apple-developer-domain-association.txt (root)
+//! Endpoint summary:
+//!   POST   /auth/signup                    — email + password
+//!   POST   /auth/login                     — email + password
+//!   POST   /auth/password-reset/request    — email link
+//!   POST   /auth/password-reset/confirm    — token + new password
+//!   POST   /auth/apple                     — Apple identity_token
+//!   POST   /auth/google                    — Google id_token
+//!   GET    /auth/google/start              — browser OAuth
+//!   GET    /auth/google/callback           — provider redirect
+//!   GET    /auth/apple/start               — browser OAuth
+//!   POST   /auth/apple/callback            — provider form_post
+//!   GET    /auth/apple/callback            —   (also tolerated)
+//!   GET    /me                             — current user
+//!   POST   /auth/logout                    — revoke this device
+//!   DELETE /auth/account                   — delete account
+//!   GET    /progress                       — full dump
+//!   PUT    /progress                       — bulk upsert
+//!   DELETE /progress                       — wipe (Reset account)
+//!   GET    /solutions                      — full dump
+//!   PUT    /solutions                      — bulk upsert (LWW)
+//!   GET    /settings                       — full dump
+//!   PUT    /settings                       — bulk upsert (LWW)
+//!   GET    /sync/ws?token=…                — realtime fan-out
+//!   POST   /courses                        — upload .libre
+//!   GET    /courses                        — own courses
+//!   GET    /courses/public                 — public feed
+//!   GET    /courses/:id                    — download archive
+//!   DELETE /courses/:id                    — delete
+//!   GET    /health                         — liveness
+//!   GET    /.well-known/apple-developer-domain-association.txt
 
 mod auth;
 mod courses;
@@ -71,27 +68,15 @@ use crate::state::AppState;
 /// negatives.
 pub fn build_router(state: Arc<AppState>) -> Router {
     // Public + protected route groups defined ONCE under a relative
-    // prefix-less layout (`/auth/signup`, `/me`, `/progress` etc.).
-    // Each group is then mounted under BOTH `/fishbones` and `/libre`
-    // path prefixes so old + new clients hit the same handlers.
-    //
-    // Backward-compat cutover plan:
-    //   1. (this commit) Server registers BOTH prefixes — old
-    //      `/fishbones/*` clients keep working, new `/libre/*`
-    //      clients start working.
-    //   2. Roll out client builds that call `/libre/*`. Older
-    //      already-deployed clients (TestFlight, cached web tabs)
-    //      keep calling `/fishbones/*` against the same server and
-    //      keep working.
-    //   3. Once telemetry shows the `/fishbones/*` traffic has
-    //      drained (TestFlight expired, every prod web user has
-    //      reloaded), drop the `/fishbones` mount and ship a
-    //      slimmer server. `/libre/*` becomes the sole prefix.
+    // prefix-less layout (`/auth/signup`, `/me`, `/progress` etc.),
+    // then merged into the root router. The host itself
+    // (`api.libre.academy`) already namespaces these to this product,
+    // so adding a `/libre` path prefix would just repeat the host.
     //
     // The /health route + /.well-known/apple-developer-domain-
-    // association.txt stay at the literal root — they're not
-    // namespaced by product (`/health` is the uptime monitor's
-    // path; Apple fetches the well-known path verbatim).
+    // association.txt also live at the literal root — `/health` is
+    // the uptime monitor's path and Apple fetches the well-known
+    // path verbatim.
     let public_endpoints = || {
         Router::new()
             .route("/auth/signup", post(auth::signup))
@@ -179,14 +164,8 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         );
 
     root
-        // Each group is mounted twice — once under the legacy prefix
-        // and once under the new prefix. The closures above return a
-        // fresh Router each call so we don't share routing state
-        // between the two mounts.
-        .nest("/fishbones", public_endpoints())
-        .nest("/fishbones", protected_endpoints())
-        .nest("/libre", public_endpoints())
-        .nest("/libre", protected_endpoints())
+        .merge(public_endpoints())
+        .merge(protected_endpoints())
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http())
         .with_state(state)

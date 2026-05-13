@@ -61,13 +61,54 @@ export function useLocalStorageState<T>(
   initialValue: T,
   options: LocalStorageStateOptions<T> = {},
 ): [T, (next: T | ((prev: T) => T)) => void] {
+  return useWebStorageState(
+    typeof localStorage === "undefined" ? null : localStorage,
+    key,
+    initialValue,
+    options,
+  );
+}
+
+/// Sister hook with the same shape as `useLocalStorageState` but
+/// backed by `sessionStorage`. Use this for state that should
+/// persist across in-session navigations but reset on every fresh
+/// app launch — e.g. the Tracks page's "you've already seen the
+/// hyper-scroll intro" flag, where we want the wow-factor to
+/// replay once per launch but not nag the learner every time they
+/// click back into the Tracks tab.
+///
+/// In a browser, `sessionStorage` is per-tab and clears on tab
+/// close. In Tauri, the WebView is recreated on each app launch,
+/// so sessionStorage scopes naturally to "this run of the app".
+export function useSessionStorageState<T>(
+  key: string,
+  initialValue: T,
+  options: LocalStorageStateOptions<T> = {},
+): [T, (next: T | ((prev: T) => T)) => void] {
+  return useWebStorageState(
+    typeof sessionStorage === "undefined" ? null : sessionStorage,
+    key,
+    initialValue,
+    options,
+  );
+}
+
+/// Shared implementation. The localStorage / sessionStorage APIs
+/// are identical (both `Storage`) so a single hook can serve both
+/// — the only thing that varies is which storage to write to.
+function useWebStorageState<T>(
+  storage: Storage | null,
+  key: string,
+  initialValue: T,
+  options: LocalStorageStateOptions<T>,
+): [T, (next: T | ((prev: T) => T)) => void] {
   const serialize = options.serialize ?? JSON.stringify;
   const deserialize = options.deserialize ?? (JSON.parse as (raw: string) => T);
 
   const [state, setState] = useState<T>(() => {
-    if (typeof localStorage === "undefined") return initialValue;
+    if (!storage) return initialValue;
     try {
-      const raw = localStorage.getItem(key);
+      const raw = storage.getItem(key);
       if (raw == null) return initialValue;
       return deserialize(raw);
     } catch {
@@ -81,9 +122,9 @@ export function useLocalStorageState<T>(
       setState((prev) => {
         const value =
           typeof next === "function" ? (next as (prev: T) => T)(prev) : next;
-        if (typeof localStorage !== "undefined") {
+        if (storage) {
           try {
-            localStorage.setItem(key, serialize(value));
+            storage.setItem(key, serialize(value));
           } catch {
             // Quota exceeded / private-browsing — silently drop the
             // persistence, but still update React state. Losing one
@@ -93,7 +134,7 @@ export function useLocalStorageState<T>(
         return value;
       });
     },
-    [key, serialize],
+    [storage, key, serialize],
   );
 
   return [state, set];

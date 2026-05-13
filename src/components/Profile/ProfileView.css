@@ -1,349 +1,347 @@
-/* Root: takes the whole main pane, scrolls its own content. The outer
-   scroll wrapper keeps the hero from sticking to the header when the
-   pane is short. */
+/* Profile / stats page.
+ *
+ * 2026-05 redesign: dashboard-grid layout. The previous shape
+ * stacked seven sections vertically and let two of them (topics,
+ * recent activity) grow unbounded, pushing every other section
+ * past the fold for heavy users. New shape:
+ *
+ *   1. Compact header strip (title + level progress bar).
+ *   2. Single dense stat row (6 horizontal-flow tiles).
+ *   3. Two-column dashboard grid (Activity + Languages above,
+ *      Achievements + Topics below).
+ *   4. Full-width Recent activity at the bottom with a
+ *      collapsed/expanded toggle.
+ *
+ * The grid collapses to a single column below ~960px so a
+ * narrowed window or a sidebar-out-half-screen split still
+ * renders cleanly. Card chrome is shared by every section
+ * (`.libre-profile-card`) — one place to change padding,
+ * radius, shadow.
+ */
+
 .libre-profile {
-  flex: 1;
+  width: 100%;
+  height: 100%;
   display: flex;
-  min-height: 0;
-  overflow: hidden;
-  margin: 10px 10px 10px 0;
+  flex-direction: column;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
 }
 
 .libre-profile-scroll {
   flex: 1;
   overflow-y: auto;
+  padding: 20px 28px 40px;
 }
 
-/* Content column. We bumped from 720px to 880px when we added the
-   heatmap + lang-chart + badges — those modules need horizontal room
-   to breathe. The page still feels composed and not sprawl-y. */
 .libre-profile-inner {
-  max-width: 880px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 36px 32px 56px;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 18px;
 }
 
-/* ---- Hero (twin rings + title) ------------------------------------- */
+/* ─── Header strip ─────────────────────────────────────────────
+   Compact band replacing the old twin-rings hero. Title block on
+   the left, level progress bar on the right. The bar carries the
+   "where am I in this level?" feeling the rings used to, but
+   horizontally so it doesn't fight the stat row for attention. */
 
-.libre-profile-hero {
-  display: grid;
-  grid-template-columns: 1fr auto;
+.libre-profile-header {
+  display: flex;
   align-items: center;
-  gap: 28px;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 4px 0 2px;
+  flex-wrap: wrap;
 }
 
-.libre-profile-hero-text {
+.libre-profile-header-text {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-
-.libre-profile-hero-title {
-  margin: 0;
-  font-size: 32px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--color-text-primary);
-}
-
-.libre-profile-hero-sub {
-  margin: 0;
-  font-size: 14px;
-  color: var(--color-text-secondary);
-  font-variant-numeric: tabular-nums;
-}
-
-/* ---- Twin rings ---------------------------------------------------- */
-
-.libre-profile-rings {
-  display: flex;
-  gap: 14px;
-}
-
-.libre-profile-ring {
-  position: relative;
-  width: 184px;
-  height: 184px;
-  display: grid;
-  place-items: center;
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border-default);
-  border-radius: 22px;
-  /* Container padding pushes the SVG ring inward so the text body
-     inside the ring has breathing room from the stroke. The SVG below
-     uses `inset: 36px` to match — the two values move in lockstep.
-     Aggressive inset shrinks the ring so the body content (which
-     includes a multi-line "830/840 XP" sub) clears the stroke at
-     the top and bottom of the circle. The container is also slightly
-     larger overall so the ring itself stays a comfortable size after
-     the inset. */
-  padding: 36px;
-  --ring-tone: var(--color-text-primary);
-  --ring-tone-soft: rgba(255, 255, 255, 0.08);
-}
-
-.libre-profile-ring--streak {
-  --ring-tone: #f59e3b;
-  --ring-tone-soft: rgba(245, 158, 59, 0.16);
-}
-
-.libre-profile-ring--level {
-  --ring-tone: #7cd97c;
-  --ring-tone-soft: rgba(124, 217, 124, 0.16);
-}
-
-.libre-profile-ring-svg {
-  position: absolute;
-  inset: 36px;
-  width: calc(100% - 72px);
-  height: calc(100% - 72px);
-}
-
-.libre-profile-ring-track {
-  stroke: var(--ring-tone-soft);
-  stroke-width: 6;
-}
-
-.libre-profile-ring-fill {
-  stroke: var(--ring-tone);
-  stroke-width: 6;
-  transition: stroke-dashoffset 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.libre-profile-ring-body {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   gap: 4px;
-  text-align: center;
-  z-index: 1;
+  min-width: 240px;
+  flex: 1 1 280px;
 }
 
-.libre-profile-ring-icon {
-  color: var(--ring-tone);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.libre-profile-ring-value {
-  font-size: 17px;
-  font-weight: 800;
+.libre-profile-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--color-text-primary);
-  line-height: 1;
-  margin-top: 3px;
+  line-height: 1.1;
+}
+
+.libre-profile-subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+/* Level progress bar. Replaces the giant 140px ring with a
+   ~10px-tall pill that runs the right half of the header. The
+   meta line ("xpIntoLevel/xpForLevel") sits beside it with
+   tabular-nums so the numbers don't jitter as XP ticks up. */
+.libre-profile-level-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1 1 340px;
+  min-width: 280px;
+  max-width: 560px;
+}
+
+.libre-profile-level-bar-track {
+  flex: 1;
+  height: 10px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.06));
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.libre-profile-level-bar-fill {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    #7cd97c 0%,
+    #b9e87c 60%,
+    #fcd34d 100%
+  );
+  border-radius: 999px;
+  transition: width 0.35s cubic-bezier(0.2, 0.65, 0.3, 1);
+}
+
+.libre-profile-level-bar-meta {
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-primary);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
-.libre-profile-ring-label {
-  font-size: 8.5px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.libre-profile-level-bar-meta-sub {
   color: var(--color-text-tertiary);
-  margin-top: 3px;
+  font-weight: 500;
 }
 
-/* ---- Color-toned stat tiles --------------------------------------- */
-/* Four-up row on desktop (vs mobile's 2x2 grid). At narrow widths the
-   row wraps into 2x2 automatically — `auto-fit` with a 200px floor
-   keeps the tiles legible without us having to add a media query. */
+/* ─── Stat strip ───────────────────────────────────────────────
+   Six dense tiles, single row at desktop widths; wraps to 3 then
+   2 columns as the pane narrows. Each tile is horizontal (icon
+   left, value+label right) rather than the old stacked layout —
+   same information in half the vertical space. */
 
 .libre-profile-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .libre-profile-stat {
+  --stat-tone: var(--color-text-primary);
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 16px 18px;
+  gap: 10px;
+  padding: 11px 13px;
   background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border-default);
-  border-radius: 14px;
-  position: relative;
-  --stat-tone: var(--color-text-primary);
+  border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.06));
+  border-radius: var(--libre-radius-md, 8px);
+  /* Subtle accent stripe inheriting the tone token — same
+     vocabulary as the old chunky tiles, just narrower. */
   overflow: hidden;
 }
 
-/* Toned accent strip on the left edge — same trick the mobile profile
-   uses. Gives each tile its own identity without a busy color
-   background. */
 .libre-profile-stat::before {
   content: "";
   position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
+  inset: 0 auto 0 0;
+  width: 2px;
   background: var(--stat-tone);
-  opacity: 0.85;
+  opacity: 0.7;
 }
 
+/* Tone palette — kept identical to the pre-redesign tiles so any
+   muscle-memory the user has for "streak is orange" survives. */
 .libre-profile-stat--streak  { --stat-tone: #f59e3b; }
 .libre-profile-stat--lessons { --stat-tone: #7cd9d3; }
 .libre-profile-stat--xp      { --stat-tone: #fcd34d; }
 .libre-profile-stat--level   { --stat-tone: #7cd97c; }
 .libre-profile-stat--longest { --stat-tone: #c79bff; }
-/* Coin gold — saturated enough to feel like a currency badge without
-   colliding with XP's softer butter tone next to it. */
 .libre-profile-stat--coins   { --stat-tone: #f3a93a; }
 
 .libre-profile-stat-icon {
-  width: 36px;
-  height: 36px;
-  display: grid;
-  place-items: center;
-  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
   background: color-mix(in srgb, var(--stat-tone) 22%, transparent);
   color: var(--stat-tone);
-  flex-shrink: 0;
+  border-radius: 6px;
 }
 
 .libre-profile-stat-text {
   display: flex;
   flex-direction: column;
-  gap: 0;
   min-width: 0;
 }
 
 .libre-profile-stat-value {
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: -0.015em;
-  color: var(--color-text-primary);
+  font-size: 18px;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
   line-height: 1.1;
+  color: var(--color-text-primary);
 }
 
 .libre-profile-stat-label {
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  font-size: 10.5px;
   text-transform: uppercase;
+  letter-spacing: 0.06em;
   color: var(--color-text-tertiary);
-  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* ---- Section shell ------------------------------------------------- */
+/* Narrow viewports: stat strip wraps to 3 then 2 columns. */
+@media (max-width: 1100px) {
+  .libre-profile-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .libre-profile-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 
-.libre-profile-section {
-  display: flex;
-  flex-direction: column;
+/* ─── Dashboard grid ──────────────────────────────────────────
+   Two-column 1:1 grid at wide widths. Each cell is a `.libre-
+   profile-card`. Below 960px the grid collapses to one column
+   so cards stack naturally. Gap matches the page-level gap so
+   the grid doesn't look like a separate sub-layout. */
+
+.libre-profile-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 14px;
 }
 
-/* Section header row that pairs the title with an inline subtitle
-   on the right (e.g. the heatmap's "X completions across N days"
-   summary). The two slide together on narrow shells so the title
-   never wraps under its own subtitle. */
-.libre-profile-section-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 4px 16px;
+@media (max-width: 960px) {
+  .libre-profile-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
-.libre-profile-section-title {
+/* ─── Card chrome (shared) ────────────────────────────────────
+   Every section inside the grid (and the recent-activity strip
+   below it) renders inside this card so radius / padding /
+   borders are managed in one place. */
+
+.libre-profile-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.06));
+  border-radius: var(--libre-radius-lg, 10px);
+}
+
+.libre-profile-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.libre-profile-card-title {
   margin: 0;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: -0.005em;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+
+.libre-profile-card-meta {
+  font-size: 11px;
   color: var(--color-text-tertiary);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
 }
 
 .libre-profile-empty {
   margin: 0;
   font-size: 13px;
-  line-height: 1.55;
   color: var(--color-text-secondary);
-  font-style: italic;
+  line-height: 1.5;
 }
 
-/* ---- Activity heatmap --------------------------------------------- */
-/* 7-row × 20-week grid. flex-column-wrap with a fixed height = 7 cells
-   tall does the column packing automatically — no manual math needed.
-   Cells are 16px (vs mobile's 14px) so the grid reads from desktop
-   distance. */
+.libre-profile-empty--inline {
+  padding: 6px 2px;
+}
 
-/* Heatmap layout: weekday labels in a fixed-width left column, the
-   actual grid stretches to the right. We use a flex row instead of
-   grid because the heatmap itself uses flex-column-wrap internally —
-   nesting two grids gets fussy. */
+/* ─── Activity card / heatmap ─────────────────────────────────
+   Same 20-week × 7-day grid as before, just sized down a touch
+   (cell from 12 → 12px with tighter gap) so the card fits
+   comfortably in a 50%-width column without dictating the row
+   height. */
+
 .libre-profile-heatmap-wrap {
   display: flex;
-  align-items: stretch;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 6px;
 }
 
-/* Day-of-week labels — Mon / Wed / Fri only, every other row. The 7
-   slots line up exactly with the 7 cell rows because the same gap
-   value is used. */
 .libre-profile-heatmap-rowlabels {
   display: grid;
-  grid-template-rows: repeat(7, 16px);
-  row-gap: 4px;
-  padding: 4px 0;
-  font-size: 10px;
-  font-weight: 600;
+  grid-template-rows: repeat(7, 12px);
+  gap: 2px;
+  padding-top: 1px;
+  font-size: 9.5px;
   color: var(--color-text-tertiary);
-  letter-spacing: 0.04em;
-  user-select: none;
+  text-align: right;
+  width: 22px;
+  flex-shrink: 0;
 }
 
-.libre-profile-heatmap-rowlabels span {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  white-space: nowrap;
-  min-width: 24px;
-}
-
-.libre-profile-heatmap-summary {
-  font-size: 12px;
-  color: var(--color-text-secondary);
-  font-variant-numeric: tabular-nums;
+.libre-profile-heatmap-rowlabels > span {
+  line-height: 12px;
 }
 
 .libre-profile-heatmap {
   display: flex;
-  flex-direction: column;
   flex-wrap: wrap;
+  flex-direction: column;
   align-content: flex-start;
-  height: calc(7 * 16px + 6 * 4px);
-  gap: 4px;
-  padding: 4px 0;
+  width: 100%;
+  height: calc(7 * 12px + 6 * 2px);
+  gap: 2px;
 }
 
 .libre-profile-heatmap-cell {
-  width: 16px;
-  height: 16px;
-  border-radius: var(--fb-radius-xs);
-  background: var(--color-bg-inset, rgba(255, 255, 255, 0.04));
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid transparent;
   flex-shrink: 0;
-  display: inline-block;
+  transition: transform 0.12s ease, filter 0.12s ease;
 }
 
-/* Future days of the current week — render as visible empty squares
-   with a dashed outline so the grid reads as a complete 7×N
-   rectangle. The dashed treatment hints at "not yet" without
-   needing an extra legend; their position (always the bottom of
-   the rightmost column) makes the meaning obvious in context. */
+.libre-profile-heatmap-cell:hover:not(.libre-profile-heatmap-cell--pad) {
+  transform: scale(1.18);
+  filter: brightness(1.2);
+}
+
 .libre-profile-heatmap-cell--pad {
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px dashed rgba(255, 255, 255, 0.08);
+  background: transparent;
 }
 
 .libre-profile-heatmap-cell--lvl-0 { background: rgba(255, 255, 255, 0.04); }
@@ -353,24 +351,24 @@
 .libre-profile-heatmap-cell--lvl-4 { background: #7cd97c;                     border-color: rgba(124, 217, 124, 0.85); }
 
 .libre-profile-heatmap-legend {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 11px;
+  gap: 4px;
+  font-size: 10px;
   color: var(--color-text-tertiary);
-  margin-top: 4px;
+  margin-top: -2px;
 }
 
-.libre-profile-heatmap-legend .libre-profile-heatmap-cell {
-  width: 12px;
-  height: 12px;
+.libre-profile-heatmap-legend > .libre-profile-heatmap-cell {
+  width: 10px;
+  height: 10px;
 }
 
-/* ---- Per-language XP chart ---------------------------------------- */
-/* Horizontal bars, brand-tinted via `data-lang`. Bar width is set
-   inline from React; the fill color comes from CSS so we don't ship a
-   color table on the JS side. The grid columns: language name,
-   stretchy bar, lessons-done fraction, XP total. */
+/* ─── XP by language card ─────────────────────────────────────
+   Horizontal bars sorted descending. Layout: name column (fixed
+   width), bar (flex), then lessons-done / XP totals on the
+   right. Tighter row height than the previous design so all 8
+   rows fit without scrolling at the typical card height. */
 
 .libre-profile-lang-chart {
   list-style: none;
@@ -378,49 +376,52 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .libre-profile-lang-row {
   display: grid;
-  grid-template-columns: 140px 1fr 80px 70px;
+  grid-template-columns: 110px minmax(0, 1fr) 56px 60px;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  min-height: 22px;
 }
 
 .libre-profile-lang-name {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--color-text-primary);
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  letter-spacing: -0.005em;
 }
 
 .libre-profile-lang-bar {
-  height: 10px;
-  background: var(--color-bg-inset, rgba(255, 255, 255, 0.06));
-  border-radius: 5px;
+  position: relative;
+  height: 7px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 999px;
   overflow: hidden;
 }
 
 .libre-profile-lang-bar-fill {
-  height: 100%;
+  position: absolute;
+  inset: 0 auto 0 0;
   background: var(--color-text-primary);
-  border-radius: 5px;
-  transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  border-radius: 999px;
+  transition: width 0.35s ease;
 }
 
-/* Brand colors per language — applied via [data-lang]. Mirrors mobile
-   exactly so JS reads yellow on every surface, Rust reads oxblood, etc.
-   Adding a new language: add an entry here AND in MobileProfile.css. */
+/* Brand colours per language. Preserved verbatim from the
+   previous design so JS reads yellow, Rust reads oxblood, etc. */
 .libre-profile-lang-bar[data-lang="javascript"] .libre-profile-lang-bar-fill { background: #f7df1e; }
 .libre-profile-lang-bar[data-lang="typescript"] .libre-profile-lang-bar-fill { background: #3178c6; }
 .libre-profile-lang-bar[data-lang="python"]     .libre-profile-lang-bar-fill { background: #3776ab; }
 .libre-profile-lang-bar[data-lang="rust"]       .libre-profile-lang-bar-fill { background: #ce412b; }
 .libre-profile-lang-bar[data-lang="go"]         .libre-profile-lang-bar-fill { background: #00add8; }
 .libre-profile-lang-bar[data-lang="swift"]      .libre-profile-lang-bar-fill { background: #fa7343; }
-.libre-profile-lang-bar[data-lang="reactnative"]   .libre-profile-lang-bar-fill { background: #61dafb; }
+.libre-profile-lang-bar[data-lang="reactnative"] .libre-profile-lang-bar-fill { background: #61dafb; }
 .libre-profile-lang-bar[data-lang="svelte"]     .libre-profile-lang-bar-fill { background: #ff3e00; }
 .libre-profile-lang-bar[data-lang="solid"]      .libre-profile-lang-bar-fill { background: #2c4f7c; }
 .libre-profile-lang-bar[data-lang="htmx"]       .libre-profile-lang-bar-fill { background: #3a4252; }
@@ -434,181 +435,214 @@
 .libre-profile-lang-bar[data-lang="kotlin"]     .libre-profile-lang-bar-fill { background: #7f52ff; }
 .libre-profile-lang-bar[data-lang="csharp"]     .libre-profile-lang-bar-fill { background: #5c2d91; }
 .libre-profile-lang-bar[data-lang="assembly"]   .libre-profile-lang-bar-fill { background: #6b6b6b; }
-.libre-profile-lang-bar[data-lang="threejs"]    .libre-profile-lang-bar-fill { background: #2d2d2d; }
+.libre-profile-lang-bar[data-lang="threejs"]    .libre-profile-lang-bar-fill { background: #cbd5e1; }
 
 .libre-profile-lang-meta {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--color-text-secondary);
-  text-align: right;
+  font-size: 11px;
   font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+  text-align: right;
+  white-space: nowrap;
 }
 
 .libre-profile-lang-meta-sub {
   color: var(--color-text-tertiary);
-  font-weight: 500;
 }
 
 .libre-profile-lang-xp {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  text-align: right;
+  font-size: 11px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+  text-align: right;
+  white-space: nowrap;
 }
 
-/* ---- Achievement badges ------------------------------------------- */
-/* 6-col × 2-row grid on desktop (vs mobile's 3×4). Locked badges dim
-   with a "x / target" hint; unlocked ones gain a gold tint + glow. */
+/* ─── Achievements card ───────────────────────────────────────
+   12 badges arranged in a responsive grid. At desktop widths
+   that's 4 cols × 3 rows; collapses to 3 cols on the narrow
+   single-column layout, 2 cols at phone-narrow widths. Badges
+   are square-ish tiles, dimmer when locked. */
 
 .libre-profile-badges {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
 }
 
-@media (max-width: 720px) {
-  /* Profile column rarely gets this narrow on desktop, but the
-   * settings dialog can host this layout in a popup. Drop to 4 cols
-   * before things get cramped. */
-  .libre-profile-badges {
-    grid-template-columns: repeat(4, 1fr);
-  }
+@media (max-width: 1100px) {
+  .libre-profile-badges { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .libre-profile-badges { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 .libre-profile-badge {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 14px 10px;
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border-default);
-  border-radius: 14px;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
   text-align: center;
-  opacity: 0.45;
-  filter: grayscale(0.4);
-  transition: opacity 0.2s ease, filter 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  /* Locked badges are dimmed; unlocked override below brings
+     them back to full opacity + warm glow. */
+  opacity: 0.55;
+  transition: opacity 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.libre-profile-badge-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-text-secondary);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.libre-profile-badge-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.15;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.libre-profile-badge-meta {
+  font-size: 9.5px;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
 }
 
 .libre-profile-badge--unlocked {
   opacity: 1;
-  filter: none;
-  border-color: rgba(252, 211, 77, 0.4);
-  background:
-    linear-gradient(180deg, rgba(252, 211, 77, 0.06), transparent 70%),
-    var(--color-bg-secondary);
-}
-
-.libre-profile-badge--unlocked:hover {
-  transform: translateY(-1px);
-  border-color: rgba(252, 211, 77, 0.6);
-}
-
-.libre-profile-badge-icon {
-  width: 40px;
-  height: 40px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  color: #fcd34d;
-  background: rgba(252, 211, 77, 0.12);
+  background: rgba(252, 211, 77, 0.08);
+  border-color: rgba(252, 211, 77, 0.32);
 }
 
 .libre-profile-badge--unlocked .libre-profile-badge-icon {
   background: rgba(252, 211, 77, 0.18);
-  box-shadow: 0 0 0 2px rgba(252, 211, 77, 0.18);
-}
-
-.libre-profile-badge-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  line-height: 1.2;
-}
-
-.libre-profile-badge-meta {
-  font-size: 10.5px;
-  font-weight: 600;
-  color: var(--color-text-tertiary);
-  font-variant-numeric: tabular-nums;
+  color: #fcd34d;
 }
 
 .libre-profile-badge--unlocked .libre-profile-badge-meta {
-  color: rgba(252, 211, 77, 0.85);
+  color: #fcd34d;
 }
 
-/* ---- Topics chips (desktop-unique, kept from previous design) ----- */
+/* ─── Topics card ─────────────────────────────────────────────
+   Compact chip strip. Default rendering caps to
+   TOPICS_PREVIEW_COUNT (10 in the TSX) with an expander button
+   below to reveal the rest. Each chip is a flex row: topic
+   name on the left, count pill on the right. */
 
 .libre-profile-topic-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
 .libre-profile-topic-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-pill);
+  padding: 4px 10px 4px 8px;
+  background: var(--color-bg-tertiary);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
   font-size: 11.5px;
   color: var(--color-text-primary);
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 .libre-profile-topic-name {
-  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
 }
 
 .libre-profile-topic-count {
-  padding: 0 6px;
-  border-radius: var(--fb-radius-pill);
-  background: var(--color-bg-tertiary);
-  color: var(--color-text-secondary);
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
   font-size: 10.5px;
-  font-weight: 700;
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1px 6px;
+  border-radius: 999px;
   font-variant-numeric: tabular-nums;
+  min-width: 18px;
+  text-align: center;
 }
 
-/* ---- Activity timeline (preserved) -------------------------------- */
+/* ─── Recent activity card ────────────────────────────────────
+   Dense single-line rows. Layout: kind dot, lesson title (flex),
+   course title (right-side, muted), time (right edge). Hovering
+   a row tints it + brightens the kind dot. Capped to
+   ACTIVITY_PREVIEW_COUNT (8) by default with an expander below. */
+
+.libre-profile-card--activity-feed {
+  /* Slightly more vertical breathing room than the other cards
+     because the feed often has more rows than the grid neighbours
+     even at its 8-row preview height. */
+  gap: 10px;
+}
 
 .libre-profile-activity {
   list-style: none;
-  padding: 0;
   margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  /* No gap between rows — the rows have their own hairline
+     border-top so they read as a connected list rather than
+     a stack of cards. The first row's border is suppressed
+     below. */
+  gap: 0;
+}
+
+.libre-profile-activity > li:not(:first-child) .libre-profile-activity-row {
+  border-top: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.04));
 }
 
 .libre-profile-activity-row {
-  width: 100%;
-  display: flex;
+  display: grid;
+  grid-template-columns: 14px minmax(0, 2fr) minmax(0, 1.4fr) auto;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
+  gap: 12px;
+  width: 100%;
+  padding: 7px 4px;
   background: transparent;
   border: 0;
-  border-radius: var(--fb-radius-md);
-  color: inherit;
-  font-family: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background var(--fb-motion-snappy);
+  color: inherit;
+  font: inherit;
+  transition: background 0.12s ease;
 }
 
 .libre-profile-activity-row:hover {
-  background: var(--color-bg-secondary);
+  background: var(--color-bg-tertiary);
+  border-radius: 6px;
 }
 
 .libre-profile-activity-kind {
-  width: 6px;
-  height: 6px;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: var(--color-text-tertiary);
   flex-shrink: 0;
@@ -620,25 +654,20 @@
 .libre-profile-activity-kind--reading      { background: #7cd97c; }
 .libre-profile-activity-kind--puzzle,
 .libre-profile-activity-kind--cloze,
-.libre-profile-activity-kind--micropuzzle { background: #c79bff; }
-
-.libre-profile-activity-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
+.libre-profile-activity-kind--micropuzzle  { background: #c79bff; }
 
 .libre-profile-activity-lesson {
   font-size: 13px;
+  font-weight: 600;
   color: var(--color-text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: -0.005em;
 }
 
 .libre-profile-activity-course {
-  font-size: 10.5px;
+  font-size: 11.5px;
   color: var(--color-text-tertiary);
   white-space: nowrap;
   overflow: hidden;
@@ -647,21 +676,45 @@
 
 .libre-profile-activity-time {
   font-size: 10.5px;
-  color: var(--color-text-tertiary);
   font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
 }
 
-/* ---- Hero-section responsiveness ---------------------------------- */
-/* On narrow shells (settings dialog, half-pane layouts) the hero
-   stacks: title above rings instead of beside them. Keeps the rings
-   as the visual anchor on tight widths. */
-@media (max-width: 640px) {
-  .libre-profile-hero {
-    grid-template-columns: 1fr;
-    gap: 18px;
-  }
-  .libre-profile-rings {
-    justify-content: center;
-  }
+/* ─── Expander button ────────────────────────────────────────
+   Shared by Topics + Recent activity. Quiet ghost button —
+   inline-flex with a chevron + label, no fill, hovers to a
+   subtle tinted background. Sits as the last child of its
+   card so it docks at the bottom regardless of how many
+   chips/rows precede it. */
+
+.libre-profile-expander {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 5px 10px;
+  background: transparent;
+  border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.08));
+  border-radius: 999px;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.libre-profile-expander:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-strong, rgba(255, 255, 255, 0.18));
+}
+
+.libre-profile-expander:focus-visible {
+  outline: 2px solid var(--color-text-secondary);
+  outline-offset: 2px;
 }

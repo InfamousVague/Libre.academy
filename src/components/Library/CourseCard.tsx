@@ -1,6 +1,7 @@
 import { memo } from "react";
 import type { Course } from "../../data/types";
 import LanguageChip from "../LanguageChip/LanguageChip";
+import { useT } from "../../i18n/i18n";
 // Card chrome lives in CourseLibrary.css alongside the grid +
 // sidebar styles. Importing it from this file (rather than relying
 // on a parent like CourseLibrary to bring it in) means every
@@ -50,7 +51,7 @@ interface Props {
   /// only, surfaced upstream via `onUpdateCourse`.
   hasUpdate?: boolean;
   /// Optional inline style — used by CourseLibrary to set the
-  /// `--fb-ripple-i` custom property per card so the mount-time
+  /// `--libre-ripple-i` custom property per card so the mount-time
   /// ripple animation staggers across the grid in index order.
   /// Spread onto the root div in BOTH the installed and
   /// placeholder render paths; the library's CSS reads the
@@ -71,13 +72,14 @@ function CourseCardImpl({
   hasUpdate,
   style,
 }: Props) {
+  const t = useT();
   const chapters = course.chapters.length;
   const isCompleted = pct === 1;
   const status =
     pct === 0
-      ? "not started"
+      ? t("library.notStartedLower")
       : isCompleted
-        ? "completed"
+        ? t("library.completedLower")
         : `${Math.round(pct * 100)}%`;
 
   // Placeholder cards (Discover mode) have no progress, no chapters
@@ -93,16 +95,18 @@ function CourseCardImpl({
         <div className="libre-library-card-main">
           <div className="libre-library-card-header">
             <LanguageChip language={course.language} size="sm" />
-            <span className="libre-library-card-status">Available</span>
+            <span className="libre-library-card-status">{t("library.available")}</span>
           </div>
           <div className="libre-library-card-title">{course.title}</div>
           {course.author && (
-            <div className="libre-library-card-author">by {course.author}</div>
+            <div className="libre-library-card-author">{t("library.authorPrefix", { author: course.author })}</div>
           )}
           <div className="libre-library-card-meta">
             {chapters > 0
-              ? `${chapters} chapter${chapters === 1 ? "" : "s"}`
-              : "Catalog book"}
+              ? chapters === 1
+                ? t("library.chapterCount", { count: chapters })
+                : t("library.chapterCountPlural", { count: chapters })
+              : t("library.catalogBook")}
           </div>
         </div>
         <div className="libre-library-card-actions">
@@ -114,9 +118,9 @@ function CourseCardImpl({
               onInstall?.();
             }}
             disabled={installing || !onInstall}
-            title="Add this book to your library"
+            title={t("library.installTitle")}
           >
-            {installing ? "Installing…" : "Install"}
+            {installing ? t("library.installing") : t("library.install")}
           </button>
         </div>
       </div>
@@ -135,8 +139,8 @@ function CourseCardImpl({
           {hasUpdate && (
             <span
               className="libre-library-card-update-dot"
-              aria-label="Update available — right-click for actions"
-              title="Update available — right-click for actions"
+              aria-label={t("library.updateAvailable")}
+              title={t("library.updateAvailable")}
             />
           )}
           <span
@@ -176,7 +180,9 @@ function CourseCardImpl({
           />
         </div>
         <div className="libre-library-card-meta">
-          {done}/{total} lessons · {chapters} chapter{chapters === 1 ? "" : "s"}
+          {chapters === 1
+            ? t("library.cardMeta", { done, total, chapters })
+            : t("library.cardMetaPlural", { done, total, chapters })}
         </div>
       </button>
     </div>

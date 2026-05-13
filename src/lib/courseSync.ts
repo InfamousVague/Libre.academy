@@ -107,14 +107,11 @@ function canonicalJson(value: unknown): string {
   });
 }
 
-/// Resolve the URL the running app should fetch a bundled course
-/// from. Vite serves `public/` at `import.meta.env.BASE_URL`, which
-/// differs between desktop (`/`) and the deployed web build
-/// (`/fishbones/learn/`). The trailing-slash handling matches
-/// `webSeedCourses.ts`'s `starterUrl()` helper.
+/// Resolve the URL the running app should fetch a course's canonical
+/// JSON from. Always the libre.academy CDN — single source of truth
+/// across desktop, web, dev server, and the production embed.
 export function bundledCourseUrl(courseId: string): string {
-  const base = (import.meta.env.BASE_URL ?? "/").replace(/\/?$/, "/");
-  return `${base}starter-courses/${courseId}.json`;
+  return `https://libre.academy/starter-courses/${courseId}.json`;
 }
 
 /// Fetch the bundled course JSON. Returns null when no bundled

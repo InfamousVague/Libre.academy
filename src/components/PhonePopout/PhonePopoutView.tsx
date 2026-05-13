@@ -50,18 +50,29 @@ export default function PhonePopoutView() {
         case "clear":
           setState({ kind: "empty" });
           break;
+        case "request-state":
+          // Originates from another popout instance, not the main
+          // window — ignore. The main is the only side that should
+          // respond to this message.
+          break;
       }
     });
-    // Tell the world we're alive so a fresh popout that opens AFTER
-    // the most recent preview URL was emitted can request a re-emit.
-    // (Future: add a request/response cycle.) For now we just sit
-    // and wait for the next push from the main window.
+    // Handshake: ask the main window to re-emit its most recent
+    // state so a fresh popout (opened AFTER the user already ran
+    // code, or just after a reload) doesn't sit on the empty
+    // placeholder forever. Cross-window emit is fire-and-forget;
+    // the main window's LessonView listens for this on the same
+    // bus and replies with a cached `preview` / `console` /
+    // `running` message if it has one. Posted asynchronously so
+    // the request always lands AFTER our own listener is wired —
+    // otherwise we could miss our own request's reply.
+    queueMicrotask(() => bus.emit({ type: "request-state" }));
     return unlisten;
   }, [scope]);
 
   return (
     <div className="libre-phone-popout-root">
-      <PhoneFrame carrier="FISH">
+      <PhoneFrame carrier="LIBRE">
         {state.kind === "empty" && (
           <div className="libre-phone-frame-placeholder">
             <span>

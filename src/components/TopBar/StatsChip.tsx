@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@base/primitives/icon";
+import { useHapticOnChange } from "../../hooks/useHaptic";
 import { flame } from "@base/primitives/icon/icons/flame";
 import { check } from "@base/primitives/icon/icons/check";
 import { sparkles } from "@base/primitives/icon/icons/sparkles";
@@ -14,6 +15,7 @@ import {
   type StreakShieldsState,
 } from "../../hooks/useStreakShields";
 import { ProgressRing } from "../Shared/ProgressRing";
+import { useT } from "../../i18n/i18n";
 
 /// Semantic color tokens for the stats chips. Each row's uppercase label
 /// is tinted to match its icon so the eye pairs them at a glance. Kept
@@ -58,6 +60,7 @@ export default function StatsChip({
   onSignIn?: () => void;
   onSignOut?: () => void;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement | null>(null);
 
@@ -83,6 +86,18 @@ export default function StatsChip({
     stats.xpForLevel > 0 ? stats.xpIntoLevel / stats.xpForLevel : 0;
   const streakActive = stats.streakDays >= 1;
   const xpToNext = Math.max(0, stats.xpForLevel - stats.xpIntoLevel);
+
+  // Streak crescendo + level-up celebration on increase. The
+  // `when` predicate ensures we only fire on increases — a
+  // reset (streak broken) wouldn't be a celebratory moment.
+  // skipInitial keeps the haptic from firing on every mount
+  // (the chip re-mounts whenever the topbar route re-renders).
+  useHapticOnChange(stats.streakDays, "streak-bump", {
+    when: (prev, next) => next > prev,
+  });
+  useHapticOnChange(stats.level, "level-up", {
+    when: (prev, next) => next > prev,
+  });
 
   /// Freeze-affordance state. The "Freeze yesterday" CTA shows only when:
   ///   - shields are wired,
@@ -201,28 +216,28 @@ export default function StatsChip({
   /// always points at "the next thing to unlock". Falls back silently
   /// when every milestone is unlocked.
   const nextMilestone = useMemo(() => {
-    const targets: Array<{ label: string; target: number; actual: number; unit: string }> = [
-      { label: "First lesson", target: 1, actual: stats.lessonsCompleted, unit: "lesson" },
-      { label: "Ten lessons", target: 10, actual: stats.lessonsCompleted, unit: "lessons" },
-      { label: "Century", target: 100, actual: stats.lessonsCompleted, unit: "lessons" },
-      { label: "3-day streak", target: 3, actual: Math.max(stats.streakDays, stats.longestStreakDays), unit: "days" },
-      { label: "Week strong", target: 7, actual: Math.max(stats.streakDays, stats.longestStreakDays), unit: "days" },
-      { label: "Iron habit", target: 30, actual: Math.max(stats.streakDays, stats.longestStreakDays), unit: "days" },
-      { label: "Apprentice", target: 5, actual: stats.level, unit: "level" },
-      { label: "Adept", target: 10, actual: stats.level, unit: "level" },
-      { label: "Mastered", target: 20, actual: stats.level, unit: "level" },
-      { label: "1k XP", target: 1000, actual: stats.xp, unit: "XP" },
-      { label: "10k XP", target: 10000, actual: stats.xp, unit: "XP" },
+    const targets: Array<{ labelKey: string; target: number; actual: number; unitKey: string }> = [
+      { labelKey: "stats.milestoneFirstLesson", target: 1, actual: stats.lessonsCompleted, unitKey: "stats.unitLesson" },
+      { labelKey: "stats.milestoneTenLessons", target: 10, actual: stats.lessonsCompleted, unitKey: "stats.unitLessons" },
+      { labelKey: "stats.milestoneCentury", target: 100, actual: stats.lessonsCompleted, unitKey: "stats.unitLessons" },
+      { labelKey: "stats.milestoneThreeDayStreak", target: 3, actual: Math.max(stats.streakDays, stats.longestStreakDays), unitKey: "stats.unitDays" },
+      { labelKey: "stats.milestoneWeekStrong", target: 7, actual: Math.max(stats.streakDays, stats.longestStreakDays), unitKey: "stats.unitDays" },
+      { labelKey: "stats.milestoneIronHabit", target: 30, actual: Math.max(stats.streakDays, stats.longestStreakDays), unitKey: "stats.unitDays" },
+      { labelKey: "stats.milestoneApprentice", target: 5, actual: stats.level, unitKey: "stats.unitLevel" },
+      { labelKey: "stats.milestoneAdept", target: 10, actual: stats.level, unitKey: "stats.unitLevel" },
+      { labelKey: "stats.milestoneMastered", target: 20, actual: stats.level, unitKey: "stats.unitLevel" },
+      { labelKey: "stats.milestoneOneKXp", target: 1000, actual: stats.xp, unitKey: "stats.unitXp" },
+      { labelKey: "stats.milestoneTenKXp", target: 10000, actual: stats.xp, unitKey: "stats.unitXp" },
     ];
     // Closest = smallest remaining gap (target - actual), among locked.
     let best: typeof targets[number] | null = null;
     let bestGap = Infinity;
-    for (const t of targets) {
-      if (t.actual >= t.target) continue;
-      const gap = t.target - t.actual;
+    for (const tg of targets) {
+      if (tg.actual >= tg.target) continue;
+      const gap = tg.target - tg.actual;
       if (gap < bestGap) {
         bestGap = gap;
-        best = t;
+        best = tg;
       }
     }
     return best;
@@ -239,7 +254,7 @@ export default function StatsChip({
           open ? "libre__topbar-stats-trigger--open" : ""
         }`}
         onClick={() => setOpen((v) => !v)}
-        title={`Level ${stats.level} · ${stats.streakDays} day streak`}
+        title={t("stats.triggerTitle", { level: stats.level, days: stats.streakDays })}
       >
         <span
           className={`libre__topbar-streak ${
@@ -256,8 +271,14 @@ export default function StatsChip({
           {frozenDayCount > 0 && (
             <span
               className="libre__topbar-streak-frozen"
-              aria-label={`${frozenDayCount} day${frozenDayCount === 1 ? "" : "s"} frozen`}
-              title={`${frozenDayCount} day${frozenDayCount === 1 ? "" : "s"} frozen`}
+              aria-label={t(
+                frozenDayCount === 1 ? "stats.daysFrozen" : "stats.daysFrozenPlural",
+                { n: frozenDayCount },
+              )}
+              title={t(
+                frozenDayCount === 1 ? "stats.daysFrozen" : "stats.daysFrozenPlural",
+                { n: frozenDayCount },
+              )}
             >
               <Icon icon={snowflake} size="xs" color="currentColor" weight="bold" />
             </span>
@@ -272,7 +293,7 @@ export default function StatsChip({
       </button>
 
       {open && (
-        <div className="libre__topbar-stats-panel" role="dialog" aria-label="Progress stats">
+        <div className="libre__topbar-stats-panel" role="dialog" aria-label={t("stats.progressStats")}>
           {/* Hero row. The ring's centre already shows the level
               number, so the right-hand body promotes the SIGNED-IN
               identity (name + email) instead of duplicating "Level N"
@@ -285,7 +306,7 @@ export default function StatsChip({
               size={72}
               stroke={5}
               label={String(stats.level)}
-              sublabel="level"
+              sublabel={t("stats.level")}
             />
             <div className="libre__topbar-stats-hero-body">
               {signedIn === true && (userDisplayName?.trim() || userEmail) ? (
@@ -299,16 +320,18 @@ export default function StatsChip({
                 </>
               ) : (
                 <>
-                  <div className="libre__topbar-stats-heading">Level {stats.level}</div>
+                  <div className="libre__topbar-stats-heading">
+                    {t("stats.levelHeading", { level: stats.level })}
+                  </div>
                   <div className="libre__topbar-stats-sub">
-                    {stats.xpIntoLevel} / {stats.xpForLevel} XP
+                    {t("stats.xpProgress", { into: stats.xpIntoLevel, forLevel: stats.xpForLevel })}
                   </div>
                 </>
               )}
               <div className="libre__topbar-stats-to-next">
                 {xpToNext === 0
-                  ? "Ready to level up — complete any lesson!"
-                  : `${xpToNext} XP to level ${stats.level + 1}`}
+                  ? t("stats.readyLevelUp")
+                  : t("stats.xpToNext", { xp: xpToNext, level: stats.level + 1 })}
               </div>
             </div>
           </div>
@@ -319,38 +342,38 @@ export default function StatsChip({
             <StatBlock
               icon={flame}
               color={STAT_COLORS.streak}
-              label={streakActive ? "Current streak" : "Streak"}
-              value={`${stats.streakDays} ${stats.streakDays === 1 ? "day" : "days"}`}
+              label={streakActive ? t("stats.currentStreak") : t("stats.streakLabel")}
+              value={`${stats.streakDays} ${stats.streakDays === 1 ? t("stats.day") : t("stats.days")}`}
               hint={
                 stats.longestStreakDays > stats.streakDays
-                  ? `best · ${stats.longestStreakDays} days`
+                  ? t("stats.bestStreak", { n: stats.longestStreakDays })
                   : streakActive
-                  ? "keep it going"
-                  : "complete a lesson today to start"
+                  ? t("stats.keepGoing")
+                  : t("stats.completeToStart")
               }
             />
             <StatBlock
               icon={check}
               color={STAT_COLORS.lessons}
-              label="Lessons done"
+              label={t("stats.lessonsDone")}
               value={String(stats.lessonsCompleted)}
-              hint="across all courses"
+              hint={t("stats.acrossAllCourses")}
             />
             <StatBlock
               icon={sparkles}
               color={STAT_COLORS.xp}
-              label="Total XP"
+              label={t("stats.totalXp")}
               value={String(stats.xp)}
-              hint="5 reading · 10 quiz · 20 exercise"
+              hint={t("stats.xpScheme")}
             />
             <StatBlock
               icon={trophy}
               color={STAT_COLORS.longest}
-              label="Longest streak"
+              label={t("stats.longestStreak")}
               value={`${stats.longestStreakDays} ${
-                stats.longestStreakDays === 1 ? "day" : "days"
+                stats.longestStreakDays === 1 ? t("stats.day") : t("stats.days")
               }`}
-              hint="personal record"
+              hint={t("stats.personalRecord")}
             />
             {/* Coins are a soft-currency that future shop UI will let the
                 learner spend on cosmetics, streak freezes, and other
@@ -361,9 +384,9 @@ export default function StatsChip({
             <StatBlock
               icon={coinsIcon}
               color={STAT_COLORS.coins}
-              label="Coins"
+              label={t("stats.coinsLabel")}
               value={String(stats.coins)}
-              hint="bank for upgrades, cosmetics, and freezes (coming soon)"
+              hint={t("stats.coinsHint")}
               span
             />
           </div>
@@ -377,16 +400,21 @@ export default function StatsChip({
           {miniHeatmap && (
             <div
               className="libre__topbar-stats-mini-heat"
-              aria-label="Activity over the last 4 weeks"
+              aria-label={t("stats.activityAria")}
             >
               <div className="libre__topbar-stats-mini-heat-head">
                 <span className="libre__topbar-stats-mini-heat-label">
-                  Recent activity
+                  {t("stats.recentActivity")}
                 </span>
                 <span className="libre__topbar-stats-mini-heat-count">
                   {miniHeatmap.activeDays === 0
-                    ? "no activity yet"
-                    : `${miniHeatmap.activeDays} active day${miniHeatmap.activeDays === 1 ? "" : "s"} · last 4 weeks`}
+                    ? t("stats.noActivity")
+                    : t(
+                        miniHeatmap.activeDays === 1
+                          ? "stats.activeDays"
+                          : "stats.activeDaysPlural",
+                        { n: miniHeatmap.activeDays },
+                      )}
                 </span>
               </div>
               <div className="libre__topbar-stats-mini-heat-body">
@@ -441,14 +469,14 @@ export default function StatsChip({
               milestone is unlocked. */}
           {nextMilestone && (
             <div className="libre__topbar-stats-next">
-              <span className="libre__topbar-stats-next-label">Next</span>
+              <span className="libre__topbar-stats-next-label">{t("stats.next")}</span>
               <span className="libre__topbar-stats-next-name">
-                {nextMilestone.label}
+                {t(nextMilestone.labelKey)}
               </span>
               <span className="libre__topbar-stats-next-progress">
                 {nextMilestone.actual}/{nextMilestone.target}{" "}
                 <span className="libre__topbar-stats-next-unit">
-                  {nextMilestone.unit}
+                  {t(nextMilestone.unitKey)}
                 </span>
               </span>
             </div>
@@ -464,7 +492,7 @@ export default function StatsChip({
           {shields && (
             <div
               className="libre__topbar-stats-freeze"
-              aria-label="Streak shields"
+              aria-label={t("stats.streakShieldsAria")}
             >
               <div className="libre__topbar-stats-freeze-head">
                 <span
@@ -475,10 +503,10 @@ export default function StatsChip({
                   <Icon icon={snowflake} size="xs" color="currentColor" weight="bold" />
                 </span>
                 <span className="libre__topbar-stats-freeze-label">
-                  Streak shields
+                  {t("stats.streakShieldsLabel")}
                 </span>
                 <span className="libre__topbar-stats-freeze-count">
-                  {shields.available} of {shields.perWeek}
+                  {t("stats.shieldsCount", { available: shields.available, perWeek: shields.perWeek })}
                 </span>
               </div>
               <div className="libre__topbar-stats-freeze-pips" aria-hidden>
@@ -495,14 +523,14 @@ export default function StatsChip({
               </div>
               <div className="libre__topbar-stats-freeze-hint">
                 {canFreezeYesterday
-                  ? "You missed yesterday — freeze it to keep your streak."
+                  ? t("stats.hintCanFreeze")
                   : yesterdayFrozen
-                  ? "Yesterday is frozen. Run is safe."
+                  ? t("stats.hintYesterdayFrozen")
                   : shields.available === 0
-                  ? "No shields left this week. They refill Monday."
+                  ? t("stats.hintNoShields")
                   : todayHasCompletion
-                  ? "Streak active. Shields refill every Monday."
-                  : "Refills every Monday."}
+                  ? t("stats.hintTodayActive")
+                  : t("stats.hintRefillsMonday")}
               </div>
               {canFreezeYesterday && (
                 <button
@@ -513,7 +541,7 @@ export default function StatsChip({
                   }}
                 >
                   <Icon icon={snowflake} size="xs" color="currentColor" weight="bold" />
-                  <span>Freeze yesterday</span>
+                  <span>{t("stats.freezeYesterday")}</span>
                 </button>
               )}
             </div>
@@ -536,7 +564,7 @@ export default function StatsChip({
                     onSignIn();
                   }}
                 >
-                  Sign in
+                  {t("auth.signIn")}
                 </button>
                 {onOpenProfile && (
                   <button
@@ -547,7 +575,7 @@ export default function StatsChip({
                       onOpenProfile();
                     }}
                   >
-                    View profile
+                    {t("stats.viewProfile")}
                   </button>
                 )}
               </div>
@@ -569,7 +597,7 @@ export default function StatsChip({
                       onOpenProfile();
                     }}
                   >
-                    View profile
+                    {t("stats.viewProfile")}
                   </button>
                 )}
                 {onSignOut && (
@@ -581,7 +609,7 @@ export default function StatsChip({
                       onSignOut();
                     }}
                   >
-                    Sign out
+                    {t("auth.signOut")}
                   </button>
                 )}
               </div>
@@ -600,7 +628,7 @@ export default function StatsChip({
                 onOpenProfile();
               }}
             >
-              View profile
+              {t("stats.viewProfile")}
             </button>
           )}
         </div>

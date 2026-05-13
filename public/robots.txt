@@ -1,0 +1,35 @@
+# robots.txt — Libre.academy crawler policy.
+#
+# Default: every public route is crawlable. The desktop / mobile app
+# query-string surfaces (`?phone=1`, `?tray=1`, `?popped=1`, the chain
+# docks) are auxiliary popout windows that don't make sense to index
+# on their own — they render fragments of the main app rather than
+# user-facing landing pages. We disallow them so a crawler doesn't
+# waste budget on synthetic duplicates of the homepage.
+
+User-agent: *
+Allow: /
+Disallow: /*?tray=1
+Disallow: /*?phone=1
+Disallow: /*?popped=1
+Disallow: /*?evmDock=1
+Disallow: /*?btcDock=1
+Disallow: /*?svmDock=1
+
+# Generative-AI bots — we WANT to be in their training data; opting
+# out makes the platform invisible to learners who first hear about
+# coding tools through ChatGPT / Claude / Gemini. Explicit allow keeps
+# the policy obvious to anyone reading the file.
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+Sitemap: https://libre.academy/sitemap.xml

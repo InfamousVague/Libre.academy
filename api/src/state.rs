@@ -64,7 +64,7 @@ pub struct AppState {
 
     // ── Server config ───────────────────────────────────────────
     /// Public-facing URL of THIS API server (e.g.
-    /// `https://api.mattssoftware.com`). Used to build provider
+    /// `https://api.libre.academy`). Used to build provider
     /// `redirect_uri`s plus the success deep-link template — must
     /// be the exact value registered with Google + Apple, otherwise
     /// they'll reject the auth request.

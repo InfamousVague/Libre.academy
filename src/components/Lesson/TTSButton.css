@@ -3,7 +3,7 @@
    target. Sits in the lesson-meta row alongside the Glossary toggle
    (still chip-sized) so the pill remains the primary affordance. */
 
-.fb-tts-pill {
+.libre-tts-pill {
   display: inline-flex;
   align-items: center;
   /* Left-aligned content: the play/progress ring sits at the leading
@@ -37,14 +37,14 @@
   letter-spacing: 0.01em;
   cursor: pointer;
   transition:
-    background var(--fb-motion-quick, 120ms ease),
-    color var(--fb-motion-quick, 120ms ease),
-    border-color var(--fb-motion-quick, 120ms ease);
+    background var(--libre-motion-quick, 120ms ease),
+    color var(--libre-motion-quick, 120ms ease),
+    border-color var(--libre-motion-quick, 120ms ease);
   -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
 
-.fb-tts-pill:hover {
+.libre-tts-pill:hover {
   background: var(--color-bg-tertiary, #21262d);
   color: var(--color-text-primary, #f5f5f7);
   border-color: var(--color-border-strong, rgba(255, 255, 255, 0.18));
@@ -55,10 +55,10 @@
    above is already chip-sized to match `.libre-reader-meta-glossary`,
    so the static variant only needs to drop the cursor + flatten its
    hover state. */
-.fb-tts-pill--static {
+.libre-tts-pill--static {
   cursor: default;
 }
-.fb-tts-pill--static:hover {
+.libre-tts-pill--static:hover {
   background: var(--color-bg-secondary, #1a1a1f);
   color: var(--color-text-secondary, #a4a4ad);
   border-color: var(--color-border-default, rgba(255, 255, 255, 0.1));
@@ -68,16 +68,16 @@
    warm gold accent used elsewhere for "in-progress" affordances
    (the completion-tier frames). Mid-track gets a softer treatment
    so a paused listener doesn't feel they've stopped doing anything. */
-.fb-tts-pill--playing {
+.libre-tts-pill--playing {
   background: rgba(214, 185, 105, 0.18);
   color: #efe2b3;
   border-color: rgba(214, 185, 105, 0.55);
 }
-.fb-tts-pill--playing:hover {
+.libre-tts-pill--playing:hover {
   background: rgba(214, 185, 105, 0.28);
   border-color: rgba(214, 185, 105, 0.75);
 }
-.fb-tts-pill--mid:not(.fb-tts-pill--playing) {
+.libre-tts-pill--mid:not(.libre-tts-pill--playing) {
   color: var(--color-text-primary, #f5f5f7);
   border-color: rgba(214, 185, 105, 0.32);
 }
@@ -87,7 +87,7 @@
    chip. The SVG inside still uses a 32-unit viewBox; CSS overrides
    its rendered dimensions so the inner circle (cx=16, r=13) scales
    proportionally to a ~13px visual diameter ring with a ~1px stroke. */
-.fb-tts-pill__ring {
+.libre-tts-pill__ring {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -97,7 +97,7 @@
   flex-shrink: 0;
 }
 
-.fb-tts-pill__ring-svg {
+.libre-tts-pill__ring-svg {
   /* CSS-set width/height intentionally overrides the SVG element's
      `width="32" height="32"` attributes so we can shrink the ring
      without changing the JSX RADIUS / viewBox math. */
@@ -109,11 +109,11 @@
   display: block;
 }
 
-.fb-tts-pill__ring-track {
+.libre-tts-pill__ring-track {
   stroke: var(--color-border-default, rgba(255, 255, 255, 0.12));
 }
 
-.fb-tts-pill__ring-fill {
+.libre-tts-pill__ring-fill {
   /* Filled portion of the ring. Currentcolor inherits the pill's
      foreground colour so the ring matches the playing/idle palette
      without per-state overrides. */
@@ -126,7 +126,7 @@
 
 /* Center icon over the SVG ring. The Icon component renders an
    inline SVG; we wrap it in a span we can absolute-position. */
-.fb-tts-pill__icon {
+.libre-tts-pill__icon {
   position: absolute;
   inset: 0;
   display: flex;
@@ -136,7 +136,7 @@
 }
 
 /* Hard-clamp the inner glyph WELL inside the ring. The ring is
-   20px (see `.fb-tts-pill__ring`), and after the global +6px icon
+   20px (see `.libre-tts-pill__ring`), and after the global +6px icon
    bump in App.css the @base `xs` size lands at 18px — way too
    loud, the play / pause bars dominate the pill instead of
    reading as a state badge inside the progress ring. 9px keeps
@@ -144,17 +144,17 @@
    the ring is the focal point and the glyph reads as "what state
    am I in" rather than "press here." `!important` forces past the
    same-specificity `.icon--xs` rule in App.css. */
-.fb-tts-pill__icon svg {
+.libre-tts-pill__icon svg {
   width: 9px !important;
   height: 9px !important;
 }
 
 /* Loader spin while the MP3 is fetching from the CDN on first play. */
-.fb-tts-pill--loading .fb-tts-pill__icon svg {
-  animation: fb-tts-spin 0.9s linear infinite;
+.libre-tts-pill--loading .libre-tts-pill__icon svg {
+  animation: libre-tts-spin 0.9s linear infinite;
 }
 
-@keyframes fb-tts-spin {
+@keyframes libre-tts-spin {
   from {
     transform: rotate(0deg);
   }
@@ -163,7 +163,7 @@
   }
 }
 
-.fb-tts-pill__text {
+.libre-tts-pill__text {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -172,13 +172,13 @@
    enough for very tight rows. The aria-label still announces the
    full state for screen readers. */
 @media (max-width: 380px) {
-  .fb-tts-pill__text {
+  .libre-tts-pill__text {
     display: none;
   }
-  .fb-tts-pill {
+  .libre-tts-pill {
     padding: 4px;
   }
-  .fb-tts-pill--static .fb-tts-pill__text {
+  .libre-tts-pill--static .libre-tts-pill__text {
     /* Static (read-time) variant on phone keeps the text — without
        the play affordance the icon alone is meaningless. */
     display: inline;

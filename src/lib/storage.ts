@@ -14,7 +14,7 @@
 ///
 /// Web storage stays purely local for now. Phase 4 layers cloud sync
 /// on top — the existing useLibreCloud hook already pushes a
-/// completions delta to api.mattssoftware.com over HTTP, so once we
+/// completions delta to api.libre.academy over HTTP, so once we
 /// hook it up to webStorage's writes we get cross-device sync for
 /// free.
 

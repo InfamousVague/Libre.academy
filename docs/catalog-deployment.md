@@ -27,9 +27,9 @@ You need **two upload buckets** (or one with two prefixes):
 
 | Path | Contents | Size | Purpose |
 |---|---|---|---|
-| `https://mattssoftware.com/fishbones/catalog/manifest.json` | Manifest JSON | ~30 KB | Desktop catalog fetch |
-| `https://mattssoftware.com/fishbones/catalog/<id>.jpg` | Cover thumbnails | ~1 MB total | Desktop placeholder cover lookup |
-| `https://mattssoftware.com/fishbones/courses/<id>.libre` | Original .libre archives | ~145 MB total | Desktop install download |
+| `https://libre.academy/catalog/manifest.json` | Manifest JSON | ~30 KB | Desktop catalog fetch |
+| `https://libre.academy/catalog/<id>.jpg` | Cover thumbnails | ~1 MB total | Desktop placeholder cover lookup |
+| `https://libre.academy/courses/<id>.libre` | Original .libre archives | ~145 MB total | Desktop install download |
 
 Web build uses same-origin paths under `/starter-courses/` — no remote hosting needed for web users; these CDN paths are desktop-only.
 
@@ -37,16 +37,16 @@ Web build uses same-origin paths under `/starter-courses/` — no remote hosting
 
 ## URL configuration
 
-The default catalog URL is **`https://mattssoftware.com/fishbones/catalog/manifest.json`** (web build uses same-origin instead — `/<base>/starter-courses/manifest.json`).
+The default catalog URL is **`https://libre.academy/catalog/manifest.json`** (web build uses same-origin instead — `/<base>/starter-courses/manifest.json`).
 
 Override at build time:
 
 ```bash
 # At extract-time, sets the per-course archiveUrl in the manifest
-LIBRE_CATALOG_BASE_URL=https://your-cdn.example.com/fishbones/courses npm run starter:web
+LIBRE_CATALOG_BASE_URL=https://your-cdn.example.com/courses npm run starter:web
 
 # At runtime (Vite env), overrides where the app FETCHES the catalog from
-LIBRE_CATALOG_URL=https://your-cdn.example.com/fishbones/catalog/manifest.json npm run build
+LIBRE_CATALOG_URL=https://your-cdn.example.com/catalog/manifest.json npm run build
 ```
 
 Both vars accept any HTTPS URL. The app refuses to download from non-HTTPS (the Rust command guards on the `archive_url` prefix).
@@ -61,12 +61,12 @@ The simplest path: a single `aws s3 sync` (or equivalent for your provider).
 # After `npm run build:web` finishes…
 
 # Catalog + per-course JSON + covers (~16 MB)
-aws s3 sync public/starter-courses/ s3://your-bucket/fishbones/catalog/ \
+aws s3 sync public/starter-courses/ s3://your-bucket/catalog/ \
   --acl public-read \
   --cache-control "public, max-age=300"
 
 # .libre archives (~145 MB; only changes when you re-pack a course)
-aws s3 sync src-tauri/resources/bundled-packs/ s3://your-bucket/fishbones/courses/ \
+aws s3 sync src-tauri/resources/bundled-packs/ s3://your-bucket/courses/ \
   --acl public-read \
   --cache-control "public, max-age=86400" \
   --exclude "README.md"

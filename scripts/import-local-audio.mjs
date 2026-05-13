@@ -76,10 +76,10 @@ const MODEL_ID = process.env.ELEVEN_MODEL || "eleven_multilingual_v2";
 /// the manifest on that one server, so URLs pointing there are correct
 /// by construction.
 ///
-/// We DELIBERATELY ignore `FB_TTS_CDN_BASE` here — that env var is what
-/// produced the original broken manifest (it baked URLs pointing at
-/// `cdn.mattssoftware.com`, a host that doesn't resolve). The
-/// `generate-lesson-audio.mjs` script honors that env var because the
+/// We DELIBERATELY ignore `FB_TTS_CDN_BASE` here — past invocations
+/// with that env var set produced manifests pointing at hosts that
+/// never came up, so audio fetches 404'd in the app. The
+/// `generate-lesson-audio.mjs` script honors the env var because the
 /// generator is the right place to opt into a separate CDN; the
 /// importer's job is just to wire up files that are about to be
 /// uploaded to the academy host, so it should always emit URLs there.

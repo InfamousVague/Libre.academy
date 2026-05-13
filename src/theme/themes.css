@@ -30,53 +30,175 @@
   --color-glass-rim: rgba(255, 255, 255, 0.04);
   --color-glass-shadow: rgba(0, 0, 0, 0.35);
 
-  /* Bone palette — mid-tone of the new libre wordmark texture.
-     Used by the LibreLoader spinner ring and any other surface
-     that wants to read as "part of the brand" rather than stark white.
-     Three strengths so consumers can pick the right contrast for their
-     surface. The amber variant is shifted ~15° toward orange and used
-     for scrollbars + accent buttons where pure bone reads too washed-
-     out against dark surfaces. */
-  --fb-bone-color: #d4c5a1;
-  --fb-bone-color-soft: #f4eedd; /* near-white text tint, see below */
-  --fb-bone-amber: #c9a76b; /* warmer bone — scrollbars, accents */
-  --fb-bone-amber-strong: #d4af6f; /* hover state, brighter on dark */
+  /* The "code surface" — mirrors the active Monaco theme's
+     `editor.background` to every other surface that should read
+     as a piece with the editor (console output pane, test output,
+     etc.). Each theme block below sets this to its paired Monaco
+     theme's exact editor.background hex; the `:root` default
+     matches `libre-dark` (the Monaco theme that default-dark +
+     cipher-dark both pair with), so any future theme that
+     forgets to set the token gets a sensible fallback.
+     The 50% alpha lets the underlying card surface show through —
+     in default-dark the workbench card is `#0f0f0f`, so the
+     editor + console both render as the card colour rather than
+     a separate slightly-darker shade (which used to read as
+     "off-puttingly different" against the surrounding chrome).
+     Monaco itself doesn't read CSS variables — the contract is
+     "edit a Monaco theme's editor.background AND the matching
+     theme block's --color-code-surface together, or the console
+     surround drifts away from the editor." */
+  --color-code-surface: rgba(15, 15, 15, 0.5);
+
+  /* Floating-card border tokens — used by surfaces that sit
+     OUT on a dark background (book covers in grid view, library
+     tiles, course cards in carousels) and need a visible edge
+     to separate from the surrounding chrome. Different from the
+     generic --color-border-* family which is intentionally near-
+     transparent on dark to keep chrome quiet. The :root default
+     points at the generic border-default so light themes (and
+     any consumer in a non-dark theme) get the existing
+     treatment without an override; default-dark below bumps
+     these to apparent rgba values so cards on the pure-black
+     backdrop don't dissolve. */
+  --color-border-card: var(--color-border-default);
+  --color-border-card-strong: var(--color-border-strong);
+
+  /* Bone palette is retired — the warm cream/amber accents read
+     against the bone-tinted text we used to ship (#f4eedd). Now
+     that body copy is pure white the warm accents look mismatched.
+     Consumers route through `--color-accent` (for "the brand
+     accent fill", set per-theme below) or plain white (for chrome
+     like scrollbars / accent buttons that previously used the
+     amber variants). */
 }
 
 [data-theme-name="ayu-light"],
 [data-theme-name="catppuccin-latte"] {
-  /* Lighter glass: ~55% white tint over the workspace, so the
-     frosted-glass blur reads as a brighter version of the surface
-     behind it instead of a dark blot. Border + shadow flip to
-     dark-on-light values to match. */
-  --color-glass-bg: rgba(255, 255, 255, 0.55);
-  --color-glass-bg-strong: rgba(255, 255, 255, 0.78);
-  --color-glass-border: rgba(0, 0, 0, 0.08);
-  --color-glass-rim: rgba(255, 255, 255, 0.5);
+  /* Pure-white sidebar + navigation rail on light themes. The
+     previous 55% / 78% white tints let the workspace bleed
+     through the chrome surfaces (frosted-glass look); users
+     reading on light themes asked for solid white so the
+     chrome reads as a clean, distinct surface against the
+     workspace.
+     Border + shadow stay dark-on-light values so the white
+     panels still have a defined edge against the bg-primary
+     workspace. */
+  --color-glass-bg: #ffffff;
+  --color-glass-bg-strong: #ffffff;
+  --color-glass-border: rgba(0, 0, 0, 0.10);
+  --color-glass-rim: rgba(255, 255, 255, 1);
   --color-glass-shadow: rgba(0, 0, 0, 0.08);
 }
 
-/* ---- Libre default dark — bone-tinted whites ----------------------
-   Stark `#FAFAFA` (the base kit's default text colour) reads as a
-   slightly cool / clinical white. The new libre wordmark is bone-
-   textured — a warm off-white. We tint the default dark theme's primary
-   text (and the secondary/tertiary tones at lower intensities) so the
-   whole UI reads as a piece with the brand mark.
-   The shift is intentionally tiny: about 5° toward yellow on the colour
-   wheel and a few percent saturation. Body text still reads as "white,"
-   not "cream." */
+/* ---- Libre default dark — pure-white text on dark ---------------
+   The default-dark text used to carry a bone-white tint (#f4eedd) so
+   it would read as a piece with the cream-textured wordmark. Reverted
+   to pure white per the rebrand — the bone tint felt too off-white
+   against the dark surfaces, especially in heavy text blocks like
+   lesson bodies. Accent surfaces (UpdateBanner icon plate, library
+   callouts, BookCover update badge, LibreLoader ring) consume
+   `--color-accent` directly; the warm bone wordmark-stroke value
+   (#d4c5a1) is now inlined here rather than indirected through the
+   retired `--fb-bone-color` token. */
 [data-theme-name="default-dark"] {
-  --color-text-primary: #f4eedd;     /* was ~#fafafa, now bone-tinted */
-  --color-text-secondary: #c5bfae;   /* was ~#a4a4ad, slightly warmed */
-  --color-text-tertiary: #8a8576;    /* was ~#71717a, slightly warmed */
-  /* --color-accent: route to the bone mid-stroke (#d4c5a1) so every
-     accent consumer (UpdateBanner icon plate + progress, the
-     CourseLibrary callout, the BookCover update badge, etc.) reads
-     as bone-white tinted. Pre-fix this was the warmer bone-amber
-     #c9a76b which felt too yellow against the rest of the bone-white
-     UI. Bone-white keeps the brand palette uniform. */
-  --color-accent: var(--fb-bone-color);
-  --color-accent-fg: #1a1410; /* deep brown for text-on-accent contrast */
+  --color-text-primary: #ffffff;     /* pure white, was bone-tinted #f4eedd */
+  --color-text-secondary: #a4a4ad;   /* cool gray, was warmed bone #c5bfae */
+  --color-text-tertiary: #71717a;    /* cool gray, was warmed bone #8a8576 */
+  /* Pure white accent on the dark theme — primary-emphasis
+     surfaces (Run button, mode-toggle pill, notification badge)
+     paint as a single bright white-on-black family. The amber
+     `#d4863a` we tried first competed with the parchment
+     certificate banner (which is the only surface that should
+     carry the warm-amber identity in dark mode); demoting accent
+     to white keeps the ALIVE controls monochrome and lets the
+     cert artefact be the one warm beat. The cream wordmark stroke
+     (`#d4c5a1`) and the cert ticket's amber details are still
+     hardcoded in brand assets, so this change only affects the
+     in-app primary-CTA family. */
+  --color-accent: #ffffff;
+  --color-accent-fg: #000000;
+  /* Two-tier border system on default-dark. The earlier "borders
+     fully retired" experiment left every chrome surface (buttons,
+     selects, inputs, filter pills, segmented toggles) without an
+     edge — fine on busy surfaces but visually unfinished on the
+     near-black backdrop where a button blends into the page. The
+     two values below restore a calm baseline:
+       default — ~0.10 alpha. Buttons, selects, inputs, filter
+                 chips, segmented controls. Just enough to draw
+                 the silhouette without becoming visual furniture.
+       strong  — ~0.22 alpha. Hover / focus / actively-attention-
+                 grabbing chrome (focused input, asserted danger
+                 outline).
+     Cards on a same-colour backdrop need a heavier lift than the
+     generic chrome tokens — see `--color-border-card-*` below. */
+  --color-border-default: rgba(255, 255, 255, 0.10);
+  --color-border-strong: rgba(255, 255, 255, 0.22);
+  --color-border-subtle: transparent;
+  /* Card-specific borders DO need to assert here — the default-dark
+     card stack (page #000 → card #0f0f0f) is only one bg-tier apart,
+     and at small thumbnail sizes that contrast dissolves to "card
+     boundary unclear." These tokens stay visible at all times so
+     cards on the near-black backdrop keep their silhouette. 0.16
+     for the subtle variant (info-dense library cards, sidebar
+     groups) and 0.32 for the strong variant (cards floating ON the
+     page bg — book covers in carousels, library tiles on the grid
+     surface). Mirrors libre-dark's pair so the two dark themes
+     share their floating-card identity. */
+  --color-border-card: rgba(255, 255, 255, 0.16);
+  --color-border-card-strong: rgba(255, 255, 255, 0.32);
+  /* Near-black neutral ladder. Window backdrop is pure `#000`;
+     cards lift by only a hair so the chrome stays very dark and
+     reads as a piece with the backdrop rather than as gray
+     plates pulled forward.
+     Ladder:
+       primary (#000000) — window backdrop. Pure black.
+       secondary (#0f0f0f) — every card / sidebar / nav rail /
+                             workbench chrome. Sits ~6% above
+                             black — a touch brighter than the
+                             earlier #0c0c0c so cards register as
+                             cards, but still well below anything
+                             that reads as "gray panel".
+       tertiary (#181818) — hover, active row, selected pill.
+       elevated (#202020) — popovers, dropdowns.
+       inset (#000000)   — inputs and the most recessed surfaces. */
+  --color-bg-primary: #000000;
+  --color-bg-secondary: #0f0f0f;
+  --color-bg-tertiary: #181818;
+  --color-bg-elevated: #202020;
+  --color-bg-inset: #000000;
+  /* Nav rail + sidebar ride --color-glass-bg. Dark-mode mirror
+     of ayu-light: where the light theme commits to PURE white
+     for its chrome surfaces, dark mode commits to PURE black.
+     The previous near-black `#0f0f0f` / `#181818` ladder was a
+     "lifted slightly above the workspace" idea — useful when
+     bg-primary was a colour other than #000, but on this theme
+     where bg-primary is already pure black, lifting the sidebar
+     to dark-gray just made it look like a separate dim-gray
+     plate. Pure-black chrome + pure-black workspace reads as
+     one continuous canvas; the glass border (below) gives the
+     panel its silhouette without adding any value-tier between
+     the two surfaces. */
+  --color-glass-bg: #000000;
+  --color-glass-bg-strong: #000000;
+  /* With the sidebar now pure black (same as the workspace),
+     the glass-border has to do the entire job of drawing the
+     panel's edge — bump from 0.03 → 0.10 so the silhouette
+     reads cleanly against the matching backdrop. Same alpha
+     as `--color-border-default` for consistency. */
+  --color-glass-border: rgba(255, 255, 255, 0.10);
+  --color-glass-rim: rgba(255, 255, 255, 0.04);
+
+  /* Floating-card borders need to ASSERT against the pure-black
+     backdrop — book covers in the library grid, course tiles in
+     a carousel, etc. The generic border tokens above are
+     transparent so chrome stays calm; these specific tokens are
+     bumped to apparent values so card edges don't dissolve into
+     the bg. 0.16 is firm enough to read across the whole card
+     perimeter; 0.32 on the strong variant gives hover state a
+     clear lift cue without going neon. Tweak both up or down
+     as a pair if cards feel over- or under-defined. */
+  --color-border-card: rgba(255, 255, 255, 0.16);
+  --color-border-card-strong: rgba(255, 255, 255, 0.32);
 }
 
 /* ---- Synesthesia Synthwave --------------------------------------------- */
@@ -248,6 +370,14 @@
 }
 
 /* ---- Ayu Light ---------------------------------------------------------- */
+/* Cream-paper surfaces straight from Ayu's daytime palette, but
+   with the Libre amber (`#d4863a`) substituted for Ayu's stock
+   tangerine `#fa8d3e`. The brand amber is shared with default-dark
+   (defined there with a longer hue-shift note); the lesson-status
+   colours stay Ayu's (green for done, blue for active) — they're
+   a graded stoplight tied to lesson lifecycle, not the brand
+   accent, and keeping them distinct from the primary CTA amber
+   prevents "everything is the same colour" mush. */
 [data-theme-name="ayu-light"] {
   --color-bg-primary: #fcfcfc;
   --color-bg-secondary: #fafafa;
@@ -257,13 +387,26 @@
   --color-text-primary: #5c6166;
   --color-text-secondary: #8a9199;
   --color-text-tertiary: #abb0b6;
+  /* Primary accent is pure black on light themes — every CTA
+     surface (Run button, primary import, settings primary,
+     welcome primary, library pill-active) inherits this and
+     reads as a single black-on-white identity. The previous
+     amber `#d4863a` was the brand-warm hand-off from the dark
+     themes; on white chrome the amber competed with the orange
+     wordmark, so light themes commit to monochrome instead. */
+  --color-accent: #000000;
+  --color-accent-fg: #ffffff;
 }
 
 [data-theme-name="ayu-light"] .libre-editor-run,
 [data-theme-name="ayu-light"] .libre-lesson-nav-btn--next:hover:not(:disabled) {
-  background: #fa8d3e !important;
+  /* Black run button + next-on-hover. Same shape as the dark
+     themes (high-contrast filled pill) but inverted: black fill,
+     white text. The hover-next selector keeps its CTA bump
+     visible against the white sidebar / nav rail. */
+  background: #000000 !important;
   color: #ffffff !important;
-  border-color: #fa8d3e !important;
+  border-color: #000000 !important;
 }
 
 [data-theme-name="ayu-light"] .libre__lesson-status--done {
@@ -284,9 +427,9 @@
 [data-theme-name="ayu-light"] .libre-library-import-seg--primary,
 [data-theme-name="ayu-light"] .libre-welcome-primary,
 [data-theme-name="ayu-light"] .libre-library-pill--active {
-  background: #fa8d3e;
+  background: #000000;
   color: #ffffff;
-  border-color: #fa8d3e;
+  border-color: #000000;
 }
 
 /* ---- Ayu Dark ----------------------------------------------------------- */
@@ -341,13 +484,21 @@
   --color-text-primary: #4c4f69;  /* text */
   --color-text-secondary: #6c6f85; /* subtext0 */
   --color-text-tertiary: #9ca0b0; /* overlay0 */
+  /* Primary accent forced to black across light themes — see
+     `ayu-light` block above for the rationale (single
+     black-on-white CTA identity instead of competing with the
+     workspace palette). The original Latte mauve `#8839ef` would
+     have been the on-brand choice here; users explicitly asked
+     for monochrome on light. */
+  --color-accent: #000000;
+  --color-accent-fg: #ffffff;
 }
 
 [data-theme-name="catppuccin-latte"] .libre-editor-run,
 [data-theme-name="catppuccin-latte"] .libre-lesson-nav-btn--next:hover:not(:disabled) {
-  background: #8839ef !important; /* mauve */
-  color: #eff1f5 !important;
-  border-color: #8839ef !important;
+  background: #000000 !important;
+  color: #ffffff !important;
+  border-color: #000000 !important;
 }
 
 [data-theme-name="catppuccin-latte"] .libre__lesson-status--done {
@@ -368,9 +519,9 @@
 [data-theme-name="catppuccin-latte"] .libre-library-import-seg--primary,
 [data-theme-name="catppuccin-latte"] .libre-welcome-primary,
 [data-theme-name="catppuccin-latte"] .libre-library-pill--active {
-  background: #8839ef;
-  color: #eff1f5;
-  border-color: #8839ef;
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
 }
 
 /* ---- Catppuccin Frappé -------------------------------------------------- */
@@ -745,4 +896,175 @@
   color: #0000aa;
   border-color: #ff55ff;
 }
+
+
+/* ─── Libre Light (data-theme-name: "cipher-light") ───────────────
+   Reworked from the Cipher slate-on-cream port to a Libre original
+   that rides on Ayu Light's structure (clean monochrome chrome,
+   near-white workspace, soft gray borders) but bumps the primary
+   text to pure black `#000` so headings + body copy read sharper
+   on the lighter chrome than Ayu Light's #5c6166 gray would. A
+   few slight variations keep this from being a copy:
+     - bg-tertiary nudged a hair cooler (#eef0f3 vs #f0f0f0) so
+       hover states feel slightly steel-tinted on close inspection.
+     - text-secondary deepened to #6b7180 (vs Ayu's #8a9199) so
+       supporting copy stays readable on the brighter chrome.
+     - border-strong cooled to #9ca3ad so focus rings + outlines
+       feel cool-gray rather than warm-gray.
+   The theme name stays `cipher-light` for storage stability with
+   users who already picked it; the display label in themes.ts
+   ("Libre Light") names what they see.
+─────────────────────────────────────────────────────────────────── */
+[data-theme-name="cipher-light"] {
+  --color-bg-primary: #fcfcfc;
+  --color-bg-secondary: #fafafa;
+  --color-bg-tertiary: #eef0f3;
+  --color-border-default: #e7ebed;
+  --color-border-strong: #9ca3ad;
+  --color-border-subtle: #f0f2f5;
+  /* Pure-black primary text — the explicit deviation from Ayu
+     Light, which used #5c6166. Black gives crisper headlines on
+     the off-white workspace and pairs cleanly with the black
+     accent CTAs below. */
+  --color-text-primary: #000000;
+  --color-text-secondary: #6b7180;
+  --color-text-tertiary: #abb0b6;
+  /* Monochrome accent (CTAs, primary buttons, focus stamps) —
+     same black-on-white identity as our refreshed Ayu Light, so
+     all three light themes (ayu-light, catppuccin-latte, this)
+     read as one family. */
+  --color-accent: #000000;
+  --color-accent-fg: #ffffff;
+}
+
+[data-theme-name="cipher-light"] .libre-editor-run,
+[data-theme-name="cipher-light"] .libre-lesson-nav-btn--next:hover:not(:disabled) {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border-color: #000000 !important;
+}
+
+[data-theme-name="cipher-light"] .libre-import-primary,
+[data-theme-name="cipher-light"] .libre-settings-primary,
+[data-theme-name="cipher-light"] .libre-library-import,
+[data-theme-name="cipher-light"] .libre-library-import-seg--primary,
+[data-theme-name="cipher-light"] .libre-welcome-primary,
+[data-theme-name="cipher-light"] .libre-library-pill--active {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+
+/* Lesson-lifecycle stoplight stays a literal stoplight (green
+   for done, blue for active) — these are lifecycle indicators,
+   not brand accent, and keeping them distinct from the black
+   primary prevents "every CTA looks the same" mush. Same colours
+   ayu-light uses so the three light themes share their lesson
+   stoplight too. */
+[data-theme-name="cipher-light"] .libre__dot--done,
+[data-theme-name="cipher-light"] .libre__lesson-status--done {
+  border-color: #86b300;
+  background: #86b300;
+  color: #ffffff;
+}
+
+[data-theme-name="cipher-light"] .libre__dot--active,
+[data-theme-name="cipher-light"] .libre__lesson-status--active {
+  border-color: #399ee6;
+  box-shadow: 0 0 0 3px rgba(57, 158, 230, 0.15);
+  color: #399ee6;
+}
+
+/* ─── Cipher Dark ──────────────────────────────────────────────────
+   Cipher's near-black app surface (#0c0f15) with slate-blue text,
+   accent swapped from Cipher's violet to Libre's deep amber for
+   brand cohesion with the rest of the dark themes.
+─────────────────────────────────────────────────────────────────── */
+[data-theme-name="cipher-dark"] {
+  --color-bg-primary: #0c0f15;
+  --color-bg-secondary: #181c24;
+  --color-bg-tertiary: #232834;
+  --color-border-default: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.16);
+  --color-border-subtle: rgba(255, 255, 255, 0.05);
+  --color-text-primary: #f5f6fa;
+  --color-text-secondary: #a8b0c2;
+  --color-text-tertiary: #71788a;
+  --color-accent: #a85e1c;
+  --color-accent-fg: #ffffff;
+}
+
+[data-theme-name="cipher-dark"] .libre-editor-run,
+[data-theme-name="cipher-dark"] .libre-lesson-nav-btn--next:hover:not(:disabled) {
+  background: #a85e1c !important;
+  color: #ffffff !important;
+  border-color: #a85e1c !important;
+}
+
+[data-theme-name="cipher-dark"] .libre-import-primary,
+[data-theme-name="cipher-dark"] .libre-settings-primary,
+[data-theme-name="cipher-dark"] .libre-library-import,
+[data-theme-name="cipher-dark"] .libre-library-import-seg--primary,
+[data-theme-name="cipher-dark"] .libre-welcome-primary,
+[data-theme-name="cipher-dark"] .libre-library-pill--active {
+  background: #a85e1c;
+  color: #ffffff;
+  border-color: #a85e1c;
+}
+
+[data-theme-name="cipher-dark"] .libre__dot--done,
+[data-theme-name="cipher-dark"] .libre__lesson-status--done {
+  border-color: #a85e1c;
+  background: #a85e1c;
+  color: #ffffff;
+}
+
+[data-theme-name="cipher-dark"] .libre__dot--active,
+[data-theme-name="cipher-dark"] .libre__lesson-status--active {
+  border-color: #a85e1c;
+  box-shadow: 0 0 0 3px rgba(168, 94, 28, 0.18);
+  color: #a85e1c;
+}
+
+/* Drop the sidebar's lifted `box-shadow` for both Cipher-derived
+   themes so the panel reads as a flat-on-paper / flat-on-deep-
+   surface chip rather than a floating glass card. The default
+   themes use `0 12px 28px var(--color-glass-shadow)` to lift the
+   sidebar; Cipher's design language wants a more grounded
+   layout where the sidebar sits IN the chrome rather than ON it. */
+[data-theme-name="cipher-light"] .libre__sidebar,
+[data-theme-name="cipher-dark"] .libre__sidebar {
+  box-shadow: inset 0 1px 0 var(--color-glass-rim);
+}
+
+/* ---- Console / test-output surface mirrors ----------------------------
+   Each app theme pairs with a Monaco theme that sets its own
+   `editor.background`. The OutputPane (console body, test results,
+   etc.) consumes `--color-code-surface` so it can sit on the same
+   plane as the editor above it instead of on a generic
+   `--color-bg-primary` that doesn't match.
+   The values below are the exact editor.background hex from each
+   paired Monaco theme in src/theme/monaco-themes/. Keep them in
+   sync: if you change a Monaco theme's editor.background, update
+   the matching row here in the same commit. Otherwise the console
+   surround drifts away from the editor and the split between
+   editor and console becomes visible again.
+   default-dark + cipher-dark inherit the `:root` default
+   (#09090b = libre-dark) so they're not listed explicitly. */
+[data-theme-name="cipher-light"],
+[data-theme-name="ayu-light"],
+[data-theme-name="catppuccin-latte"]      { --color-code-surface: #fbfbf8; }
+[data-theme-name="synthwave"]             { --color-code-surface: #1a1427; }
+[data-theme-name="claude-code-dark"]      { --color-code-surface: #14110d; }
+[data-theme-name="ayu-mirage"]            { --color-code-surface: #1f2430; }
+[data-theme-name="ayu-dark"]              { --color-code-surface: #0b0e14; }
+[data-theme-name="catppuccin-frappe"]     { --color-code-surface: #303446; }
+[data-theme-name="catppuccin-macchiato"]  { --color-code-surface: #24273a; }
+[data-theme-name="catppuccin-mocha"]      { --color-code-surface: #1e1e2e; }
+[data-theme-name="tokyo-night"]           { --color-code-surface: #1a1b26; }
+[data-theme-name="rose-pine"]             { --color-code-surface: #191724; }
+[data-theme-name="ubuntu-dark"]           { --color-code-surface: #2c001e; }
+[data-theme-name="absent-contrast"]       { --color-code-surface: #0e1114; }
+[data-theme-name="vesper"]                { --color-code-surface: #101010; }
+[data-theme-name="word"]                  { --color-code-surface: #0000aa; }
 

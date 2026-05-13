@@ -83,7 +83,7 @@
      family with leading-edge content rather than centered content. */
   justify-content: flex-start;
   gap: 9px;
-  /* Locked to the same height + padding + line-height as `.fb-tts-pill`
+  /* Locked to the same height + padding + line-height as `.libre-tts-pill`
      (see TTSButton.css). Both chips share `height: 30px`,
      `padding: 0 14px`, and `line-height: 1` so neither's inner
      content (14px icon, 11px label, 20px ring etc.) can drive a
@@ -96,13 +96,13 @@
   line-height: 1;
   background: transparent;
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
   color: var(--color-text-secondary);
   font-family: inherit;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy), border-color var(--fb-motion-snappy);
+  transition: background var(--libre-motion-snappy), color var(--libre-motion-snappy), border-color var(--libre-motion-snappy);
 }
 
 .libre-reader-meta-glossary:hover {
@@ -140,7 +140,7 @@
      looking cramped beside the now-larger label. */
   min-width: 20px;
   padding: 0 7px;
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
   background: var(--color-bg-tertiary);
   color: var(--color-text-tertiary);
   /* Bumped to 11px so the count tracks the parent pill's 12px label
@@ -166,7 +166,7 @@
   background: rgba(232, 196, 107, 0.06);
   border: 1px solid rgba(232, 196, 107, 0.3);
   border-left: 3px solid #e8c46b;
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
 }
 
 .libre-reader-retry-head {
@@ -234,7 +234,7 @@
   font-weight: 700;
   letter-spacing: 0.2px;
   cursor: pointer;
-  transition: opacity var(--fb-motion-snappy);
+  transition: opacity var(--libre-motion-snappy);
 }
 
 .libre-reader-retry-btn:hover {
@@ -248,7 +248,7 @@
   background: rgba(124, 193, 217, 0.06);
   border: 1px solid rgba(124, 193, 217, 0.3);
   border-left: 3px solid #7cc1d9;
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
 }
 
 .libre-reader-objectives-label {
@@ -296,7 +296,7 @@
   -webkit-backdrop-filter: blur(28px) saturate(160%);
   backdrop-filter: blur(28px) saturate(160%);
   border: 1px solid var(--color-glass-border);
-  border-radius: var(--fb-radius-lg);
+  border-radius: var(--libre-radius-lg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -374,7 +374,7 @@
   padding: 10px 14px;
   border: 1px solid var(--color-border-default);
   border-left-width: 3px;
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   background: var(--color-bg-secondary);
 }
 
@@ -498,7 +498,11 @@
 .libre-code-block {
   position: relative;
   margin: 16px 0;
-  border-radius: var(--fb-radius-md);
+  /* 10px to match the lesson-table corners — keeps the prose
+     column's two "block elements with their own chrome" (tables
+     + code blocks) on the same radius so they read as siblings
+     rather than two slightly-different cards. */
+  border-radius: 10px;
   overflow: hidden;
   border: 1px solid var(--color-border-default);
 }
@@ -624,7 +628,14 @@
   font-size: 12.5px;
   line-height: 1.55;
   overflow-x: auto;
-  background: var(--color-bg-primary) !important;
+  /* Match the chrome — the sidebar and navigation rail both
+     paint with `--color-glass-bg`, which in opaque themes
+     (libre-dark) resolves to a slightly-lighter-than-bg-primary
+     hex and in translucent themes composites to the same glass
+     tint. Using the same token here makes code blocks read as
+     "a piece of chrome inside the lesson body" instead of
+     sinking into the page-dark bg-primary canvas. */
+  background: var(--color-glass-bg) !important;
 }
 
 /* Shiki emits per-token <span style="background-color: ..."> for some
@@ -658,7 +669,9 @@
 
 .libre-code-plain {
   color: var(--color-text-primary);
-  border-radius: var(--fb-radius-md);
+  /* Same 10px as `.libre-code-block` so unhighlighted fences
+     keep the visual rhythm with shiki-rendered ones. */
+  border-radius: 10px;
   border: 1px solid var(--color-border-default);
 }
 
@@ -678,6 +691,9 @@
    needed when the user flips themes mid-session. */
 [data-theme="light"] .libre-code-block .shiki span {
   color: var(--shiki-light);
+  /* Per-token bg comes from the Shiki theme — leave it on so
+     range highlights / diff markers Shiki renders inline still
+     paint correctly. */
   background-color: var(--shiki-light-bg, transparent);
   font-style: var(--shiki-light-font-style, normal);
   font-weight: var(--shiki-light-font-weight, normal);
@@ -686,7 +702,15 @@
 [data-theme="light"] .libre-code-block .shiki,
 [data-theme="light"] .libre-code-block .shiki code {
   color: var(--shiki-light);
-  background-color: var(--shiki-light-bg, transparent) !important;
+  /* The Shiki-emitted <pre class="shiki …"> is the same element
+     that .libre-code-block-pre targets — its inline
+     `--shiki-light-bg` (GitHub Light's near-white) needs to be
+     overridden so the block reads as chrome rather than as
+     Shiki's theme. We force it to the same `--color-glass-bg`
+     the sidebar + nav rail use, so code blocks visually sit
+     "inside" the chrome system instead of sinking into the
+     lesson body's `bg-primary` canvas. */
+  background-color: var(--color-glass-bg) !important;
 }
 [data-theme="dark"] .libre-code-block .shiki span,
 .libre-code-block .shiki span {
@@ -701,16 +725,43 @@
 .libre-code-block .shiki,
 .libre-code-block .shiki code {
   color: var(--shiki-dark);
-  background-color: var(--shiki-dark-bg, transparent) !important;
+  /* The Shiki-emitted <pre class="shiki …"> needs an explicit
+     background OVERRIDE because Shiki bakes its own
+     `--shiki-dark-bg` (GitHub Dark's #0d1117) inline on the
+     element. We force it to the same `--color-glass-bg` the
+     sidebar + nav rail paint with so code blocks read as
+     chrome — a slightly-lighter card sitting on the lesson
+     body's `bg-primary` canvas, matching the sidebar's tone.
+     Previously this was `transparent !important`, which made
+     the pre's bg fall through to the lesson body and the
+     block lost its card affordance. Per-token backgrounds
+     stay intact because they're set on `.shiki span`, not on
+     the wrapper. */
+  background-color: var(--color-glass-bg) !important;
 }
 
-/* GFM tables: subtle borders, tight padding, sticky-free. Markdown-it emits
-   a standard <table><thead><tbody> structure that we style directly. */
+/* GFM tables — quieter chrome that lets the data carry the read.
+   The earlier version used `--color-border-strong` everywhere
+   for both the outer ring and every inner cell separator, which
+   read as a heavy black grid against the lesson body. Now:
+     - The OUTER ring uses `--color-border-default` (~10% alpha)
+       and 10px rounded corners, framing the table as a soft card.
+     - INNER separators are even quieter (`--color-border-subtle`
+       falling back to a low-alpha rgba) so they hint at cell
+       boundaries without competing with the prose.
+   `overflow: hidden` on the table is what makes the rounded
+   corners actually clip the inner cells — without it the
+   first/last header cells would punch out past the rounded
+   silhouette since they're block-shaped descendants. */
 .libre-reader-body table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   margin: 16px 0;
   font-size: 13px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 10px;
+  overflow: hidden;
 }
 
 .libre-reader-body thead {
@@ -719,11 +770,32 @@
 
 .libre-reader-body th,
 .libre-reader-body td {
-  border: 1px solid var(--color-border-default);
+  /* Single hairline between cells: bottom-only + right-only,
+     so adjacent borders don't double up. The outer `<table>`
+     border owns the silhouette; these just sketch the grid
+     softly inside. `rgba` for the subtle case keeps the lines
+     readable on every theme without depending on a token that
+     may resolve transparent. */
+  border-right: 1px solid
+    color-mix(in srgb, var(--color-border-default) 70%, transparent);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--color-border-default) 70%, transparent);
   padding: 7px 10px;
   text-align: left;
   vertical-align: top;
   color: var(--color-text-primary);
+}
+
+/* Drop the rightmost border on every row's last cell and the
+   bottom border on the final row — the outer table ring takes
+   over from there. */
+.libre-reader-body th:last-child,
+.libre-reader-body td:last-child {
+  border-right: 0;
+}
+.libre-reader-body tbody tr:last-child td,
+.libre-reader-body thead:last-child tr:last-child th {
+  border-bottom: 0;
 }
 
 .libre-reader-body th {
@@ -812,8 +884,23 @@
    ribbon so the highlight reads as a margin marker more than a
    block-fill (less visually loud than a full background block).
    Transitions in/out so the cursor glides between paragraphs
-   instead of stutter-cutting. */
-.libre-reader-body [data-tts-block].fb-tts-current {
+   instead of stutter-cutting.
+
+   IMPORTANT: the ribbon is drawn as a `::before` pseudo-element,
+   NOT via `border-left + padding-left + margin-left` on the box
+   itself. An earlier version of this rule used the box-edge
+   approach (border-left + 12px padding + -14px margin), which
+   works fine for `<p>` blocks because they have no built-in
+   inline indentation. But when a `<ul>` / `<ol>` block becomes
+   the active TTS target, that negative margin yanks the whole
+   list 14px leftward — list items move out of the prose column
+   and the bullet markers crash into the lesson's left gutter.
+   The pseudo-element approach draws the ribbon at an absolute
+   `left: -14px` offset without disturbing any of the active
+   block's layout properties, so paragraphs, lists, blockquotes,
+   and code blocks all share the same visual treatment without
+   any of them shifting. */
+.libre-reader-body [data-tts-block].libre-tts-current {
   position: relative;
   background: linear-gradient(
     90deg,
@@ -821,17 +908,26 @@
     rgba(214, 185, 105, 0.05) 60%,
     transparent 100%
   );
-  border-left: 2px solid rgba(214, 185, 105, 0.6);
-  padding-left: 12px;
-  margin-left: -14px;
   border-radius: 0 4px 4px 0;
-  transition:
-    background 350ms ease,
-    border-color 350ms ease;
+  transition: background 350ms ease;
+}
+
+.libre-reader-body [data-tts-block].libre-tts-current::before {
+  content: "";
+  position: absolute;
+  left: -14px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(214, 185, 105, 0.6);
+  border-radius: 1px;
+  transition: background 350ms ease;
+  pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .libre-reader-body [data-tts-block].fb-tts-current {
+  .libre-reader-body [data-tts-block].libre-tts-current,
+  .libre-reader-body [data-tts-block].libre-tts-current::before {
     transition: none;
   }
 }

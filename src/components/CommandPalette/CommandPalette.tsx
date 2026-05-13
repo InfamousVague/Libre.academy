@@ -14,6 +14,7 @@ import { refreshCw } from "@base/primitives/icon/icons/refresh-cw";
 import { clipboardPaste } from "@base/primitives/icon/icons/clipboard-paste";
 import "@base/primitives/icon/icon.css";
 import type { Course, Lesson } from "../../data/types";
+import { useT } from "../../i18n/i18n";
 import "./CommandPalette.css";
 
 /// What the palette can navigate to. Each result becomes one row in the
@@ -44,7 +45,7 @@ interface CommandPaletteProps {
   /// handler) — the palette filters them out automatically.
   actions: {
     openLibrary?: () => void;
-    openPlayground?: () => void;
+    openSandbox?: () => void;
     openProfile?: () => void;
     openSettings?: () => void;
     importBook?: () => void;
@@ -89,6 +90,7 @@ export default function CommandPalette({
   actions,
   onOpenLesson,
 }: CommandPaletteProps) {
+  const t = useT();
   const [query, setQuery] = useState("");
   const [activeIdx, setActiveIdx] = useState(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -103,23 +105,23 @@ export default function CommandPalette({
       out.push({
         id: "action:library",
         kind: "action",
-        label: "Open library",
-        hint: "Browse every course",
+        label: t("commandPalette.openLibrary"),
+        hint: t("commandPalette.openLibraryHint"),
         icon: libraryBig,
         onSelect: () => {
           actions.openLibrary?.();
           onClose();
         },
       });
-    if (actions.openPlayground)
+    if (actions.openSandbox)
       out.push({
-        id: "action:playground",
+        id: "action:sandbox",
         kind: "action",
-        label: "Open playground",
-        hint: "Scratch editor",
+        label: t("commandPalette.openSandbox"),
+        hint: t("commandPalette.openSandboxHint"),
         icon: terminal,
         onSelect: () => {
-          actions.openPlayground?.();
+          actions.openSandbox?.();
           onClose();
         },
       });
@@ -127,8 +129,8 @@ export default function CommandPalette({
       out.push({
         id: "action:profile",
         kind: "action",
-        label: "Open profile",
-        hint: "Streak, XP, generators",
+        label: t("commandPalette.openProfile"),
+        hint: t("commandPalette.openProfileHint"),
         icon: userRoundCog,
         onSelect: () => {
           actions.openProfile?.();
@@ -139,8 +141,8 @@ export default function CommandPalette({
       out.push({
         id: "action:settings",
         kind: "action",
-        label: "Open settings",
-        hint: "Theme, AI, keys",
+        label: t("commandPalette.openSettings"),
+        hint: t("commandPalette.openSettingsHint"),
         icon: settingsIcon,
         onSelect: () => {
           actions.openSettings?.();
@@ -151,8 +153,8 @@ export default function CommandPalette({
       out.push({
         id: "action:import",
         kind: "action",
-        label: "Import a book",
-        hint: "PDF or EPUB",
+        label: t("commandPalette.importBook"),
+        hint: t("commandPalette.importBookHint"),
         icon: bookOpen,
         onSelect: () => {
           actions.importBook?.();
@@ -163,8 +165,8 @@ export default function CommandPalette({
       out.push({
         id: "action:ask-ai",
         kind: "action",
-        label: "Ask Libre",
-        hint: "Local AI assistant",
+        label: t("commandPalette.askAi"),
+        hint: t("commandPalette.askAiHint"),
         icon: sparkles,
         onSelect: () => {
           actions.askAi?.();
@@ -175,8 +177,8 @@ export default function CommandPalette({
       out.push({
         id: "action:verify-course",
         kind: "action",
-        label: "Verify this course",
-        hint: "Run every exercise's solution",
+        label: t("commandPalette.verifyCourse"),
+        hint: t("commandPalette.verifyCourseHint"),
         icon: circleCheck,
         onSelect: () => {
           actions.verifyCourse?.();
@@ -187,8 +189,8 @@ export default function CommandPalette({
       out.push({
         id: "action:verify-all-courses",
         kind: "action",
-        label: "Verify all courses",
-        hint: "Run every exercise across the library",
+        label: t("commandPalette.verifyAll"),
+        hint: t("commandPalette.verifyAllHint"),
         icon: listChecks,
         onSelect: () => {
           actions.verifyAllCourses?.();
@@ -199,8 +201,8 @@ export default function CommandPalette({
       out.push({
         id: "action:reapply-bundled-starter",
         kind: "action",
-        label: "Reapply bundled starter (this course)",
-        hint: "Overwrite installed copy from public/starter-courses",
+        label: t("commandPalette.reapplyStarter"),
+        hint: t("commandPalette.reapplyStarterHint"),
         icon: refreshCw,
         onSelect: () => {
           actions.reapplyBundledStarter?.();
@@ -211,8 +213,8 @@ export default function CommandPalette({
       out.push({
         id: "action:apply-fixes-from-prompt",
         kind: "action",
-        label: "Apply fixes from prompt",
-        hint: "Paste an LLM reply to patch lessons",
+        label: t("commandPalette.applyFixes"),
+        hint: t("commandPalette.applyFixesHint"),
         icon: clipboardPaste,
         onSelect: () => {
           actions.applyFixesFromPrompt?.();
@@ -220,7 +222,7 @@ export default function CommandPalette({
         },
       });
     return out;
-  }, [actions, onClose]);
+  }, [actions, onClose, t]);
 
   const coursePool: BaseResult[] = useMemo(
     () =>
@@ -372,7 +374,7 @@ export default function CommandPalette({
       <div
         className="libre-cmdpal"
         role="dialog"
-        aria-label="Command palette"
+        aria-label={t("commandPalette.ariaLabel")}
       >
         <div className="libre-cmdpal-search">
           <span className="libre-cmdpal-search-icon" aria-hidden>
@@ -387,8 +389,8 @@ export default function CommandPalette({
               setQuery(e.target.value);
               setActiveIdx(0);
             }}
-            placeholder="Search lessons, courses, actions…"
-            aria-label="Command palette search"
+            placeholder={t("commandPalette.searchPlaceholder")}
+            aria-label={t("commandPalette.ariaSearch")}
             spellCheck={false}
             autoComplete="off"
           />
@@ -400,8 +402,7 @@ export default function CommandPalette({
         <div className="libre-cmdpal-results" ref={listRef}>
           {flatRows.length === 0 && (
             <div className="libre-cmdpal-empty">
-              No matches for <strong>"{query}"</strong>. Try a course,
-              lesson title, or "open settings".
+              {t("commandPalette.noMatches")} <strong>"{query}"</strong>. {t("commandPalette.noMatchesHint")}
             </div>
           )}
           {sections.map((section) => (

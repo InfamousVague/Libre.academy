@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Icon } from "@base/primitives/icon";
 import { externalLink } from "@base/primitives/icon/icons/external-link";
 import "@base/primitives/icon/icon.css";
+import { useT } from "../../i18n/i18n";
 import "./LessonPopover.css";
 
 export interface PopoverContent {
@@ -39,6 +40,7 @@ export default function LessonPopover({
   onPopoverEnter,
   onPopoverLeave,
 }: Props) {
+  const t = useT();
   // Callback ref to trigger re-measurement once the popover mounts.
   const [popEl, setPopEl] = useState<HTMLDivElement | null>(null);
   const popRef = useCallback((node: HTMLDivElement | null) => {
@@ -111,7 +113,7 @@ export default function LessonPopover({
           className="libre-popover-doclink"
           onClick={() => onOpenDoc(content.docUrl!)}
         >
-          View full docs
+          {t("lesson.viewFullDocs")}
           <span className="libre-popover-doclink-icon" aria-hidden>
             <Icon icon={externalLink} size="xs" color="currentColor" />
           </span>

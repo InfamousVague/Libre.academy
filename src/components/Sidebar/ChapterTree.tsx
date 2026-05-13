@@ -7,6 +7,7 @@ import type { Chapter, Lesson } from "../../data/types";
 import { useLocalStorageState } from "../../hooks/useLocalStorageState";
 import { ProgressRing } from "../Shared/ProgressRing";
 import { iconForKind } from "./labels";
+import { useT } from "../../i18n/i18n";
 
 /// Section separator used by importer scripts that want their chapter
 /// titles auto-grouped in the sidebar — e.g. the Svelte tutorial emits
@@ -173,6 +174,7 @@ function SectionGroup({
     e: React.MouseEvent,
   ) => void;
 }) {
+  const t = useT();
   const containsActiveLesson = activeLessonId
     ? entries.some(({ chapter }) =>
         chapter.lessons.some((l) => l.id === activeLessonId),
@@ -187,13 +189,20 @@ function SectionGroup({
     deserialize: (raw) => raw === "1",
   });
 
-  // If the user navigates to a lesson inside this section AFTER the
-  // group rendered closed, force it open so the active row is
-  // reachable without an extra click. The setter writes through to
-  // localStorage — minor, but keeps "I'm here, leave it open" sticky
-  // for next session too.
+  // Auto-sync the section's open state to whether it contains the
+  // active lesson. Two effects in one:
+  //   - Expand when the learner navigates INTO a chapter in this
+  //     section (was previously the only direction handled).
+  //   - Collapse when the learner navigates OUT of this section to
+  //     a different one — keeps the tree focused on where they are
+  //     instead of accumulating expanded sections as they roam.
+  // The setter writes through to localStorage, so the closed
+  // state survives a refresh too. Manual toggles via the header
+  // button still work between navigations — the next nav just
+  // resyncs to the canonical "is this where the learner is?"
+  // truth.
   useEffect(() => {
-    if (containsActiveLesson) setOpen(true);
+    setOpen(containsActiveLesson);
   }, [containsActiveLesson, setOpen]);
 
   const toggle = () => setOpen((prev) => !prev);
@@ -235,7 +244,10 @@ function SectionGroup({
         <span className="libre__section-title-text">{label}</span>
         <span
           className="libre__section-ring"
-          title={`${doneLessons}/${totalLessons} lessons complete`}
+          title={t("sidebar.lessonsCompleteTitle", {
+            done: doneLessons,
+            total: totalLessons,
+          })}
         >
           <ProgressRing progress={pct} size={16} stroke={2} label="" />
         </span>
@@ -289,20 +301,27 @@ function ChapterBlock({
     e: React.MouseEvent,
   ) => void;
 }) {
+  const t = useT();
   const done = chapter.lessons.filter((l) => completed.has(`${courseId}:${l.id}`)).length;
   const total = chapter.lessons.length;
   const pct = total > 0 ? done / total : 0;
 
-  // A chapter is open by default if it contains the currently-active
-  // lesson — that's the one the learner is working in, so the lesson
-  // tree should be visible without an extra click. Other chapters stay
-  // collapsed to their header row so the active card doesn't sprawl.
-  // Once the user manually toggles a chapter open, it stays open for
-  // the session (state is local).
+  // A chapter is open exactly when it contains the currently-active
+  // lesson. Auto-syncs on every navigation so:
+  //   - Moving INTO a chapter expands it (so the active lesson row
+  //     is visible without an extra click)
+  //   - Moving OUT of a chapter collapses it (so the tree stays
+  //     focused on where the learner is, not where they've been)
+  // Manual toggles between navigations still work — the useEffect
+  // below only fires when `containsActiveLesson` actually changes
+  // (i.e. on real navigation events).
   const containsActiveLesson = activeLessonId
     ? chapter.lessons.some((l) => l.id === activeLessonId)
     : false;
   const [open, setOpen] = useState(containsActiveLesson);
+  useEffect(() => {
+    setOpen(containsActiveLesson);
+  }, [containsActiveLesson]);
 
   return (
     <div
@@ -334,7 +353,7 @@ function ChapterBlock({
         </span>
         <span
           className="libre__chapter-ring"
-          title={`${done}/${total} lessons complete`}
+          title={t("sidebar.lessonsCompleteTitle", { done, total })}
         >
           <ProgressRing progress={pct} size={16} stroke={2} label="" />
         </span>

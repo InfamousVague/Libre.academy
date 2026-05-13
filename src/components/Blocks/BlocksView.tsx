@@ -57,6 +57,7 @@ import {
 } from "../../lib/workbenchFiles";
 import { runFiles, type RunResult } from "../../runtimes";
 import { isMobile } from "../../lib/platform";
+import { fireHaptic } from "../../lib/haptics";
 import OutputPane from "../Output/OutputPane";
 import Workbench from "../Workbench/Workbench";
 import {
@@ -158,7 +159,7 @@ export default function BlocksView({
   // present; this is a defense-in-depth message.
   if (!blocks) {
     return (
-      <div className="fb-blocks fb-blocks--error">
+      <div className="libre-blocks libre-blocks--error">
         <p>This exercise hasn't been authored for blocks mode yet.</p>
       </div>
     );
@@ -393,15 +394,24 @@ function BlocksViewInner({
           : null;
       if (!blockId) return;
 
-      // Drop into a slot.
+      // Drop into a slot — fire a selection haptic so the snap
+      // reads as a deliberate "I placed this" tactile event.
+      // Selection is the right weight here: heavier than a tap
+      // (this is a placement, not a press) but lighter than a
+      // medium impact (the visual movement carries most of the
+      // perceived weight already).
       if (overId.startsWith(DROP_SLOT_PREFIX)) {
         const targetSlotId = overId.slice(DROP_SLOT_PREFIX.length);
+        void fireHaptic("selection");
         placeBlock(targetSlotId, blockId);
         return;
       }
       // Drop back into the pool — only meaningful if the block was
-      // previously in a slot.
+      // previously in a slot. Light impact since the block is
+      // moving away from a placement (a "returning" action that
+      // shouldn't feel as rewarding as a placement).
       if (overId === DROP_POOL && activeId.startsWith(DRAG_FROM_SLOT)) {
+        void fireHaptic("impact-light");
         clearSlot(activeId.slice(DRAG_FROM_SLOT.length));
       }
     },
@@ -625,14 +635,14 @@ function BlocksViewInner({
   const blocksTopHalf = (
     <div
       className={
-        "fb-blocks" + (justPassed ? " fb-blocks--passed" : "")
+        "libre-blocks" + (justPassed ? " libre-blocks--passed" : "")
       }
     >
         {/* Off-screen polite live region for screen-reader feedback.
             React updates the text whenever a placement, removal, or
             verify outcome happens, and assistive tech announces it
             without stealing focus or interrupting the learner. */}
-        <span className="fb-blocks__sr-live" role="status" aria-live="polite">
+        <span className="libre-blocks__sr-live" role="status" aria-live="polite">
           {liveMessage}
         </span>
         {/* Header bar — same chrome as EditorPane's header
@@ -645,19 +655,19 @@ function BlocksViewInner({
             (lessons without blocks data + non-desktop callers without
             mode wiring). */}
         {onExerciseModeChange && (
-          <div className="fb-blocks__header">
+          <div className="libre-blocks__header">
             {exerciseMode && (
               <div
-                className="fb-blocks__mode"
+                className="libre-blocks__mode"
                 role="group"
                 aria-label="Exercise mode"
               >
                 <button
                   type="button"
                   className={
-                    "fb-blocks__mode-btn" +
+                    "libre-blocks__mode-btn" +
                     (exerciseMode === "editor"
-                      ? " fb-blocks__mode-btn--active"
+                      ? " libre-blocks__mode-btn--active"
                       : "")
                   }
                   onClick={() => onExerciseModeChange("editor")}
@@ -668,9 +678,9 @@ function BlocksViewInner({
                 <button
                   type="button"
                   className={
-                    "fb-blocks__mode-btn" +
+                    "libre-blocks__mode-btn" +
                     (exerciseMode === "blocks"
-                      ? " fb-blocks__mode-btn--active"
+                      ? " libre-blocks__mode-btn--active"
                       : "")
                   }
                   onClick={() => onExerciseModeChange("blocks")}
@@ -688,12 +698,12 @@ function BlocksViewInner({
             comfortable horizontal space without competing with the
             toggle's right edge. */}
         {blocks.prompt && (
-          <p className="fb-blocks__prompt">{blocks.prompt}</p>
+          <p className="libre-blocks__prompt">{blocks.prompt}</p>
         )}
 
-        <pre className="fb-blocks__template shiki" aria-label="Code template">
+        <pre className="libre-blocks__template shiki" aria-label="Code template">
           {renderedLines.map((line, lineIdx) => (
-            <span key={lineIdx} className="fb-blocks__line">
+            <span key={lineIdx} className="libre-blocks__line">
               {line.map((tok, tokIdx) =>
                 tok.kind === "slot" ? (
                   <SlotZone
@@ -713,6 +723,7 @@ function BlocksViewInner({
                     expectedBlockId={slotById.get(tok.slotId)?.expectedBlockId}
                     allowFeedback={!!result}
                     onTap={() => handleSlotTap(tok.slotId)}
+                    lessonTitle={lesson.title}
                   />
                 ) : (
                   <span
@@ -732,7 +743,7 @@ function BlocksViewInner({
         </pre>
 
         <PoolZone>
-          <div className="fb-blocks__pool-row" role="list" aria-label="Block tray">
+          <div className="libre-blocks__pool-row" role="list" aria-label="Block tray">
             {shuffledPool.map((b) =>
               placedBlockIds.has(b.id) ? null : (
                 <BlockChip
@@ -742,19 +753,20 @@ function BlocksViewInner({
                   tokens={chipTokens.get(b.id) ?? null}
                   armed={armedBlockId === b.id}
                   onTap={() => handleBlockTap(b.id)}
+                  lessonTitle={lesson.title}
                 />
               ),
             )}
             {shuffledPool.every((b) => placedBlockIds.has(b.id)) && (
-              <span className="fb-blocks__pool-empty">All blocks placed.</span>
+              <span className="libre-blocks__pool-empty">All blocks placed.</span>
             )}
           </div>
         </PoolZone>
 
-        <div className="fb-blocks__controls">
+        <div className="libre-blocks__controls">
           <button
             type="button"
-            className="fb-blocks__verify"
+            className="libre-blocks__verify"
             onClick={() => void verify()}
             disabled={!allPlaced || running}
             aria-disabled={!allPlaced || running}
@@ -768,7 +780,7 @@ function BlocksViewInner({
           </button>
           <button
             type="button"
-            className="fb-blocks__reset"
+            className="libre-blocks__reset"
             onClick={reset}
             disabled={running}
           >
@@ -777,10 +789,10 @@ function BlocksViewInner({
           {allPlaced && !result && (
             <span
               className={
-                "fb-blocks__answerkey " +
+                "libre-blocks__answerkey " +
                 (allCorrect
-                  ? "fb-blocks__answerkey--ok"
-                  : "fb-blocks__answerkey--maybe")
+                  ? "libre-blocks__answerkey--ok"
+                  : "libre-blocks__answerkey--maybe")
               }
               aria-live="polite"
             >
@@ -823,7 +835,7 @@ function BlocksViewInner({
         {activeBlock ? (
           <div
             className={
-              "fb-blocks__chip fb-blocks__chip--ghost" +
+              "libre-blocks__chip libre-blocks__chip--ghost" +
               // When dragging from a slot, the source chip has zero
               // padding + transparent background (`--placed` style).
               // Without matching the ghost to that, the overlay renders
@@ -832,7 +844,7 @@ function BlocksViewInner({
               // misaligned from the cursor." Match the variant so the
               // visual size stays identical to the source.
               (activeDragId?.startsWith(DRAG_FROM_SLOT)
-                ? " fb-blocks__chip--placed"
+                ? " libre-blocks__chip--placed"
                 : "")
             }
           >
@@ -893,6 +905,9 @@ interface SlotZoneProps {
   /// exercise.
   allowFeedback: boolean;
   onTap: () => void;
+  /// Forwarded to `DraggablePlacedBlock` for the hover-tooltip
+  /// affordance — same lesson-title text the pool chips carry.
+  lessonTitle: string;
 }
 
 function SlotZone({
@@ -903,6 +918,7 @@ function SlotZone({
   expectedBlockId,
   allowFeedback,
   onTap,
+  lessonTitle,
 }: SlotZoneProps) {
   const { setNodeRef, isOver } = useDroppable({ id: DROP_SLOT_PREFIX + slotId });
   const filled = !!placedBlock;
@@ -912,11 +928,11 @@ function SlotZone({
     <span
       ref={setNodeRef}
       className={
-        "fb-blocks__slot" +
-        (filled ? " fb-blocks__slot--filled" : " fb-blocks__slot--empty") +
-        (isOver ? " fb-blocks__slot--over" : "") +
-        (correct ? " fb-blocks__slot--correct" : "") +
-        (wrong ? " fb-blocks__slot--wrong" : "")
+        "libre-blocks__slot" +
+        (filled ? " libre-blocks__slot--filled" : " libre-blocks__slot--empty") +
+        (isOver ? " libre-blocks__slot--over" : "") +
+        (correct ? " libre-blocks__slot--correct" : "") +
+        (wrong ? " libre-blocks__slot--wrong" : "")
       }
       role="button"
       tabIndex={0}
@@ -941,9 +957,10 @@ function SlotZone({
           slotId={slotId}
           block={placedBlock!}
           tokens={placedBlockTokens}
+          lessonTitle={lessonTitle}
         />
       ) : (
-        <span className="fb-blocks__slot-placeholder">{hint ?? "block"}</span>
+        <span className="libre-blocks__slot-placeholder">{hint ?? "block"}</span>
       )}
     </span>
   );
@@ -962,9 +979,23 @@ interface BlockChipProps {
   /// place-on-slot logic lives in `handleSlotTap`.
   armed?: boolean;
   onTap?: () => void;
+  /// Lesson title surfaced as the chip's hover-tooltip (`title`
+  /// attribute) so a learner peeking at a block in the pool or
+  /// in a slot gets a reminder of which lesson the block belongs
+  /// to. The chip's `code` content is already on the visible
+  /// face; the tooltip carries lesson context that the chip
+  /// itself doesn't have room for.
+  lessonTitle: string;
 }
 
-function BlockChip({ block, source, tokens, armed, onTap }: BlockChipProps) {
+function BlockChip({
+  block,
+  source,
+  tokens,
+  armed,
+  onTap,
+  lessonTitle,
+}: BlockChipProps) {
   const dragId = (source === "pool" ? DRAG_FROM_POOL : DRAG_FROM_SLOT) + block.id;
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: dragId,
@@ -981,12 +1012,17 @@ function BlockChip({ block, source, tokens, armed, onTap }: BlockChipProps) {
       {...attributes}
       {...listeners}
       className={
-        "fb-blocks__chip" +
-        (armed ? " fb-blocks__chip--armed" : "") +
-        (isDragging ? " fb-blocks__chip--dragging" : "")
+        "libre-blocks__chip" +
+        (armed ? " libre-blocks__chip--armed" : "") +
+        (isDragging ? " libre-blocks__chip--dragging" : "")
       }
       role="listitem"
       aria-label={`Block: ${block.code}. Drag to a slot, or tap to select.`}
+      // Native browser tooltip with the lesson title. Cheap UX hint
+      // — fires on a brief hover hold, costs nothing on touch
+      // devices (where it's just ignored). The screen-reader path
+      // is already covered by `aria-label` above.
+      title={lessonTitle}
       onClick={(e) => {
         // We ALSO listen for taps via the dnd-kit listeners; clicks
         // come through after a drag-cancel or a click-without-drag.
@@ -1011,10 +1047,15 @@ function DraggablePlacedBlock({
   slotId,
   block,
   tokens,
+  lessonTitle,
 }: {
   slotId: string;
   block: Block;
   tokens: RenderedToken[] | null;
+  /// Same lesson-title hover tooltip the pool chips carry — keeps
+  /// the affordance consistent whether the block is sitting in
+  /// the pool or has been placed into a slot.
+  lessonTitle: string;
 }) {
   const dragId = DRAG_FROM_SLOT + slotId;
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -1024,13 +1065,14 @@ function DraggablePlacedBlock({
     <span
       ref={setNodeRef}
       className={
-        "fb-blocks__chip fb-blocks__chip--placed" +
-        (isDragging ? " fb-blocks__chip--dragging" : "")
+        "libre-blocks__chip libre-blocks__chip--placed" +
+        (isDragging ? " libre-blocks__chip--dragging" : "")
       }
       style={{
         transform: CSS.Translate.toString(transform),
         opacity: isDragging ? 0 : undefined,
       }}
+      title={lessonTitle}
       {...attributes}
       {...listeners}
     >
@@ -1048,7 +1090,7 @@ function PoolZone({ children }: { children: React.ReactNode }) {
   return (
     <div
       ref={setNodeRef}
-      className={"fb-blocks__pool" + (isOver ? " fb-blocks__pool--over" : "")}
+      className={"libre-blocks__pool" + (isOver ? " libre-blocks__pool--over" : "")}
     >
       {children}
     </div>

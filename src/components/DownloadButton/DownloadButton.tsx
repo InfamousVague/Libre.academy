@@ -15,6 +15,7 @@ import { download as downloadIcon } from "@base/primitives/icon/icons/download";
 import { chevronDown } from "@base/primitives/icon/icons/chevron-down";
 import "@base/primitives/icon/icon.css";
 import { downloadUrl } from "../../lib/platform";
+import { track } from "../../lib/track";
 import "./DownloadButton.css";
 
 interface Props {
@@ -72,6 +73,7 @@ export default function DownloadButton({ className, primaryLabel }: Props) {
           target="_blank"
           rel="noopener noreferrer"
           title="Open the latest desktop release on GitHub"
+          onClick={() => track.installClick(primary.os)}
         >
           <Icon icon={downloadIcon} size="xs" color="currentColor" />
           <span>{primaryLabel ?? primary.label}</span>
@@ -107,7 +109,10 @@ export default function DownloadButton({ className, primaryLabel }: Props) {
                 className={`libre-download-item${
                   isPrimary ? " libre-download-item--primary" : ""
                 }`}
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  track.installClick(target.os);
+                  setOpen(false);
+                }}
               >
                 <Icon icon={downloadIcon} size="xs" color="currentColor" />
                 <span className="libre-download-item-body">

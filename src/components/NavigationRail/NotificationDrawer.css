@@ -4,13 +4,13 @@
    it floats out to the right of the rail at the bell's vertical
    anchor without the rail's flex layout absorbing it. */
 
-.fb-notif {
+.libre-notif {
   position: relative;
   display: block;
   width: 100%;
 }
 
-.fb-notif__trigger {
+.libre-notif__trigger {
   /* Mirror the RailItem's footprint so the bell sits cleanly in
      the rail's bottom cluster without throwing off the alignment
      of the surrounding icons. The actual RailItem styles live in
@@ -31,18 +31,18 @@
   color: var(--color-text-secondary);
   cursor: pointer;
   font: inherit;
-  border-radius: var(--fb-radius-sm);
-  transition: background var(--fb-motion-snappy),
-    color var(--fb-motion-snappy);
+  border-radius: var(--libre-radius-sm);
+  transition: background var(--libre-motion-snappy),
+    color var(--libre-motion-snappy);
 }
 
-.fb-notif__trigger:hover,
-.fb-notif__trigger[aria-expanded="true"] {
+.libre-notif__trigger:hover,
+.libre-notif__trigger[aria-expanded="true"] {
   color: var(--color-text-primary);
   background: var(--color-bg-secondary);
 }
 
-.fb-notif__trigger:focus-visible {
+.libre-notif__trigger:focus-visible {
   outline: 2px solid var(--color-accent-warm, #e8954a);
   outline-offset: -3px;
 }
@@ -50,7 +50,7 @@
 /* Unread-count chip floats over the upper-right corner of the bell
    icon. Capped at "9+" so a long unbroken streak doesn't push the
    chip wider than the rail. */
-.fb-notif__badge {
+.libre-notif__badge {
   position: absolute;
   top: 6px;
   right: 6px;
@@ -80,15 +80,15 @@
   box-shadow: 0 0 0 1.5px var(--color-bg-primary, #0b0c10);
 }
 
-/* Default-dark theme override: the warm-orange chip clashed with
-   the monochrome rest of the rail. Swap to white-on-black so the
-   counter reads as part of the same neutral surface family. The
-   ring stays the bg-primary token so it still draws a clean halo
-   against the rail backdrop. Other themes keep the warm-orange
-   accent — it's part of their identity. */
-[data-theme-name="default-dark"] .fb-notif__badge {
-  background: #ffffff;
-  color: #000000;
+/* Default-dark uses the brand amber on the badge so the chip
+   reads as a piece with the Run button / mode-toggle pill —
+   all the "primary emphasis" surfaces in default-dark are the
+   same accent colour. (Previously this was white-on-black to
+   stay monochrome with the rail; the brand amber now provides
+   the single warm accent point across the whole chrome.) */
+[data-theme-name="default-dark"] .libre-notif__badge {
+  background: var(--color-accent);
+  color: var(--color-accent-fg);
 }
 
 /* ─── Popover panel ────────────────────────────────────── */
@@ -97,7 +97,7 @@
    position. Cap width so the panel reads as a glanceable preview,
    not a real drawer; vertical scroll kicks in only if a future
    source pushes the list past ~7 rows. */
-.fb-notif__panel {
+.libre-notif__panel {
   position: absolute;
   /* Anchor at the bell's bottom edge so the panel grows upward
      visually balanced against the rail's bottom cluster. */
@@ -109,7 +109,7 @@
   max-height: 420px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md, 10px);
+  border-radius: var(--libre-radius-md, 10px);
   box-shadow:
     0 18px 40px -8px rgba(0, 0, 0, 0.45),
     0 4px 12px rgba(0, 0, 0, 0.22);
@@ -121,11 +121,11 @@
   z-index: 95;
   overflow: hidden;
   /* Soft entrance — the panel scales up slightly from the bell */
-  animation: fb-notif-pop 140ms ease-out;
+  animation: libre-notif-pop 140ms ease-out;
   transform-origin: left bottom;
 }
 
-@keyframes fb-notif-pop {
+@keyframes libre-notif-pop {
   from {
     opacity: 0;
     transform: scale(0.96) translateY(6px);
@@ -136,7 +136,7 @@
   }
 }
 
-.fb-notif__panel-head {
+.libre-notif__panel-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -146,20 +146,20 @@
   flex-shrink: 0;
 }
 
-.fb-notif__panel-title {
+.libre-notif__panel-title {
   font-size: 13px;
   font-weight: 700;
   color: var(--color-text-primary);
   letter-spacing: -0.01em;
 }
 
-.fb-notif__panel-actions {
+.libre-notif__panel-actions {
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.fb-notif__panel-link {
+.libre-notif__panel-link {
   background: transparent;
   border: 0;
   color: var(--color-accent-warm, #e8954a);
@@ -167,11 +167,11 @@
   font-weight: 600;
   cursor: pointer;
   padding: 4px 8px;
-  border-radius: var(--fb-radius-sm);
-  transition: background var(--fb-motion-snappy);
+  border-radius: var(--libre-radius-sm);
+  transition: background var(--libre-motion-snappy);
 }
 
-.fb-notif__panel-link:hover {
+.libre-notif__panel-link:hover {
   background: color-mix(
     in srgb,
     var(--color-accent-warm, #e8954a) 14%,
@@ -179,46 +179,46 @@
   );
 }
 
-.fb-notif__panel-close {
+.libre-notif__panel-close {
   background: transparent;
   border: 0;
   color: var(--color-text-tertiary);
   cursor: pointer;
   padding: 4px;
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   display: inline-flex;
 }
-.fb-notif__panel-close:hover {
+.libre-notif__panel-close:hover {
   color: var(--color-text-primary);
   background: var(--color-bg-tertiary);
 }
 
 /* ─── List ──────────────────────────────────────────────── */
 
-.fb-notif__list {
+.libre-notif__list {
   list-style: none;
   margin: 0;
   padding: 4px 0;
   overflow-y: auto;
 }
 
-.fb-notif__item {
+.libre-notif__item {
   display: grid;
   grid-template-columns: 36px 1fr auto;
   align-items: center;
   gap: 10px;
   padding: 8px 14px;
   border-left: 2px solid transparent;
-  transition: background var(--fb-motion-snappy);
+  transition: background var(--libre-motion-snappy);
 }
 
-.fb-notif__item:hover {
+.libre-notif__item:hover {
   background: var(--color-bg-tertiary);
 }
 
 /* Unread accent rail along the left edge of unread rows so the
    eye lands on what's new without needing to read timestamps. */
-.fb-notif__item--unread {
+.libre-notif__item--unread {
   border-left-color: var(--color-accent-warm, #e8954a);
   background: color-mix(
     in srgb,
@@ -227,7 +227,7 @@
   );
 }
 
-.fb-notif__item-icon {
+.libre-notif__item-icon {
   /* Achievement PNGs ship with their own circular medallion baked
      into the alpha channel + a warm halo around the rim. Wrapping
      them in a 36-px disc with `overflow: hidden` cropped the rim
@@ -247,7 +247,7 @@
   color: var(--color-text-secondary);
 }
 
-.fb-notif__item-img {
+.libre-notif__item-img {
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -257,11 +257,11 @@
   filter: drop-shadow(0 2px 6px rgba(243, 114, 57, 0.22));
 }
 
-.fb-notif__item-body {
+.libre-notif__item-body {
   min-width: 0;
 }
 
-.fb-notif__item-title {
+.libre-notif__item-title {
   font-size: 12.5px;
   font-weight: 600;
   color: var(--color-text-primary);
@@ -271,7 +271,7 @@
   white-space: nowrap;
 }
 
-.fb-notif__item-blurb {
+.libre-notif__item-blurb {
   font-size: 11px;
   color: var(--color-text-tertiary);
   margin-top: 2px;
@@ -283,7 +283,7 @@
   -webkit-box-orient: vertical;
 }
 
-.fb-notif__item-ts {
+.libre-notif__item-ts {
   font-size: 10.5px;
   color: var(--color-text-tertiary);
   font-variant-numeric: tabular-nums;
@@ -294,27 +294,27 @@
 
 /* ─── Empty state ───────────────────────────────────────── */
 
-.fb-notif__empty {
+.libre-notif__empty {
   padding: 28px 18px;
   text-align: center;
   color: var(--color-text-tertiary);
 }
 
-.fb-notif__empty-glyph {
+.libre-notif__empty-glyph {
   display: block;
   font-size: 22px;
   color: var(--color-accent-warm, #e8954a);
   margin-bottom: 8px;
 }
 
-.fb-notif__empty-title {
+.libre-notif__empty-title {
   font-size: 13px;
   font-weight: 700;
   color: var(--color-text-primary);
   margin-bottom: 4px;
 }
 
-.fb-notif__empty-blurb {
+.libre-notif__empty-blurb {
   font-size: 11.5px;
   color: var(--color-text-tertiary);
   line-height: 1.4;

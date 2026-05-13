@@ -49,6 +49,7 @@ import {
 import { loadAllRecords, summariseStats } from "./practiceStore";
 import type { PracticeItem, PracticeRecord, PracticeStats } from "./types";
 import PracticeSession from "./PracticeSession";
+import { useT } from "../../i18n/i18n";
 import "./PracticeView.css";
 
 interface Props {
@@ -67,10 +68,10 @@ interface Props {
 
 const SESSION_LIMITS = [5, 10, 25] as const;
 
-const KIND_LABELS: Record<PracticeItem["kind"], string> = {
-  mcq: "Multiple choice",
-  short: "Short answer",
-  blocks: "Code blocks",
+const KIND_LABEL_KEYS: Record<PracticeItem["kind"], string> = {
+  mcq: "practice.kindMcq",
+  short: "practice.kindShort",
+  blocks: "practice.kindBlocks",
 };
 
 export default function PracticeView({
@@ -79,6 +80,7 @@ export default function PracticeView({
   history,
   onOpenLesson,
 }: Props) {
+  const t = useT();
   // Harvest is cheap; rerun whenever the inputs change so author
   // edits / new completions take effect without a refresh.
   const items = useMemo(
@@ -204,10 +206,10 @@ export default function PracticeView({
               feels they're inside the same app. */}
           <section
             className="libre-practice-hero"
-            aria-label="Practice overview"
+            aria-label={t("practice.ariaOverview")}
           >
             <div className="libre-practice-hero-text">
-              <h1 className="libre-practice-hero-title">Practice</h1>
+              <h1 className="libre-practice-hero-title">{t("practice.title")}</h1>
               <p className="libre-practice-hero-sub">{heroSub}</p>
             </div>
             <DueRing
@@ -224,16 +226,17 @@ export default function PracticeView({
               sessions never touch the panel. */}
           <section className="libre-practice-cta">
             <div className="libre-practice-cta-meta">
-              <span className="libre-practice-cta-label">Up next</span>
+              <span className="libre-practice-cta-label">{t("practice.upNext")}</span>
               <span className="libre-practice-cta-title">
                 {previewQueue.length > 0 ? (
                   <>
-                    {previewQueue.length} card
-                    {previewQueue.length === 1 ? "" : "s"} ·{" "}
-                    {MODE_LABELS[mode]}
+                    {previewQueue.length === 1
+                      ? t("practice.cardCount", { count: previewQueue.length })
+                      : t("practice.cardCountPlural", { count: previewQueue.length })}{" "}
+                    · {MODE_LABELS[mode]}
                   </>
                 ) : (
-                  "Nothing queued in this slice"
+                  t("practice.nothingQueued")
                 )}
               </span>
               <span className="libre-practice-cta-hint">
@@ -246,7 +249,7 @@ export default function PracticeView({
               onClick={startSession}
               disabled={previewQueue.length === 0}
             >
-              Start
+              {t("practice.start")}
               <Icon icon={dumbbell} size="sm" color="currentColor" />
             </button>
           </section>
@@ -257,25 +260,25 @@ export default function PracticeView({
               icon={layers}
               tone="cards"
               value={items.length}
-              label="In deck"
+              label={t("practice.statInDeck")}
             />
             <StatTile
               icon={clock}
               tone="due"
               value={stats.dueCount}
-              label="Due now"
+              label={t("practice.statDueNow")}
             />
             <StatTile
               icon={brain}
               tone="weak"
               value={stats.weakCount}
-              label="Weak spots"
+              label={t("practice.statWeakSpots")}
             />
             <StatTile
               icon={checkIcon}
               tone="done"
               value={`${stats.correctToday}/${stats.attemptsToday}`}
-              label="Today"
+              label={t("practice.statToday")}
             />
           </div>
 
@@ -287,10 +290,10 @@ export default function PracticeView({
             <section className="libre-practice-section">
               <div className="libre-practice-section-head">
                 <h2 className="libre-practice-section-title">
-                  To revisit
+                  {t("practice.toRevisit")}
                 </h2>
                 <span className="libre-practice-section-sub">
-                  Recently missed
+                  {t("practice.recentlyMissed")}
                 </span>
               </div>
               <ul className="libre-practice-misses">
@@ -336,7 +339,7 @@ export default function PracticeView({
               aria-expanded={customizeOpen}
             >
               <Icon icon={sliders} size="sm" color="currentColor" />
-              <span>Customize</span>
+              <span>{t("practice.customize")}</span>
               <span className="libre-practice-customize-summary">
                 {summariseFilters(
                   mode,
@@ -344,6 +347,7 @@ export default function PracticeView({
                   selectedKinds,
                   sessionLength,
                   courseGroups.length,
+                  t,
                 )}
               </span>
               <Icon
@@ -355,7 +359,7 @@ export default function PracticeView({
 
             {customizeOpen && (
               <div className="libre-practice-customize">
-                <CustomizeRow label="Mode">
+                <CustomizeRow label={t("practice.customizeMode")}>
                   {(Object.keys(MODE_LABELS) as PracticeMode[]).map((m) => (
                     <button
                       key={m}
@@ -371,7 +375,7 @@ export default function PracticeView({
                   ))}
                 </CustomizeRow>
 
-                <CustomizeRow label="Length">
+                <CustomizeRow label={t("practice.customizeLength")}>
                   {SESSION_LIMITS.map((n) => (
                     <button
                       key={n}
@@ -389,7 +393,7 @@ export default function PracticeView({
 
                 {courseGroups.length > 1 && (
                   <CustomizeRow
-                    label="Courses"
+                    label={t("practice.customizeCourses")}
                     onClear={
                       selectedCourses.size > 0
                         ? () => setSelectedCourses(new Set())
@@ -427,7 +431,7 @@ export default function PracticeView({
                 )}
 
                 <CustomizeRow
-                  label="Kinds"
+                  label={t("practice.customizeKinds")}
                   onClear={
                     selectedKinds.size > 0
                       ? () => setSelectedKinds(new Set())
@@ -435,7 +439,7 @@ export default function PracticeView({
                   }
                 >
                   {(
-                    Object.keys(KIND_LABELS) as PracticeItem["kind"][]
+                    Object.keys(KIND_LABEL_KEYS) as PracticeItem["kind"][]
                   ).map((k) => {
                     const count = items.filter((it) => it.kind === k).length;
                     if (count === 0) return null;
@@ -457,7 +461,7 @@ export default function PracticeView({
                           });
                         }}
                       >
-                        {KIND_LABELS[k]}
+                        {t(KIND_LABEL_KEYS[k])}
                         <span className="libre-practice-pill-count">
                           {count}
                         </span>
@@ -486,6 +490,7 @@ function CustomizeRow({
   onClear?: () => void;
   children: React.ReactNode;
 }) {
+  const t = useT();
   return (
     <div className="libre-practice-customize-row">
       <span className="libre-practice-customize-row-label">
@@ -496,7 +501,7 @@ function CustomizeRow({
             className="libre-practice-customize-clear"
             onClick={onClear}
           >
-            clear
+            {t("practice.customizeClear")}
           </button>
         )}
       </span>
@@ -521,6 +526,7 @@ function DueRing({
   correctToday: number;
   attemptsToday: number;
 }) {
+  const t = useT();
   const pct = total > 0 ? Math.min(due / total, 1) : 0;
   const r = 42;
   const c = Math.round(2 * Math.PI * r * 100) / 100;
@@ -559,7 +565,7 @@ function DueRing({
         </span>
         <span className="libre-practice-ring-value">{due}</span>
         <span className="libre-practice-ring-label">
-          {attemptsToday > 0 ? `${accuracy}% today` : "Due"}
+          {attemptsToday > 0 ? t("practice.todayPct", { pct: accuracy }) : t("practice.due")}
         </span>
       </div>
     </div>
@@ -600,6 +606,7 @@ function StatTile({
 // EmptyState — first-run / nothing-touched-yet message.
 
 function EmptyState({ history }: { history?: readonly Completion[] }) {
+  const t = useT();
   const recent = history?.length ?? 0;
   return (
     <div className="libre-practice">
@@ -609,14 +616,10 @@ function EmptyState({ history }: { history?: readonly Completion[] }) {
             <Icon icon={dumbbell} size="xl" color="currentColor" />
           </div>
           <h1 className="libre-practice-hero-title">
-            {recent === 0 ? "Open a lesson to start the deck." : "Nothing to practise yet."}
+            {recent === 0 ? t("practice.emptyTitleSeed") : t("practice.emptyTitleNoneYet")}
           </h1>
           <p className="libre-practice-empty-blurb">
-            Every quiz question and code-blocks puzzle you encounter in a
-            lesson becomes a card here. Finish one — even just one — and the
-            deck starts filling. The scheduler handles the rest: short
-            sessions, spaced apart, biased toward whatever you got wrong
-            recently.
+            {t("practice.emptyBlurb")}
           </p>
           {recent === 0 ? (
             <div className="libre-practice-empty-hint">
@@ -651,8 +654,13 @@ function summariseFilters(
   selectedKinds: Set<PracticeItem["kind"]>,
   sessionLength: number,
   courseCount: number,
+  t: (key: string, params?: Record<string, string | number>) => string,
 ): string {
-  const parts: string[] = [MODE_LABELS[mode], `${sessionLength} cards`];
+  const cardsLabel =
+    sessionLength === 1
+      ? t("practice.cardCount", { count: sessionLength })
+      : t("practice.cardCountPlural", { count: sessionLength });
+  const parts: string[] = [MODE_LABELS[mode], cardsLabel];
   if (selectedCourses.size > 0 && selectedCourses.size < courseCount) {
     parts.push(
       `${selectedCourses.size} course${selectedCourses.size === 1 ? "" : "s"}`,
@@ -661,7 +669,7 @@ function summariseFilters(
   if (selectedKinds.size > 0) {
     parts.push(
       Array.from(selectedKinds)
-        .map((k) => KIND_LABELS[k].toLowerCase())
+        .map((k) => t(KIND_LABEL_KEYS[k]).toLowerCase())
         .join(", "),
     );
   }

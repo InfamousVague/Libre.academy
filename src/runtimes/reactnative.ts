@@ -128,6 +128,17 @@ function buildPreviewHtml(
       z-index: 999;
     }
   </style>
+  <!-- Console-forwarding shim installed FIRST in the head as a
+       non-module script. If we leave it inside the
+       <script type="module"> below, a parse / import failure in
+       the module would happen BEFORE the shim's window 'error'
+       and 'unhandledrejection' listeners are installed, leaving
+       the parent window unable to capture the failure. Plain
+       <script> in the head runs synchronously during HTML
+       parsing, before any module fetches begin. -->
+  <script>
+${CONSOLE_SHIM}
+  </script>
   <!-- Babel standalone, served from the local Tauri preview server's
        /vendor route. Same file the CDN used to ship — but bundled
        once at build time and read from the shipped resources dir, so
@@ -148,7 +159,6 @@ function buildPreviewHtml(
   </div>
   <div id="root"></div>
   <script type="module">
-    ${CONSOLE_SHIM}
 
     /// Wrap the whole pipeline (imports + transform + mount) in a
     /// single async function with a top-level try/catch, so that an

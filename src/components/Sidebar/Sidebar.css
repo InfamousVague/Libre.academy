@@ -6,30 +6,12 @@
    macOS use for navigation chrome. The hairline border keeps the
    sidebar reading as a distinct floating panel against the flat
    `--color-bg-primary` floor it sits on top of. */
-/* Brand wordmark at the top of the sidebar. Moved here from the
-   library / discover page headers — the rail is the canonical
-   "always visible" surface, so the lockup anchors page identity
-   without being repeated per-view. Naked image, left-aligned
-   inside the rail's content gutter; the frosted-glass sidebar
-   surface is the framing. */
-.libre__sidebar-brand {
-  display: flex;
-  align-items: center;
-  padding: 14px 14px 0 14px;
-  margin-bottom: -7px;
-  flex-shrink: 0;
-}
-.libre__sidebar-brand-img {
-  display: block;
-  height: 52px;
-  width: auto;
-  max-width: 100%;
-  user-select: none;
-  -webkit-user-drag: none;
-}
-
 .libre__sidebar {
-  width: 260px;
+  /* 260 × 1.15 ≈ 299 → 300px. Wider sidebar gives long chapter
+     titles (e.g. "Chapter 14 · Memory allocators in practice")
+     enough horizontal room to read on one line instead of
+     wrapping. Multiples-of-10 keep the visual rhythm tidy. */
+  width: 300px;
   margin: 10px 0 10px 10px;
   /* Surface + border + rim/shadow read from --color-glass-* tokens
      defined in theme/themes.css. Light themes override the tokens
@@ -39,7 +21,7 @@
   -webkit-backdrop-filter: blur(28px) saturate(160%);
   backdrop-filter: blur(28px) saturate(160%);
   border: 1px solid var(--color-glass-border);
-  border-radius: var(--fb-radius-lg);
+  border-radius: var(--libre-radius-lg);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -84,7 +66,7 @@
   cursor: pointer;
   position: relative;
   z-index: 1;
-  transition: color 0.2s ease, background var(--fb-motion-snappy);
+  transition: color 0.2s ease, background var(--libre-motion-snappy);
   width: 100%;
 }
 
@@ -162,14 +144,14 @@
   padding: 6px 10px;
   background: transparent;
   border: 0;
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   color: var(--color-text-secondary);
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 500;
   text-align: left;
   cursor: pointer;
-  transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy);
+  transition: background var(--libre-motion-snappy), color var(--libre-motion-snappy);
 }
 
 .libre__course-row:hover {
@@ -237,19 +219,23 @@
   letter-spacing: -0.04em;
 }
 
-/* Course header card. Slightly elevated surface with a border so the
-   header feels like a distinct module, not just another row in the tree.
-   Hover + active state use the next surface up. */
+/* Course header card. The active-course branch was retired in
+   favour of MiniCertBanner — only INACTIVE / "peeking-at-another-
+   course" rows still hit this rule (and its --expanded variant
+   when the learner clicks to peek inside).
+   Background dropped to transparent so the card reads as a row in
+   the sidebar's chrome rather than a black panel sitting on a
+   black backdrop. The border alone gives the structural cue. */
 .libre__course-card {
-  background: var(--color-bg-primary);
+  background: transparent;
   border: 1px solid var(--color-border-default);
   border-radius: 10px;
   overflow: hidden;
-  transition: border-color 0.2s ease, background var(--fb-motion-snappy);
+  transition: border-color 0.2s ease, background var(--libre-motion-snappy);
 }
 
 .libre__course-card--expanded {
-  background: var(--color-bg-tertiary);
+  background: transparent;
 }
 
 .libre__course-card--active {
@@ -289,7 +275,7 @@
   background: var(--color-text-primary, #ffffff);
   color: var(--color-bg-primary, #000000);
   flex-shrink: 0;
-  transition: opacity var(--fb-motion-snappy), transform var(--fb-motion-snappy);
+  transition: opacity var(--libre-motion-snappy), transform var(--libre-motion-snappy);
 }
 
 .libre__course-title:hover .libre__course-caret {
@@ -355,16 +341,25 @@
   transition: width 0.3s ease;
 }
 
-/* Expanded body: chapter list. Slightly inset from the parent course
-   card with a subtle left guide line so the chapters read as
-   "belonging to" the course above rather than as siblings of it. */
+/* Expanded body: chapter list. Padding + the left-guide border
+   were retired so the chapter rows sit flush with the sidebar's
+   inner edge — the visual hierarchy now comes from the MiniCert
+   banner above (the "you're here" anchor) and the chapter
+   carets, not from indented chrome around the tree. Tiny vertical
+   gap stays so adjacent chapter rows don't crowd each other. */
 .libre__course-body {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 6px 0 4px 6px;
-  margin-left: 4px;
-  border-left: 1px solid var(--color-border-default);
+  /* Top padding bumped from 6 → 16 so the first chapter
+     disclosure breathes under the MiniCertBanner. The cert
+     ticket's bottom edge previously sat tight against the
+     opening chapter caret, making the sidebar read as one
+     wall of chrome; the extra space lets the cert sit as a
+     discrete header and the chapter tree as its own column. */
+  padding: 16px 0 4px;
+  margin-left: 0;
+  border-left: 0;
 }
 
 /* Section group — wraps a contiguous run of chapters that share an
@@ -387,7 +382,7 @@
   padding: 6px 8px 6px 6px;
   background: transparent;
   border: 0;
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   /* Slightly louder than chapter-title so the eye lands on section
      headers first when scanning a long course outline. */
   color: var(--color-text-primary);
@@ -397,7 +392,7 @@
   letter-spacing: 0.2px;
   text-align: left;
   cursor: pointer;
-  transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy);
+  transition: background var(--libre-motion-snappy), color var(--libre-motion-snappy);
 }
 
 .libre__section-title:hover {
@@ -437,9 +432,13 @@
   display: flex;
   flex-direction: column;
   gap: 1px;
-  padding: 2px 0 4px 8px;
-  margin-left: 4px;
-  border-left: 1px solid var(--color-border-default);
+  /* Inset + guide-line retired (matches `.libre__course-body`).
+     Tiny left padding only — keeps nested chapters visually
+     subordinate to their section header without the heavy
+     indented-tree chrome the previous treatment had. */
+  padding: 2px 0 4px 6px;
+  margin-left: 0;
+  border-left: 0;
   animation: libre-chapter-open 150ms ease-out;
 }
 
@@ -463,7 +462,7 @@
   padding: 5px 8px 5px 6px;
   background: transparent;
   border: 0;
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   color: var(--color-text-secondary);
   font-family: inherit;
   font-size: 11.5px;
@@ -471,7 +470,7 @@
   letter-spacing: 0.1px;
   text-align: left;
   cursor: pointer;
-  transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy);
+  transition: background var(--libre-motion-snappy), color var(--libre-motion-snappy);
 }
 
 .libre__chapter-title:hover {
@@ -524,7 +523,12 @@
   display: flex;
   flex-direction: column;
   gap: 1px;
-  padding: 2px 0 4px 8px;
+  /* Padding stripped to match the rest of the tree — lesson rows
+     run flush with the chapter's left edge so the chrome stays
+     calm. The lesson-status icon's own width (26px) provides
+     enough visual indentation to make the row read as nested
+     under its chapter header without extra padding. */
+  padding: 2px 0 4px;
   animation: libre-chapter-open 150ms ease-out;
 }
 
@@ -576,7 +580,7 @@
   height: 26px;
   flex-shrink: 0;
   border-radius: 50%;
-  transition: background 0.2s ease, border-color 0.2s ease, color var(--fb-motion-snappy),
+  transition: background 0.2s ease, border-color 0.2s ease, color var(--libre-motion-snappy),
     box-shadow 0.2s ease;
 }
 
@@ -684,14 +688,14 @@
   padding: 7px 10px;
   background: transparent;
   border: 0;
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   color: var(--color-text-secondary);
   font-family: inherit;
   font-size: 13px;
   font-weight: 500;
   text-align: left;
   cursor: pointer;
-  transition: background var(--fb-motion-snappy), color var(--fb-motion-snappy);
+  transition: background var(--libre-motion-snappy), color var(--libre-motion-snappy);
 }
 
 .libre__sidebar-nav-item:hover {
@@ -787,13 +791,13 @@
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
   border: 0;
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   font: inherit;
   font-size: 11.5px;
   font-weight: 600;
   letter-spacing: 0.1px;
   cursor: pointer;
-  transition: opacity var(--fb-motion-snappy);
+  transition: opacity var(--libre-motion-snappy);
 }
 .libre__nav-empty-cta:hover {
   opacity: 0.9;
@@ -818,7 +822,7 @@
   min-width: 180px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   padding: 4px;
   display: flex;
   flex-direction: column;
@@ -937,7 +941,7 @@
   padding: 0;
   background: var(--color-bg-tertiary);
   border: 0;
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   /* Clip the cover + progress strip to the rounded corners. The strip
      sits flush to the bottom edge of the cover; without clipping its
      fill would square off the corners. */
@@ -969,7 +973,7 @@
 /* Cover <img> still needs to respect the card's rounded corners since
    the button itself no longer clips. */
 .libre__carousel-cover {
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
 }
 
 /* Dark gradient fading from transparent (top) to near-opaque (bottom)
@@ -1048,11 +1052,11 @@
 .libre__carousel-progress-fill {
   display: block;
   height: 100%;
-  /* Bone-white (#d4c5a1, --fb-bone-color). The previous hardcoded
-     amber #e8c46b was a holdover from the pre-bone-palette design
-     and visibly diverged from every other progress indicator in
-     the app, all of which now read as bone. */
-  background: var(--fb-bone-color, #d4c5a1);
+  /* Warm cream (#d4c5a1, the wordmark mid-stroke). Routed through
+     `--color-accent` so all progress + accent surfaces share one
+     theme-tunable token; the previous indirection via the now-
+     retired `--fb-bone-color` was a holdover from the bone palette. */
+  background: var(--color-accent, #d4c5a1);
   transition: width 0.25s ease;
 }
 
@@ -1062,7 +1066,7 @@
   .libre__carousel-item,
   .libre__carousel-item:hover {
     transform: none;
-    transition: outline-color var(--fb-motion-snappy), box-shadow var(--fb-motion-snappy);
+    transition: outline-color var(--libre-motion-snappy), box-shadow var(--libre-motion-snappy);
   }
 }
 

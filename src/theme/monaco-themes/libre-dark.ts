@@ -36,7 +36,7 @@ export const LIBRE_DARK: editor.IStandaloneThemeData = {
     { token: "constant.language", foreground: "fafafa", fontStyle: "bold" },
   ],
   colors: {
-    "editor.background": "#09090b",
+    "editor.background": "#0f0f0f80",
     "editor.foreground": "#fafafa",
     "editor.lineHighlightBackground": "#111113",
     "editor.lineHighlightBorder": "#111113",
@@ -49,7 +49,7 @@ export const LIBRE_DARK: editor.IStandaloneThemeData = {
     "editorIndentGuide.activeBackground": "#3e3e44",
     "editorBracketMatch.background": "#19191d",
     "editorBracketMatch.border": "#70707c",
-    "editorGutter.background": "#09090b",
+    "editorGutter.background": "#0f0f0f80",
     "editorWidget.background": "#111113",
     "editorWidget.border": "#1e1e22",
     "editorSuggestWidget.background": "#111113",
@@ -57,5 +57,14 @@ export const LIBRE_DARK: editor.IStandaloneThemeData = {
     "scrollbarSlider.background": "#ffffff10",
     "scrollbarSlider.hoverBackground": "#ffffff1f",
     "scrollbarSlider.activeBackground": "#ffffff33",
+    // Kill Monaco's default 1px blue focus glow (vs-dark base
+    // ships `focusBorder: "#007fd4"`). The new 2px black frame
+    // on `.libre-editor-host` in the default-dark theme is the
+    // active-editor signal now — the blue overlay competed with
+    // it and read as a stray accent against the otherwise
+    // monochrome palette. Fully-transparent hex (`#00000000`)
+    // because Monaco interprets the value as a colour rather
+    // than honouring `transparent`.
+    "focusBorder": "#00000000",
   },
 };

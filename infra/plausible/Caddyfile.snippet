@@ -1,0 +1,43 @@
+# Append this block to the existing /etc/caddy/Caddyfile on the
+# Vultr VPS (alongside the existing `libre.academy` /
+# `api.libre.academy` blocks). Reload with:
+#   sudo systemctl reload caddy
+#   # or, if Caddy is running in docker:
+#   sudo docker exec <caddy-container> caddy reload --config /etc/caddy/Caddyfile
+#
+# Caddy issues + auto-renews the Let's Encrypt cert; no manual
+# certbot step needed.
+
+stats.libre.academy {
+	encode zstd gzip
+
+	# CORS — let the production web app POST events to /api/event.
+	# Plausible's direct-POST fallback (in src/lib/analytics.ts)
+	# sends `Content-Type: application/json` which trips a
+	# preflight; without these headers events get dropped at the
+	# browser. Origin is hard-locked to the libre.academy apex
+	# (no wildcard) so other sites can't fire events at our
+	# instance.
+	@analytics_api path /api/event /api/event/*
+	header @analytics_api {
+		Access-Control-Allow-Origin "https://libre.academy"
+		Access-Control-Allow-Methods "POST, OPTIONS"
+		Access-Control-Allow-Headers "Content-Type"
+		Access-Control-Max-Age "86400"
+	}
+
+	# Health-check — cheap 200 for uptime monitors without
+	# bothering the Plausible app.
+	handle /healthz {
+		respond "ok" 200
+	}
+
+	# Plausible app on the loopback. The compose stack binds the
+	# container to 127.0.0.1:8000; this proxy hop is what
+	# terminates TLS and gives stats.libre.academy a real cert.
+	reverse_proxy 127.0.0.1:8000 {
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+		header_up X-Real-IP {remote_host}
+	}
+}

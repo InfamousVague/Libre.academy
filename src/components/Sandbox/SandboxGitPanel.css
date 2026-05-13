@@ -1,0 +1,227 @@
+/* Source control panel anchored to the bottom of the Sandbox
+   sidebar. Visual language matches the project switcher above it
+   (same eyebrow + count typography, same hairline divider) so the
+   sidebar reads as a single multi-section column rather than three
+   independent cards. */
+
+.libre-sb-git {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 8px 12px;
+  border-top: 1px solid color-mix(in srgb, var(--color-border-default) 60%, transparent);
+}
+
+.libre-sb-git__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 6px 2px;
+}
+
+.libre-sb-git__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+.libre-sb-git__count {
+  font-size: 10.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-tertiary);
+  letter-spacing: 0.02em;
+}
+
+/* Init / reveal / commit primary buttons. Soft pill chrome; on hover
+   they pick up the accent border like the rest of the sandbox. */
+
+.libre-sb-git__init,
+.libre-sb-git__reveal,
+.libre-sb-git__commit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--libre-radius-sm, 6px);
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.libre-sb-git__init:hover:not(:disabled),
+.libre-sb-git__reveal:hover:not(:disabled),
+.libre-sb-git__commit-btn:hover:not(:disabled) {
+  color: var(--color-text-primary);
+  border-color: var(--color-accent, #d4c5a1);
+  background: color-mix(in srgb, var(--color-accent, #d4c5a1) 10%, transparent);
+}
+
+.libre-sb-git__init:disabled,
+.libre-sb-git__reveal:disabled,
+.libre-sb-git__commit-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Reveal button sits below everything else and reads as quieter
+   chrome — it's a navigation affordance, not a primary action. */
+.libre-sb-git__reveal {
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+}
+
+/* Changed files list. Capped at 8 rows (the rest are summarised
+   with a "+ N more" footer) so the panel never grows past a
+   reasonable height — the user's primary intent here is "I have
+   uncommitted work" rather than browsing every dirty file. */
+
+.libre-sb-git__changes {
+  list-style: none;
+  margin: 0;
+  padding: 0 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.libre-sb-git__change {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--color-text-secondary);
+}
+
+.libre-sb-git__change-status {
+  flex-shrink: 0;
+  width: 22px;
+  text-align: center;
+  font-family: var(--font-mono, ui-monospace, "SF Mono", Menlo, monospace);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--color-accent, #d4c5a1);
+}
+
+.libre-sb-git__change-path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.libre-sb-git__change--more {
+  font-style: italic;
+  color: var(--color-text-tertiary);
+  padding-left: 30px;
+}
+
+/* Commit input strip. Reveals via the "Commit changes" button →
+   gives focus to the message input; submitting fires the IPC and
+   collapses the strip. Esc dismisses the same way the New Project
+   dialog handles it. */
+
+.libre-sb-git__commit-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.libre-sb-git__commit-input {
+  flex: 1;
+  padding: 6px 9px;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--libre-radius-sm, 6px);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 12px;
+}
+
+.libre-sb-git__commit-input:focus {
+  outline: none;
+  border-color: var(--color-border-strong);
+}
+
+.libre-sb-git__commit-submit {
+  padding: 6px 10px;
+  background: var(--color-text-primary);
+  color: var(--color-bg-primary);
+  border: 1px solid var(--color-text-primary);
+  border-radius: var(--libre-radius-sm, 6px);
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity var(--libre-motion-snappy);
+}
+
+.libre-sb-git__commit-submit:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.libre-sb-git__commit-submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Latest-commit summary shown when the working tree is clean. The
+   monospace hash sits next to the truncated subject so the user
+   knows the most recent commit landed without having to open a
+   separate log view. */
+
+.libre-sb-git__latest,
+.libre-sb-git__empty {
+  margin: 0;
+  padding: 0 6px;
+  font-size: 11.5px;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.libre-sb-git__latest-hash {
+  font-family: var(--font-mono, ui-monospace, "SF Mono", Menlo, monospace);
+  font-size: 10.5px;
+  color: var(--color-text-tertiary);
+}
+
+.libre-sb-git__empty {
+  font-style: italic;
+  color: var(--color-text-tertiary);
+}
+
+/* Inline error surface. Lives at the bottom of the panel so command
+   failures (missing git, no identity configured, etc.) stay visible
+   without hijacking a modal. */
+.libre-sb-git__error {
+  margin: 0;
+  padding: 6px 8px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--color-danger, #b04b4b);
+  background: color-mix(in srgb, var(--color-danger, #b04b4b) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-danger, #b04b4b) 35%, transparent);
+  border-radius: var(--libre-radius-sm, 6px);
+  white-space: pre-wrap;
+}

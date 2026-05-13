@@ -26,6 +26,7 @@ import { heart } from "@base/primitives/icon/icons/heart";
 import { copy as copyIcon } from "@base/primitives/icon/icons/copy";
 import { check as checkIcon } from "@base/primitives/icon/icons/check";
 import "@base/primitives/icon/icon.css";
+import { useT } from "../../i18n/i18n";
 import "./TipDropdown.css";
 
 // ─────────────────────────── Types ───────────────────────────
@@ -348,6 +349,7 @@ export interface TipDropdownProps {
 export default function TipDropdown({
   methods = DEFAULT_TIP_METHODS,
 }: TipDropdownProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -455,7 +457,7 @@ export default function TipDropdown({
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="dialog"
-        title="Support libre"
+        title={t("tooltips.support")}
       >
         {/* The Icon component only accepts the semantic IconColor enum,
             so we paint the heart red by setting `color` on a wrapping
@@ -468,7 +470,7 @@ export default function TipDropdown({
         >
           <Icon icon={heart} size="xs" color="currentColor" />
         </span>
-        <span className="libre__tip-trigger-label">Support</span>
+        <span className="libre__tip-trigger-label">{t("topBar.support")}</span>
       </button>
 
       {open && (

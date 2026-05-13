@@ -86,6 +86,20 @@ function buildPreviewHtml(userSource: string, userCss: string): string {
     }
 ${userCss}
   </style>
+  <!-- CRITICAL: The console-forwarding shim has to be the FIRST
+       script the page evaluates. If we wait until after the module
+       import below, a syntax error during module resolution (the
+       most common failure mode — e.g. \`Importing binding name
+       'createRoot' is not found\` from a malformed vendor bundle)
+       fires BEFORE the shim installs its console + error listeners,
+       so the error never reaches the parent window's console
+       capture. Loading the shim in the head as a plain
+       (non-module) script means it runs synchronously during HTML
+       parsing, BEFORE any \`<script type="module">\` blocks below
+       are even fetched. -->
+  <script>
+${CONSOLE_SHIM}
+  </script>
   <!-- Vendored bundles served from the local Tauri preview server's
        /vendor route. See scripts/vendor-cdn-deps.mjs for the build
        step that produces them out of node_modules. -->
@@ -95,15 +109,33 @@ ${userCss}
   <div id="root"></div>
   <script type="module">
     import * as ReactMod from "/vendor/react.js";
-    import { createRoot } from "/vendor/react-dom-client.js";
+    import * as ReactDOMClient from "/vendor/react-dom-client.js";
     const React = ReactMod.default || ReactMod;
+    // Resolve createRoot tolerantly. Real ESM bundles expose it as
+    // a named export (\`{ createRoot }\`); some vendor bundles
+    // (rollup'd from CommonJS, esbuild legacy output) expose only
+    // a default object that CONTAINS createRoot. We try named
+    // import first via the namespace object, then fall back to
+    // .default.createRoot, then to the bundle's default itself
+    // (when the default IS the createRoot fn). Any miss is a
+    // hard error the shim's window 'error' handler reports.
+    const createRoot =
+      ReactDOMClient.createRoot ??
+      (ReactDOMClient.default && ReactDOMClient.default.createRoot) ??
+      (typeof ReactDOMClient.default === "function" ? ReactDOMClient.default : null);
+    if (!createRoot) {
+      throw new Error(
+        "react-dom-client vendor bundle didn't export createRoot. " +
+        "Expected named export \`createRoot\` or a default object containing it. " +
+        "Got: " + Object.keys(ReactDOMClient).join(", ")
+      );
+    }
 
     // Module top level can't \`return\` — wrap the whole runtime in an
     // IIFE so the early-exit-on-error pattern below works syntactically.
     // \`import\` statements have to stay at module top level (above
     // the IIFE) per the ES spec, but everything else slides in here.
     (() => {
-    ${CONSOLE_SHIM}
 
     const source = atob("${sourceB64}");
 

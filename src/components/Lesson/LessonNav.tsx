@@ -2,6 +2,8 @@ import { Icon } from "@base/primitives/icon";
 import { arrowLeft } from "@base/primitives/icon/icons/arrow-left";
 import { arrowRight } from "@base/primitives/icon/icons/arrow-right";
 import "@base/primitives/icon/icon.css";
+import { ShortcutHint } from "../ShortcutHint/ShortcutHint";
+import { useT } from "../../i18n/i18n";
 import "./LessonNav.css";
 
 interface NeighborLesson {
@@ -18,6 +20,12 @@ interface Props {
   /// marked complete, this becomes something like "Mark read & next →" so the
   /// single button handles both actions.
   nextLabel?: string;
+  /// When true, the Next button gets the holographic CTA treatment —
+  /// reserved for the "mark read & next" variant on reading-only
+  /// lessons that the learner is about to complete by clicking. The
+  /// holo overlay reads as "this is the moment, take the action."
+  /// Defaults false.
+  nextIsCta?: boolean;
 }
 
 /// CSS `text-overflow: ellipsis` only trims at the end, which on a lesson
@@ -53,9 +61,17 @@ function MiddleTitle({ text }: { text: string }) {
 /// linear progression feel — users can advance through a course without
 /// opening the sidebar for every step, and reading-only lessons get marked
 /// complete as part of pressing Next (see `nextLabel`).
-export default function LessonNav({ prev, next, onPrev, onNext, nextLabel }: Props) {
+export default function LessonNav({
+  prev,
+  next,
+  onPrev,
+  onNext,
+  nextLabel,
+  nextIsCta = false,
+}: Props) {
+  const t = useT();
   return (
-    <nav className="libre-lesson-nav" aria-label="Lesson navigation">
+    <nav className="libre-lesson-nav" aria-label={t("lessonNav.ariaLabel")}>
       <button
         type="button"
         className="libre-lesson-nav-btn libre-lesson-nav-btn--prev"
@@ -67,20 +83,32 @@ export default function LessonNav({ prev, next, onPrev, onNext, nextLabel }: Pro
           <Icon icon={arrowLeft} size="sm" color="currentColor" />
         </span>
         <span className="libre-lesson-nav-text">
-          <span className="libre-lesson-nav-label">previous</span>
+          <span className="libre-lesson-nav-label">
+            {t("lessonNav.previous")}
+            {prev && <ShortcutHint actionId="lesson.prev" variant="muted" className="libre-shortcut-hint--gap" />}
+          </span>
           {prev && <MiddleTitle text={prev.title} />}
         </span>
       </button>
 
       <button
         type="button"
-        className="libre-lesson-nav-btn libre-lesson-nav-btn--next"
+        className={
+          "libre-lesson-nav-btn libre-lesson-nav-btn--next " +
+          (nextIsCta ? "libre-lesson-nav-btn--cta" : "")
+        }
         onClick={onNext}
         disabled={!next}
         title={next?.title}
       >
+        {/* Holographic foil retired — the rainbow snake-sparkle
+            treatment is now scoped to certificates + the AI
+            button so the Next CTA reads as a quiet flat surface. */}
         <span className="libre-lesson-nav-text libre-lesson-nav-text--right">
-          <span className="libre-lesson-nav-label">{nextLabel ?? "next"}</span>
+          <span className="libre-lesson-nav-label">
+            {nextLabel ?? t("lessonNav.next")}
+            {next && <ShortcutHint actionId="lesson.next" variant="muted" className="libre-shortcut-hint--gap" />}
+          </span>
           {next && <MiddleTitle text={next.title} />}
         </span>
         <span className="libre-lesson-nav-arrow" aria-hidden>

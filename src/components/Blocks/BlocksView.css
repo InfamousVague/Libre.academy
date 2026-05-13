@@ -11,7 +11,7 @@
    (.libre-reader-body / .m-reader__prose) already cap width;
    we don't impose further. */
 
-.fb-blocks {
+.libre-blocks {
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -30,10 +30,10 @@
   -webkit-overflow-scrolling: touch;
 }
 
-.fb-blocks--error {
+.libre-blocks--error {
   padding: 16px;
   border: 1px dashed var(--color-border-default);
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   color: var(--color-text-secondary);
 }
 
@@ -45,9 +45,9 @@
    workbench editor-slot edge-to-edge and sits flush against the
    top edge — visually identical to how the editor's header sits
    above its codemirror surface. The prompt narration moves to a
-   sibling line below the header (see `.fb-blocks__prompt`) so the
+   sibling line below the header (see `.libre-blocks__prompt`) so the
    header row can stay a single horizontal control strip. */
-.fb-blocks__header {
+.libre-blocks__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -62,30 +62,30 @@
 /* Prompt narration on its own line below the header bar. No flex
    context anymore — it's a regular block paragraph that fills the
    parent's content width and wraps naturally. */
-.fb-blocks__prompt {
+.libre-blocks__prompt {
   margin: 0;
   font-size: 14px;
   color: var(--color-text-secondary);
 }
 
-.fb-blocks__mode {
+.libre-blocks__mode {
   display: inline-flex;
   gap: 0;
   padding: 2px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--libre-radius-sm);
   flex-shrink: 0;
 }
 
-.fb-blocks__mode-btn {
+.libre-blocks__mode-btn {
   padding: 2px 10px;
   font-size: 11px;
   font-weight: 600;
   color: var(--color-text-secondary);
   background: transparent;
   border: 0;
-  border-radius: calc(var(--fb-radius-sm) - 2px);
+  border-radius: calc(var(--libre-radius-sm) - 2px);
   cursor: pointer;
   transition:
     background 120ms ease,
@@ -93,11 +93,11 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.fb-blocks__mode-btn:hover:not(.fb-blocks__mode-btn--active) {
+.libre-blocks__mode-btn:hover:not(.libre-blocks__mode-btn--active) {
   color: var(--color-text-primary);
 }
 
-.fb-blocks__mode-btn--active {
+.libre-blocks__mode-btn--active {
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
 }
@@ -106,13 +106,13 @@
 
 /* The template is a monospace block. Each token rendered inside
    carries an inline `color` style from Shiki (github-dark theme);
-   our `.fb-blocks__template` rule sets the FALLBACK text colour
+   our `.libre-blocks__template` rule sets the FALLBACK text colour
    for the rare token Shiki doesn't colour, plus the panel
    background. Chips inside the template inherit the surrounding
    line-height + indentation so a placed chip reads as continuous
    code. `white-space: pre-wrap` lets long lines wrap on phone
    without losing leading indentation. */
-.fb-blocks__template {
+.libre-blocks__template {
   margin: 0;
   padding: 14px 16px;
   font-family: var(--font-mono, "SF Mono", Menlo, monospace);
@@ -124,7 +124,7 @@
      also work but the slight blue-grey tint is what Shiki ships. */
   background: #0d1117;
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   white-space: pre-wrap;
   /* Allow long code to scroll horizontally if wrap isn't enough. */
   overflow-x: auto;
@@ -135,7 +135,7 @@
    per-line later if needed. Block-level so the line breaks render
    even with a flexbox parent. Inline-block keeps the line-height
    correct without forcing line wrapping inside chips. */
-.fb-blocks__line {
+.libre-blocks__line {
   display: inline;
 }
 
@@ -148,7 +148,7 @@
    centres whatever lives inside (the placeholder hint, the placed
    chip's `<code>`); without it short answers like `c` or `9.0`
    sit hard-left in a wider min-width box and read as misaligned. */
-.fb-blocks__slot {
+.libre-blocks__slot {
   display: inline-block;
   vertical-align: baseline;
   min-width: 56px;
@@ -174,14 +174,14 @@
    as values fall in. Hover (desktop only — no-op on touch) lights
    up the gold ring as a "tap to remove" hint, since with the chip
    chrome gone there's no other visual cue. */
-.fb-blocks__slot--filled {
+.libre-blocks__slot--filled {
   border: 0;
   background: transparent;
   padding: 0;
   border-radius: 0;
 }
 
-.fb-blocks__slot--filled:hover {
+.libre-blocks__slot--filled:hover {
   background: rgba(214, 185, 105, 0.08);
   box-shadow: 0 0 0 1px rgba(214, 185, 105, 0.35);
   border-radius: 4px;
@@ -189,7 +189,7 @@
 
 /* While a draggable hovers over the slot — strong visual confirmation
    the drop will land here. */
-.fb-blocks__slot--over {
+.libre-blocks__slot--over {
   background: rgba(214, 185, 105, 0.18);
   border-color: rgba(214, 185, 105, 0.7);
   box-shadow: 0 0 0 2px rgba(214, 185, 105, 0.25);
@@ -199,17 +199,17 @@
    least once (component gates with `allowFeedback`) so the puzzle
    doesn't degenerate into "drag random blocks until everything
    turns green." */
-.fb-blocks__slot--correct {
+.libre-blocks__slot--correct {
   border-color: rgba(120, 200, 140, 0.6);
   box-shadow: inset 0 0 0 1px rgba(120, 200, 140, 0.35);
 }
 
-.fb-blocks__slot--wrong {
+.libre-blocks__slot--wrong {
   border-color: rgba(220, 110, 110, 0.7);
   box-shadow: inset 0 0 0 1px rgba(220, 110, 110, 0.4);
 }
 
-.fb-blocks__slot-placeholder {
+.libre-blocks__slot-placeholder {
   display: inline-block;
   font-size: 0.92em;
   color: var(--color-text-tertiary, var(--color-text-secondary));
@@ -223,7 +223,7 @@
    reads as continuous code. The pool's chips get a subtle elevation
    to communicate "pickable"; placed chips drop the elevation so
    the eye doesn't bounce between filled slots. */
-.fb-blocks__chip {
+.libre-blocks__chip {
   display: inline-block;
   padding: 4px 10px;
   border-radius: 6px;
@@ -248,19 +248,19 @@
   touch-action: none;
 }
 
-.fb-blocks__chip:hover {
+.libre-blocks__chip:hover {
   border-color: var(--color-border-strong, var(--color-border-default));
 }
 
-.fb-blocks__chip:active,
-.fb-blocks__chip--dragging {
+.libre-blocks__chip:active,
+.libre-blocks__chip--dragging {
   cursor: grabbing;
 }
 
 /* Tap-to-place "armed" state — distinct from drag. The ring
    colour is the same warm gold the cursor + TTS pill use so the
    app feels coherent across surfaces. */
-.fb-blocks__chip--armed {
+.libre-blocks__chip--armed {
   border-color: rgba(214, 185, 105, 0.7);
   box-shadow: 0 0 0 2px rgba(214, 185, 105, 0.25);
 }
@@ -268,9 +268,9 @@
 /* Placed chips read as fully continuous code — no chrome at all,
    just the Shiki-coloured tokens against the template background.
    Discoverability of "tap to remove" lives on the parent slot's
-   hover state (`.fb-blocks__slot--filled:hover` lights up a gold
+   hover state (`.libre-blocks__slot--filled:hover` lights up a gold
    ring) so the chip itself stays visually transparent. */
-.fb-blocks__chip--placed {
+.libre-blocks__chip--placed {
   background: transparent;
   border: 0;
   padding: 0;
@@ -279,7 +279,7 @@
 
 /* Floating ghost the DragOverlay renders. Slightly elevated so the
    user sees what they're carrying. */
-.fb-blocks__chip--ghost {
+.libre-blocks__chip--ghost {
   box-shadow:
     0 6px 14px rgba(0, 0, 0, 0.35),
     0 0 0 1px rgba(214, 185, 105, 0.5);
@@ -288,7 +288,7 @@
   transform: scale(1.02);
 }
 
-.fb-blocks__chip code {
+.libre-blocks__chip code {
   font-family: inherit;
   background: transparent;
   border: 0;
@@ -299,9 +299,9 @@
 
 /* ── Pool tray ─────────────────────────────────────────────────── */
 
-.fb-blocks__pool {
+.libre-blocks__pool {
   padding: 12px;
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
   min-height: 56px;
@@ -310,19 +310,19 @@
     border-color 120ms ease;
 }
 
-.fb-blocks__pool--over {
+.libre-blocks__pool--over {
   background: rgba(214, 185, 105, 0.10);
   border-color: rgba(214, 185, 105, 0.45);
 }
 
-.fb-blocks__pool-row {
+.libre-blocks__pool-row {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
 }
 
-.fb-blocks__pool-empty {
+.libre-blocks__pool-empty {
   font-size: 13px;
   color: var(--color-text-secondary);
   font-style: italic;
@@ -330,62 +330,62 @@
 
 /* ── Controls ─────────────────────────────────────────────────── */
 
-.fb-blocks__controls {
+.libre-blocks__controls {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   align-items: center;
 }
 
-.fb-blocks__verify {
+.libre-blocks__verify {
   padding: 8px 18px;
   border: 0;
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   background: var(--color-text-primary);
   color: var(--color-bg-primary);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity var(--fb-motion-quick, 100ms ease);
+  transition: opacity var(--libre-motion-quick, 100ms ease);
 }
 
-.fb-blocks__verify:disabled {
+.libre-blocks__verify:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.fb-blocks__reset {
+.libre-blocks__reset {
   padding: 8px 14px;
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   background: transparent;
   color: var(--color-text-secondary);
   font-size: 13px;
   cursor: pointer;
 }
 
-.fb-blocks__reset:hover {
+.libre-blocks__reset:hover {
   color: var(--color-text-primary);
   border-color: var(--color-border-strong, var(--color-border-default));
 }
 
-.fb-blocks__answerkey {
+.libre-blocks__answerkey {
   font-size: 13px;
   color: var(--color-text-secondary);
 }
 
-.fb-blocks__answerkey--ok {
+.libre-blocks__answerkey--ok {
   color: rgba(120, 200, 140, 0.85);
 }
 
-.fb-blocks__answerkey--maybe {
+.libre-blocks__answerkey--maybe {
   color: var(--color-text-secondary);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fb-blocks__chip,
-  .fb-blocks__slot,
-  .fb-blocks__pool {
+  .libre-blocks__chip,
+  .libre-blocks__slot,
+  .libre-blocks__pool {
     transition: none;
   }
 }
@@ -394,7 +394,7 @@
 
 /* Visually-hidden span for the screen-reader live region. Off-screen
    without `display: none` so AT actually announces updates. */
-.fb-blocks__sr-live {
+.libre-blocks__sr-live {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -411,8 +411,8 @@
    tell which one is "armed" via keyboard. Ring colour matches the
    warm-gold accent used for tap-arm + drag-over so the visual
    vocabulary stays consistent. */
-.fb-blocks__chip:focus-visible,
-.fb-blocks__slot:focus-visible {
+.libre-blocks__chip:focus-visible,
+.libre-blocks__slot:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px rgba(214, 185, 105, 0.65);
   border-radius: 6px;
@@ -426,15 +426,15 @@
    a passing solution can re-trigger the celebration. The animation
    is purely cosmetic — completion is credited even if the user has
    `prefers-reduced-motion: reduce` set, just without the visuals. */
-.fb-blocks--passed .fb-blocks__template {
-  animation: fb-blocks-fanfare 1.5s ease-out 1;
+.libre-blocks--passed .libre-blocks__template {
+  animation: libre-blocks-fanfare 1.5s ease-out 1;
 }
 
-.fb-blocks--passed .fb-blocks__verify {
-  animation: fb-blocks-verify-pop 0.6s ease-out 1;
+.libre-blocks--passed .libre-blocks__verify {
+  animation: libre-blocks-verify-pop 0.6s ease-out 1;
 }
 
-@keyframes fb-blocks-fanfare {
+@keyframes libre-blocks-fanfare {
   0% {
     box-shadow: 0 0 0 0 rgba(120, 200, 140, 0);
     background: #0d1117;
@@ -449,15 +449,15 @@
   }
 }
 
-@keyframes fb-blocks-verify-pop {
+@keyframes libre-blocks-verify-pop {
   0% { transform: scale(1); }
   40% { transform: scale(1.06); }
   100% { transform: scale(1); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fb-blocks--passed .fb-blocks__template,
-  .fb-blocks--passed .fb-blocks__verify {
+  .libre-blocks--passed .libre-blocks__template,
+  .libre-blocks--passed .libre-blocks__verify {
     animation: none;
   }
 }
@@ -483,7 +483,7 @@
      inner blocks-content padding here so chips don't slam the
      viewport edge, and drop the rounded borders on the template + pool
      so they read as edge-to-edge zones rather than nested cards. */
-  .fb-blocks {
+  .libre-blocks {
     padding: 12px 8px;
   }
 
@@ -492,8 +492,8 @@
      pool tray) is preserved; the borders + radii are what made it
      read as "card inside a card". Hairline borders on top + bottom
      stay so separation between zones survives. */
-  .fb-blocks__template,
-  .fb-blocks__pool {
+  .libre-blocks__template,
+  .libre-blocks__pool {
     border-left: 0;
     border-right: 0;
     border-radius: 0;
@@ -503,12 +503,12 @@
      code lines have more usable width. Vertical padding unchanged
      so line-height + breathing room around the chips stay
      comfortable. */
-  .fb-blocks__template {
+  .libre-blocks__template {
     padding-left: 12px;
     padding-right: 12px;
   }
 
-  .fb-blocks__pool {
+  .libre-blocks__pool {
     padding: 10px 12px;
   }
 }

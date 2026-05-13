@@ -155,11 +155,11 @@ export function QrScanner({ onResult, onCancel, title, hint }: Props) {
   }, [onResult]);
 
   return (
-    <div className="fb-qr-scanner" role="dialog" aria-label="Scan QR code">
-      <div className="fb-qr-scanner__viewport">
+    <div className="libre-qr-scanner" role="dialog" aria-label="Scan QR code">
+      <div className="libre-qr-scanner__viewport">
         <video
           ref={videoRef}
-          className={`fb-qr-scanner__video${ready ? " is-ready" : ""}`}
+          className={`libre-qr-scanner__video${ready ? " is-ready" : ""}`}
           playsInline
           muted
           aria-hidden
@@ -167,26 +167,26 @@ export function QrScanner({ onResult, onCancel, title, hint }: Props) {
         {/* Offscreen canvas — never displayed, only used by jsqr
             for pixel access. Hidden via CSS rather than
             display:none so the 2D context stays mountable. */}
-        <canvas ref={canvasRef} className="fb-qr-scanner__canvas" aria-hidden />
-        <div className="fb-qr-scanner__viewfinder" aria-hidden>
-          <div className="fb-qr-scanner__corner fb-qr-scanner__corner--tl" />
-          <div className="fb-qr-scanner__corner fb-qr-scanner__corner--tr" />
-          <div className="fb-qr-scanner__corner fb-qr-scanner__corner--bl" />
-          <div className="fb-qr-scanner__corner fb-qr-scanner__corner--br" />
+        <canvas ref={canvasRef} className="libre-qr-scanner__canvas" aria-hidden />
+        <div className="libre-qr-scanner__viewfinder" aria-hidden>
+          <div className="libre-qr-scanner__corner libre-qr-scanner__corner--tl" />
+          <div className="libre-qr-scanner__corner libre-qr-scanner__corner--tr" />
+          <div className="libre-qr-scanner__corner libre-qr-scanner__corner--bl" />
+          <div className="libre-qr-scanner__corner libre-qr-scanner__corner--br" />
         </div>
       </div>
 
-      <div className="fb-qr-scanner__chrome">
-        <div className="fb-qr-scanner__title">{title ?? "Scan a QR code"}</div>
-        {hint && <div className="fb-qr-scanner__hint">{hint}</div>}
+      <div className="libre-qr-scanner__chrome">
+        <div className="libre-qr-scanner__title">{title ?? "Scan a QR code"}</div>
+        {hint && <div className="libre-qr-scanner__hint">{hint}</div>}
         {error && (
-          <div className="fb-qr-scanner__error" role="alert">
+          <div className="libre-qr-scanner__error" role="alert">
             {error}
           </div>
         )}
         <button
           type="button"
-          className="fb-qr-scanner__cancel"
+          className="libre-qr-scanner__cancel"
           onClick={onCancel}
         >
           {error ? "Close" : "Cancel"}

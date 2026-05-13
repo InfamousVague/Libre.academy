@@ -37,7 +37,7 @@ export interface TabGroup {
   id: string;
   name: string;
   /// Token reference into the group-colour palette (see TopBar.css's
-  /// `--fb-tab-group-color-*` definitions). Stored as the token's
+  /// `--libre-tab-group-color-*` definitions). Stored as the token's
   /// suffix ("gold", "coral", "mint", "sky", "lavender") rather than
   /// a hex so a theme swap re-tints groups without re-saving state.
   colorToken: string;

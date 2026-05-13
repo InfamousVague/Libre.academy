@@ -40,13 +40,13 @@ interface TourManifest {
 /// straight into the output, so the file ends up at
 /// `<base>/tour-audio/manifest.json`. We compose the URL from
 /// Vite's `import.meta.env.BASE_URL` (which is `/` for the
-/// desktop / Tauri build, `/learn/` for the libre.academy
-/// embed, `/fishbones/learn/` for the legacy mattssoftware embed)
-/// so the same code works under every base path. Hardcoding the
-/// root-absolute `/tour-audio/manifest.json` previously made the
-/// embed surface fall through to the marketing site's SPA
-/// fallback (`try_files /index.html`), which returns the academy
-/// homepage's HTML — the hook then sees `Content-Type: text/html`,
+/// desktop / Tauri build and `/learn/` for the libre.academy
+/// embed) so the same code works under every base path.
+/// Hardcoding the root-absolute `/tour-audio/manifest.json`
+/// previously made the embed surface fall through to the
+/// marketing site's SPA fallback (`try_files /index.html`),
+/// which returns the academy homepage's HTML — the hook then
+/// sees `Content-Type: text/html`,
 /// the JSON parse guard rejects, and tour audio silently fails.
 ///
 /// `BASE_URL` always ends with a `/`, so concatenating without a

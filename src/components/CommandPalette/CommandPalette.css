@@ -20,7 +20,7 @@
   padding-left: 16px;
   padding-right: 16px;
   /* Quick fade-in so the palette doesn't pop. */
-  animation: libre-cmdpal-fade-in var(--fb-motion-quick)-out;
+  animation: libre-cmdpal-fade-in var(--libre-motion-quick)-out;
 }
 
 @keyframes libre-cmdpal-fade-in {
@@ -34,7 +34,7 @@
   max-height: min(70vh, 540px);
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-lg);
+  border-radius: var(--libre-radius-lg);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;

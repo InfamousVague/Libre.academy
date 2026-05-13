@@ -7,7 +7,7 @@ import { nodePolyfills } from "vite-plugin-node-polyfills";
 const host = process.env.TAURI_DEV_HOST;
 
 // Build-target switch — desktop (Tauri shell, default) vs web
-// (static-hosted at mattssoftware.com/play). Set via LIBRE_TARGET
+// (static-hosted under `libre.academy/learn/`). Set via LIBRE_TARGET
 // env var; threaded into the bundle through `define` so
 // `import.meta.env.LIBRE_TARGET` resolves at compile time and
 // Rollup can dead-code-eliminate the wrong branch from each variant.
@@ -23,14 +23,12 @@ const isWebBuild = target === "web";
 // Public base path for the web build — where the bundle's assets
 // expect to be served from. Different consumers want different
 // values:
-//   /fishbones/learn/  ← mattssoftware.com (legacy embed at that path)
-//   /learn/            ← libre.academy (the new product domain)
-//   /                  ← any other host that mounts the app at root
+//   /learn/   ← libre.academy (the canonical embed path)
+//   /         ← any other host that mounts the app at root
 //
-// Override at build time with LIBRE_BASE; falls back to the
-// mattssoftware path for backward compatibility (existing
-// build:web invocations don't need to change).
-const webBase = (process.env.LIBRE_BASE || "/fishbones/learn/").replace(
+// Override at build time with LIBRE_BASE; defaults to `/learn/` so
+// existing `npm run build:web` invocations don't need to change.
+const webBase = (process.env.LIBRE_BASE || "/learn/").replace(
   /\/?$/,
   "/",
 );
@@ -91,7 +89,7 @@ export default defineConfig(async () => ({
       protocolImports: false,
     }),
   ],
-  // Web build deploys under `mattssoftware.com/fishbones/learn/`, so
+  // Web build deploys under `libre.academy/learn/`, so
   // every emitted asset URL needs that prefix. Desktop ships at the
   // webview's root (`tauri://...`) so an empty base is correct
   // there. Vite's `import.meta.env.BASE_URL` reflects this and is

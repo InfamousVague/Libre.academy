@@ -26,6 +26,7 @@ import { volumeX } from "@base/primitives/icon/icons/volume-x";
 import "@base/primitives/icon/icon.css";
 import type { TourStep } from "./tourSteps";
 import { useTourAudio } from "./useTourAudio";
+import { useT } from "../../i18n/i18n";
 import "./Tour.css";
 
 interface TourProps {
@@ -69,6 +70,7 @@ export function Tour({
   onStepChange,
   onComplete,
 }: TourProps) {
+  const t = useT();
   const [currentStep, setCurrentStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [ready, setReady] = useState(false);
@@ -247,14 +249,14 @@ export function Tour({
   const audioPct = Math.max(0, Math.min(1, audio.progress)) * 100;
 
   return (
-    <div className="fb-tour" role="dialog" aria-label="Guided tour">
+    <div className="libre-tour" role="dialog" aria-label={t("tour.ariaLabel")}>
       {/* Constant dimmed backdrop. The mask cuts a hole around the
           spotlight rect so the actual UI shows through, drawing the
           eye to the called-out element. */}
-      <div className="fb-tour__backdrop" onClick={dismiss}>
+      <div className="libre-tour__backdrop" onClick={dismiss}>
         {spotlightRect ? (
           <div
-            className="fb-tour__backdrop-mask"
+            className="libre-tour__backdrop-mask"
             style={{
               maskImage:
                 "linear-gradient(#000 0 0), linear-gradient(#000 0 0)",
@@ -271,13 +273,13 @@ export function Tour({
             }}
           />
         ) : (
-          <div className="fb-tour__backdrop-full" />
+          <div className="libre-tour__backdrop-full" />
         )}
       </div>
 
       {spotlightRect && (
         <div
-          className="fb-tour__spotlight"
+          className="libre-tour__spotlight"
           style={{
             top: spotlightRect.top,
             left: spotlightRect.left,
@@ -291,13 +293,13 @@ export function Tour({
       {ready && (
         <div
           key={currentStep}
-          className="fb-tour__tooltip"
+          className="libre-tour__tooltip"
           style={tooltipStyle}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="fb-tour__progress-bar">
+          <div className="libre-tour__progress-bar">
             <div
-              className="fb-tour__progress-fill"
+              className="libre-tour__progress-fill"
               style={{ width: `${progressPct}%` }}
             />
             {/* Audio sub-progress — only visible while the step's
@@ -306,26 +308,26 @@ export function Tour({
                 cluttering the UI when audio is muted / unavailable. */}
             {audio.available && (
               <div
-                className="fb-tour__progress-audio"
+                className="libre-tour__progress-audio"
                 style={{ width: `${audioPct}%` }}
               />
             )}
           </div>
 
-          <div className="fb-tour__header">
+          <div className="libre-tour__header">
             <div
-              className="fb-tour__icon"
+              className="libre-tour__icon"
               style={{ background: `${step.iconColor}1a` }}
             >
               <span style={{ color: step.iconColor }}>
                 <Icon icon={step.icon} size="base" color="currentColor" />
               </span>
             </div>
-            <div className="fb-tour__header-text">
-              <div className="fb-tour__step-label">
-                Step {currentStep + 1} of {steps.length}
+            <div className="libre-tour__header-text">
+              <div className="libre-tour__step-label">
+                {t("tour.stepOfTotal", { current: currentStep + 1, total: steps.length })}
               </div>
-              <div className="fb-tour__title">{step.title}</div>
+              <div className="libre-tour__title">{step.title}</div>
             </div>
             {/* Mute / unmute the narration. Persists across steps but
                 NOT across tour sessions — re-opening the tour starts
@@ -335,7 +337,7 @@ export function Tour({
             {audio.available && (
               <button
                 type="button"
-                className="fb-tour__mute"
+                className="libre-tour__mute"
                 onClick={() => {
                   setMuted((m) => {
                     const next = !m;
@@ -344,8 +346,8 @@ export function Tour({
                     return next;
                   });
                 }}
-                aria-label={muted ? "Unmute narration" : "Mute narration"}
-                title={muted ? "Unmute narration" : "Mute narration"}
+                aria-label={muted ? t("tour.unmute") : t("tour.mute")}
+                title={muted ? t("tour.unmute") : t("tour.mute")}
               >
                 <Icon
                   icon={muted ? volumeX : volume2}
@@ -356,37 +358,37 @@ export function Tour({
             )}
           </div>
 
-          <div className="fb-tour__body">{step.body}</div>
+          <div className="libre-tour__body">{step.body}</div>
 
-          <div className="fb-tour__dots" aria-hidden>
+          <div className="libre-tour__dots" aria-hidden>
             {steps.map((_, i) => (
               <span
                 key={i}
                 className={
-                  "fb-tour__dot" +
-                  (i === currentStep ? " fb-tour__dot--active" : "") +
-                  (i < currentStep ? " fb-tour__dot--done" : "")
+                  "libre-tour__dot" +
+                  (i === currentStep ? " libre-tour__dot--active" : "") +
+                  (i < currentStep ? " libre-tour__dot--done" : "")
                 }
               />
             ))}
           </div>
 
-          <div className="fb-tour__footer">
+          <div className="libre-tour__footer">
             <button
               type="button"
-              className="fb-tour__btn fb-tour__btn--ghost"
+              className="libre-tour__btn libre-tour__btn--ghost"
               onClick={dismiss}
             >
-              Skip tour
+              {t("tour.skip")}
             </button>
-            <div className="fb-tour__actions">
+            <div className="libre-tour__actions">
               {audio.available && (
                 <button
                   type="button"
-                  className="fb-tour__btn fb-tour__btn--ghost fb-tour__btn--icon"
+                  className="libre-tour__btn libre-tour__btn--ghost libre-tour__btn--icon"
                   onClick={() => (audio.isPlaying ? audio.pause() : audio.play())}
-                  aria-label={audio.isPlaying ? "Pause narration" : "Play narration"}
-                  title={audio.isPlaying ? "Pause narration" : "Play narration"}
+                  aria-label={audio.isPlaying ? t("tour.pause") : t("tour.play")}
+                  title={audio.isPlaying ? t("tour.pause") : t("tour.play")}
                 >
                   <Icon
                     icon={audio.isPlaying ? pauseIcon : playIcon}
@@ -398,18 +400,18 @@ export function Tour({
               {currentStep > 0 && (
                 <button
                   type="button"
-                  className="fb-tour__btn fb-tour__btn--ghost"
+                  className="libre-tour__btn libre-tour__btn--ghost"
                   onClick={prev}
                 >
-                  Back
+                  {t("tour.back")}
                 </button>
               )}
               <button
                 type="button"
-                className="fb-tour__btn fb-tour__btn--primary"
+                className="libre-tour__btn libre-tour__btn--primary"
                 onClick={next}
               >
-                {currentStep === steps.length - 1 ? "Finish" : "Next"}
+                {currentStep === steps.length - 1 ? t("tour.finish") : t("tour.next")}
               </button>
             </div>
           </div>

@@ -5,7 +5,7 @@
   max-height: 86vh;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-lg);
+  border-radius: var(--libre-radius-lg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -103,13 +103,13 @@
   padding: 8px 12px;
   background: transparent;
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   color: var(--color-text-secondary);
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: background var(--fb-motion-snappy), border-color var(--fb-motion-snappy), color var(--fb-motion-snappy);
+  transition: background var(--libre-motion-snappy), border-color var(--libre-motion-snappy), color var(--libre-motion-snappy);
 }
 
 .libre-genpack-lang-btn:hover:not(:disabled) {
@@ -155,11 +155,11 @@
   padding: 10px 12px;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   cursor: pointer;
   font-family: inherit;
   color: var(--color-text-primary);
-  transition: border-color var(--fb-motion-snappy), background var(--fb-motion-snappy);
+  transition: border-color var(--libre-motion-snappy), background var(--libre-motion-snappy);
 }
 
 .libre-genpack-model:hover {
@@ -187,7 +187,7 @@
   padding: 12px 14px;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -233,7 +233,7 @@
   font-size: 12.5px;
   font-weight: 500;
   cursor: pointer;
-  transition: background var(--fb-motion-snappy), border-color var(--fb-motion-snappy), color var(--fb-motion-snappy);
+  transition: background var(--libre-motion-snappy), border-color var(--libre-motion-snappy), color var(--libre-motion-snappy);
 }
 
 .libre-genpack-btn:hover {

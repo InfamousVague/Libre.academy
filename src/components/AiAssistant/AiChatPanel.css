@@ -5,16 +5,13 @@
 
 .libre-ai-panel {
   position: fixed;
-  /* Anchor sits clear of the orb's top edge with breathing room.
-     Orb button is 96×96 (bumped from the original 52px so the
-     larger DNA helix has room) anchored at `bottom: 20px`. Orb's
-     top edge is therefore at `96 + 20 = 116px` from screen bottom.
-     Add 16px breathing room so the panel's bottom rim doesn't
-     visually butt up against the helix. Total: 132px. Re-do the
-     maths here if the orb size or its `bottom` anchor changes
-     again — these constants flow into the `top` / `height`
-     calculations below too. */
-  bottom: calc(96px + 20px + 16px);
+  /* Anchor just above the AI orb. Geometry:
+       orb-height (52px) + orb-bottom-anchor (20px) + breathing
+       gap (8px) = 80px
+     Re-do the maths here AND in the `.libre-ai-host--floating`
+     wrapper rule in `TrayPanel.css` (sibling positioner) if the
+     orb size or its `bottom` anchor changes. */
+  bottom: 80px;
   right: 20px;
   /* Use both `top` AND `bottom` to give the panel a *definite*
      height (capped by the viewport on small screens). Without a
@@ -22,14 +19,19 @@
      a real overflow target — the scrollbar appears in DOM but the
      wheel doesn't have a constrained surface to scroll, which is
      exactly the "I can't scroll the history" symptom. */
-  top: max(14px, calc(100vh - 96px - 20px - 16px - min(620px, 80vh)));
-  height: min(620px, calc(100vh - 96px - 20px - 16px - 14px));
-  width: 380px;
+  top: max(14px, calc(100vh - 80px - min(720px, 90vh)));
+  height: min(720px, calc(100vh - 80px - 14px));
+  /* Default to a comfortable reading width. Agent mode bumps this
+     to 560px via the `.libre-ai-panel--agent` modifier below —
+     code dumps + per-file write chips need the room and 380 was
+     leaving the user with a vertically-stacked ribbon of
+     half-broken lines. */
+  width: 420px;
   max-width: calc(100vw - 28px);
   z-index: 91;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-lg);
+  border-radius: var(--libre-radius-lg);
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.38);
   display: flex;
   flex-direction: column;
@@ -48,6 +50,24 @@
   transform: translateY(0) scale(1);
   opacity: 1;
   pointer-events: auto;
+}
+
+/* Agent-mode is wider — tool result chips, per-file write
+   pills, and the inline assistant code summaries don't read at
+   380px. We also bump the height a touch since agent runs
+   tend to produce longer scrollback. */
+.libre-ai-panel--agent {
+  width: 580px;
+  max-width: calc(100vw - 28px);
+}
+
+/* On a narrow viewport (< 680px wide) we drop back to the
+   default chat width — past that point, eating 580px of horizontal
+   space starts to crowd out whatever the user is editing. */
+@media (max-width: 680px) {
+  .libre-ai-panel--agent {
+    width: calc(100vw - 28px);
+  }
 }
 
 /* ---- Header ---------------------------------------------------- */
@@ -500,4 +520,735 @@
 .libre-ai-panel-send:disabled {
   opacity: 0.35;
   cursor: not-allowed;
+}
+
+/* ── Agent mode: tool-call chips + breadcrumbs ────────────────────
+   Rendered inline between message bubbles by `AiAgentPanel`. Each
+   chip is one tool call — name on the left, truncated args / result
+   preview on the right, status colour via the OK / FAIL variant.
+   Pending chips additionally render Allow / Deny buttons. */
+
+.libre-ai-tool-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  margin: 4px 0;
+  background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.10));
+  border-radius: 8px;
+  font-size: 11.5px;
+  color: var(--color-text-secondary, #b0b0b8);
+  /* Tool calls aren't conversational — quieter than message bubbles
+     so they read as structural side-info. */
+}
+
+.libre-ai-tool-chip--ok {
+  border-color: rgba(86, 201, 138, 0.45);
+  background: rgba(86, 201, 138, 0.08);
+  color: var(--color-text-primary);
+}
+
+.libre-ai-tool-chip--fail {
+  border-color: rgba(220, 95, 95, 0.45);
+  background: rgba(220, 95, 95, 0.08);
+  color: var(--color-text-primary);
+}
+
+.libre-ai-tool-chip--pending {
+  border-color: var(--color-accent, #d4863a);
+  background: color-mix(in srgb, var(--color-accent, #d4863a) 12%, transparent);
+  color: var(--color-text-primary);
+}
+
+/* `running` state — the user clicked Allow and the tool is in
+   flight. Slightly more saturated background + pulsing border so
+   the chip reads as "active, please wait" rather than the calm
+   "approved, persisting" state. The icon also spins (see the
+   `--spin` modifier below) and a `running…` label appears in the
+   right cluster. */
+.libre-ai-tool-chip--running {
+  border-color: color-mix(in srgb, var(--color-accent, #d4863a) 60%, transparent);
+  background: color-mix(in srgb, var(--color-accent, #d4863a) 18%, transparent);
+  animation: libre-ai-tool-running-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes libre-ai-tool-running-pulse {
+  0%,
+  100% {
+    border-color: color-mix(in srgb, var(--color-accent, #d4863a) 60%, transparent);
+  }
+  50% {
+    border-color: color-mix(in srgb, var(--color-accent, #d4863a) 100%, transparent);
+  }
+}
+
+/* Spinning icon for the running state — replaces the bold static
+   hammer with a slow rotate so the chip reads as "doing work".
+   transform-origin defaults to centre which is what we want for
+   the icon glyph. */
+.libre-ai-tool-chip-icon--spin {
+  animation: libre-ai-tool-icon-spin 1.6s linear infinite;
+}
+
+@keyframes libre-ai-tool-icon-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* `running…` text label that sits between the chip's argument
+   preview and the (now-absent) action buttons. Tabular-figure
+   font so the trailing ellipsis doesn't jitter as the chip's
+   width animates. */
+.libre-ai-tool-chip-status {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--color-accent, #d4863a) 80%, var(--color-text-primary));
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* Inline file-write breadcrumb — fired by `useSandboxStreamWriter`
+   as the agent's fenced ```lang:path blocks stream in. Renders
+   as a compact pill in the agent panel's message stream so the
+   user sees per-file progress without having to context-switch
+   to the sandbox view. The `--writing` modifier shows a pulsing
+   chevron while the file is mid-stream; `--done` swaps to a
+   check once the closing fence arrives. */
+.libre-ai-file-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  margin: 4px 0;
+  border: 1px solid var(--color-border-default);
+  border-radius: 999px;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+  width: fit-content;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.libre-ai-file-chip--writing {
+  border-color: color-mix(in srgb, var(--color-accent, #d4863a) 50%, transparent);
+  background: color-mix(in srgb, var(--color-accent, #d4863a) 8%, var(--color-bg-secondary));
+}
+
+.libre-ai-file-chip--done {
+  border-color: color-mix(in srgb, #7cd97c 50%, transparent);
+  background: color-mix(in srgb, #7cd97c 6%, var(--color-bg-secondary));
+}
+
+.libre-ai-file-chip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.libre-ai-file-chip--writing .libre-ai-file-chip-icon {
+  color: var(--color-accent, #d4863a);
+  animation: libre-ai-tool-icon-spin 1.6s linear infinite;
+}
+
+.libre-ai-file-chip--done .libre-ai-file-chip-icon {
+  color: #7cd97c;
+}
+
+.libre-ai-file-chip-path {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.libre-ai-file-chip-bytes {
+  font-size: 10.5px;
+  color: var(--color-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Stack of file-write chips. Vertical layout — newest at the
+   bottom, matching the chat scroll's chronology. Small gap so
+   the chips read as a list of separate "files in flight" rather
+   than a single dense ribbon. */
+.libre-ai-file-chip-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 6px 0;
+}
+
+/* Long-running run banner. Mounted while `run_sandbox_project`
+   is in flight — same chrome family as the file chips, just a
+   different accent (cyan/teal so the user can pattern-match
+   "this is the runtime working" vs the orange tool-chip running
+   state). The ::before spinner is a CSS-only ring so we don't
+   need to ship another spinning icon. */
+.libre-ai-run-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  margin: 6px 0;
+  border: 1px solid color-mix(in srgb, #7fc8ff 40%, transparent);
+  background: color-mix(in srgb, #7fc8ff 8%, var(--color-bg-secondary));
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--color-text-primary);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  width: fit-content;
+  animation: libre-ai-run-banner-pulse 2s ease-in-out infinite;
+}
+
+@keyframes libre-ai-run-banner-pulse {
+  0%,
+  100% {
+    border-color: color-mix(in srgb, #7fc8ff 40%, transparent);
+  }
+  50% {
+    border-color: color-mix(in srgb, #7fc8ff 80%, transparent);
+  }
+}
+
+.libre-ai-run-banner-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, #7fc8ff 30%, transparent);
+  border-top-color: #7fc8ff;
+  animation: libre-ai-tool-icon-spin 0.9s linear infinite;
+  flex-shrink: 0;
+}
+
+.libre-ai-run-banner-text strong {
+  color: color-mix(in srgb, #7fc8ff 80%, var(--color-text-primary));
+  font-weight: 700;
+}
+
+.libre-ai-tool-chip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.libre-ai-tool-chip-name {
+  font-weight: 600;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.libre-ai-tool-chip-preview {
+  flex: 1;
+  min-width: 0;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 10.5px;
+  color: var(--color-text-tertiary, #888);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.libre-ai-tool-chip-actions {
+  display: inline-flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.libre-ai-tool-chip-btn {
+  padding: 3px 10px;
+  border-radius: 5px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--color-border-default);
+  background: transparent;
+  color: var(--color-text-primary);
+  transition: background 100ms ease, border-color 100ms ease;
+}
+
+.libre-ai-tool-chip-btn--ok {
+  background: var(--color-accent, #d4863a);
+  color: var(--color-bg-primary);
+  border-color: var(--color-accent, #d4863a);
+}
+
+.libre-ai-tool-chip-btn--ok:hover {
+  opacity: 0.9;
+}
+
+.libre-ai-tool-chip-btn--deny:hover {
+  background: rgba(220, 95, 95, 0.15);
+  border-color: rgba(220, 95, 95, 0.45);
+}
+
+/* "thinking…" breadcrumb shown while the agent is mid-turn —
+   either waiting on the first streaming token or executing a
+   pure tool-call turn with no visible text. Pairs with an
+   animated three-dot pulse so the user has a visible "this is
+   still running" affordance instead of a blank card. */
+.libre-ai-agent-breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  margin: 4px 0;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 999px;
+  align-self: flex-start;
+}
+
+.libre-ai-agent-breadcrumb-dots {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.libre-ai-agent-breadcrumb-dots span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.4;
+  animation: libre-ai-agent-breadcrumb-pulse 1.1s ease-in-out infinite;
+}
+
+.libre-ai-agent-breadcrumb-dots span:nth-child(2) {
+  animation-delay: 0.18s;
+}
+.libre-ai-agent-breadcrumb-dots span:nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+@keyframes libre-ai-agent-breadcrumb-pulse {
+  0%,
+  60%,
+  100% {
+    opacity: 0.4;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+/* ── Chat / Agent mode toggle pill ──────────────────────────────
+   Floats above the panel header at the same horizontal anchor
+   the panel uses (right edge of viewport). Tucks JUST above the
+   panel's top edge so the user can see both controls at the same
+   eye-line. */
+.libre-ai-mode-toggle {
+  position: fixed;
+  /* Same math the panel uses for its top edge (panel-bottom +
+     panel-height + a small gap). Panel bottom is 80px (orb-
+     height 52 + orb-bottom-anchor 20 + 8 gap), so the toggle
+     lands at 80 + panel-height + 6px gap. */
+  bottom: calc(80px + min(620px, 80vh) + 6px);
+  right: 20px;
+  z-index: 92;
+  display: inline-flex;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 999px;
+  padding: 2px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+.libre-ai-mode-toggle-btn {
+  padding: 4px 12px;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: background 100ms ease, color 100ms ease;
+}
+
+.libre-ai-mode-toggle-btn:hover {
+  color: var(--color-text-primary);
+}
+
+.libre-ai-mode-toggle-btn.is-active {
+  background: var(--color-text-primary);
+  color: var(--color-bg-primary);
+}
+
+/* ── Agent: scope chip ───────────────────────────────────────────
+   Slim header row directly under the panel title. Renders only
+   when the scope has restrictions (active project, allow-list,
+   read-only paths, etc.). Communicates "the agent is restricted"
+   without spending much vertical real estate. */
+.libre-ai-panel-scope {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--color-border-default);
+  background: color-mix(in srgb, var(--color-accent, #d4863a) 8%, transparent);
+  color: var(--color-text-secondary);
+  font-size: 11.5px;
+}
+
+.libre-ai-panel-scope-text {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.libre-ai-panel-scope-clear {
+  padding: 2px 8px;
+  background: transparent;
+  border: 1px solid var(--color-border-default);
+  border-radius: 4px;
+  font: inherit;
+  font-size: 10.5px;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+}
+
+.libre-ai-panel-scope-clear:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-border-strong);
+}
+
+/* Active state on the "Tools · N" toggle button in the header. */
+.libre-ai-panel-reset.is-active {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+/* ── Agent: live preview pane ────────────────────────────────────
+   Inline iframe at the bottom of the panel showing whatever URL
+   the agent most recently produced. Sized to ~220px tall so it
+   doesn't dominate the chat scrollback, with a header carrying
+   the source-tool name + open-in-new-window + close. */
+.libre-ai-panel-preview {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  border-top: 1px solid var(--color-border-default);
+  background: var(--color-bg-primary);
+  max-height: 240px;
+}
+
+.libre-ai-panel-preview-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.libre-ai-panel-preview-title {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.libre-ai-panel-preview-open,
+.libre-ai-panel-preview-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.libre-ai-panel-preview-open:hover,
+.libre-ai-panel-preview-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-primary);
+}
+
+.libre-ai-panel-preview-frame {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  border: 0;
+  background: #fff;
+}
+
+.libre-ai-panel-preview-restore {
+  display: block;
+  width: 100%;
+  padding: 6px 12px;
+  background: var(--color-bg-tertiary);
+  border: 0;
+  border-top: 1px solid var(--color-border-default);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.libre-ai-panel-preview-restore:hover {
+  color: var(--color-text-primary);
+}
+
+/* ── Agent: console pane ──────────────────────────────────────
+   Shows the latest run's logs + error output. Sits below the
+   preview (if there is one) or in the preview's place for CLI
+   runs that don't produce a previewUrl. Mono font + dark
+   surface to read as a real terminal output panel, not a
+   chat-message follow-up. */
+.libre-ai-panel-console {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  border-top: 1px solid var(--color-border-default);
+  background: var(--color-code-surface, #1e1e1e);
+  color: var(--color-text-primary);
+  max-height: 220px;
+}
+
+.libre-ai-panel-console--errored {
+  border-top-color: rgba(220, 95, 95, 0.45);
+}
+
+.libre-ai-panel-console-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border-default);
+  font-size: 11px;
+}
+
+.libre-ai-panel-console-title {
+  flex: 1;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  font-size: 10px;
+}
+
+.libre-ai-panel-console--errored .libre-ai-panel-console-title {
+  color: rgb(240, 130, 130);
+}
+
+.libre-ai-panel-console-meta {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 10.5px;
+  color: var(--color-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.libre-ai-panel-console-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 12px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.libre-ai-panel-console-empty {
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}
+
+.libre-ai-panel-console-line {
+  margin: 0 0 2px;
+}
+
+.libre-ai-panel-console-text {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font: inherit;
+  color: inherit;
+}
+
+/* Level color coding — info stays default, warn is amber, error
+   is red. Same hues the workbench OutputPane uses so the two
+   consoles read as the same vocabulary. */
+.libre-ai-panel-console-line--warn .libre-ai-panel-console-text {
+  color: #e8c46b;
+}
+
+.libre-ai-panel-console-line--error .libre-ai-panel-console-text {
+  color: #ef6f6f;
+}
+
+/* Error block: rendered separately from logs because runtime
+   errors (panic, exception, compile failure) carry stack traces
+   that benefit from a visible bordered container. */
+.libre-ai-panel-console-error {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 4px;
+  border-left: 3px solid rgba(220, 95, 95, 0.7);
+  background: rgba(220, 95, 95, 0.08);
+}
+
+.libre-ai-panel-console-error-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: rgb(240, 130, 130);
+  margin-bottom: 4px;
+}
+
+.libre-ai-panel-console-error-text {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font: inherit;
+  color: rgb(255, 180, 180);
+}
+
+/* ── Agent: tool-call timeline drawer ────────────────────────────
+   Slides up from the bottom of the panel (above the composer).
+   Lists every tool call from the current agent run with full
+   JSON for debugging — each entry is a <details> so heavy results
+   stay collapsed until the user wants them. */
+.libre-ai-panel-drawer {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  max-height: 280px;
+  border-top: 1px solid var(--color-border-default);
+  background: var(--color-bg-secondary);
+}
+
+.libre-ai-panel-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.libre-ai-panel-drawer-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+}
+
+.libre-ai-panel-drawer-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-primary);
+}
+
+.libre-ai-panel-drawer-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.libre-ai-panel-drawer-empty {
+  padding: 12px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
+.libre-ai-panel-drawer-entry {
+  border: 1px solid var(--color-border-default);
+  border-radius: 6px;
+  background: var(--color-bg-primary);
+}
+
+.libre-ai-panel-drawer-entry-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.libre-ai-panel-drawer-entry-head::-webkit-details-marker {
+  display: none;
+}
+
+.libre-ai-panel-drawer-entry-name {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.libre-ai-panel-drawer-entry-status {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.libre-ai-panel-drawer-entry-head.is-ok .libre-ai-panel-drawer-entry-status {
+  background: rgba(86, 201, 138, 0.18);
+  color: rgb(110, 220, 158);
+}
+
+.libre-ai-panel-drawer-entry-head.is-fail .libre-ai-panel-drawer-entry-status {
+  background: rgba(220, 95, 95, 0.18);
+  color: rgb(245, 130, 130);
+}
+
+.libre-ai-panel-drawer-entry-body {
+  margin: 0;
+  padding: 8px 10px;
+  border-top: 1px solid var(--color-border-default);
+  background: var(--color-bg-inset, #000);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 200px;
+  overflow-y: auto;
 }

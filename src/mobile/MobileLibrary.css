@@ -85,7 +85,7 @@
   display: inline-flex;
   background: var(--color-bg-elevated, #19191d);
   border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.08));
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   padding: 2px;
   gap: 2px;
 }
@@ -98,11 +98,11 @@
   background: transparent;
   border: 0;
   color: var(--color-text-tertiary);
-  border-radius: calc(var(--fb-radius-md) - 2px);
+  border-radius: calc(var(--libre-radius-md) - 2px);
   cursor: pointer;
   font: inherit;
   -webkit-tap-highlight-color: transparent;
-  transition: background var(--fb-motion-quick), color var(--fb-motion-quick);
+  transition: background var(--libre-motion-quick), color var(--libre-motion-quick);
 }
 
 .m-lib__viewbtn--active {
@@ -145,11 +145,11 @@
   background: var(--color-bg-elevated, #19191d);
   border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.08));
   color: var(--color-text-secondary);
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   cursor: pointer;
   font: inherit;
   -webkit-tap-highlight-color: transparent;
-  transition: background var(--fb-motion-quick), color var(--fb-motion-quick);
+  transition: background var(--libre-motion-quick), color var(--libre-motion-quick);
   /* No margin-top here — the parent `.m-lib__head-actions` owns the
      vertical alignment for the whole group (toggle + search). */
 }
@@ -185,14 +185,14 @@
   padding: 7px 12px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--fb-radius-pill);
+  border-radius: var(--libre-radius-pill);
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text-secondary);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   white-space: nowrap;
-  transition: background var(--fb-motion-quick), color var(--fb-motion-quick), border-color var(--fb-motion-quick);
+  transition: background var(--libre-motion-quick), color var(--libre-motion-quick), border-color var(--libre-motion-quick);
 }
 
 .m-lib__pill:active {
@@ -337,7 +337,7 @@
   background-color: var(--color-bg-secondary);
   background-size: cover;
   background-position: center;
-  border-radius: var(--fb-radius-md);
+  border-radius: var(--libre-radius-md);
   border: 1px solid var(--color-border-default);
   overflow: hidden;
   /* Subtle inset shadow gives the cover that printed-page feel. */

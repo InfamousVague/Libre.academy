@@ -1,5 +1,7 @@
-import { type ReactNode, type MouseEvent } from "react";
+import { type ReactNode, type MouseEvent, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useEscapeKey } from "../../hooks/useEscapeKey";
+import { fireHaptic } from "../../lib/haptics";
 import "./ModalBackdrop.css";
 
 interface Props {
@@ -44,16 +46,49 @@ export default function ModalBackdrop({
 }: Props) {
   useEscapeKey(onDismiss, closeOnEscape);
 
+  // Light impact on every modal MOUNT. Centralised here so every
+  // dialog in the app (sign-in, course settings, achievement
+  // unlock modal, etc.) gets a uniform "something just opened"
+  // tactile cue without having to wire haptics per consumer.
+  // Skips the haptic if the modal opens immediately on app
+  // launch — the throttle in the engine handles repeated mounts.
+  useEffect(() => {
+    void fireHaptic("impact-light");
+  }, []);
+
   const stop = (e: MouseEvent) => {
     e.stopPropagation();
   };
 
-  const cls = className ? `fb-modal-backdrop ${className}` : "fb-modal-backdrop";
-  return (
+  const cls = className ? `libre-modal-backdrop ${className}` : "libre-modal-backdrop";
+
+  // Portal to `document.body` so the backdrop ALWAYS occupies the
+  // full viewport. CSS `position: fixed` is normally relative to
+  // the viewport, but an ancestor with `transform`, `filter`,
+  // `backdrop-filter`, or `will-change: transform` creates a new
+  // containing block — and the fixed element becomes anchored to
+  // THAT ancestor instead. The sandbox sidebar has at least one
+  // such ancestor in the chain (the main rail uses `backdrop-
+  // filter` for its frosted-glass surface; popout windows use
+  // transformed wrappers for slide-in transitions). Portaling to
+  // body sidesteps all of those.
+  if (typeof document === "undefined") {
+    // SSR / test fallback — render inline. There's no portal
+    // target in those environments anyway.
+    return (
+      <div className={cls} style={{ zIndex }} onClick={onDismiss}>
+        <div className="libre-modal-backdrop__panel" onClick={stop}>
+          {children}
+        </div>
+      </div>
+    );
+  }
+  return createPortal(
     <div className={cls} style={{ zIndex }} onClick={onDismiss}>
-      <div className="fb-modal-backdrop__panel" onClick={stop}>
+      <div className="libre-modal-backdrop__panel" onClick={stop}>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

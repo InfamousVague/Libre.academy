@@ -26,10 +26,10 @@
     0 6px 14px rgba(0, 0, 0, 0.3),
     0 2px 4px rgba(0, 0, 0, 0.2);
   transition:
-    transform var(--fb-motion-quick),
-    background var(--fb-motion-quick),
-    color var(--fb-motion-quick),
-    border-color var(--fb-motion-quick);
+    transform var(--libre-motion-quick),
+    background var(--libre-motion-quick),
+    color var(--libre-motion-quick),
+    border-color var(--libre-motion-quick);
 }
 
 .libre-phone-toggle-button:hover {

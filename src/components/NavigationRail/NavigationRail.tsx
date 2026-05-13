@@ -1,5 +1,5 @@
 /// Slim icon-only rail to the LEFT of the floating sidebar. Holds the
-/// app's primary navigation (Library / Playground / Discover /
+/// app's primary navigation (Library / Sandbox / Discover /
 /// Practice / Achievements / Tracks / Trees) plus the persistent
 /// footer cluster
 /// (Settings + sidebar toggle).
@@ -24,19 +24,22 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { Icon } from "@base/primitives/icon";
 import { libraryBig } from "@base/primitives/icon/icons/library-big";
 import { compass as compassIcon } from "@base/primitives/icon/icons/compass";
-import { trees as treesIcon } from "@base/primitives/icon/icons/trees";
 import { trainTrack } from "@base/primitives/icon/icons/train-track";
 import { dumbbell } from "@base/primitives/icon/icons/dumbbell";
 import { trophy } from "@base/primitives/icon/icons/trophy";
+import { award } from "@base/primitives/icon/icons/award";
 import { terminal as terminalIcon } from "@base/primitives/icon/icons/terminal";
 import { settings as settingsIcon } from "@base/primitives/icon/icons/settings";
 import { circleHelp } from "@base/primitives/icon/icons/circle-help";
 import { panelLeftClose } from "@base/primitives/icon/icons/panel-left-close";
 import { panelLeftOpen } from "@base/primitives/icon/icons/panel-left-open";
+import { play as playIcon } from "@base/primitives/icon/icons/play";
 import { Tooltip } from "@base/primitives/tooltip";
 import "@base/primitives/icon/icon.css";
 import "@base/primitives/tooltip/tooltip.css";
+import { formatShortcutForTitle } from "../ShortcutHint/ShortcutHint";
 import NotificationDrawer from "./NotificationDrawer";
+import { useT } from "../../i18n/i18n";
 import "./NavigationRail.css";
 
 export interface NavigationRailProps {
@@ -47,24 +50,36 @@ export interface NavigationRailProps {
   activeView?:
     | "courses"
     | "profile"
-    | "playground"
+    | "sandbox"
     | "library"
     | "discover"
-    | "trees"
     | "tracks"
     | "practice"
-    | "achievements";
+    | "achievements"
+    | "certificates";
   onLibrary: () => void;
+  /// Resume-most-recent affordance. When present, surfaces a play
+  /// chip at the very top of the rail (above Library) that drops
+  /// the learner back into the course they touched most recently,
+  /// at the first uncompleted lesson. Hidden when omitted OR when
+  /// `resumeLabel` is empty — the App passes both together (the
+  /// label is the course title, used as the tooltip; both come
+  /// from the same memoised resume-candidate calculation). Keeping
+  /// the resolution in App means the rail stays a dumb renderer.
+  onResume?: () => void;
+  /// Tooltip / aria-label for the resume button — typically the
+  /// course title ("Resume: The Rust Programming Language"). The
+  /// button only renders when both `onResume` AND a non-empty
+  /// label are provided, so a course with no recents shows
+  /// nothing rather than a "Resume —" with a blank line.
+  resumeLabel?: string;
   /// Discover route — browse catalog books + challenge packs not
   /// yet in the user's library. Optional; embeddings without one
   /// just hide the chip.
   onDiscover?: () => void;
-  /// Trees route — skill-tree explorer.
-  onTrees?: () => void;
-  /// Tracks route — curated linear paths through one or more trees.
-  /// Lives next to Trees in the rail because the two affordances
-  /// are complementary: Trees show the prerequisite DAG, Tracks
-  /// show author-curated recipes through it.
+  /// Tracks route — curated linear learning paths. (The Trees
+  /// surface was retired in the 2026-05 redesign; Tracks is now
+  /// the sole "outcome-driven sequence" affordance.)
   onTracks?: () => void;
   /// Practice route — review-mode that resurfaces quizzes and
   /// blocks puzzles from courses the learner has already touched.
@@ -75,8 +90,16 @@ export interface NavigationRailProps {
   /// Achievements route — browse-all surface for the unlock
   /// library. Optional; when omitted the chip just doesn't render.
   onAchievements?: () => void;
-  /// Playground route — free-form coding sandbox.
-  onPlayground?: () => void;
+  /// Certificates route — browse-all surface for course-completion
+  /// certificates. Sits just below Achievements because both
+  /// surfaces are "trophy case" affordances; certificates are the
+  /// more permanent / shareable artefact, so they go second.
+  onCertificates?: () => void;
+  /// Sandbox route — free-form coding workspace with multi-project
+  /// support (per-project file list + language + git later in the
+  /// roadmap). Optional so embeddings that don't ship the sandbox
+  /// can just hide the chip.
+  onSandbox?: () => void;
   onSettings: () => void;
   /// Re-trigger the guided tour (auto-runs on first launch; this
   /// puts a permanent affordance in the rail so a learner who
@@ -130,17 +153,20 @@ function RailItem({ icon, label, onClick, active, pressed }: RailItemProps) {
 export default function NavigationRail({
   activeView,
   onLibrary,
+  onResume,
+  resumeLabel,
   onDiscover,
-  onTrees,
   onTracks,
   onPractice,
   onAchievements,
-  onPlayground,
+  onCertificates,
+  onSandbox,
   onSettings,
   onStartTour,
   onToggleSidebar,
   sidebarCollapsed,
 }: NavigationRailProps) {
+  const t = useT();
   // Sliding-pill indicator: a single absolutely-positioned element
   // animates its `top` between the active rail button's positions
   // rather than the highlight snapping from one button to another.
@@ -177,25 +203,37 @@ export default function NavigationRail({
     // and Trees becomes available) would shift the active button's
     // offset without re-running the effect, leaving the pill
     // misaligned.
-  }, [activeView, onDiscover, onTrees, onTracks, onPractice, onAchievements, onPlayground]);
+  }, [activeView, onDiscover, onTracks, onPractice, onAchievements, onCertificates, onSandbox]);
 
   return (
-    <nav className="libre-nav-rail" aria-label="Primary navigation">
+    <nav className="libre-nav-rail" aria-label={t("nav.primaryNavigation")}>
       <div className="libre-nav-rail__top" ref={topRef}>
         {pillTop !== null && (
           <span
             className="libre-nav-rail__pill"
             style={{ transform: `translateY(${pillTop}px)` }}
             aria-hidden
-          />
+          >
+            {/* Flat accent pill — the iridescent foil treatment is
+                now reserved for certificates + the AI assistant
+                button. The active-route indicator is intentionally
+                quiet so it reads as a state hint rather than a
+                second CTA. */}
+          </span>
         )}
         {/* Order rationale (top → bottom):
+              0. Resume       — when the learner has a course in
+                               recents, the very first chip is a
+                               play button that drops them right
+                               back in. Hidden on first launch
+                               (no recents) and after a deliberate
+                               library teardown.
               1. Library      — the home + most-visited surface
-              2. Playground   — open-ended editor, surfaced near the
-                               top so devs can dive in without first
-                               picking a course
+              2. Sandbox      — open-ended editor + project workspace,
+                               surfaced near the top so devs can dive
+                               in without first picking a course
               3. Discover     — catalog browser; sits next to
-                               Playground because both are entry
+                               Sandbox because both are entry
                                points for "I want to start something"
               4. Practice     — review-mode for cards already opened;
                                middle of the rail because it's a
@@ -203,32 +241,42 @@ export default function NavigationRail({
               5. Achievements — unlock browser; below Practice so
                                the run-of-day affordances cluster
                                above the trophy case
-              6. Tracks       — curated linear paths (less primary
-                               than Library / Practice for the
-                               typical learner)
-              7. Trees        — full skill-DAG; bottom because it's
-                               the deepest / most exploratory affordance,
-                               and Tracks above it hands the learner
-                               a friendlier on-ramp into the same content
+              6. Certificates — permanent / shareable artefacts of
+                               course completion (the more durable
+                               cousin of the Achievements browser)
+              7. Tracks       — curated linear paths anchored at
+                               the bottom of the rail; the
+                               outcome-driven on-ramp for learners
+                               who haven't picked a book yet. (The
+                               Trees skill-DAG surface that used
+                               to live below Tracks was retired in
+                               the 2026-05 redesign.)
         */}
+        {onResume && resumeLabel && (
+          <RailItem
+            icon={playIcon}
+            label={`${t("nav.resumePrefix")} ${resumeLabel}`}
+            onClick={onResume}
+          />
+        )}
         <RailItem
           icon={libraryBig}
-          label="Library"
+          label={t("nav.library")}
           onClick={onLibrary}
           active={activeView === "library"}
         />
-        {onPlayground && (
+        {onSandbox && (
           <RailItem
             icon={terminalIcon}
-            label="Playground"
-            onClick={onPlayground}
-            active={activeView === "playground"}
+            label={t("nav.sandbox")}
+            onClick={onSandbox}
+            active={activeView === "sandbox"}
           />
         )}
         {onDiscover && (
           <RailItem
             icon={compassIcon}
-            label="Discover"
+            label={t("nav.discover")}
             onClick={onDiscover}
             active={activeView === "discover"}
           />
@@ -236,7 +284,7 @@ export default function NavigationRail({
         {onPractice && (
           <RailItem
             icon={dumbbell}
-            label="Practice"
+            label={t("nav.practice")}
             onClick={onPractice}
             active={activeView === "practice"}
           />
@@ -244,25 +292,25 @@ export default function NavigationRail({
         {onAchievements && (
           <RailItem
             icon={trophy}
-            label="Achievements"
+            label={t("nav.achievements")}
             onClick={onAchievements}
             active={activeView === "achievements"}
+          />
+        )}
+        {onCertificates && (
+          <RailItem
+            icon={award}
+            label={t("nav.certificates")}
+            onClick={onCertificates}
+            active={activeView === "certificates"}
           />
         )}
         {onTracks && (
           <RailItem
             icon={trainTrack}
-            label="Tracks"
+            label={t("nav.tracks")}
             onClick={onTracks}
             active={activeView === "tracks"}
-          />
-        )}
-        {onTrees && (
-          <RailItem
-            icon={treesIcon}
-            label="Trees"
-            onClick={onTrees}
-            active={activeView === "trees"}
           />
         )}
       </div>
@@ -279,9 +327,10 @@ export default function NavigationRail({
         {onToggleSidebar && (
           <RailItem
             icon={sidebarCollapsed ? panelLeftOpen : panelLeftClose}
-            label={
-              sidebarCollapsed ? "Show sidebar (⌘\\)" : "Hide sidebar (⌘\\)"
-            }
+            label={formatShortcutForTitle(
+              sidebarCollapsed ? t("nav.showSidebar") : t("nav.hideSidebar"),
+              "app.toggle-sidebar",
+            )}
             onClick={onToggleSidebar}
             pressed={sidebarCollapsed}
           />
@@ -290,13 +339,13 @@ export default function NavigationRail({
         {onStartTour && (
           <RailItem
             icon={circleHelp}
-            label="Take the tour"
+            label={t("nav.takeTour")}
             onClick={onStartTour}
           />
         )}
         <RailItem
           icon={settingsIcon}
-          label="Settings"
+          label={formatShortcutForTitle(t("nav.settings"), "app.settings")}
           onClick={onSettings}
         />
       </div>

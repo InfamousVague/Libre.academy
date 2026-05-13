@@ -126,6 +126,21 @@ pub async fn ai_chat_probe(model_hint: Option<String>) -> ProbeResult {
 pub struct ChatMessage {
     pub role: String,
     pub content: String,
+    /// Tool-use additions, only present on certain message kinds.
+    /// `tool_call_id` + `name` are required when `role == "tool"`
+    /// so Ollama can correlate the result with the call it
+    /// answered. `tool_calls` is what the assistant emits when it
+    /// wants to invoke one or more tools instead of (or alongside)
+    /// writing free-form text. All three fields stay `None` /
+    /// untouched for ordinary `user` / `assistant` text rows so
+    /// the legacy `ai_chat_stream` path serialises the same JSON
+    /// it always did.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_call_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_calls: Option<Vec<ToolCallSpec>>,
 }
 
 #[derive(Debug, Serialize)]
@@ -133,6 +148,103 @@ struct OllamaChatRequest<'a> {
     model: &'a str,
     messages: &'a [ChatMessage],
     stream: bool,
+}
+
+/// Outbound request shape for the agent-turn (non-streaming)
+/// command. Adds the `tools` parameter that the streaming variant
+/// doesn't need. Tools are OpenAI-compatible (name + JSON-schema
+/// parameter object) — Ollama's `/api/chat` endpoint accepts the
+/// same shape verbatim when the underlying model supports tool
+/// calling (Qwen 2.5 Coder, Llama 3.x, Hermes 3, etc.).
+#[derive(Debug, Serialize)]
+struct OllamaAgentRequest<'a> {
+    model: &'a str,
+    messages: &'a [ChatMessage],
+    stream: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tools: Option<&'a serde_json::Value>,
+}
+
+/// Tool-call payload the assistant emits. The `function.arguments`
+/// field is a JSON-encoded STRING (matching the OpenAI shape) —
+/// the frontend parses it before dispatching to the tool handler.
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct ToolCallSpec {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub kind: Option<String>,
+    pub function: ToolFunctionCall,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct ToolFunctionCall {
+    pub name: String,
+    /// Some Ollama builds return `arguments` as a JSON object,
+    /// others as a JSON-encoded string. We deserialise it as a
+    /// `serde_json::Value` and stringify on the way out so the
+    /// frontend always receives the OpenAI-style string form.
+    pub arguments: serde_json::Value,
+}
+
+/// Non-streaming agent-turn response. `tool_calls` is `None` on
+/// terminal turns where the model is just writing text; it's
+/// populated when the model decided to invoke tools instead.
+///
+/// `usage` carries token counts + duration when Ollama reported
+/// them (every modern Ollama build does, going back to ~2024). The
+/// frontend's token-strip reads these to render run totals; older
+/// daemons that omit the field just show a "—" instead.
+#[derive(Debug, Serialize)]
+pub struct AgentTurnResponse {
+    pub content: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_calls: Option<Vec<ToolCallSpec>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub usage: Option<TurnUsage>,
+}
+
+/// Token-usage telemetry for one turn. Field names are
+/// serde-renamed to snake_case so the JS wrapper can read them
+/// without a translation layer.
+#[derive(Debug, Serialize, Default)]
+pub struct TurnUsage {
+    /// Input tokens — `prompt_eval_count` from Ollama's final
+    /// done-line. None on builds that don't report it.
+    pub prompt_tokens: Option<u64>,
+    /// Output tokens — `eval_count`.
+    pub completion_tokens: Option<u64>,
+    /// Total wall-clock duration of this request in milliseconds.
+    /// Sourced from Ollama's `total_duration` (nanoseconds) divided
+    /// by 1e6, falling back to our own `Instant` timer when the
+    /// field is missing.
+    pub total_duration_ms: Option<u64>,
+}
+
+/// One Ollama agent response (non-streaming /api/chat with
+/// `stream: false`). Mirrors the `OllamaChatChunk` shape used by
+/// streaming chat but with `message` always present.
+///
+/// Includes the usage fields Ollama emits on the final response:
+/// `prompt_eval_count`, `eval_count`, `total_duration`. These map
+/// to our `TurnUsage` shape after a divide on the duration.
+#[derive(Debug, Deserialize)]
+struct OllamaAgentChunk {
+    message: OllamaAgentMessage,
+    #[serde(default)]
+    prompt_eval_count: Option<u64>,
+    #[serde(default)]
+    eval_count: Option<u64>,
+    #[serde(default)]
+    total_duration: Option<u64>,
+}
+
+#[derive(Debug, Deserialize)]
+struct OllamaAgentMessage {
+    #[serde(default)]
+    content: String,
+    #[serde(default)]
+    tool_calls: Option<Vec<ToolCallSpec>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -160,13 +272,24 @@ pub async fn ai_chat_stream(
     let model = model.unwrap_or_else(|| DEFAULT_MODEL.to_string());
     let start = Instant::now();
 
-    // 120s per-request ceiling. An Apple Silicon laptop at 8-15 tok/s
-    // will comfortably finish any kata-hint-sized reply in under 60s;
-    // 120 leaves headroom for the 3B→7B model variance on slower
-    // machines while still protecting against an Ollama hang that
-    // would otherwise leak resources.
+    // For a STREAMING request, `reqwest::ClientBuilder::timeout` is
+    // a footgun: it caps the TOTAL request duration including all
+    // streamed reads, so a multi-thousand-token completion that
+    // legitimately takes 3-5 minutes on a 7B model gets killed
+    // mid-stream with a confusing "error decoding response body"
+    // message. We use `connect_timeout` (TCP handshake only) +
+    // `read_timeout` (per-read idle window) instead, which fails
+    // fast on a hung daemon while letting a healthy generation
+    // run to completion.
+    //
+    // - connect_timeout(5s)  → unreachable daemon surfaces in <5s
+    // - read_timeout(60s)    → if Ollama produces no tokens for a
+    //                          full minute, treat as stalled and
+    //                          bail; a healthy run emits tokens at
+    //                          minimum every few hundred ms
     let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(120))
+        .connect_timeout(std::time::Duration::from_secs(5))
+        .read_timeout(std::time::Duration::from_secs(60))
         .build()
         .map_err(|e| format!("client init: {e}"))?;
 
@@ -205,7 +328,10 @@ pub async fn ai_chat_stream(
         let bytes = match chunk {
             Ok(b) => b,
             Err(e) => {
-                let msg = format!("stream read: {e}");
+                // Same classify pattern as the agent path — clear
+                // user-facing message instead of the raw reqwest
+                // string ("error decoding response body" etc.).
+                let msg = classify_reqwest_error(&e);
                 emit_error(&app, &stream_id, &msg);
                 return Err(msg);
             }
@@ -251,6 +377,239 @@ pub async fn ai_chat_stream(
     Ok(())
 }
 
+/// One agent turn — non-streaming. Returns the assistant message
+/// (content + optional tool_calls) so the frontend `useAiAgent`
+/// loop can dispatch tools and re-enter for another turn.
+///
+/// Why non-streaming for tool-using turns:
+///   - The model's tool_calls payload only lands once the response
+///     is complete; streaming would just delay parsing without any
+///     UX win on the intermediate calls.
+///   - The frontend re-renders the tool-call timeline + chips
+///     between turns. Streaming tokens during a tool-using turn
+///     would conflict with that handoff.
+/// The FINAL turn (where the model is producing the text reply,
+/// no more tool calls) can still be streamed via the existing
+/// `ai_chat_stream` command if the caller wants progressive
+/// rendering — the agent hook currently waits for the full reply
+/// for simplicity, but the seam is there.
+#[tauri::command]
+pub async fn ai_chat_agent_turn(
+    app: AppHandle,
+    messages: Vec<ChatMessage>,
+    tools: Option<serde_json::Value>,
+    model: Option<String>,
+    // `stream_id`: when provided, the command streams content
+    // tokens via `ai-chat-chunk:<stream_id>` events as Ollama
+    // produces them (same channel `ai_chat_stream` uses) AND
+    // returns the fully-assembled response + tool_calls when
+    // done. Lets the frontend render the final terminal turn's
+    // tokens progressively without losing the structured
+    // tool_calls parse — they only land on the final chunk
+    // anyway, so nothing is sacrificed.
+    // When None, the command runs in legacy non-streaming mode:
+    // single `stream: false` POST, returns the full response in
+    // one go. Useful when the caller doesn't want token events
+    // (e.g. agent intermediate turns that are pure tool-call
+    // negotiations with no user-visible text).
+    stream_id: Option<String>,
+) -> Result<AgentTurnResponse, String> {
+    let model = model.unwrap_or_else(|| DEFAULT_MODEL.to_string());
+
+    // No total request timeout — `reqwest::ClientBuilder::timeout`
+    // covers the WHOLE request including every streamed read, so
+    // a multi-minute generation (e.g. "build me a blackjack game"
+    // produces 2-4k tokens at ~10 tok/s = 200-400s on a 7B model)
+    // gets killed mid-stream with a confusing
+    // "stream read error: error decoding response body".
+    //
+    // Instead we use:
+    //   - connect_timeout: fail fast on an unreachable daemon
+    //   - read_timeout: per-read idle window. As long as Ollama
+    //     is still producing tokens it stays under the window;
+    //     a stalled daemon trips it within 60s.
+    //
+    // This is the standard reqwest pattern for streaming clients.
+    let client = reqwest::Client::builder()
+        .connect_timeout(std::time::Duration::from_secs(5))
+        .read_timeout(std::time::Duration::from_secs(60))
+        .build()
+        .map_err(|e| format!("failed to build http client: {e}"))?;
+
+    let streaming = stream_id.is_some();
+    let payload = OllamaAgentRequest {
+        model: &model,
+        messages: &messages,
+        stream: streaming,
+        tools: tools.as_ref(),
+    };
+
+    let response = client
+        .post(format!("{OLLAMA_URL}/api/chat"))
+        .json(&payload)
+        .send()
+        .await
+        .map_err(|e| classify_reqwest_error(&e))?;
+
+    if !response.status().is_success() {
+        let status = response.status();
+        let body = response.text().await.unwrap_or_default();
+        return Err(format!("ollama returned {status}: {body}"));
+    }
+
+    // Non-streaming fast path. One JSON parse, return.
+    if !streaming {
+        let started = Instant::now();
+        let parsed: OllamaAgentChunk = response
+            .json()
+            .await
+            .map_err(|e| format!("failed to parse ollama response: {e}"))?;
+        let usage = TurnUsage {
+            prompt_tokens: parsed.prompt_eval_count,
+            completion_tokens: parsed.eval_count,
+            total_duration_ms: parsed
+                .total_duration
+                .map(|ns| ns / 1_000_000)
+                .or_else(|| Some(started.elapsed().as_millis() as u64)),
+        };
+        return Ok(AgentTurnResponse {
+            content: parsed.message.content,
+            tool_calls: parsed.message.tool_calls,
+            usage: Some(usage),
+        });
+    }
+
+    // Streaming path. Ollama emits one JSON object per line; each
+    // carries a `message` with incremental `content` and a `done`
+    // flag. We assemble the full content + bubble tool_calls from
+    // whatever line carries them (always the final non-empty one
+    // in practice). Tokens are forwarded via the existing chat-
+    // chunk event channel so the frontend's chat-stream listener
+    // works verbatim.
+    let stream_id = stream_id.unwrap();
+    let started = Instant::now();
+    let mut content_acc = String::new();
+    let mut final_tool_calls: Option<Vec<ToolCallSpec>> = None;
+    let mut prompt_tokens: Option<u64> = None;
+    let mut completion_tokens: Option<u64> = None;
+    let mut total_duration_ms: Option<u64> = None;
+    let mut byte_stream = response.bytes_stream();
+    let mut buffer = Vec::new();
+    while let Some(chunk_res) = byte_stream.next().await {
+        let chunk = match chunk_res {
+            Ok(c) => c,
+            Err(e) => {
+                // Classify the error so the user sees a meaningful
+                // message (stalled daemon vs. network blip vs.
+                // decoding failure) instead of the raw reqwest
+                // string. Also fire the chunk-channel's error event
+                // so any UI listener can render an inline error
+                // rather than just hanging on a half-streamed
+                // response.
+                let msg = classify_reqwest_error(&e);
+                emit_error(&app, &stream_id, &msg);
+                return Err(msg);
+            }
+        };
+        buffer.extend_from_slice(&chunk);
+        // Split on newlines; keep any trailing partial line in the
+        // buffer for the next iteration.
+        while let Some(nl) = buffer.iter().position(|&b| b == b'\n') {
+            let line = buffer.drain(..=nl).collect::<Vec<u8>>();
+            let line = &line[..line.len().saturating_sub(1)];
+            if line.is_empty() {
+                continue;
+            }
+            let parsed: OllamaAgentStreamChunk = match serde_json::from_slice(line) {
+                Ok(v) => v,
+                Err(_) => continue, // Defensive: skip malformed lines.
+            };
+            if let Some(msg) = parsed.message {
+                if !msg.content.is_empty() {
+                    emit_chunk(&app, &stream_id, &msg.content);
+                    content_acc.push_str(&msg.content);
+                }
+                if let Some(tc) = msg.tool_calls {
+                    if !tc.is_empty() {
+                        final_tool_calls = Some(tc);
+                    }
+                }
+            }
+            // Usage fields only appear on the done-line in
+            // Ollama's protocol, but we hoist into our scoped
+            // locals on every line that carries them so we don't
+            // miss the figures if the daemon re-orders future
+            // protocol versions.
+            if let Some(p) = parsed.prompt_eval_count {
+                prompt_tokens = Some(p);
+            }
+            if let Some(e) = parsed.eval_count {
+                completion_tokens = Some(e);
+            }
+            if let Some(d) = parsed.total_duration {
+                total_duration_ms = Some(d / 1_000_000);
+            }
+            if parsed.done {
+                let usage = TurnUsage {
+                    prompt_tokens,
+                    completion_tokens,
+                    total_duration_ms: total_duration_ms
+                        .or_else(|| Some(started.elapsed().as_millis() as u64)),
+                };
+                emit_done(
+                    &app,
+                    &stream_id,
+                    completion_tokens.unwrap_or(0) as u32,
+                    started.elapsed().as_millis() as u64,
+                );
+                return Ok(AgentTurnResponse {
+                    content: content_acc,
+                    tool_calls: final_tool_calls,
+                    usage: Some(usage),
+                });
+            }
+        }
+    }
+
+    // Stream ended without a `done: true` line — return what we
+    // have rather than erroring.
+    let usage = TurnUsage {
+        prompt_tokens,
+        completion_tokens,
+        total_duration_ms: total_duration_ms
+            .or_else(|| Some(started.elapsed().as_millis() as u64)),
+    };
+    emit_done(
+        &app,
+        &stream_id,
+        completion_tokens.unwrap_or(0) as u32,
+        started.elapsed().as_millis() as u64,
+    );
+    Ok(AgentTurnResponse {
+        content: content_acc,
+        tool_calls: final_tool_calls,
+        usage: Some(usage),
+    })
+}
+
+/// Streaming-variant chunk. `message` may be missing on the final
+/// done-line. `done` flips true on the terminator. The terminator
+/// chunk also carries the usage fields — `prompt_eval_count` /
+/// `eval_count` / `total_duration` — so the streaming path can
+/// build a `TurnUsage` the same way the non-streaming path does.
+#[derive(Debug, Deserialize)]
+struct OllamaAgentStreamChunk {
+    message: Option<OllamaAgentMessage>,
+    #[serde(default)]
+    done: bool,
+    #[serde(default)]
+    prompt_eval_count: Option<u64>,
+    #[serde(default)]
+    eval_count: Option<u64>,
+    #[serde(default)]
+    total_duration: Option<u64>,
+}
+
 #[derive(Debug, Serialize, Clone)]
 struct ChunkPayload<'a> {
     token: &'a str,
@@ -287,9 +646,25 @@ fn emit_error(app: &AppHandle, stream_id: &str, error: &str) {
 
 fn classify_reqwest_error(e: &reqwest::Error) -> String {
     if e.is_timeout() {
-        "timed out talking to Ollama — is it running? (`ollama serve`)".into()
+        // With our read_timeout strategy this means Ollama produced
+        // no tokens for the full window — usually because the daemon
+        // hung mid-generation. The previous wording ("timed out talking
+        // to Ollama") was confusing when the daemon WAS responding but
+        // had stalled. Differentiate so the user knows what to do.
+        "Ollama stalled — no tokens for 60s. The model may have crashed; check `ollama ps` and try again, or pull a smaller/different model.".into()
     } else if e.is_connect() {
         "Ollama isn't reachable on localhost:11434. Start it with `ollama serve` or install via `brew install ollama`.".into()
+    } else if e.is_request() {
+        format!("Ollama request failed: {e}")
+    } else if e.is_body() || e.is_decode() {
+        // The "error decoding response body" the user hit. With the
+        // read_timeout fix this should be much rarer, but if Ollama
+        // sends a malformed chunk or the connection is severed we
+        // still want a clear message.
+        format!(
+            "Lost connection to Ollama mid-response. The daemon may have crashed or run out of memory. \
+             Check the Ollama logs (`tail -f /tmp/ollama.log`) and try again. Detail: {e}"
+        )
     } else {
         format!("request failed: {e}")
     }

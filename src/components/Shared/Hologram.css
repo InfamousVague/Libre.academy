@@ -1,0 +1,385 @@
+/* Reusable holographic-foil overlay. See Hologram.tsx for the
+   contract. Two layers (foil + shine) sized to inset:0 of the
+   parent, with the parent expected to be `position: relative` +
+   `overflow: hidden`. The overlay never transforms the parent —
+   it only animates its own internal `background-position`, so
+   the parent's layout, stacking context, and Z-index are
+   completely untouched. Drop on any card or button. */
+
+/* Foil position is registered so it can transition smoothly
+   between keyframes + after the loop is removed. Shared across
+   every Hologram instance — it's animation-only state, not
+   identity. */
+@property --libre-holo-h {
+  syntax: "<percentage>";
+  initial-value: 50%;
+  inherits: true;
+}
+
+@property --libre-holo-p {
+  syntax: "<percentage>";
+  initial-value: 50%;
+  inherits: true;
+}
+
+.libre-holo {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* Match the parent's clipping by inheriting border-radius —
+     consumers that round their corners get a rounded foil for
+     free without setting a duplicate radius value here. */
+  border-radius: inherit;
+  /* Foil + shine paint from this stacking context's own scope.
+     Without isolation the mix-blend-mode on the foil would
+     reach up the tree and tint surfaces it shouldn't (e.g.
+     siblings outside the parent card). */
+  isolation: isolate;
+  overflow: hidden;
+  --libre-holo-h: 50%;
+  --libre-holo-p: 50%;
+}
+
+/* ─── Foil layer: rainbow bands + sparkle stencil ───────────── */
+
+.libre-holo__foil {
+  position: absolute;
+  inset: 0;
+  --libre-holo-space: 5%;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    hsl(0, 95%, 60%) 0%,
+    hsl(30, 95%, 60%) calc(var(--libre-holo-space) * 1),
+    hsl(60, 95%, 60%) calc(var(--libre-holo-space) * 2),
+    hsl(120, 90%, 55%) calc(var(--libre-holo-space) * 3),
+    hsl(180, 90%, 55%) calc(var(--libre-holo-space) * 4),
+    hsl(222, 95%, 60%) calc(var(--libre-holo-space) * 5),
+    hsl(258, 95%, 60%) calc(var(--libre-holo-space) * 6),
+    hsl(300, 95%, 60%) calc(var(--libre-holo-space) * 7),
+    hsl(0, 95%, 60%) calc(var(--libre-holo-space) * 8)
+  );
+  background-size: 200% 200%;
+  background-position: var(--libre-holo-h) var(--libre-holo-h);
+  background-repeat: no-repeat;
+  /* Tiled four-pointed sparkle so the rainbow shows through as
+     iridescent dust rather than a continuous gradient slab. */
+  --libre-holo-sparkle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2 L13.5 10.5 L22 12 L13.5 13.5 L12 22 L10.5 13.5 L2 12 L10.5 10.5 Z' fill='black'/%3E%3C/svg%3E");
+  mask-image: var(--libre-holo-sparkle);
+  -webkit-mask-image: var(--libre-holo-sparkle);
+  mask-size: 5% 14%;
+  -webkit-mask-size: 5% 14%;
+  mask-repeat: repeat;
+  -webkit-mask-repeat: repeat;
+  filter: brightness(0.95) contrast(0.85) saturate(1.15);
+}
+
+/* Sparkle stencil variant — swap the four-pointed star mask for
+   the brand snake silhouette.
+     - Source PNG: `/new-logo-tile.png` is the greyscale brand
+       mark (`/new-logo-greyscale.png`, 2048×2048) recentred
+       inside a 3200×3200 canvas. The added ~580px padding per
+       side becomes a transparent gutter between tiles when the
+       mask repeats, so silhouettes don't crowd into each other.
+     - Aspect: paired with fixed-px `mask-size` values defined
+       per `--size-*` tier below. Fixed pixels (not %) keep
+       each cell SQUARE regardless of the wrapper's aspect —
+       a wide button no longer stretches the head sideways.
+     - Soften: an extra `saturate(0.55)` on top of the base
+       foil filter dampens the rainbow on snake-variant
+       surfaces specifically — the silhouette already gives
+       the foil a distinct character; layering full-saturation
+       rainbow on top read as too loud. Star-variant surfaces
+       keep the base saturate(1.15).
+   Trade-off documented on the prop in Hologram.tsx: the snake
+   reads as a silhouette at the `md`-`xl` tile sizes and
+   degrades to soft blobs at `xs` (hairline accent strips —
+   used intentionally there because the strip itself is only
+   2px wide). */
+.libre-holo--sparkle-snake .libre-holo__foil {
+  /* Source asset: `/new-logo-tile.png` is the greyscale brand
+     logo (`/new-logo-greyscale.png`) recentred inside a 3200×
+     3200 canvas. The added padding becomes a transparent gutter
+     between tiles when the mask repeats. The greyscale variant
+     keeps the silhouette's natural tonal range in the mask's
+     alpha channel — softer edges than the pure-black silhouette
+     we used previously, so rainbow bleeds in slightly around
+     thin features rather than hard-stamping them. */
+  --libre-holo-sparkle: url("/new-logo-tile.png");
+  filter: brightness(0.95) contrast(0.85) saturate(0.55);
+}
+
+/* ─── Tile-size tiers ────────────────────────────────────────
+   Fixed-pixel `mask-size` per tier so cells stay square no
+   matter the wrapper aspect. Scoped to the snake variant
+   first — the star variant keeps its existing 5% × 14%
+   default so existing star-using surfaces don't perturb.
+   Consumers can still override via their own `.libre-holo__foil`
+   rule (`!important` if they need to win against this).
+*/
+.libre-holo--sparkle-snake.libre-holo--size-xxs .libre-holo__foil {
+  mask-size: 10px 10px;
+  -webkit-mask-size: 10px 10px;
+}
+.libre-holo--sparkle-snake.libre-holo--size-xs .libre-holo__foil {
+  mask-size: 14px 14px;
+  -webkit-mask-size: 14px 14px;
+}
+.libre-holo--sparkle-snake.libre-holo--size-sm .libre-holo__foil {
+  mask-size: 22px 22px;
+  -webkit-mask-size: 22px 22px;
+}
+.libre-holo--sparkle-snake.libre-holo--size-md .libre-holo__foil {
+  mask-size: 36px 36px;
+  -webkit-mask-size: 36px 36px;
+}
+.libre-holo--sparkle-snake.libre-holo--size-lg .libre-holo__foil {
+  mask-size: 56px 56px;
+  -webkit-mask-size: 56px 56px;
+}
+.libre-holo--sparkle-snake.libre-holo--size-xl .libre-holo__foil {
+  mask-size: 88px 88px;
+  -webkit-mask-size: 88px 88px;
+}
+
+/* Surface variants — flip the blend mode + filter chain so the
+   rainbow reads correctly against light vs dark backings. */
+.libre-holo--light .libre-holo__foil {
+  /* Multiply works for parchment / paper-tinted surfaces; the
+     rainbow lands as dark pigment. */
+  mix-blend-mode: multiply;
+}
+
+.libre-holo--dark .libre-holo__foil {
+  /* Plus-lighter is additive — perfect for foil sitting on top
+     of a dark card. The rainbow reads as light sheen rather
+     than dark stains. Slight contrast boost so the colours
+     punch through dark backings. */
+  mix-blend-mode: plus-lighter;
+  filter: brightness(1.05) contrast(0.9) saturate(1.25);
+}
+
+/* ─── Shine layer: diagonal sweep band ──────────────────────── */
+
+.libre-holo__shine {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+    -70deg,
+    transparent 42%,
+    rgba(212, 176, 107, 0.4) 50%,
+    transparent 58%
+  );
+  background-size: 220% 220%;
+  background-position: var(--libre-holo-p) var(--libre-holo-p);
+  background-repeat: no-repeat;
+  mix-blend-mode: multiply;
+}
+
+.libre-holo--dark .libre-holo__shine {
+  /* Dark surfaces want a light shine sweep instead of the
+     amber-on-multiply default. */
+  background-image: linear-gradient(
+    -70deg,
+    transparent 42%,
+    rgba(255, 255, 255, 0.18) 50%,
+    transparent 58%
+  );
+  mix-blend-mode: plus-lighter;
+}
+
+/* ─── Intensity tiers — resting foil + shine opacity ───────── */
+
+.libre-holo--whisper .libre-holo__foil  { opacity: 0.18; }
+.libre-holo--whisper .libre-holo__shine { opacity: 0.08; }
+
+.libre-holo--subtle .libre-holo__foil   { opacity: 0.34; }
+.libre-holo--subtle .libre-holo__shine  { opacity: 0.18; }
+
+.libre-holo--vivid .libre-holo__foil    { opacity: 0.6; }
+.libre-holo--vivid .libre-holo__shine   { opacity: 0.28; }
+
+/* ─── Ambient drift ─────────────────────────────────────────── */
+
+/* When `ambient` is on, the foil + shine each glide on slow
+   independent loops. Different durations + different starting
+   phases so the two motion sources don't lock into a visible
+   beat — together they give the surface a "the foil is alive"
+   feeling without ever swinging hard enough to read as
+   intentional motion. */
+.libre-holo--ambient .libre-holo__foil {
+  animation: libre-holo-foil-drift 14s ease-in-out infinite;
+}
+
+.libre-holo--ambient .libre-holo__shine {
+  animation: libre-holo-shine-drift 22s ease-in-out infinite;
+}
+
+@keyframes libre-holo-foil-drift {
+  0%   { --libre-holo-h: 30%; }
+  50%  { --libre-holo-h: 80%; }
+  100% { --libre-holo-h: 30%; }
+}
+
+@keyframes libre-holo-shine-drift {
+  0%   { --libre-holo-p: 20%; }
+  50%  { --libre-holo-p: 90%; }
+  100% { --libre-holo-p: 20%; }
+}
+
+/* ─── Excited / "running" drift ─────────────────────────────────
+ *
+ * Boosted state — fires while a lesson run is executing (see the
+ * `useRunStatus` hook in src/hooks/useRunStatus.ts). The foil and
+ * shine swing faster than the ambient loop and across a wider
+ * range, so the surface reads as "live, something's happening"
+ * vs the ambient state's slow breathing.
+ *
+ * The "organic" feel comes from the foil's TWO concurrent loops:
+ *   - a primary back-and-forth on `--libre-holo-h` (2.3s)
+ *   - a secondary background-position-x sweep at a coprime
+ *     duration (3.7s)
+ * Both loops are independent — they never lock into a steady
+ * visible beat, so the foil never reads as "this is one rigid
+ * animation playing on a timer," it reads as the surface is
+ * actually alive. The numbers (2.3 / 3.7) are deliberately not a
+ * simple integer ratio so the combined motion takes ~21.5s
+ * (LCM-ish) to perfectly repeat.
+ *
+ * Shine layer runs a single faster sweep at 1.7s so the diagonal
+ * highlight glides across the surface a few times per second of
+ * run time, layering a sense of momentum on top of the foil's
+ * hue shimmer. */
+
+.libre-holo--excited .libre-holo__foil {
+  animation:
+    libre-holo-foil-excited-h 2.3s ease-in-out infinite,
+    libre-holo-foil-excited-x 3.7s ease-in-out infinite;
+}
+
+.libre-holo--excited .libre-holo__shine {
+  animation: libre-holo-shine-excited 1.7s ease-in-out infinite;
+}
+
+/* Slight intensity boost on the foil while excited — pushes the
+   resting opacity up a notch so the faster motion is also more
+   visible. Inheritors of `--vivid` already sit at 0.6; the
+   excited state nudges them all closer to 0.75 so even "whisper"
+   surfaces feel involved during a run without us having to swap
+   the intensity class at the consumer level. */
+.libre-holo--excited .libre-holo__foil {
+  opacity: 0.78;
+}
+.libre-holo--excited .libre-holo__shine {
+  opacity: 0.42;
+}
+
+@keyframes libre-holo-foil-excited-h {
+  0%   { --libre-holo-h: 12%; }
+  /* Not 50% — pulling the midpoint off-centre gives the swing a
+     slight "lean" that reads more organic than a pure sine. */
+  47%  { --libre-holo-h: 92%; }
+  100% { --libre-holo-h: 12%; }
+}
+
+@keyframes libre-holo-foil-excited-x {
+  /* Background-position-x on its own won't override the
+     `--libre-holo-h`-driven background-position shorthand from
+     the base rule (that one sets both x and y). We instead
+     animate the foil's `background-position-x` via the same
+     property indirectly — by transforming the layer slightly so
+     the iridescent bands appear to scroll laterally. translate is
+     a compositor-cheap property so this is free on the GPU. */
+  0%   { transform: translate3d(-6%, 0, 0); }
+  50%  { transform: translate3d(6%, 0, 0); }
+  100% { transform: translate3d(-6%, 0, 0); }
+}
+
+@keyframes libre-holo-shine-excited {
+  0%   { --libre-holo-p: 0%; }
+  /* Asymmetric easing — the shine "snaps" forward then drifts
+     back, like a flashlight catching the foil at an angle. */
+  60%  { --libre-holo-p: 100%; }
+  100% { --libre-holo-p: 0%; }
+}
+
+/* ─── Hover sweep ────────────────────────────────────────────── *
+ *
+ * When the Hologram's parent element is hovered, the shine layer
+ * runs a one-shot sweep across the surface — like a flashlight
+ * catching the foil at an angle as the user's cursor passes
+ * through. Layered on top of the resting ambient drift (which the
+ * `--ambient` modifier still owns); the hover animation's higher
+ * specificity overrides while it's active, then the ambient loop
+ * picks back up after the cursor leaves.
+ *
+ * Trigger: `*:hover > .libre-holo` — "the element whose direct
+ * child is a Hologram is being hovered". Because the hovered
+ * element gets `:hover` whenever the cursor is inside ANY of its
+ * descendants (CSS hover bubbling), this fires for any cursor
+ * activity within the consumer container. `:has` isn't needed —
+ * the direct-child `>` constraint keeps unrelated ancestors from
+ * over-matching.
+ *
+ * Why these specific keyframes:
+ *   - Position sweeps `-20%` → `120%` so the diagonal band starts
+ *     and ends fully off-screen rather than fading in / out at
+ *     the edges. With the shine's `background-size: 220%`, those
+ *     percentages translate to ~44% past each edge — comfortably
+ *     beyond the visible viewport on every aspect ratio.
+ *   - 800ms with `ease-out` so the sweep is brisk on entry then
+ *     decelerates — reads as the cursor "catching" the angle and
+ *     dragging the highlight. A linear sweep felt mechanical;
+ *     ease-in-out felt slow at the edges.
+ *   - Shine opacity boost (1.6x its resting tier) bumps the
+ *     highlight from "passive iridescence" to "the surface is
+ *     visibly reacting" without us having to rewrite the
+ *     consumer's intensity prop. The opacity returns to its
+ *     resting value once the animation finishes.
+ *
+ * Foil layer doesn't move on hover — only the shine. The foil's
+ * resting iridescence is the "surface identity"; the shine sweep
+ * is the "you're interacting with it" signal. Layering both at
+ * once muddied the read in early tests. */
+
+*:hover > .libre-holo > .libre-holo__shine {
+  animation: libre-holo-shine-hover 800ms ease-out;
+}
+
+@keyframes libre-holo-shine-hover {
+  0% {
+    --libre-holo-p: -20%;
+    opacity: var(--libre-holo-shine-base, 0.18);
+  }
+  20% {
+    /* Brighten just past entry so the leading edge of the sweep
+       is when the highlight is most visible — same way a real
+       reflection catches strongest at the angle of incidence. */
+    opacity: calc(var(--libre-holo-shine-base, 0.18) * 1.6);
+  }
+  100% {
+    --libre-holo-p: 120%;
+    opacity: var(--libre-holo-shine-base, 0.18);
+  }
+}
+
+/* Per-intensity base opacity for the hover sweep — keeps the
+   keyframe above generic by reading from a custom property whose
+   value each intensity tier sets to match its resting shine
+   opacity. Without this, the hover sweep would always snap to the
+   `--vivid` brightness regardless of the consumer's intensity
+   prop. */
+.libre-holo--whisper { --libre-holo-shine-base: 0.08; }
+.libre-holo--subtle  { --libre-holo-shine-base: 0.18; }
+.libre-holo--vivid   { --libre-holo-shine-base: 0.28; }
+
+/* ─── Reduced motion ────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .libre-holo--ambient .libre-holo__foil,
+  .libre-holo--ambient .libre-holo__shine,
+  .libre-holo--excited .libre-holo__foil,
+  .libre-holo--excited .libre-holo__shine,
+  *:hover > .libre-holo > .libre-holo__shine {
+    animation: none;
+  }
+}

@@ -253,19 +253,19 @@ export function TradeDock({ variant = "banner", onClose }: Props) {
   return (
     <div
       ref={rootRef}
-      className={"fb-trade-dock fb-trade-dock--" + variant}
+      className={"libre-trade-dock libre-trade-dock--" + variant}
       style={rootStyle}
     >
-      <header className="fb-trade-dock__header">
-        <div className="fb-trade-dock__title">
-          <span className="fb-trade-dock__title-icon" aria-hidden>
+      <header className="libre-trade-dock__header">
+        <div className="libre-trade-dock__title">
+          <span className="libre-trade-dock__title-icon" aria-hidden>
             <Icon icon={plug} size="sm" color="currentColor" />
           </span>
           <span>API Tester</span>
           <span
             className={
-              "fb-trade-dock__mode-pill" +
-              (liveMode ? " fb-trade-dock__mode-pill--live" : "")
+              "libre-trade-dock__mode-pill" +
+              (liveMode ? " libre-trade-dock__mode-pill--live" : "")
             }
             title={
               liveMode
@@ -276,13 +276,13 @@ export function TradeDock({ variant = "banner", onClose }: Props) {
             {liveMode ? "LIVE" : "MOCK"}
           </span>
         </div>
-        <div className="fb-trade-dock__tabs" role="tablist">
+        <div className="libre-trade-dock__tabs" role="tablist">
           <button
             type="button"
             role="tab"
             aria-selected={tab === "rest"}
             className={
-              "fb-trade-dock__tab" +
+              "libre-trade-dock__tab" +
               (tab === "rest" ? " is-active" : "")
             }
             onClick={() => setTab("rest")}
@@ -294,7 +294,7 @@ export function TradeDock({ variant = "banner", onClose }: Props) {
             role="tab"
             aria-selected={tab === "ws"}
             className={
-              "fb-trade-dock__tab" +
+              "libre-trade-dock__tab" +
               (tab === "ws" ? " is-active" : "")
             }
             onClick={() => setTab("ws")}
@@ -302,13 +302,13 @@ export function TradeDock({ variant = "banner", onClose }: Props) {
             WebSocket
           </button>
         </div>
-        <div className="fb-trade-dock__header-actions">
+        <div className="libre-trade-dock__header-actions">
           <button
             type="button"
             role="switch"
             aria-checked={liveMode}
             className={
-              "fb-trade-dock__live-switch" +
+              "libre-trade-dock__live-switch" +
               (liveMode ? " is-live" : "")
             }
             onClick={() => applyLive(!liveMode)}
@@ -318,7 +318,7 @@ export function TradeDock({ variant = "banner", onClose }: Props) {
                 : "Mock mode — recognised endpoints return canned responses so this works offline. Click to switch to LIVE."
             }
           >
-            <span className="fb-trade-dock__live-thumb" aria-hidden>
+            <span className="libre-trade-dock__live-thumb" aria-hidden>
               <Icon
                 icon={liveMode ? radio : testTube}
                 size="xs"
@@ -328,7 +328,7 @@ export function TradeDock({ variant = "banner", onClose }: Props) {
           </button>
           <button
             type="button"
-            className="fb-trade-dock__icon-btn"
+            className="libre-trade-dock__icon-btn"
             onClick={() => setEnvOpen((v) => !v)}
             title={
               envOpen
@@ -343,7 +343,7 @@ export function TradeDock({ variant = "banner", onClose }: Props) {
           {variant === "banner" && onClose && (
             <button
               type="button"
-              className="fb-trade-dock__icon-btn"
+              className="libre-trade-dock__icon-btn"
               onClick={onClose}
               title="Hide dock"
             >
@@ -357,12 +357,12 @@ export function TradeDock({ variant = "banner", onClose }: Props) {
         <EnvPanel env={env} onChange={updateEnv} defaults={ENV_DEFAULTS} />
       )}
 
-      <div className="fb-trade-dock__body">
+      <div className="libre-trade-dock__body">
         <PresetsSidebar
           activePresetId={activePresetId}
           onPick={setActivePresetId}
         />
-        <div className="fb-trade-dock__main">
+        <div className="libre-trade-dock__main">
           {tab === "rest" ? (
             <RestPanel
               key={activePresetId ?? "blank"}
@@ -386,7 +386,7 @@ export function TradeDock({ variant = "banner", onClose }: Props) {
           mode only; popout would manage its own window size. */}
       {variant === "banner" && (
         <div
-          className="fb-trade-dock__resize-handle"
+          className="libre-trade-dock__resize-handle"
           onMouseDown={onResizeStart}
           role="separator"
           aria-orientation="horizontal"
@@ -411,17 +411,17 @@ function EnvPanel({
 }) {
   const keys = Object.keys({ ...defaults, ...env });
   return (
-    <div className="fb-trade-dock__env">
-      <span className="fb-trade-dock__env-hint">
+    <div className="libre-trade-dock__env">
+      <span className="libre-trade-dock__env-hint">
         Variables interpolate into URLs + bodies via{" "}
         <code>{`{{name}}`}</code>.
       </span>
-      <div className="fb-trade-dock__env-grid">
+      <div className="libre-trade-dock__env-grid">
         {keys.map((k) => (
-          <label key={k} className="fb-trade-dock__env-row">
-            <span className="fb-trade-dock__env-label">{k}</span>
+          <label key={k} className="libre-trade-dock__env-row">
+            <span className="libre-trade-dock__env-label">{k}</span>
             <input
-              className="fb-trade-dock__env-input"
+              className="libre-trade-dock__env-input"
               value={env[k] ?? ""}
               onChange={(e) => onChange(k, e.target.value)}
               spellCheck={false}
@@ -456,17 +456,17 @@ function PresetsSidebar({
   }, []);
 
   return (
-    <aside className="fb-trade-dock__sidebar" aria-label="Saved requests">
+    <aside className="libre-trade-dock__sidebar" aria-label="Saved requests">
       {groups.map(([cat, items]) => (
-        <section key={cat} className="fb-trade-dock__group">
-          <h4 className="fb-trade-dock__group-title">{cat}</h4>
-          <ul className="fb-trade-dock__preset-list">
+        <section key={cat} className="libre-trade-dock__group">
+          <h4 className="libre-trade-dock__group-title">{cat}</h4>
+          <ul className="libre-trade-dock__preset-list">
             {items.map((p) => (
               <li key={p.id}>
                 <button
                   type="button"
                   className={
-                    "fb-trade-dock__preset" +
+                    "libre-trade-dock__preset" +
                     (activePresetId === p.id ? " is-active" : "")
                   }
                   onClick={() => onPick(p.id)}
@@ -474,16 +474,16 @@ function PresetsSidebar({
                 >
                   <span
                     className={
-                      "fb-trade-dock__preset-method " +
+                      "libre-trade-dock__preset-method " +
                       (p.kind === "rest"
-                        ? "fb-trade-dock__preset-method--" +
+                        ? "libre-trade-dock__preset-method--" +
                           p.method.toLowerCase()
-                        : "fb-trade-dock__preset-method--ws")
+                        : "libre-trade-dock__preset-method--ws")
                     }
                   >
                     {p.kind === "rest" ? p.method : "WS"}
                   </span>
-                  <span className="fb-trade-dock__preset-label">
+                  <span className="libre-trade-dock__preset-label">
                     {p.label}
                   </span>
                 </button>
@@ -634,10 +634,10 @@ function RestPanel({
   }
 
   return (
-    <div className="fb-trade-dock__rest">
-      <div className="fb-trade-dock__url-row">
+    <div className="libre-trade-dock__rest">
+      <div className="libre-trade-dock__url-row">
         <select
-          className="fb-trade-dock__method"
+          className="libre-trade-dock__method"
           value={method}
           onChange={(e) => setMethod(e.target.value as PresetMethod)}
         >
@@ -650,7 +650,7 @@ function RestPanel({
           )}
         </select>
         <input
-          className="fb-trade-dock__url"
+          className="libre-trade-dock__url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           spellCheck={false}
@@ -658,7 +658,7 @@ function RestPanel({
         />
         <button
           type="button"
-          className="fb-trade-dock__send"
+          className="libre-trade-dock__send"
           onClick={() => void send()}
           disabled={state.loading || !url.trim()}
         >
@@ -668,15 +668,15 @@ function RestPanel({
       </div>
 
       {resolvedUrl !== url && (
-        <div className="fb-trade-dock__resolved">
+        <div className="libre-trade-dock__resolved">
           → <code>{resolvedUrl}</code>
         </div>
       )}
 
-      <details className="fb-trade-dock__section">
+      <details className="libre-trade-dock__section">
         <summary>Headers</summary>
         <textarea
-          className="fb-trade-dock__textarea"
+          className="libre-trade-dock__textarea"
           value={headers}
           onChange={(e) => setHeaders(e.target.value)}
           spellCheck={false}
@@ -686,12 +686,12 @@ function RestPanel({
       </details>
 
       <details
-        className="fb-trade-dock__section"
+        className="libre-trade-dock__section"
         open={method !== "GET" && method !== "DELETE"}
       >
         <summary>Body</summary>
         <textarea
-          className="fb-trade-dock__textarea fb-trade-dock__textarea--mono"
+          className="libre-trade-dock__textarea libre-trade-dock__textarea--mono"
           value={body}
           onChange={(e) => setBody(e.target.value)}
           spellCheck={false}
@@ -700,13 +700,13 @@ function RestPanel({
         />
       </details>
 
-      <div className="fb-trade-dock__response">
-        <div className="fb-trade-dock__response-head">
+      <div className="libre-trade-dock__response">
+        <div className="libre-trade-dock__response-head">
           <span>Response</span>
           {state.status !== undefined && (
             <span
               className={
-                "fb-trade-dock__status fb-trade-dock__status--" +
+                "libre-trade-dock__status libre-trade-dock__status--" +
                 statusTone(state.status)
               }
             >
@@ -714,14 +714,14 @@ function RestPanel({
             </span>
           )}
           {state.durationMs !== undefined && (
-            <span className="fb-trade-dock__duration">
+            <span className="libre-trade-dock__duration">
               {state.durationMs} ms
             </span>
           )}
           {state.source && (
             <span
               className={
-                "fb-trade-dock__source fb-trade-dock__source--" + state.source
+                "libre-trade-dock__source libre-trade-dock__source--" + state.source
               }
             >
               {state.source}
@@ -729,15 +729,15 @@ function RestPanel({
           )}
         </div>
         {state.errorMessage ? (
-          <pre className="fb-trade-dock__response-body fb-trade-dock__response-body--error">
+          <pre className="libre-trade-dock__response-body libre-trade-dock__response-body--error">
             {state.errorMessage}
           </pre>
         ) : state.responseBody ? (
-          <pre className="fb-trade-dock__response-body">
+          <pre className="libre-trade-dock__response-body">
             {state.responseBody}
           </pre>
         ) : (
-          <div className="fb-trade-dock__response-empty">
+          <div className="libre-trade-dock__response-empty">
             Send a request to see the response here.
           </div>
         )}
@@ -889,10 +889,10 @@ function WsPanel({
   }
 
   return (
-    <div className="fb-trade-dock__ws">
-      <div className="fb-trade-dock__url-row">
+    <div className="libre-trade-dock__ws">
+      <div className="libre-trade-dock__url-row">
         <input
-          className="fb-trade-dock__url"
+          className="libre-trade-dock__url"
           value={wsUrl}
           onChange={(e) => setWsUrl(e.target.value)}
           spellCheck={false}
@@ -901,7 +901,7 @@ function WsPanel({
         {status === "open" || status === "connecting" ? (
           <button
             type="button"
-            className="fb-trade-dock__send fb-trade-dock__send--danger"
+            className="libre-trade-dock__send libre-trade-dock__send--danger"
             onClick={disconnect}
           >
             Disconnect
@@ -909,7 +909,7 @@ function WsPanel({
         ) : (
           <button
             type="button"
-            className="fb-trade-dock__send"
+            className="libre-trade-dock__send"
             onClick={connect}
             disabled={!wsUrl.trim()}
           >
@@ -920,15 +920,15 @@ function WsPanel({
       </div>
 
       {resolvedUrl !== wsUrl && (
-        <div className="fb-trade-dock__resolved">
+        <div className="libre-trade-dock__resolved">
           → <code>{resolvedUrl}</code>
         </div>
       )}
 
-      <div className="fb-trade-dock__ws-status-row">
+      <div className="libre-trade-dock__ws-status-row">
         <span
           className={
-            "fb-trade-dock__ws-status fb-trade-dock__ws-status--" + status
+            "libre-trade-dock__ws-status libre-trade-dock__ws-status--" + status
           }
         >
           {status}
@@ -936,7 +936,7 @@ function WsPanel({
         {messages.length > 0 && (
           <button
             type="button"
-            className="fb-trade-dock__icon-btn"
+            className="libre-trade-dock__icon-btn"
             onClick={() => setMessages([])}
             title="Clear stream"
           >
@@ -945,9 +945,9 @@ function WsPanel({
         )}
       </div>
 
-      <div className="fb-trade-dock__ws-stream" aria-live="polite">
+      <div className="libre-trade-dock__ws-stream" aria-live="polite">
         {messages.length === 0 ? (
-          <div className="fb-trade-dock__response-empty">
+          <div className="libre-trade-dock__response-empty">
             {status === "open"
               ? "Connected. Frames will appear here as they arrive."
               : "Connect to see the message stream."}
@@ -957,26 +957,26 @@ function WsPanel({
             <div
               key={m.id}
               className={
-                "fb-trade-dock__ws-msg fb-trade-dock__ws-msg--" + m.direction
+                "libre-trade-dock__ws-msg libre-trade-dock__ws-msg--" + m.direction
               }
             >
-              <div className="fb-trade-dock__ws-msg-meta">
-                <span className="fb-trade-dock__ws-msg-arrow">
+              <div className="libre-trade-dock__ws-msg-meta">
+                <span className="libre-trade-dock__ws-msg-arrow">
                   {m.direction === "in" ? "←" : "→"}
                 </span>
-                <span className="fb-trade-dock__ws-msg-time">
+                <span className="libre-trade-dock__ws-msg-time">
                   {fmtTime(m.ts)}
                 </span>
               </div>
-              <pre className="fb-trade-dock__ws-msg-body">{m.payload}</pre>
+              <pre className="libre-trade-dock__ws-msg-body">{m.payload}</pre>
             </div>
           ))
         )}
       </div>
 
-      <div className="fb-trade-dock__ws-send">
+      <div className="libre-trade-dock__ws-send">
         <textarea
-          className="fb-trade-dock__textarea fb-trade-dock__textarea--mono"
+          className="libre-trade-dock__textarea libre-trade-dock__textarea--mono"
           value={outDraft}
           onChange={(e) => setOutDraft(e.target.value)}
           spellCheck={false}
@@ -985,7 +985,7 @@ function WsPanel({
         />
         <button
           type="button"
-          className="fb-trade-dock__send"
+          className="libre-trade-dock__send"
           onClick={sendDraft}
           disabled={status !== "open" || !outDraft.trim()}
         >

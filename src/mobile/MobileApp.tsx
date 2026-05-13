@@ -32,6 +32,7 @@ import {
 } from "../lib/librarySync";
 import { isHiddenCourse } from "../lib/hiddenCourses";
 import { unlockAudioContext } from "../lib/sfx";
+import { haptics } from "../lib/haptics";
 import type { Course, Lesson } from "../data/types";
 import { isoToUnixSeconds } from "../lib/timestamps";
 import MobileLibrary from "./MobileLibrary";
@@ -45,6 +46,7 @@ import SignInDialog from "../components/dialogs/SignInDialog/SignInDialog";
 import MobileTabBar, { type MobileTab } from "../components/MobileTabBar/MobileTabBar";
 import AiAssistant from "../components/AiAssistant/AiAssistant";
 import LibreLoader from "../components/Shared/LibreLoader";
+import StreakExtendedOverlay from "./StreakExtendedOverlay";
 import "./MobileApp.css";
 
 type View =
@@ -86,8 +88,8 @@ export default function MobileApp() {
   /// Library-marker-derived allowlist. Updated by the progress
   /// apply path whenever a marker row arrives from the relay. Lets
   /// desktop's installed-library list propagate even when the
-  /// `/fishbones/settings` endpoint isn't deployed (the marker
-  /// rows ride the always-available `/fishbones/progress` endpoint
+  /// `/settings` endpoint isn't deployed (the marker
+  /// rows ride the always-available `/progress` endpoint
   /// instead). Persisted to localStorage so a cold-start before
   /// the next pull settles still shows the right library.
   const SYNCED_LIBRARY_KEY = "libre.library.markers.v1";
@@ -109,7 +111,7 @@ export default function MobileApp() {
   /// Visible course list. Three signals, in priority order:
   ///
   ///   1. **Library markers** — sentinel rows desktop pushes to
-  ///      `/fishbones/progress` carrying its installed-course-id
+  ///      `/progress` carrying its installed-course-id
   ///      list. AUTHORITATIVE when present: desktop owns the
   ///      library (mobile has no Discover catalog), so seeing
   ///      markers means "show exactly these courses, hide the
@@ -117,7 +119,7 @@ export default function MobileApp() {
   ///      bundled books but desktop has only installed 11 of them.
   ///
   ///   2. **Settings allowlist** — the legacy path, populated by
-  ///      `applySettings` when the relay's `/fishbones/settings`
+  ///      `applySettings` when the relay's `/settings`
   ///      endpoint is deployed. Several relay deployments 404 on
   ///      this; markers (above) cover that gap.
   ///
@@ -178,6 +180,34 @@ export default function MobileApp() {
   ]);
 
   const stats = useStreakAndXp(history, courses);
+
+  // ── Streak-extension celebration ───────────────────────────────
+  // Watches `stats.streakDays` for an INCREASE and fires the
+  // full-screen overlay. Skips the very first observation each
+  // session so a learner who already has a multi-day streak when
+  // they cold-launch the app doesn't get a celebration just for
+  // opening it — only ACTUAL extensions (a fresh completion that
+  // rolled the count forward) should trigger.
+  //
+  // `lastSeenStreakRef === null` means "we haven't observed any
+  // stats yet" — the first useEffect run sets it to the current
+  // count without showing the overlay. Subsequent runs compare
+  // and show on strict increase.
+  const [streakOverlayOpen, setStreakOverlayOpen] = useState(false);
+  const lastSeenStreakRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (lastSeenStreakRef.current === null) {
+      lastSeenStreakRef.current = stats.streakDays;
+      return;
+    }
+    if (
+      stats.streakDays > lastSeenStreakRef.current &&
+      stats.streakDays > 0
+    ) {
+      setStreakOverlayOpen(true);
+    }
+    lastSeenStreakRef.current = stats.streakDays;
+  }, [stats.streakDays]);
 
   // Publish the snapshot the iOS widgets + watchOS app read on
   // every render where streak / library / completions changed.
@@ -471,6 +501,13 @@ export default function MobileApp() {
       lesson_id: lesson.id,
       completed_at: new Date().toISOString(),
     });
+    // Triple-pulse celebration — the same `notification-success`
+    // intent the desktop fires on test-pass, but on mobile this
+    // is THE moment of triumph for reading lessons too. Pairs
+    // with the in-app celebration VFX timing-wise; the haptic
+    // hits a touch before the visual peak so the buzz reads as
+    // cause, not coincident effect.
+    void haptics.success();
     goNext();
   };
 
@@ -601,10 +638,27 @@ export default function MobileApp() {
 
       <MobileTabBar
         active={activeTab}
-        onLibrary={() => setView("library")}
-        onPlayground={() => setView("playground")}
-        onPractice={() => setView("practice")}
-        onProfile={() => setView("profile")}
+        // Light selection haptic on every tab switch — the
+        // physical "tick" of moving between screens, modelled on
+        // iOS's native tab-bar feel. Fires BEFORE `setView` so
+        // the buzz lands as cause-of-transition rather than a
+        // reaction to it.
+        onLibrary={() => {
+          void haptics.selection();
+          setView("library");
+        }}
+        onPlayground={() => {
+          void haptics.selection();
+          setView("playground");
+        }}
+        onPractice={() => {
+          void haptics.selection();
+          setView("practice");
+        }}
+        onProfile={() => {
+          void haptics.selection();
+          setView("profile");
+        }}
       />
 
       {/* Floating AI assistant. Same component as the desktop, but
@@ -626,6 +680,19 @@ export default function MobileApp() {
           onClose={() => setSignInOpen(false)}
         />
       )}
+
+      {/* Streak-extension celebration. Renders unconditionally so
+          the mount + animation flow runs cleanly on each
+          extension; the `open` prop drives visibility internally
+          and the component returns null when closed. Hosted here
+          (above the search palette + sign-in dialog) so the
+          overlay floats above every page surface. */}
+      <StreakExtendedOverlay
+        open={streakOverlayOpen}
+        streakDays={stats.streakDays}
+        history={history}
+        onClose={() => setStreakOverlayOpen(false)}
+      />
 
       <MobileSearchPalette
         open={searchOpen}

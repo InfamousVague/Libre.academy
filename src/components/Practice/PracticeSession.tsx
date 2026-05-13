@@ -115,10 +115,10 @@ export default function PracticeSession({
 
   if (queue.length === 0) {
     return (
-      <div className="fb-practice-session fb-practice-session--empty">
-        <div className="fb-practice-session__scroll">
-          <div className="fb-practice-session__inner">
-            <div className="fb-practice-session__empty-icon" aria-hidden>
+      <div className="libre-practice-session libre-practice-session--empty">
+        <div className="libre-practice-session__scroll">
+          <div className="libre-practice-session__inner">
+            <div className="libre-practice-session__empty-icon" aria-hidden>
               <Icon icon={dumbbell} size="lg" color="currentColor" />
             </div>
             <h2>No items to practice in this slice.</h2>
@@ -126,7 +126,7 @@ export default function PracticeSession({
               Try a different mode, widen the course filter, or come back when
               more items are due.
             </p>
-            <button className="fb-practice-session__exit" onClick={onExit}>
+            <button className="libre-practice-session__exit" onClick={onExit}>
               Back
             </button>
           </div>
@@ -137,8 +137,8 @@ export default function PracticeSession({
 
   if (isDone) {
     return (
-      <div className="fb-practice-session">
-        <div className="fb-practice-session__scroll">
+      <div className="libre-practice-session">
+        <div className="libre-practice-session__scroll">
           <SessionSummary
             queue={queue}
             outcomes={outcomes}
@@ -155,26 +155,26 @@ export default function PracticeSession({
   const wrongCount = outcomes.filter((o) => o.status === "wrong").length;
 
   return (
-    <div className="fb-practice-session">
-      <div className="fb-practice-session__scroll">
-        <div className="fb-practice-session__inner">
-          <header className="fb-practice-session__header">
+    <div className="libre-practice-session">
+      <div className="libre-practice-session__scroll">
+        <div className="libre-practice-session__inner">
+          <header className="libre-practice-session__header">
             <button
               type="button"
-              className="fb-practice-session__back"
+              className="libre-practice-session__back"
               onClick={onExit}
               aria-label="Back to practice deck"
             >
               <Icon icon={arrowLeft} size="xs" color="currentColor" />
               <span>Back</span>
             </button>
-            <div className="fb-practice-session__progress">
-              <div className="fb-practice-session__pip-row">
+            <div className="libre-practice-session__progress">
+              <div className="libre-practice-session__pip-row">
                 {queue.map((_, i) => (
                   <span
                     key={i}
                     className={
-                      "fb-practice-session__pip" +
+                      "libre-practice-session__pip" +
                       (i === cursor ? " is-current" : "") +
                       (outcomes[i].status === "correct"
                         ? " is-correct"
@@ -186,33 +186,33 @@ export default function PracticeSession({
                   />
                 ))}
               </div>
-              <div className="fb-practice-session__progress-label">
+              <div className="libre-practice-session__progress-label">
                 {cursor + 1} / {queue.length} · {MODE_LABELS[mode]}
               </div>
             </div>
-            <div className="fb-practice-session__score">
-              <span className="fb-practice-session__score-correct">
+            <div className="libre-practice-session__score">
+              <span className="libre-practice-session__score-correct">
                 <Icon icon={checkIcon} size="xs" color="currentColor" />{" "}
                 {correctCount}
               </span>
-              <span className="fb-practice-session__score-wrong">
+              <span className="libre-practice-session__score-wrong">
                 <Icon icon={xIcon} size="xs" color="currentColor" />{" "}
                 {wrongCount}
               </span>
             </div>
           </header>
 
-          <main className="fb-practice-session__card">
-            <div className="fb-practice-session__card-meta">
-              <span className="fb-practice-session__course">
+          <main className="libre-practice-session__card">
+            <div className="libre-practice-session__card-meta">
+              <span className="libre-practice-session__course">
                 {current.courseTitle}
               </span>
-              <span className="fb-practice-session__sep">·</span>
-              <span className="fb-practice-session__lesson">
+              <span className="libre-practice-session__sep">·</span>
+              <span className="libre-practice-session__lesson">
                 {current.lessonTitle}
               </span>
               {current.language && (
-                <span className="fb-practice-session__lang">
+                <span className="libre-practice-session__lang">
                   {current.language}
                 </span>
               )}
@@ -242,7 +242,7 @@ export default function PracticeSession({
                 onResult={commitOutcome}
               />
             ) : (
-              <div className="fb-practice-session__card-error">
+              <div className="libre-practice-session__card-error">
                 This item couldn't be loaded.
               </div>
             )}
@@ -294,15 +294,15 @@ function QuizCard({
   }
 
   return (
-    <div className="fb-practice-quiz">
-      <div className="fb-practice-quiz__prompt">{question.prompt}</div>
+    <div className="libre-practice-quiz">
+      <div className="libre-practice-quiz__prompt">{question.prompt}</div>
       {question.kind === "mcq" ? (
-        <div className="fb-practice-quiz__options">
+        <div className="libre-practice-quiz__options">
           {question.options.map((opt, i) => {
             const isPicked = i === picked;
             const isCorrect = i === question.correctIndex;
             const klass = [
-              "fb-practice-quiz__option",
+              "libre-practice-quiz__option",
               committed && isCorrect ? "is-correct" : "",
               committed && isPicked && !isCorrect ? "is-wrong" : "",
             ]
@@ -316,7 +316,7 @@ function QuizCard({
                 onClick={() => submitMcq(i)}
                 disabled={committed}
               >
-                <span className="fb-practice-quiz__option-letter">
+                <span className="libre-practice-quiz__option-letter">
                   {String.fromCharCode(65 + i)}
                 </span>
                 <span>{opt}</span>
@@ -325,10 +325,10 @@ function QuizCard({
           })}
         </div>
       ) : (
-        <div className="fb-practice-quiz__short">
+        <div className="libre-practice-quiz__short">
           <input
             type="text"
-            className="fb-practice-quiz__short-input"
+            className="libre-practice-quiz__short-input"
             value={shortValue}
             onChange={(e) => setShortValue(e.target.value)}
             onKeyDown={(e) => {
@@ -340,7 +340,7 @@ function QuizCard({
           />
           <button
             type="button"
-            className="fb-practice-quiz__short-submit"
+            className="libre-practice-quiz__short-submit"
             onClick={submitShort}
             disabled={committed || !shortValue.trim()}
           >
@@ -373,13 +373,13 @@ function CardFeedback({
   return (
     <div
       className={
-        "fb-practice-feedback" +
+        "libre-practice-feedback" +
         (outcome.status === "correct"
-          ? " fb-practice-feedback--correct"
-          : " fb-practice-feedback--wrong")
+          ? " libre-practice-feedback--correct"
+          : " libre-practice-feedback--wrong")
       }
     >
-      <div className="fb-practice-feedback__verdict">
+      <div className="libre-practice-feedback__verdict">
         {outcome.status === "correct" ? (
           <>
             <Icon icon={checkIcon} size="sm" color="currentColor" />
@@ -393,13 +393,13 @@ function CardFeedback({
         )}
       </div>
       {explanation && (
-        <div className="fb-practice-feedback__explain">{explanation}</div>
+        <div className="libre-practice-feedback__explain">{explanation}</div>
       )}
-      <div className="fb-practice-feedback__actions">
+      <div className="libre-practice-feedback__actions">
         {onOpenLesson && (
           <button
             type="button"
-            className="fb-practice-feedback__lesson-link"
+            className="libre-practice-feedback__lesson-link"
             onClick={() => onOpenLesson(item.courseId, item.lessonId)}
           >
             Open original lesson →
@@ -407,7 +407,7 @@ function CardFeedback({
         )}
         <button
           type="button"
-          className="fb-practice-feedback__next"
+          className="libre-practice-feedback__next"
           onClick={onAdvance}
           autoFocus
         >
@@ -448,34 +448,34 @@ function SessionSummary({
   const minutes = Math.max(1, Math.round(elapsedMs / 60000));
 
   return (
-    <div className="fb-practice-summary">
-      <div className="fb-practice-summary__hero">
-        <div className="fb-practice-summary__big">
+    <div className="libre-practice-summary">
+      <div className="libre-practice-summary__hero">
+        <div className="libre-practice-summary__big">
           {correct}/{total}
         </div>
-        <div className="fb-practice-summary__caption">
+        <div className="libre-practice-summary__caption">
           {accuracy >= 90
             ? "Strong session — that's the rhythm."
             : accuracy >= 70
               ? "Solid. The misses come back tomorrow."
               : "Some friction here. The deck remembers — those'll cycle back soon."}
         </div>
-        <div className="fb-practice-summary__sub">
+        <div className="libre-practice-summary__sub">
           {accuracy}% accuracy · {minutes} min
         </div>
       </div>
 
       {wrongItems.length > 0 && (
-        <section className="fb-practice-summary__missed">
+        <section className="libre-practice-summary__missed">
           <h3>Items to revisit</h3>
           <ul>
             {wrongItems.map(({ item }) => (
               <li key={item.id}>
-                <div className="fb-practice-summary__missed-meta">
-                  <span className="fb-practice-summary__missed-course">
+                <div className="libre-practice-summary__missed-meta">
+                  <span className="libre-practice-summary__missed-course">
                     {item.courseTitle}
                   </span>
-                  <span className="fb-practice-summary__missed-sep">·</span>
+                  <span className="libre-practice-summary__missed-sep">·</span>
                   <span>{item.lessonTitle}</span>
                 </div>
                 {onOpenLesson && (
@@ -492,10 +492,10 @@ function SessionSummary({
         </section>
       )}
 
-      <div className="fb-practice-summary__actions">
+      <div className="libre-practice-summary__actions">
         <button
           type="button"
-          className="fb-practice-summary__exit"
+          className="libre-practice-summary__exit"
           onClick={onExit}
         >
           Back to deck

@@ -3,7 +3,6 @@ import ReactDOM from "react-dom/client";
 import { applyTheme, loadTheme } from "./theme/themes";
 import { prewarmCoursesSummary } from "./hooks/useCourses";
 import { isMobile } from "./lib/platform";
-import { migrateLegacyStorageKeys } from "./lib/storageMigration";
 // Base library's design tokens FIRST (light `:root` + `[data-theme=
 // "dark"]` blocks), then our theme overrides, then app shell styles.
 // The order is load-bearing: the base kit's `[data-theme="dark"]`
@@ -24,6 +23,7 @@ import { migrateLegacyStorageKeys } from "./lib/storageMigration";
 import "@mattmattmattmatt/base/site/styles/tokens.css";
 import "./theme/themes.css";
 import "./App.css";
+import { I18nProvider } from "./i18n/i18n";
 
 // Boot-phase markers. Pushed to the dev console buffer (devconsole.js
 // patched console.log before this script even started parsing) so we
@@ -38,18 +38,17 @@ function bootLog(label: string) {
 }
 bootLog("main.tsx start");
 
-// One-shot rename of legacy localStorage prefixes (kata:* / fishbones:*
-// / fb:*) → libre:*. Runs synchronously before any hook reads
-// localStorage so initial state computations see the migrated values
-// on the same boot the user updates to a Libre-branded build. Gated
-// by a sentinel so subsequent boots are O(1).
-migrateLegacyStorageKeys();
-bootLog("storage keys migrated");
-
 // Apply the user's chosen theme (or system preference for the first-run
 // default) before React mounts so we don't flash the wrong palette.
 applyTheme(loadTheme());
 bootLog("theme applied");
+
+// Analytics — web-only, no-op everywhere else. Imported lazily so
+// the desktop / mobile bundles don't even include the module (Vite
+// + the `isWeb` guard inside the module elide the script-injection
+// path at build time). Auto-skips popout / tray / dock surfaces so
+// they don't double-count as independent pageviews.
+void import("./lib/analytics").then((m) => m.init());
 
 const params = new URLSearchParams(window.location.search);
 const isPopped = params.get("popped") === "1";
@@ -61,7 +60,14 @@ const isPhone = params.get("phone") === "1";
 const isEvmDock = params.get("evmDock") === "1";
 const isBtcDock = params.get("btcDock") === "1";
 const isSvmDock = params.get("svmDock") === "1";
-const popoutMode = isPopped || isPhone || isEvmDock || isBtcDock || isSvmDock;
+// Menu-bar (macOS tray) popover. Tauri's tray.rs spawns a frameless
+// WebviewWindow loaded at `?tray=1`; we route that to a slim panel
+// with Ask Libre + a scrollable in-progress list instead of mounting
+// the entire `App` (which would blow ~50MB through the menu-bar
+// surface).
+const isTray = params.get("tray") === "1";
+const popoutMode =
+  isPopped || isPhone || isEvmDock || isBtcDock || isSvmDock || isTray;
 
 // Kick off the courses-summary IPC BEFORE React mounts. Skip on the
 // popout / dock variants — they don't render the library so warming
@@ -113,6 +119,7 @@ const Page = (() => {
     );
   }
   if (isPhone) return lazy(() => import("./components/PhonePopout/PhonePopoutView"));
+  if (isTray) return lazy(() => import("./components/TrayPanel/TrayPanel"));
   if (isPopped) return lazy(() => import("./components/Workbench/PoppedWorkbench"));
   return isMobile
     ? lazy(() => import("./mobile/MobileApp"))
@@ -123,9 +130,16 @@ bootLog(`page picked: ${isMobile ? "MobileApp" : popoutMode ? "popout" : "App"}`
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <Suspense fallback={null}>
-      <Page />
-    </Suspense>
+    {/* I18nProvider wraps every page variant (App, MobileApp, all
+        the popout / dock surfaces) so `useT()` is callable from
+        anywhere in the tree. The provider's persisted locale is
+        loaded synchronously from localStorage at mount, so the
+        first paint already has the correct language. */}
+    <I18nProvider>
+      <Suspense fallback={null}>
+        <Page />
+      </Suspense>
+    </I18nProvider>
   </React.StrictMode>,
 );
 bootLog("createRoot.render scheduled");
