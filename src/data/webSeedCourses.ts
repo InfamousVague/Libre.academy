@@ -23,7 +23,7 @@ interface ManifestEntry {
   file: string;
   cover?: string;
   sizeBytes: number;
-  packType?: "course" | "challenges";
+  packType?: "course" | "challenges" | "track";
   /// "Unlisted" — see Course.hidden + CatalogEntry.hidden. We still
   /// seed the course (so a deep link to `?courseId=…` works without
   /// an extra fetch) but stamp the flag onto the saved Course so
@@ -337,7 +337,49 @@ function starterUrl(path: string): string {
 /// green under the headless native Go runner. Bumping so
 /// returning web visitors pick up the new entry + cover
 /// without waiting for the next seed-altering change.
-const SEED_VERSION = 19;
+///
+/// V20 — Exercism Python track ingest. New starter course
+/// `exercism-python` (146 lessons across two chapters:
+/// Concepts + Practice), mirrored from github.com/exercism/python
+/// (MIT-licensed). Each lesson preserves the upstream
+/// introduction + instructions + hints; tests are
+/// auto-translated from unittest.TestCase shape into the
+/// kata_test DSL via a discovery runner appended at import
+/// time. Verified 144/146 lessons green in local CPython
+/// (remaining 2 are local Python-version artefacts that pass
+/// under Pyodide's 3.11+). New `packType: "track"` discriminator
+/// renders the lesson in the dedicated Tracks section between
+/// Books and Challenges. First of six planned Exercism tracks;
+/// TypeScript / Go / Rust / Elixir / Haskell follow in V21+.
+///
+/// V21 — Exercism full track expansion. Adds 17 more language
+/// tracks alongside Python: JavaScript (158), TypeScript (106),
+/// Rust (109), Go (165), Swift (116), Ruby (120), Elixir (168),
+/// Haskell (111), Lua (120), Dart (78), Scala (95), C (84),
+/// C++ (100), Java (158), Kotlin (88), C# (178), Zig (98). All
+/// 18 tracks mirror github.com/exercism/<lang> under MIT;
+/// per-language processors in scripts/import-exercism-track.mjs
+/// translate test code so it runs against Libre's runtime where
+/// possible (Python's unittest → kata_test, Jest globals stripped
+/// + module paths rewritten for JS/TS, Rust's #[cfg(test)] mod
+/// kata_tests wrap with use-statement stripping + #[ignore]
+/// removal). Native-runner languages (Ruby, Elixir, Haskell,
+/// Scala, Dart, Kotlin, Java, C, C++, C#, Zig, Swift, Lua)
+/// ship the upstream tests verbatim — they render in the
+/// workbench so learners can read them; `Run` works on desktop
+/// builds with the native toolchain installed, and falls back
+/// to the desktop-upsell on web. Adds ~2200 new exercises to
+/// the catalog in one shot.
+///
+/// V22 — Track cards swap from the language-icon hero treatment
+/// to the dense `CourseCard` layout that books use in grid view
+/// (title + author + progress bar + lesson-count meta). Removes
+/// the custom `TrackCard` component + its CSS — tracks now look
+/// like the same info-dense tiles books do, surfaced consistently
+/// across shelf and grid view modes. No content change, just a
+/// visual refresh; bump forces returning visitors to pick up the
+/// new bundle.
+const SEED_VERSION = 22;
 
 /// Run the web seed if it hasn't run yet OR if the persisted
 /// `SEED_VERSION` is older than the current build's. Idempotent +

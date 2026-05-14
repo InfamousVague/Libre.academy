@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Icon } from "@base/primitives/icon";
 import { check } from "@base/primitives/icon/icons/check";
 import "@base/primitives/icon/icon.css";
@@ -18,16 +18,37 @@ type QuestionState =
   | { status: "correct" }
   | { status: "wrong" };
 
+/// Passing threshold for the quiz — Notion issue
+/// #a9c9e3d8fabb5ebe asked that a grade ≥ 80% pass the quiz
+/// (was: every question must be correct). 0.8 is a permissive
+/// floor that still demands the learner has the concept in hand
+/// while letting a single wrong answer on a 5-question
+/// checkpoint slide. Wrong answers on MCQ are also now retry-able
+/// — picking again clears the "wrong" mark and runs a fresh
+/// submission, so a learner who fumbles isn't stuck on a red
+/// chip with no path forward.
+const PASS_THRESHOLD = 0.8;
+
 /// Renders a checkpoint quiz. Each question can be answered independently;
-/// the lesson counts as complete only when every question is correct. Wrong
-/// answers reveal the explanation and allow retry. No scoring — concept
-/// retention is the point, not hitting a number.
+/// wrong answers can be retried until correct, and the lesson counts as
+/// complete once the learner crosses the PASS_THRESHOLD share of correct
+/// answers.
 export default function QuizView({ lesson, onComplete }: Props) {
   const [state, setState] = useState<QuestionState[]>(() =>
     lesson.questions.map(() => ({ status: "unanswered" })),
   );
 
-  const allCorrect = state.every((s) => s.status === "correct");
+  // Latched once we've fired `onComplete` so a learner who passes
+  // at 80% then KEEPS answering the remaining questions doesn't
+  // re-trigger the completion bubble on each subsequent green
+  // chip. Ref (not state) because the React render path doesn't
+  // need to read it — it's purely a guard for the side-effectful
+  // bubble.
+  const completedRef = useRef(false);
+
+  const correctCount = state.filter((s) => s.status === "correct").length;
+  const correctShare = correctCount / Math.max(1, lesson.questions.length);
+  const passed = correctShare >= PASS_THRESHOLD;
 
   function setQuestionState(index: number, next: QuestionState) {
     // Per-question haptic: success on correct, warning on wrong.
@@ -43,16 +64,18 @@ export default function QuizView({ lesson, onComplete }: Props) {
     setState((prev) => {
       const copy = prev.slice();
       copy[index] = next;
-      const done = copy.every((s) => s.status === "correct");
-      if (done && !allCorrect) {
-        // All green — bubble completion up. Fire a celebration
-        // haptic alongside; the engine throttle will collapse
-        // the success buzz above + this completion into a
-        // single perceptible event when the last answer is the
-        // one that completes the quiz.
+      const nextCorrect = copy.filter((s) => s.status === "correct").length;
+      const nextShare = nextCorrect / Math.max(1, lesson.questions.length);
+      if (!completedRef.current && nextShare >= PASS_THRESHOLD) {
+        // Crossed the pass threshold. Fire a celebration haptic
+        // alongside the per-question haptic above; the engine's
+        // throttle collapses adjacent buzzes into one event so
+        // the user feels a single confident "you passed" pulse
+        // rather than two stacked.
         void fireHaptic("completion");
-        // Bubble completion up in a microtask so the state
-        // update commits first.
+        // Latch so the bubble fires exactly once even if the
+        // learner answers the rest of the questions afterward.
+        completedRef.current = true;
         queueMicrotask(onComplete);
       }
       return copy;
@@ -77,11 +100,8 @@ export default function QuizView({ lesson, onComplete }: Props) {
       });
     });
     return off;
-    // setQuestionState closes over `allCorrect` from the latest
-    // render, which is what we want — re-binding when allCorrect
-    // changes lets the listener pick up the freshest closure.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lesson.id, lesson.questions.length, allCorrect]);
+  }, [lesson.id, lesson.questions.length]);
 
   return (
     <div className="libre-quiz">
@@ -108,8 +128,12 @@ export default function QuizView({ lesson, onComplete }: Props) {
         />
       ))}
 
-      {allCorrect && (
-        <div className="libre-quiz-done">nice — checkpoint cleared</div>
+      {passed && (
+        <div className="libre-quiz-done">
+          {correctShare >= 1
+            ? "nice — checkpoint cleared"
+            : `nice — checkpoint cleared (${Math.round(correctShare * 100)}%)`}
+        </div>
       )}
     </div>
   );
@@ -176,30 +200,48 @@ function McqAnswer({
   onResult: (status: "correct" | "wrong") => void;
 }) {
   const [picked, setPicked] = useState<number | null>(null);
-  const committed = state.status !== "unanswered";
+  // Lock the question once it's CORRECT — wrong answers stay
+  // retry-able so a learner who misclicks or guesses can pick
+  // again (Notion issue #a9c9e3d8fabb5ebe). Re-clicking after a
+  // wrong answer clears the wrong-state visual on the previous
+  // pick and runs a fresh submission against the new index.
+  const locked = state.status === "correct";
 
   function submit(i: number) {
-    if (committed) return;
+    if (locked) return;
     setPicked(i);
     onResult(i === question.correctIndex ? "correct" : "wrong");
   }
 
+  // Wrong-state visual decoration: only paint the just-clicked
+  // option as wrong, AND only while we're still in wrong-state.
+  // Once the learner picks again, the wrong-state visual moves
+  // to the new pick (or clears entirely if the new pick was
+  // correct).
   return (
     <div className="libre-quiz-options">
       {question.options.map((opt, i) => {
         const isPicked = i === picked;
         const isCorrect = i === question.correctIndex;
+        // Show the correct option as green only after the learner
+        // has either landed on it OR after they've burned a wrong
+        // guess — same "reveal the answer" semantic as before, but
+        // staged through the retry-able state machine.
+        const showCorrect =
+          state.status === "correct" && isCorrect;
+        const showWrong =
+          state.status === "wrong" && isPicked && !isCorrect;
         const classes = [
           "libre-quiz-option",
-          committed && isCorrect ? "libre-quiz-option--correct" : "",
-          committed && isPicked && !isCorrect ? "libre-quiz-option--wrong" : "",
+          showCorrect ? "libre-quiz-option--correct" : "",
+          showWrong ? "libre-quiz-option--wrong" : "",
         ].join(" ");
         return (
           <button
             key={i}
             className={classes}
             onClick={() => submit(i)}
-            disabled={committed && state.status === "correct"}
+            disabled={locked}
           >
             <span className="libre-quiz-option-letter">{String.fromCharCode(65 + i)}</span>
             <span>{opt}</span>
@@ -228,6 +270,13 @@ function ShortAnswer({
     const ok = question.accept.some((a) => normalizeAnswer(a) === normalized);
     onResult(ok ? "correct" : "wrong");
   }
+
+  // Retry path on the input: ShortAnswer's submit is gated on
+  // `committed` (= correct) so a wrong submission leaves both the
+  // input AND the check button live. The red visual persists until
+  // the next submit re-evaluates the new value — accurate, because
+  // the question really IS still in the wrong-state until proven
+  // otherwise.
 
   return (
     <div className="libre-quiz-short">

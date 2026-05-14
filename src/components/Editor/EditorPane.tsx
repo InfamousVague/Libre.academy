@@ -100,6 +100,14 @@ interface Props {
   /// (e.g. when the EditorPane is already rendered inside the popped-out
   /// window).
   onPopOut?: () => void;
+  /// Hand the current lesson off to the Libre VSCode extension. When
+  /// supplied, renders a small button next to `onPopOut` that fires a
+  /// `vscode://libre-academy.libre/open?course=…&lesson=…` URL —
+  /// VSCode picks it up (if installed) and opens the lesson in its
+  /// own UI with the same shared progress.sqlite this app writes to.
+  /// Omit on surfaces where the handoff doesn't make sense (e.g. the
+  /// popped-out workbench window, where you're already detached).
+  onOpenInVSCode?: () => void;
   /// Exercise render-mode toggle, surfaced inline in the editor header
   /// when the lesson ships authored blocks data. When omitted, no
   /// toggle renders. The toggle replaces the previous language label
@@ -190,6 +198,7 @@ export default function EditorPane({
   onReset,
   onRevealSolution,
   onPopOut,
+  onOpenInVSCode,
   exerciseMode,
   onExerciseModeChange,
 }: Props) {
@@ -523,6 +532,49 @@ export default function EditorPane({
               title={t("editor.popOut")}
             >
               ⇱
+            </button>
+          )}
+          {onOpenInVSCode && (
+            <button
+              type="button"
+              className="libre-editor-button"
+              onClick={onOpenInVSCode}
+              title={t("editor.openInVSCode")}
+              aria-label={t("editor.openInVSCode")}
+            >
+              {/* Inline SVG of the VSCode mark. Single-path,
+                  `fill="currentColor"` so it inherits text colour
+                  in both dark + light themes; `fill-rule="evenodd"`
+                  punches the inner triangle out of the chevron
+                  silhouette so the notch is a true hole.
+
+                  Previous geometry (Notion issue
+                  #bd02f45814de4be6 — "VSCode icon is broken in
+                  dark and light mode") had a 4-point flat-edged
+                  left wing — `L16 54 L8 60 L8 40 L16 46` —
+                  which rendered as an I-beam on the chevron's
+                  outer edge instead of a recognisable VSCode
+                  ribbon. Replaced with a clean
+                  slab-plus-pointed-chevron silhouette: slab on
+                  the right with parallelogram-tilt edges, a
+                  single-point chevron wing on the left, and an
+                  inner-triangle notch where the wing tip enters
+                  the slab. Reads correctly in both themes
+                  because the only colour used is currentColor. */}
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 100 100"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M75 6 L94 16 L94 84 L75 94 L12 50 L75 6 Z M75 30 L40 50 L75 70 Z"
+                  fill="currentColor"
+                />
+              </svg>
             </button>
           )}
           <button

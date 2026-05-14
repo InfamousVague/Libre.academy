@@ -21,7 +21,7 @@
 ///         "sizeBytes": 1234567,
 ///         "archiveSizeBytes": 234567,
 ///         "tier": "core" | "remote",
-///         "packType": "course" | "challenges",
+///         "packType": "course" | "challenges" | "track",
 ///         "releaseStatus": "BETA" | "ALPHA" | "UNREVIEWED",
 ///         "lessonCount": 168
 ///       },
@@ -50,9 +50,16 @@ export interface CatalogEntry {
   /// resolve to a real URL via `coverHref` below.
   cover?: string;
   sizeBytes: number;
-  archiveSizeBytes: number;
+  /// Optional — only set when the catalog ships a downloadable .academy
+  /// archive alongside the per-course JSON. Course-derived books carry
+  /// it (the AI-generated lessons + multi-MB cover JPEGs benefit from
+  /// the archive format); Exercism tracks ship JSON-only, so this is
+  /// undefined for them. The BookCover placeholder uses it to render
+  /// the "X.X MB" hint next to the Install button; absence just hides
+  /// the hint.
+  archiveSizeBytes?: number;
   tier: "core" | "remote";
-  packType?: "course" | "challenges";
+  packType?: "course" | "challenges" | "track";
   releaseStatus?: "BETA" | "ALPHA" | "UNREVIEWED" | "PRE-RELEASE";
   lessonCount?: number;
   /// Unlisted flag — see Course.hidden. The catalog layer drops

@@ -63,6 +63,13 @@ interface Props {
   /// optional — empty values just render shorter footer text.
   appVersion?: string | null;
   themeName?: string | null;
+  /// Fires every time the user clicks/taps the version chip. The
+  /// parent dialog tallies the taps and reveals the Developer
+  /// pane on the 10th in a row (5-second window). Plumbed as a
+  /// callback rather than a counter so this component stays
+  /// purely presentational — the gating logic lives in the
+  /// dialog where the pane filter is already wired.
+  onVersionTap?: () => void;
 }
 
 export default function SettingsNav({
@@ -73,6 +80,7 @@ export default function SettingsNav({
   onProfileClick,
   appVersion,
   themeName,
+  onVersionTap,
 }: Props) {
   const t = useT();
   return (
@@ -158,7 +166,11 @@ export default function SettingsNav({
           interactive surfaces. Both fields are optional; omitted
           ones just shorten the strip. */}
       {(appVersion || themeName) && (
-        <FooterChip appVersion={appVersion} themeName={themeName} />
+        <FooterChip
+          appVersion={appVersion}
+          themeName={themeName}
+          onVersionTap={onVersionTap}
+        />
       )}
     </nav>
   );
@@ -167,9 +179,10 @@ export default function SettingsNav({
 interface FooterProps {
   appVersion?: string | null;
   themeName?: string | null;
+  onVersionTap?: () => void;
 }
 
-function FooterChip({ appVersion, themeName }: FooterProps) {
+function FooterChip({ appVersion, themeName, onVersionTap }: FooterProps) {
   const t = useT();
   // Format the version with a leading "Libre" prefix; the version
   // string from `getVersion()` is bare ("0.1.15") and reads better
@@ -177,9 +190,22 @@ function FooterChip({ appVersion, themeName }: FooterProps) {
   const version = appVersion
     ? t("settings.libreVersion", { version: appVersion })
     : t("settings.libreOnly");
+  // Version span is silently click-armed when `onVersionTap` is
+  // wired — the parent dialog uses this to count 10 quick taps as
+  // the easter-egg gesture to reveal the Developer pane. We don't
+  // change the cursor / aria so the gate stays undiscovered until
+  // someone tries it; the wrapped <span> remains visually
+  // identical to the un-tappable version. `user-select: none` via
+  // inline style stops a double-/triple-click from selecting the
+  // text and triggering the OS context menu.
   return (
     <footer className="libre-settings-nav__footer">
-      <span>{version}</span>
+      <span
+        onClick={onVersionTap}
+        style={onVersionTap ? { userSelect: "none" } : undefined}
+      >
+        {version}
+      </span>
       {themeName && (
         <>
           <span aria-hidden>·</span>

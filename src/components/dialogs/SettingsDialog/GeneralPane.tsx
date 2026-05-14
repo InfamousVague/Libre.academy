@@ -4,10 +4,18 @@ import { check as checkIcon } from "@base/primitives/icon/icons/check";
 import { rocket } from "@base/primitives/icon/icons/rocket";
 import { arrowDownToLine } from "@base/primitives/icon/icons/arrow-down-to-line";
 import { info } from "@base/primitives/icon/icons/info";
+import { arrowRight } from "@base/primitives/icon/icons/arrow-right";
 import "@base/primitives/icon/icon.css";
 import SettingsCard, { SettingsPage } from "./SettingsCard";
 import SettingsRow from "./SettingsRow";
+import SettingsToggle from "./SettingsToggle";
 import { useT } from "../../../i18n/i18n";
+import { useLocalStorageState } from "../../../hooks/useLocalStorageState";
+import {
+  AUTO_ADVANCE_DEFAULT,
+  AUTO_ADVANCE_STORAGE_KEY,
+  setAutoAdvanceEnabled,
+} from "../../../lib/autoAdvance";
 
 /// "General" section of the Settings dialog. Hosts the Updates
 /// sub-panel: current version, manual check-for-updates, and the
@@ -123,11 +131,60 @@ export default function GeneralPane() {
     }
   }, []);
 
+  // Learner-pace preference. Off by default — the surprise factor
+  // of being teleported to the next lesson is small but real, and
+  // we want learners who don't know about the toggle to keep the
+  // existing "sit on the pass screen until I click Next" flow.
+  // Lives on the same key the imperative reader in `lib/autoAdvance
+  // .ts` watches; both surfaces stay in sync via the underlying
+  // localStorage write.
+  const [autoAdvance, setAutoAdvanceState] = useLocalStorageState<boolean>(
+    AUTO_ADVANCE_STORAGE_KEY,
+    AUTO_ADVANCE_DEFAULT,
+    // Match the lib module's `"1"` / `"0"` encoding so the two
+    // readers see the same value byte-for-byte. Without this the
+    // hook's default JSON serialisation would write `true` / `false`
+    // and the imperative reader's `=== "1"` check would always be
+    // false.
+    {
+      serialize: (v) => (v ? "1" : "0"),
+      deserialize: (raw) => raw === "1",
+    },
+  );
+
   return (
     <SettingsPage
       title={t("settings.general")}
       description={t("settings.generalDescription")}
     >
+      <SettingsCard title={t("settings.learningCard")}>
+        <SettingsRow
+          icon={arrowRight}
+          tone={autoAdvance ? "accent" : "default"}
+          label={t("settings.autoAdvanceLabel")}
+          sub={t("settings.autoAdvanceSub")}
+          control={
+            <SettingsToggle
+              checked={autoAdvance}
+              onChange={(next) => {
+                // Two writes: the React-state setter (so the
+                // toggle re-renders immediately) AND the
+                // imperative module setter (which the completion
+                // path reads from). Both target the same
+                // localStorage key, so a later page reload would
+                // pick up either write — the duplication exists
+                // only to make this surface's onChange handler
+                // self-contained without having to wait on the
+                // useEffect-based persistence.
+                setAutoAdvanceState(next);
+                setAutoAdvanceEnabled(next);
+              }}
+              label={t("settings.autoAdvanceLabel")}
+            />
+          }
+        />
+      </SettingsCard>
+
       <SettingsCard title={t("settings.updatesCard")}>
         <SettingsRow
           icon={info}

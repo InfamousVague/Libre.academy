@@ -22,7 +22,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Course, LanguageId } from "../data/types";
 import type { Completion } from "../hooks/useProgress";
-import { isChallengePack } from "../data/types";
+import { isChallengePack, isExerciseTrack } from "../data/types";
 import { prefetchCovers } from "../hooks/useCourseCover";
 import { useLocalStorageState } from "../hooks/useLocalStorageState";
 import { haptics } from "../lib/haptics";
@@ -211,9 +211,11 @@ export default function MobileLibrary({
   /// still render a sensible order.
   const sections = useMemo(() => {
     const books: Course[] = [];
+    const tracks: Course[] = [];
     const challenges: Course[] = [];
     for (const c of filtered) {
       if (isChallengePack(c)) challenges.push(c);
+      else if (isExerciseTrack(c)) tracks.push(c);
       else books.push(c);
     }
     const hasHistory = history && history.length > 0;
@@ -241,10 +243,14 @@ export default function MobileLibrary({
           return tier(a) - tier(b);
         };
     books.sort(sortByActivity);
+    tracks.sort(sortByActivity);
     challenges.sort(sortByActivity);
     const out: Array<{ key: string; label: string; rows: Course[] }> = [];
     if (books.length > 0) {
       out.push({ key: "books", label: "Books", rows: books });
+    }
+    if (tracks.length > 0) {
+      out.push({ key: "tracks", label: "Tracks", rows: tracks });
     }
     if (challenges.length > 0) {
       out.push({ key: "challenges", label: "Challenges", rows: challenges });

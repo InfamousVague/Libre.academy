@@ -99,7 +99,7 @@ export default function AchievementBadge({
       {!showLock && (
         <Hologram
           surface="dark"
-          intensity="vivid"
+          intensity="subtle"
           sparkle="snake"
           className="libre-ach-badge__holo"
         />

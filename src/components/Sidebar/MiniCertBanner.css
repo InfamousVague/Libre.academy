@@ -98,11 +98,16 @@
   isolation: isolate;
   cursor: default;
 
-  /* Parchment + radial wash matching the full cert. */
-  background-color: #fbfaf6;
+  /* White paper base + neutral radial wash — mirrors the
+     modernized full cert ticket (Notion issue #8fc4fe14f15d1747).
+     The previous parchment-cream `#fbfaf6` + amber haze didn't
+     match the modernized certificates-page treatment, which left
+     a visible style break between the sidebar mini-cert and the
+     full cert when the user clicked through. */
+  background-color: #ffffff;
   background-image: radial-gradient(
     circle at var(--mini-cert-p) 35%,
-    rgba(212, 176, 107, 0.18) 0%,
+    rgba(0, 0, 0, 0.04) 0%,
     transparent 65%
   );
 
@@ -186,7 +191,7 @@
 }
 
 .libre-mini-cert--interactive:focus-visible {
-  outline: 2px solid #a85e1c;
+  outline: 2px solid rgba(0, 0, 0, 0.45);
   outline-offset: 2px;
 }
 
@@ -303,7 +308,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  color: #1a1418;
+  color: #111111;
   min-width: 0;
 }
 
@@ -316,15 +321,15 @@
 /* Icon companion to the eyebrow. Wraps the Lucide `award` glyph
    in a fixed-size flex slot so the icon's bounding box doesn't
    nudge the eyebrow text around as the SVG's intrinsic size
-   varies. Color tracks the eyebrow's amber so the two read as a
-   pair. */
+   varies. Neutral grey tracks the eyebrow so the two read as a
+   pair in the modernized monochrome system. */
 .libre-mini-cert__icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 13px;
   height: 13px;
-  color: #a85e1c;
+  color: rgba(0, 0, 0, 0.5);
   flex-shrink: 0;
 }
 
@@ -334,21 +339,27 @@
 }
 
 .libre-mini-cert__eyebrow {
-  font-family: Georgia, "Times New Roman", Times, serif;
+  /* Modernized to match the full cert eyebrow: app-default sans
+     + tracked-uppercase + neutral grey. Was Georgia + amber. */
+  font-family: inherit;
   font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
+  font-weight: 600;
+  letter-spacing: 0.32em;
   text-transform: uppercase;
-  color: #a85e1c;
+  color: rgba(0, 0, 0, 0.5);
 }
 
 .libre-mini-cert__course {
-  font-family: Georgia, "Times New Roman", Times, serif;
-  font-style: italic;
+  /* Modernized hero text: bold sans (was Georgia italic), tight
+     negative tracking, pure-black ink — same treatment the full
+     cert ticket's recipient line uses. */
+  font-family: inherit;
+  font-style: normal;
   font-weight: 700;
   font-size: 14px;
   line-height: 1.15;
-  color: #1a1418;
+  letter-spacing: -0.015em;
+  color: #111111;
   margin: 3px 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -360,20 +371,24 @@
   width: 100%;
   height: 4px;
   border-radius: 999px;
-  background: rgba(26, 20, 24, 0.12);
+  /* Neutralized from `rgba(26, 20, 24, 0.12)` warm parchment to
+     a plain black-alpha track. */
+  background: rgba(0, 0, 0, 0.08);
   overflow: hidden;
 }
 
 .libre-mini-cert__bar-fill {
   height: 100%;
   border-radius: inherit;
-  /* Amber → gold gradient so the fill reads as part of the
-     cert's foil family. */
+  /* Graphite gradient instead of the old amber → gold
+     (`#a85e1c → #d4863a → #e6b15a`), matching the in-progress
+     full-cert bar's modernized fill. Keeps the visual idea of
+     a filling bar while staying in the new monochrome system. */
   background: linear-gradient(
     90deg,
-    #a85e1c 0%,
-    #d4863a 60%,
-    #e6b15a 100%
+    #1a1a1a 0%,
+    #3a3a3a 60%,
+    #555555 100%
   );
   transition: width 0.4s ease;
 }
@@ -390,17 +405,18 @@
   align-items: center;
   justify-content: space-between;
   text-align: center;
-  color: #1a1418;
+  color: #111111;
   /* Dashed perforation rule on the left edge — visually mirrors
      the full ticket's separator, scaled down for the chrome
-     size. The dash spacing is tighter so the rule still reads
-     as perforated at this scale. */
+     size. Neutralized from the warm `rgba(26, 20, 24, 0.5)` ink
+     to plain black-alpha so the perf reads in the modern
+     monochrome system. */
   background-image: repeating-linear-gradient(
     180deg,
     transparent 0px,
     transparent 4px,
-    rgba(26, 20, 24, 0.5) 4px,
-    rgba(26, 20, 24, 0.5) 8px
+    rgba(0, 0, 0, 0.3) 4px,
+    rgba(0, 0, 0, 0.3) 8px
   );
   background-size: 1.5px 100%;
   background-repeat: no-repeat;
@@ -441,21 +457,24 @@
 }
 
 .libre-mini-cert__stub-stat-label {
-  font-family: Georgia, "Times New Roman", Times, serif;
+  /* Modernized: sans + neutral grey (was Georgia + amber). */
+  font-family: inherit;
   font-size: 8px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: #a85e1c;
+  color: rgba(0, 0, 0, 0.5);
   line-height: 1;
 }
 
 .libre-mini-cert__stub-stat-value {
-  font-family: Georgia, "Times New Roman", Times, serif;
+  /* Modernized: sans + pure-black ink (was Georgia + warm `#1a1418`). */
+  font-family: inherit;
   font-weight: 700;
   font-size: 13px;
   line-height: 1;
-  color: #1a1418;
+  letter-spacing: -0.01em;
+  color: #111111;
   font-variant-numeric: tabular-nums;
 }
 
@@ -471,7 +490,7 @@
    with the numerator for the eye's attention. */
 .libre-mini-cert__stub-stat-suffix {
   font-size: 0.7em;
-  color: rgba(26, 20, 24, 0.55);
+  color: rgba(0, 0, 0, 0.5);
   font-weight: 600;
   margin-left: 1px;
 }
@@ -480,7 +499,7 @@
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 8px;
   font-weight: 600;
-  color: rgba(26, 20, 24, 0.6);
+  color: rgba(0, 0, 0, 0.55);
   letter-spacing: 0.06em;
   flex-shrink: 0;
 }
@@ -538,8 +557,9 @@
   padding-top: 8px;
   /* Dashed perforation line separating the badge grid from the
      progress bar above — echoes the tear-off stub's perforation
-     so the cert's visual vocabulary stays consistent. */
-  border-top: 1px dashed rgba(26, 20, 24, 0.18);
+     so the cert's visual vocabulary stays consistent.
+     Neutralized from warm `rgba(26, 20, 24, 0.18)`. */
+  border-top: 1px dashed rgba(0, 0, 0, 0.14);
 }
 
 .libre-mini-cert__badge {
@@ -557,7 +577,7 @@
    foreground colour, low opacity so empty slots whisper rather
    than shout. */
 .libre-mini-cert__badge--pending {
-  color: rgba(26, 20, 24, 0.18);
+  color: rgba(0, 0, 0, 0.14);
 }
 
 /* Earned — dark-coloured icon silhouette + drop-shadow rim so the
@@ -572,10 +592,10 @@
    Color matches the cert's primary text ink so the punch reads
    as "missing material" against the parchment. */
 .libre-mini-cert__badge--earned {
-  color: #1a1418;
+  color: #111111;
   filter:
-    drop-shadow(0 1px 0 rgba(255, 250, 240, 0.7))
-    drop-shadow(0 0 1px rgba(26, 20, 24, 0.55));
+    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.7))
+    drop-shadow(0 0 1px rgba(0, 0, 0, 0.35));
 }
 
 /* Cookie-cutter silhouette: fill every shape inside an earned

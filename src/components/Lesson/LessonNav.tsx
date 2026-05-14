@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Icon } from "@base/primitives/icon";
 import { arrowLeft } from "@base/primitives/icon/icons/arrow-left";
 import { arrowRight } from "@base/primitives/icon/icons/arrow-right";
@@ -26,6 +27,13 @@ interface Props {
   /// holo overlay reads as "this is the moment, take the action."
   /// Defaults false.
   nextIsCta?: boolean;
+  /// Timestamp (ms since epoch) at which an auto-advance is scheduled
+  /// to fire, or null when none is pending. When non-null the Next
+  /// button paints a circular 3..2..1 countdown ring + digit overlay
+  /// that animates until the timer reaches zero — visual confirmation
+  /// of "you're about to be moved forward, click anywhere to stop me."
+  /// Notion issue #9180e1cfc9e068a8.
+  autoAdvanceFireAt?: number | null;
 }
 
 /// CSS `text-overflow: ellipsis` only trims at the end, which on a lesson
@@ -57,6 +65,79 @@ function MiddleTitle({ text }: { text: string }) {
   );
 }
 
+/// Total auto-advance duration in ms. Mirrors the `setTimeout` delay
+/// in App.tsx's `markCompletedAndCelebrate` — bumped to 3000ms when
+/// the countdown ring was introduced so the 3..2..1 sequence has
+/// room to read. If App's delay changes, this constant must change
+/// in lockstep or the ring will end before / after the actual fire.
+const AUTO_ADVANCE_DURATION_MS = 3000;
+
+/// Countdown overlay rendered on top of the Next button while an
+/// auto-advance is pending. Polls `Date.now()` at requestAnimationFrame
+/// cadence (~60fps) so the ring sweeps smoothly from a full
+/// circle to empty. Self-contained — owns its own RAF loop, fires
+/// `onZero` exactly once when the timer reaches 0, and tears itself
+/// down on unmount.
+function AutoAdvanceRing({ fireAt }: { fireAt: number }) {
+  // Remaining ms as a continuous value so the ring animates smoothly.
+  // The visible digit (3 / 2 / 1) is derived from this — Math.ceil
+  // so the first frame shows "3" rather than "2" (3000ms ÷ 1000 =
+  // exactly 3, which floors to 3 but ceils to 3 too; 2999ms ÷ 1000
+  // would floor to 2 but we want "3" until we've actually crossed
+  // the 2000ms boundary).
+  const [remainingMs, setRemainingMs] = useState(() =>
+    Math.max(0, fireAt - Date.now()),
+  );
+  useEffect(() => {
+    let raf = 0;
+    const tick = () => {
+      const r = Math.max(0, fireAt - Date.now());
+      setRemainingMs(r);
+      if (r > 0) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [fireAt]);
+  // Ring fill: full circle at start (remaining = duration), empty
+  // circle when remaining = 0. Stroke-dashoffset is the difference
+  // between the full circumference and the proportion remaining.
+  const radius = 11;
+  const circumference = 2 * Math.PI * radius;
+  const progress = Math.max(0, Math.min(1, remainingMs / AUTO_ADVANCE_DURATION_MS));
+  const offset = circumference * (1 - progress);
+  // Digit display: 3..2..1, rounded up so the digit ticks down at
+  // each whole-second boundary instead of skipping.
+  const digit = Math.max(1, Math.ceil(remainingMs / 1000));
+  return (
+    <span className="libre-lesson-nav-countdown" aria-hidden>
+      <svg
+        className="libre-lesson-nav-countdown-ring"
+        viewBox="0 0 28 28"
+        width="28"
+        height="28"
+      >
+        <circle
+          className="libre-lesson-nav-countdown-track"
+          cx="14"
+          cy="14"
+          r={radius}
+          fill="none"
+        />
+        <circle
+          className="libre-lesson-nav-countdown-fill"
+          cx="14"
+          cy="14"
+          r={radius}
+          fill="none"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+        />
+      </svg>
+      <span className="libre-lesson-nav-countdown-digit">{digit}</span>
+    </span>
+  );
+}
+
 /// Prev/Next bar that sits at the end of every lesson. Mirrors Codecademy's
 /// linear progression feel — users can advance through a course without
 /// opening the sidebar for every step, and reading-only lessons get marked
@@ -68,8 +149,16 @@ export default function LessonNav({
   onNext,
   nextLabel,
   nextIsCta = false,
+  autoAdvanceFireAt = null,
 }: Props) {
   const t = useT();
+  // Only paint the countdown when there's an actual pending fire-at
+  // AND it's in the future. A `fireAt` in the past would render a
+  // negative digit / under-filled ring — guard here so the visual
+  // never glitches if App's clearPendingAutoAdvance hasn't propagated
+  // yet.
+  const showCountdown =
+    autoAdvanceFireAt !== null && autoAdvanceFireAt > Date.now();
   return (
     <nav className="libre-lesson-nav" aria-label={t("lessonNav.ariaLabel")}>
       <button
@@ -95,7 +184,8 @@ export default function LessonNav({
         type="button"
         className={
           "libre-lesson-nav-btn libre-lesson-nav-btn--next " +
-          (nextIsCta ? "libre-lesson-nav-btn--cta" : "")
+          (nextIsCta ? "libre-lesson-nav-btn--cta " : "") +
+          (showCountdown ? "libre-lesson-nav-btn--counting" : "")
         }
         onClick={onNext}
         disabled={!next}
@@ -112,7 +202,11 @@ export default function LessonNav({
           {next && <MiddleTitle text={next.title} />}
         </span>
         <span className="libre-lesson-nav-arrow" aria-hidden>
-          <Icon icon={arrowRight} size="sm" color="currentColor" />
+          {showCountdown && autoAdvanceFireAt !== null ? (
+            <AutoAdvanceRing fireAt={autoAdvanceFireAt} />
+          ) : (
+            <Icon icon={arrowRight} size="sm" color="currentColor" />
+          )}
         </span>
       </button>
     </nav>

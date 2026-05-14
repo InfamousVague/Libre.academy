@@ -95,6 +95,70 @@
   z-index: 1;
 }
 
+/* ── Auto-advance countdown ring ─────────────────────────────────
+   Shown on the Next button while an auto-advance is pending
+   (Notion issue #9180e1cfc9e068a8). Replaces the inline arrow
+   glyph with a 28×28 SVG ring that sweeps from full to empty
+   over the auto-advance window, with a 3 / 2 / 1 digit centered
+   inside. The ring is rotated -90deg so the sweep starts at 12
+   o'clock and goes clockwise (the conventional "remaining time"
+   direction in iOS / Android system UI).
+
+   The ring lives inside `.libre-lesson-nav-arrow`, replacing the
+   chevron, so existing layout / spacing rules continue to apply
+   without per-state overrides. */
+.libre-lesson-nav-countdown {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+}
+
+.libre-lesson-nav-countdown-ring {
+  position: absolute;
+  inset: 0;
+  /* Rotate so the stroke starts at the top + sweeps clockwise. */
+  transform: rotate(-90deg);
+}
+
+.libre-lesson-nav-countdown-track {
+  stroke: currentColor;
+  stroke-width: 2;
+  opacity: 0.2;
+}
+
+.libre-lesson-nav-countdown-fill {
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  /* No CSS transition on dashoffset — the React component
+     updates it every animation frame, so a layered transition
+     would lag the actual value. */
+}
+
+.libre-lesson-nav-countdown-digit {
+  position: relative;
+  z-index: 1;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+/* Reduced motion: drop the per-frame ring sweep to a static
+   visible state. The digit still ticks 3→2→1 (state updates
+   are React-driven, not animation), but the ring just appears
+   filled at the start. The component still works — just less
+   visually. */
+@media (prefers-reduced-motion: reduce) {
+  .libre-lesson-nav-countdown-fill {
+    stroke-dashoffset: 0 !important;
+  }
+}
+
 /* CTA variant — applied when the next button doubles as
    "mark read & next" on reading-only lessons. Promotes the
    button to the brand-accent base (white on default-dark) so

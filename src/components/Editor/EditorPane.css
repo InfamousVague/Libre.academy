@@ -81,15 +81,28 @@
 
 .libre-editor-actions {
   display: flex;
+  align-items: stretch;
   gap: 6px;
+  /* Shared toolbar control height — every button in the action
+     cluster (Help split, Pop-out, Open-in-VSCode, Run) inherits
+     this so the row reads as a single horizontal rail rather
+     than a stagger of slightly-mismatched boxes. Trimmed from
+     28px → 24px (Notion issue #80858f2c): Run/Help/Open-in-
+     VSCode were reading too tall for what's effectively a
+     single-line label + glyph. 24px still clears the 22px
+     ShortcutHint chip and stays comfortably above the 22-24px
+     touch-target floor we use elsewhere on the toolbar. */
+  --libre-editor-btn-h: 24px;
 }
 
 .libre-editor-button {
-  /* Larger toolbar buttons — earlier 3×10 padding read as cramped
-     next to the editor's full vertical real estate. Bumped to
-     5×14 with a bigger font so the row of actions feels weight-
-     matched to the editor body. */
-  padding: 5px 14px;
+  /* Vertical padding trimmed (5px → 1px) — height is driven by
+     `min-height` now so the icon buttons (Pop-out, Open-in-VSCode)
+     align flush with the Run button instead of out-pacing it.
+     Horizontal padding kept at 12px so the icon glyphs have
+     room without crowding the border. */
+  padding: 1px 12px;
+  min-height: var(--libre-editor-btn-h, 24px);
   background: transparent;
   border: 1px solid var(--color-border-default);
   border-radius: var(--libre-radius-xs);
@@ -99,7 +112,9 @@
   cursor: pointer;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
+  box-sizing: border-box;
 }
 
 .libre-editor-button:hover:not(:disabled) {
@@ -131,6 +146,11 @@
   border-color: var(--color-accent, var(--color-text-primary, #ffffff));
   font-weight: 600;
   isolation: isolate;
+  /* The ShortcutHint chip's own height used to drive Run's
+     outer dimensions (the chip was 22px → ~34px button). Now
+     that every toolbar control shares `--libre-editor-btn-h`,
+     the chip is sized down in the rule below to fit inside
+     that shared height without overflowing. */
 }
 
 .libre-editor-run:hover:not(:disabled) {
@@ -159,7 +179,13 @@
    learner glancing at the editor toolbar immediately reads the
    binding instead of squinting at micro-text. */
 .libre-editor-run .libre-shortcut-hint {
-  height: 22px;
+  /* Chip height pulled in from 22px → 18px so it fits comfortably
+     inside the unified `--libre-editor-btn-h` (28px) toolbar
+     button height alongside the "run" label. Run was previously
+     ~34px outer, which made Help + the icon buttons look stunted
+     in comparison — now the whole action cluster sits on the
+     same horizontal baseline. */
+  height: 18px;
   /* Line-height matches the box height so the ⌘R glyphs centre
      via the line box itself rather than relying on the parent's
      flex `align-items: center`. Without this the chip's vertical
@@ -172,16 +198,17 @@
      round that read as a visible "jump" of the chip. Locking the
      line-height to the box height makes the chip's layout
      intrinsic + repaint-stable. */
-  line-height: 22px;
-  padding: 0 8px;
+  line-height: 18px;
+  padding: 0 7px;
   background: transparent;
   border: 1px solid currentColor;
   border-radius: var(--libre-radius-xs);
   color: var(--color-accent-fg, var(--color-bg-primary, #000000));
-  /* Bumped from 10.5 → 12 so the ⌘R glyph pair lands at roughly
-     the same point size as the topbar's chip + reads at the
-     same vertical optical weight as the button's "run" label. */
-  font-size: 12px;
+  /* Tuned from 12 → 11px to fit the chip's reduced 18px height
+     (was 22px). Still readable + sits at roughly the same
+     point size as the topbar's chip; the smaller box just no
+     longer leaves room for the previous 12px glyph pair. */
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.02em;
   /* `translateZ(0)` pins the chip to its own compositor layer
@@ -219,10 +246,16 @@
 
 .libre-editor-help-split {
   display: inline-flex;
+  /* Height-match the rest of the action cluster so the Help
+     cluster reads on the same horizontal baseline as the
+     Run button. Falls back to the shared `--libre-editor-btn-h`
+     (now 24px) when the variable isn't reachable. */
+  min-height: var(--libre-editor-btn-h, 24px);
   border: 1px solid var(--color-border-default);
   border-radius: var(--libre-radius-xs);
   overflow: hidden;
   background: transparent;
+  box-sizing: border-box;
 }
 
 .libre-editor-help-main,
@@ -231,18 +264,29 @@
   color: var(--color-text-primary);
   border: 0;
   cursor: pointer;
-  font-size: 11px;
+  /* Font bumped 11 → 12px to match the rest of the toolbar
+     (the icon-only `.libre-editor-button` sits at 12.5px;
+     this stays a half-step quieter because it's a secondary
+     control with text inside a denser split). */
+  font-size: 12px;
   display: inline-flex;
   align-items: center;
   font-family: inherit;
 }
 
 .libre-editor-help-main {
-  padding: 3px 10px;
+  /* Vertical padding zeroed out — height comes from the
+     parent `.libre-editor-help-split`'s `min-height`. Keeps
+     the Help button flush with Run instead of growing a
+     second set of internal padding on top of the parent's
+     box. */
+  padding: 0 12px;
 }
 
 .libre-editor-help-caret {
-  padding: 3px 6px;
+  /* Same height treatment as `.libre-editor-help-main`; the
+     chevron centres via flex on the parent. */
+  padding: 0 6px;
   border-left: 1px solid var(--color-border-default);
 }
 

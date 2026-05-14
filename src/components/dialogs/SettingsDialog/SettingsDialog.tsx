@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Icon } from "@base/primitives/icon";
 import { check as checkIcon } from "@base/primitives/icon/icons/check";
@@ -115,18 +115,66 @@ export default function SettingsDialog({
   // in the Account section without a sign-in path, and showing an
   // empty pane is worse than not advertising it.
   const accountAvailable = !!onRequestSignIn || cloud.signedIn;
+
+  // Developer-pane gate. The Developer entry stays hidden until the
+  // user taps the version-number chip in the rail footer 10× in
+  // quick succession (the Android-style easter egg). Once unlocked,
+  // we persist the flag in localStorage so subsequent opens of the
+  // dialog show the pane without re-tapping. Cleared only by hand
+  // (no in-UI relock — once a learner has found the gate, they've
+  // earned the entry).
+  const [devUnlocked, setDevUnlocked] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("libre:devUnlocked") === "1";
+    } catch {
+      return false;
+    }
+  });
+  // Tap-counter state for the version-number gesture. Held in a
+  // ref (not state) because we don't want every tap to re-render
+  // the dialog — only the 10th tap should flip `devUnlocked` and
+  // surface the pane. 5-second window resets the counter on idle.
+  const versionTapRef = useRef<{ count: number; firstAt: number }>({
+    count: 0,
+    firstAt: 0,
+  });
+  const onVersionTap = () => {
+    if (devUnlocked) return;
+    const now = Date.now();
+    const TAPS_NEEDED = 10;
+    const WINDOW_MS = 5000;
+    const s = versionTapRef.current;
+    if (now - s.firstAt > WINDOW_MS) {
+      s.count = 1;
+      s.firstAt = now;
+    } else {
+      s.count += 1;
+    }
+    if (s.count >= TAPS_NEEDED) {
+      setDevUnlocked(true);
+      try {
+        localStorage.setItem("libre:devUnlocked", "1");
+      } catch {
+        /* private mode / quota — pane unlocks for this session only */
+      }
+      s.count = 0;
+    }
+  };
+
   const visiblePanes = useMemo(() => {
-    return PANES.filter((p) => p.id !== "account" || accountAvailable).map(
-      (p) => {
-        // Swap the Account pane's hint when signed out so the rail
-        // entry advertises the sign-in CTA the body will render.
-        if (p.id === "account" && !cloud.signedIn) {
-          return { ...p, hint: t("settings.signInToSync") };
-        }
-        return p;
-      },
-    );
-  }, [accountAvailable, cloud.signedIn, t]);
+    return PANES.filter((p) => {
+      if (p.id === "account" && !accountAvailable) return false;
+      if (p.id === "developer" && !devUnlocked) return false;
+      return true;
+    }).map((p) => {
+      // Swap the Account pane's hint when signed out so the rail
+      // entry advertises the sign-in CTA the body will render.
+      if (p.id === "account" && !cloud.signedIn) {
+        return { ...p, hint: t("settings.signInToSync") };
+      }
+      return p;
+    });
+  }, [accountAvailable, cloud.signedIn, devUnlocked, t]);
 
   // If the active section disappears (e.g. user signs out while the
   // dialog is open), fall back to General so we don't render a
@@ -255,6 +303,7 @@ export default function SettingsDialog({
             onProfileClick={() => setSection("account")}
             appVersion={appVersion}
             themeName={themeLabel}
+            onVersionTap={onVersionTap}
           />
 
           <div className="libre-settings-body">

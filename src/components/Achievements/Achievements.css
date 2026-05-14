@@ -786,10 +786,122 @@
   background: var(--color-bg-secondary, #241b2f);
   border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.07));
   border-radius: 12px;
+  /* `position: relative` so the unlocked variant's holographic
+     foil pseudo-element has a positioning context, and
+     `overflow: hidden` so the foil is clipped to the rounded
+     corners instead of leaking past them. */
+  position: relative;
+  overflow: hidden;
+  /* Subtle "face the mouse" tilt. The custom properties are
+     written by AchievementsPage.tsx's page-level mousemove
+     tracker (rAF-throttled, distance-attenuated, capped at
+     ±4°) — every tile gets its own pair based on its own
+     centre-to-cursor vector, so the grid behaves like a field
+     of compasses pointing at the pointer. The transition
+     eases each tile back toward its at-rest tilt when the
+     mouse stops moving rather than snapping. */
+  transform-style: preserve-3d;
+  transform: perspective(900px)
+    rotateX(var(--libre-ach-rx, 0deg))
+    rotateY(var(--libre-ach-ry, 0deg));
+  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* Unlocked achievements get the same visual treatment as
+   certificates — flat white paper base + holographic snake
+   foil overlay — so an earned tile reads as a small artefact
+   the learner is collecting, rather than a darker UI surface.
+   Locked tiles stay on the dark `--color-bg-secondary` chrome
+   so the contrast between "yours" and "not yet" is obvious at
+   a glance. */
 .libre-ach-page__tile--unlocked {
-  background: color-mix(in srgb, var(--color-bg-secondary, #241b2f) 90%, var(--color-accent, #d4c5a1) 10%);
+  background-color: #ffffff;
+  background-image: radial-gradient(
+    circle at 35% 40%,
+    rgba(0, 0, 0, 0.04) 0%,
+    transparent 65%
+  );
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #111111;
+}
+
+/* Holographic foil overlay. Tiled greyscale snake-silhouette
+   mask carved out of a -45° rainbow band, composited via
+   `multiply` so the rainbow paints AS pigment INTO the white
+   paper (the same blend the cert ticket uses). Sits behind
+   the tile content via z-index — content gets pushed to z-2
+   below. Opacity is tuned low (0.18) so the foil reads as
+   iridescent accent rather than competing with the badge or
+   the title text. */
+.libre-ach-page__tile--unlocked::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    hsl(0, 95%, 60%) 0%,
+    hsl(30, 95%, 60%) 5%,
+    hsl(60, 95%, 60%) 10%,
+    hsl(120, 90%, 55%) 15%,
+    hsl(180, 90%, 55%) 20%,
+    hsl(222, 95%, 60%) 25%,
+    hsl(258, 95%, 60%) 30%,
+    hsl(300, 95%, 60%) 35%,
+    hsl(0, 95%, 60%) 40%
+  );
+  background-size: 200% 200%;
+  /* Background position drives the apparent flow of the rainbow.
+     The custom property is written by the page-level mouse
+     tracker — clamped to 25-75% so the band always crosses the
+     tile, never slides off. Transitioned so the foil eases
+     between positions as the cursor moves rather than ticking
+     frame-by-frame. */
+  background-position: var(--libre-ach-foil, 50%) 50%;
+  background-repeat: no-repeat;
+  transition: background-position 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  --sparkle-mask: url("/new-logo-tile.png");
+  mask-image: var(--sparkle-mask);
+  -webkit-mask-image: var(--sparkle-mask);
+  /* Aspect-correct mask cells — the tile is roughly 4:1
+     landscape at the 260px min-width grid setting, so the
+     mask-size height percentage is bumped 4× the width
+     percentage to keep the snake silhouettes square. */
+  mask-size: 16% 64%;
+  -webkit-mask-size: 16% 64%;
+  mask-repeat: repeat;
+  -webkit-mask-repeat: repeat;
+  mix-blend-mode: multiply;
+  filter: brightness(0.95) contrast(0.85) saturate(1.1);
+  opacity: 0.18;
+}
+
+/* Tile content (badge + text block) stacks above the foil
+   pseudo-element so the snake silhouettes paint as background
+   pattern rather than overlaying the title / icon. */
+.libre-ach-page__tile--unlocked > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Dark text overrides on the white unlocked card — pure-black
+   alpha for hierarchy (title → blurb → unlock-time stamp). */
+.libre-ach-page__tile--unlocked .libre-ach-page__tile-title {
+  color: #111111;
+}
+
+.libre-ach-page__tile--unlocked .libre-ach-page__tile-blurb {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.libre-ach-page__tile--unlocked .libre-ach-page__tile-when {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.libre-ach-page__tile--unlocked .libre-ach-page__retired-pill {
+  background: rgba(0, 0, 0, 0.08);
+  color: rgba(0, 0, 0, 0.55);
 }
 
 .libre-ach-page__tile--locked .libre-ach-page__tile-title,
@@ -856,4 +968,16 @@
     transition-duration: 60ms !important;
   }
   .libre-ach-toast--in { opacity: 1; transform: none; }
+  /* Kill the mouse-tracking tilt + foil sweep — the JS hook
+     also early-exits under reduced-motion (so no inline styles
+     are written), but the resting transform/transition are
+     overridden here as a defence-in-depth measure for static
+     rendering. */
+  .libre-ach-page__tile {
+    transform: none !important;
+    transition: none !important;
+  }
+  .libre-ach-page__tile--unlocked::before {
+    transition: none !important;
+  }
 }

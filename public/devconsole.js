@@ -26,13 +26,15 @@
  * vanilla JS / DOM — no framework dep, no build step, runs the
  * moment the script tag executes.
  *
- * Three ways to surface the panel:
+ * Two ways to surface the panel:
  *   1. localStorage["libre:devconsole"] = "1" — persistent
  *   2. URL param ?devconsole=1 / =0                — flips the flag
  *      (and ?devconsole=0 explicitly clears it)
- *   3. Five-tap on the top-left 80×80 region in 2.5s — magic gesture.
- *      The only way to flip the flag from inside the iPad app
- *      without rebuilding.
+ *
+ * The earlier "five taps on the top-left corner" magic gesture was
+ * retired — it had a high false-positive rate on touch surfaces
+ * and the official path (Settings → Developer → toggle) covers
+ * every device the app ships on.
  *
  * To dismiss: tap the × button on the panel (clears the flag and
  * unmounts) or run `localStorage.removeItem("libre:devconsole")`
@@ -52,24 +54,6 @@
   var STORAGE_KEY_MIN = "fb:devconsole:minimized-v1";
   var STORAGE_KEY_FLAG = "libre:devconsole";
   var MAX_LOGS = 1000;
-
-  // 5-tap gesture: tap the top-left TAP_REGION_PX×TAP_REGION_PX
-  // square TAPS_NEEDED times within TAP_WINDOW_MS to toggle the
-  // panel. Anything outside the corner resets the count, so a
-  // normal tap on the sidebar can't accidentally arm it.
-  //
-  // Bumped from 80×80 to 120×120 because the original was hard to
-  // hit reliably on iPad — the corner of the screen is partially
-  // occluded by the home indicator gesture zone in landscape and
-  // by the status bar in portrait, and the user can't see whether
-  // their taps are being detected (the whole reason this gesture
-  // exists is the app being stuck on the preloader with no way to
-  // open Web Inspector). The visible tap-counter badge below makes
-  // the larger region safe — even an accidental top-left tap that
-  // shows "1/5" is harmless, and the badge fades on its own.
-  var TAP_WINDOW_MS = 3000;
-  var TAP_REGION_PX = 120;
-  var TAPS_NEEDED = 5;
 
   // ── Flag helpers ───────────────────────────────────────────────
   function isFlagSet() {
@@ -578,69 +562,6 @@
     }
   }
 
-  // ── 5-tap-on-top-left magic gesture (invisible) ────────────────
-  // The official enable path is Settings → Developer → "Show dev
-  // console" toggle (which calls window.__fbDevConsole_toggle).
-  // The 5-tap gesture stays bound as a silent fallback for the
-  // iPad-preloader-stall case where Settings isn't reachable —
-  // tap the top-left TAP_REGION_PX × TAP_REGION_PX corner
-  // TAPS_NEEDED times within TAP_WINDOW_MS to summon / dismiss.
-  // No visual indicator: production users shouldn't see a pink
-  // box, and the gesture's so awkward to trigger by accident that
-  // a counter UI isn't necessary for normal use.
-  //
-  // Bound to `document` AND `window` (capture phase) on three
-  // event families (pointerdown / touchstart / mousedown) so iPad
-  // WKWebView's occasional drop of document-level touch events on
-  // full-viewport divs (the preloader) doesn't break the gesture.
-  // A 50ms dedupe collapses synthetic event chains — one finger
-  // that fires pointerdown → touchstart → mousedown counts as ONE
-  // tap.
-  (function bindCornerTap() {
-    var taps = [];
-    var lastTapAt = 0;
-
-    function onTap(e) {
-      var now = Date.now();
-      if (now - lastTapAt < 50) return;
-
-      var x, y;
-      var t =
-        (e.touches && e.touches[0]) ||
-        (e.changedTouches && e.changedTouches[0]);
-      if (t) { x = t.clientX; y = t.clientY; }
-      else if (typeof e.clientX === "number") { x = e.clientX; y = e.clientY; }
-      else return;
-
-      if (x > TAP_REGION_PX || y > TAP_REGION_PX) {
-        taps = [];
-        return;
-      }
-
-      lastTapAt = now;
-      taps = taps.filter(function (ts) { return now - ts < TAP_WINDOW_MS; });
-      taps.push(now);
-
-      if (taps.length >= TAPS_NEEDED) {
-        taps = [];
-        toggleConsole();
-      }
-    }
-
-    var opts = { capture: true, passive: true };
-    var types = ["pointerdown", "touchstart", "mousedown"];
-    var targets = [document, window];
-    for (var i = 0; i < targets.length; i++) {
-      for (var j = 0; j < types.length; j++) {
-        try {
-          targets[i].addEventListener(types[j], onTap, opts);
-        } catch (e) {
-          targets[i].addEventListener(types[j], onTap, true);
-        }
-      }
-    }
-  })();
-
   // Public toggle API for the Settings → Developer pane and any
   // other UI that wants to flip the panel without touching
   // localStorage directly. Returns the new state ("on" | "off").
@@ -659,8 +580,8 @@
     return !!panelEl;
   };
 
-  // Mount on first load if the flag is on. Console patches and the
-  // tap gesture handler above are already armed regardless — we're
-  // only deciding whether to show the panel right now.
+  // Mount on first load if the flag is on. Console patches are
+  // already armed regardless — we're only deciding whether to show
+  // the panel right now.
   if (isFlagSet()) ensureMounted();
 })();

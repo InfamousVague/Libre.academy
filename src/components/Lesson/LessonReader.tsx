@@ -470,6 +470,95 @@ export default function LessonReader({
     setPopoverContent(null);
   }, [lesson.id, cancelHide]);
 
+  // --- Section completion badges --------------------------------------
+  //
+  // markdown.ts step 7 (`annotateSectionHeadings`) stamps every h2/h3
+  // in the rendered body with a `data-libre-section` attribute + an
+  // inert `<span class="libre-section-check">` slot. This effect
+  // watches each heading with an IntersectionObserver rooted on the
+  // scroll container; once a heading has fully scrolled above the top
+  // of the visible reader region, we flip an `is-completed` class on
+  // it. The badge stays on once set — re-scrolling back up doesn't
+  // un-complete a section (matches the reading-progress mental model
+  // where "I've seen this part already" is monotonic).
+  //
+  // Re-runs when `html` changes (new lesson, or enrichment re-render)
+  // because the previous observer's `target` nodes are detached the
+  // moment innerHTML is reassigned. `scrollEl` is the dependency that
+  // ensures we wait until the scroll container is mounted before
+  // wiring up the observer — otherwise the IO root would be null and
+  // it would fall back to the document viewport, which here always
+  // overlaps the entire article and reports every heading as
+  // "visible" forever.
+  useEffect(() => {
+    if (!articleEl || !scrollEl) return;
+    const headings = articleEl.querySelectorAll<HTMLElement>(
+      "[data-libre-section]",
+    );
+    if (headings.length === 0) return;
+    // One-shot stamp pass: any heading that's ALREADY above the
+    // visible region on mount (e.g. the user returns to a partially-
+    // read lesson and we restore their scroll position) should show
+    // its badge immediately, without waiting for the next scroll
+    // event. The IO callback fires on observe()-time too, but it
+    // can race the layout — doing a synchronous pass first means the
+    // first paint after lesson entry has the correct state.
+    const containerTop = scrollEl.getBoundingClientRect().top;
+    for (const h of Array.from(headings)) {
+      if (h.getBoundingClientRect().bottom <= containerTop) {
+        h.classList.add("is-completed");
+      }
+    }
+    // IntersectionObserver does the rest. `rootMargin: "0px 0px
+    // -100% 0px"` collapses the intersect zone to a 1px-tall band
+    // sitting on top of the scroll container, so a heading
+    // "intersects" only while its top edge is at or just below the
+    // visible-region top. As soon as the heading scrolls past that
+    // band (i.e. its bottom passes the container top), the entry's
+    // intersection ratio drops to 0 and `boundingClientRect.bottom`
+    // becomes ≤ rootBounds.top — that's our cue to mark it
+    // completed.
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const rootTop = entry.rootBounds?.top ?? 0;
+          if (entry.boundingClientRect.bottom <= rootTop) {
+            (entry.target as HTMLElement).classList.add("is-completed");
+          }
+        }
+      },
+      { root: scrollEl, threshold: 0, rootMargin: "0px 0px -100% 0px" },
+    );
+    for (const h of Array.from(headings)) observer.observe(h);
+    // Bottom-of-page completion: the LAST section heading never
+    // scrolls past the top of the viewport (there's no
+    // subsequent prose to push it up), so the IO above can't
+    // ever flip it complete. Wire a scroll listener that
+    // detects when the scroll container hits the bottom — that
+    // marks the final heading complete.
+    //
+    // The 24px slack accounts for sub-pixel rounding, scrollbar
+    // gutter, and the lesson nav footer overlay so a learner who
+    // scrolls *almost* to the bottom still triggers the badge.
+    const lastHeading = headings[headings.length - 1];
+    const onScroll = () => {
+      if (lastHeading.classList.contains("is-completed")) return;
+      const remaining =
+        scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight;
+      if (remaining <= 24) {
+        lastHeading.classList.add("is-completed");
+      }
+    };
+    // Run once on mount in case the lesson is short enough that
+    // there's no scroll to begin with (page fits viewport).
+    onScroll();
+    scrollEl.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      observer.disconnect();
+      scrollEl.removeEventListener("scroll", onScroll);
+    };
+  }, [articleEl, scrollEl, html]);
+
   // Stop the singleton TTS player when the user navigates to a
   // different lesson or unmounts the reader entirely. Without this
   // the narration of the previous lesson keeps playing while the

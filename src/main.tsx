@@ -43,6 +43,17 @@ bootLog("main.tsx start");
 applyTheme(loadTheme());
 bootLog("theme applied");
 
+// Global link interceptor. Routes every external-URL click to the
+// OS default browser on desktop (Tauri), or `window.open(_blank)` on
+// web — so the WebView / SPA never navigates away from the app and
+// traps the user with no way back. See
+// `lib/installLinkInterceptor.ts` for the full rationale. Installed
+// here (pre-mount, pre-paint) so the very first click works.
+void import("./lib/installLinkInterceptor").then((m) =>
+  m.installLinkInterceptor(),
+);
+bootLog("link interceptor installed");
+
 // Analytics — web-only, no-op everywhere else. Imported lazily so
 // the desktop / mobile bundles don't even include the module (Vite
 // + the `isWeb` guard inside the module elide the script-injection

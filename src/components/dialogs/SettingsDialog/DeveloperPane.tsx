@@ -1,12 +1,5 @@
 import { useEffect, useState } from "react";
 import { terminal } from "@base/primitives/icon/icons/terminal";
-import { sparkles } from "@base/primitives/icon/icons/sparkles";
-import { dice5 } from "@base/primitives/icon/icons/dice-5";
-import {
-  celebrate,
-  celebrateWith,
-  type CelebrationEffect,
-} from "../../../lib/celebrate";
 
 import SettingsCard, { SettingsPage } from "./SettingsCard";
 import SettingsRow from "./SettingsRow";
@@ -15,22 +8,12 @@ import { useT } from "../../../i18n/i18n";
 
 const FLAG_KEY = "libre:devconsole";
 
-/// i18n keys for the celebration effects in the achievement-test panel.
-/// Stored as keys so the labels track the active locale at render time.
-const EFFECT_LABEL_KEYS: Array<{
-  id: CelebrationEffect;
-  labelKey: string;
-  hintKey: string;
-}> = [
-  {
-    id: "coin-burst",
-    labelKey: "settings.coinBurst",
-    hintKey: "settings.coinBurstHint",
-  },
-];
-
-/// Developer settings — the floating dev console toggle, plus a
-/// celebration tester for designers wiring up new unlock cues.
+/// Developer settings. Hidden from the rail by default — the parent
+/// dialog reveals it only after the user has tapped the version
+/// number in the footer 10× in a row. Currently surfaces a single
+/// affordance: the floating dev console toggle. The celebration
+/// tester that used to live here was retired alongside the
+/// coin-burst effect (see `lib/celebrate.ts`).
 export default function DeveloperPane() {
   const t = useT();
   const [enabled, setEnabled] = useState<boolean>(() => {
@@ -42,8 +25,8 @@ export default function DeveloperPane() {
   });
 
   // Re-sync if devconsole.js was toggled by another path (the
-  // 5-tap fallback gesture, the panel's × button, or a second
-  // tab). Polling at 1Hz is fine for a settings dialog open briefly.
+  // panel's × button, or a second tab). Polling at 1Hz is fine for
+  // a settings dialog open briefly.
   useEffect(() => {
     const id = window.setInterval(() => {
       let live = false;
@@ -101,56 +84,6 @@ export default function DeveloperPane() {
               onChange={toggle}
               label={t("settings.showDevConsole")}
             />
-          }
-        />
-        <div
-          style={{
-            padding: "12px 20px 16px",
-            fontSize: 12.5,
-            color: "var(--color-text-tertiary, rgba(245, 245, 247, 0.55))",
-            lineHeight: 1.5,
-          }}
-        >
-          <strong style={{ color: "var(--color-text-secondary)" }}>
-            {t("settings.emergencyFallback")}
-          </strong>{" "}
-          {t("settings.emergencyFallbackBody")}
-        </div>
-      </SettingsCard>
-
-      <SettingsCard title={t("settings.celebrationTester")}>
-        {EFFECT_LABEL_KEYS.map((eff) => (
-          <SettingsRow
-            key={eff.id}
-            icon={sparkles}
-            tone="accent"
-            label={t(eff.labelKey)}
-            sub={t(eff.hintKey)}
-            control={
-              <button
-                type="button"
-                className="libre-settings-secondary"
-                onClick={() =>
-                  void celebrateWith(eff.id, "medium", { x: 0.5, y: 0.5 })
-                }
-              >
-                {t("settings.tryBtn")}
-              </button>
-            }
-          />
-        ))}
-        <SettingsRow
-          icon={dice5}
-          label={t("settings.randomCelebration")}
-          sub={t("settings.randomCelebrationHint")}
-          control={
-            <button
-              type="button"
-              className="libre-settings-secondary"
-              onClick={() => void celebrate("medium", { x: 0.5, y: 0.5 })}
-            >
-              {t("settings.fireBtn")}
-            </button>
           }
         />
       </SettingsCard>

@@ -15,7 +15,7 @@
 /// link. The route is `/achievements` (web) and the desktop equivalent
 /// is registered alongside the existing in-app routes in App.tsx.
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@base/primitives/icon";
 import { search as searchIcon } from "@base/primitives/icon/icons/search";
 import { trophy } from "@base/primitives/icon/icons/trophy";
@@ -112,8 +112,76 @@ export default function AchievementsPage({
     return m;
   }, [query, categoryFilter, unlocked]);
 
+  // Page-level mouse tracker that subtly tilts each tile toward
+  // the cursor and slides the holographic foil's rainbow band as
+  // the mouse moves — just enough motion to animate the foil
+  // sweep without becoming distracting. Each tile computes its
+  // own tilt from its center-to-mouse vector, attenuated by
+  // distance so far-away tiles barely move. Caps the absolute
+  // tilt at ±4° and the foil drift at ±25% around the 50% rest
+  // position. Throttled to ~60fps via requestAnimationFrame and
+  // skipped entirely under `prefers-reduced-motion`.
+  const pageRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const root = pageRef.current;
+    if (!root) return;
+    let frameId: number | null = null;
+    let last: { x: number; y: number } | null = null;
+    const apply = () => {
+      frameId = null;
+      if (!last) return;
+      const { x: mx, y: my } = last;
+      // Diagonal-of-viewport as the attenuation scale — beyond
+      // that distance, tiles read as "out of range" of the cursor
+      // and basically rest flat. 0.6 multiplier so even off-grid
+      // tiles still get a hint of lean.
+      const maxDist =
+        Math.max(window.innerWidth, window.innerHeight) * 0.6;
+      const tiles = root.querySelectorAll<HTMLElement>(
+        ".libre-ach-page__tile",
+      );
+      tiles.forEach((tile) => {
+        const rect = tile.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const dx = mx - cx;
+        const dy = my - cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const attenuation = Math.max(0, 1 - dist / maxDist);
+        // ry (around vertical axis) gives left/right lean — sign
+        // chosen so the tile presents its face toward the cursor
+        // (cursor on the right → tile rotates so right edge
+        // recedes, left edge advances). rx (around horizontal
+        // axis) handles up/down lean.
+        const ry = (dx / maxDist) * 4 * attenuation;
+        const rx = (-dy / maxDist) * 4 * attenuation;
+        tile.style.setProperty("--libre-ach-rx", `${rx.toFixed(2)}deg`);
+        tile.style.setProperty("--libre-ach-ry", `${ry.toFixed(2)}deg`);
+        // Foil sweep position — mirrors the rainbow band along
+        // the cursor's horizontal vector. Clamps to 25-75% so the
+        // band never disappears off-tile.
+        const fp = 50 + (dx / maxDist) * 25 * attenuation;
+        tile.style.setProperty(
+          "--libre-ach-foil",
+          `${Math.max(25, Math.min(75, fp)).toFixed(1)}%`,
+        );
+      });
+    };
+    const onMove = (e: MouseEvent) => {
+      last = { x: e.clientX, y: e.clientY };
+      if (frameId == null) frameId = requestAnimationFrame(apply);
+    };
+    window.addEventListener("mousemove", onMove, { passive: true });
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      if (frameId != null) cancelAnimationFrame(frameId);
+    };
+  }, []);
+
   return (
-    <div className="libre-ach-page">
+    <div className="libre-ach-page" ref={pageRef}>
       <div className="libre-ach-page__inner">
       <header className="libre-ach-page__head">
         <div className="libre-ach-page__head-row">

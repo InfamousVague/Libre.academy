@@ -161,8 +161,9 @@ export default function SignInDialog({
       // Account once they're in. Keeping the modal small.
       await cloud.signUpEmail(email, password);
       setCreatedNotice(true);
-      // Don't close yet — the cloud watcher (line ~140) auto-closes
-      // once the /me fetch resolves and `cloud.signedIn` flips.
+      // Don't close yet — the `createdNotice && cloud.signedIn`
+      // watcher below handles the dismiss after a short beat so
+      // the welcome notice has time to read.
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       const lower = msg.toLowerCase();
@@ -231,6 +232,24 @@ export default function SignInDialog({
       onClose();
     }
   }, [awaitingOAuth, cloud.signedIn, onClose]);
+
+  /// Email-signup auto-close. `onSignUpSubmit` sets `createdNotice`
+  /// after `signUpEmail` resolves (which already flipped `signedIn`
+  /// via the same `runAuth` path the sign-in flow uses), then waits
+  /// for this watcher to dismiss the dialog. A small delay so the
+  /// "Welcome! Account created — signing you in…" notice is actually
+  /// readable before the modal disappears — without the delay the
+  /// notice would render for a single frame at most. This watcher
+  /// is paired with — not folded into — the OAuth one above so the
+  /// two flows can evolve their close-timing independently (OAuth
+  /// closes the instant the deep-link returns; email signup hangs
+  /// on the success notice for a beat).
+  useEffect(() => {
+    if (createdNotice && cloud.signedIn) {
+      const timer = window.setTimeout(onClose, 1200);
+      return () => window.clearTimeout(timer);
+    }
+  }, [createdNotice, cloud.signedIn, onClose]);
 
   /// Holds the popup-window handle on the web variant so we can poll
   /// `closed` (user dismissed it without finishing) and tear down the

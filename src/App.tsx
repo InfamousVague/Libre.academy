@@ -5,7 +5,9 @@ import { onOpenUrl, getCurrent as getCurrentDeepLinks } from "@tauri-apps/plugin
 import {
   type Course,
   filterCourseForDesktop,
+  isExerciseKind,
 } from "./data/types";
+import { getAutoAdvanceEnabled } from "./lib/autoAdvance";
 import { Icon } from "@base/primitives/icon";
 import { libraryBig } from "@base/primitives/icon/icons/library-big";
 import "@base/primitives/icon/icon.css";
@@ -627,6 +629,37 @@ export default function App() {
   /// `completed` set up here. The AiAssistant resets to idle on its
   /// own a few seconds later.
   const [celebrateAt, setCelebrateAt] = useState(0);
+  /// Pending "auto advance" timer. We schedule a delayed
+  /// `selectLesson(nextId)` after a fresh exercise pass when the
+  /// learner opted into the auto-advance preference (Settings →
+  /// General → Auto-advance after a pass). The id is parked here so
+  /// any manual navigation (Prev/Next click, lesson picked from the
+  /// sidebar, command-palette jump) can cancel it before it fires —
+  /// otherwise the auto-advance would yank the learner away ~1s
+  /// after they manually navigated elsewhere, which reads as the
+  /// app misbehaving rather than a feature.
+  const autoAdvanceTimerRef = useRef<number | null>(null);
+  /// Timestamp (ms since epoch) at which the pending auto-advance
+  /// will fire. Null when no auto-advance is queued. Surfaced to
+  /// LessonView → LessonNav so the Next button can paint a 3..2..1
+  /// countdown ring (Notion issue #9180e1cfc9e068a8 — "When auto
+  /// advance is on, show a timer with 3…2….1 in a circular
+  /// progress bar over the proceed button"). State (not just a
+  /// ref) because the LessonNav consumer needs to re-render when
+  /// the timer starts / cancels.
+  const [autoAdvanceFireAt, setAutoAdvanceFireAt] = useState<number | null>(null);
+  const clearPendingAutoAdvance = useCallback(() => {
+    if (autoAdvanceTimerRef.current !== null) {
+      window.clearTimeout(autoAdvanceTimerRef.current);
+      autoAdvanceTimerRef.current = null;
+    }
+    setAutoAdvanceFireAt(null);
+  }, []);
+  // Belt-and-braces unmount cleanup so a pending auto-advance timer
+  // doesn't fire into a torn-down App (rare — App is the root in the
+  // main window — but it can happen in tray/popout surfaces that
+  // share the bundle but never render LessonView).
+  useEffect(() => clearPendingAutoAdvance, [clearPendingAutoAdvance]);
   function markCompletedAndCelebrate(courseId: string, lessonId: string) {
     const key = `${courseId}:${lessonId}`;
     const isFresh = !completed.has(key);
@@ -669,6 +702,51 @@ export default function App() {
     // pass, reading + Next, quiz all-correct — so the verifier loop
     // can advance without caring which kind it just finished.
     emitVerifierEvent({ type: "lessonComplete", courseId, lessonId });
+
+    // Auto-advance — opt-in via Settings → General → Auto-advance.
+    // Three gates, all required:
+    //   - the user actually enabled the preference,
+    //   - this was a FRESH pass (no point auto-advancing again on a
+    //     re-pass of a lesson already in the completed set — the
+    //     learner is probably revisiting deliberately),
+    //   - the lesson is a code exercise (kind "exercise" or "mixed").
+    //     The user's request was specifically "when a test passes on
+    //     a code exercise" — quiz lessons + plain readings have
+    //     their own "Next" affordance the learner clicks deliberately.
+    // The delay lets the celebration play out — `xp-pop` (~300ms),
+    // the AI tutor's celebration loop, and the visual completion
+    // tick on the lesson card. 1400ms is enough to register the
+    // pass without dragging the rhythm.
+    // Re-resolve the lesson here — the existing `course`/`lesson`
+    // locals above are scoped inside the `isFresh` branch (for the
+    // XP-stashing path), so we can't reach them. Cost of the second
+    // walk is negligible against the rest of this function's
+    // realtime / verifier / analytics work.
+    if (isFresh && getAutoAdvanceEnabled()) {
+      const course = coursesAll.find((c) => c.id === courseId);
+      const lesson = course?.chapters
+        .flatMap((c) => c.lessons)
+        .find((l) => l.id === lessonId);
+      if (lesson && isExerciseKind(lesson) && course) {
+        const next = findNeighbors(course, lessonId).next;
+        if (next) {
+          clearPendingAutoAdvance();
+          // 3-second delay (bumped from 1400ms) so the Next
+          // button's circular 3..2..1 countdown has room to tell
+          // the story — the timer ring sweeps from full to empty
+          // while the digit ticks 3 → 2 → 1. The longer delay
+          // also reads as "you have time to look at the celebration
+          // before we move on" rather than a yank.
+          const fireAt = Date.now() + 3000;
+          setAutoAdvanceFireAt(fireAt);
+          autoAdvanceTimerRef.current = window.setTimeout(() => {
+            autoAdvanceTimerRef.current = null;
+            setAutoAdvanceFireAt(null);
+            selectLesson(courseId, next.id);
+          }, 3000);
+        }
+      }
+    }
   }
   // Stats use the UNFILTERED list so XP / streak / longest-streak stay
   // correct even when the learner racked up completions via drill kinds
@@ -1339,6 +1417,12 @@ export default function App() {
   const activeLesson = findLesson(activeCourse, activeTab?.lessonId);
 
   function selectLesson(courseId: string, lessonId: string) {
+    // Cancel any pending auto-advance — if a manual navigation
+    // beats the timer to the punch (sidebar click, command palette,
+    // Prev/Next button), respect it. When the auto-advance callback
+    // itself calls selectLesson, the ref was already nulled inside
+    // the timer body so this is a safe no-op for the canonical path.
+    clearPendingAutoAdvance();
     // Once the learner has explicitly opened something, the auto-open-
     // first-lesson effect stands down — they're driving.
     didAutoOpen.current = true;
@@ -2389,6 +2473,7 @@ export default function App() {
               lesson={activeLesson}
               neighbors={findNeighbors(activeCourse, activeLesson.id)}
               isCompleted={completed.has(`${activeCourse.id}:${activeLesson.id}`)}
+              autoAdvanceFireAt={autoAdvanceFireAt}
               onComplete={() => markCompletedAndCelebrate(activeCourse.id, activeLesson.id)}
               onNavigate={(lessonId) => selectLesson(activeCourse.id, lessonId)}
               onRetryLesson={(lessonId) =>

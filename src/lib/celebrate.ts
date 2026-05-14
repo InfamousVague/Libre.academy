@@ -1,388 +1,63 @@
-/// Random-effect celebration cue. Replaces direct `confettiBurst`
-/// calls at every "you unlocked something" surface so the visual
-/// language stays surprising — picks one of six full-frame
-/// transparent-WebM overlays at random per call.
+/// Celebration cue — historically a full-screen transparent-WebM
+/// overlay of falling gold coins ("coin-burst") that fired on every
+/// achievement unlock / section complete / etc. Retired May 2026
+/// because the visual was overusing screen-time-as-reward and the
+/// repeated coin shower started reading as "ka-ching" mobile-game
+/// noise rather than punctuation.
 ///
-/// Each video is an alpha-channel WebM (VP8 + alpha) staged at
-/// `public/celebrations/<id>.webm`. The browser plays them inline,
-/// muted, autoplay, with `pointer-events: none` so clicks pass
-/// through. The video element appends to the body once, plays its
-/// 6-8 second loop, then removes itself + resolves the returned
-/// Promise so callers can sequence on "done".
+/// The exports below are kept as no-ops (besides the haptic
+/// accompaniment) so the integrated lifecycle in AchievementModal +
+/// SectionCompleteSummary doesn't have to re-plumb. Specifically:
 ///
-/// The pool currently has a single effect: `coin-burst` — gold coins
-/// erupt from centre and fall into a pile. Sourced from a green-screen
-/// MP4 keyed via `chromakey + despill=type=green` (clean key, no
-/// magenta-style halos).
+///   - `celebrate(...)` / `celebrateWith(...)` resolve immediately
+///     and fire a three-beat haptic so motion-free devices still
+///     get the unlock signal.
+///   - `accelerateActiveCelebrations()` / `dismissActiveCelebrations()`
+///     are no-ops — there are no active videos to tear down.
+///   - `clearCelebrations()` sweeps any leftover overlay DOM the
+///     previous build may have left behind on a stale localStorage /
+///     hot-reload state. Cheap defensive cleanup.
 ///
-/// Earlier iterations included confetti-cascade / fireworks / glass-
-/// shatter / medallion-spin / ribbon-vortex, all keyed off magenta
-/// sources with messy edges. We retired them in favour of the single
-/// green-keyed coin-burst since (a) the visual quality is better and
-/// (b) coins as the unlock cue ties into the new coin-reward economy
-/// (every unlock awards XP AND coins; coins will eventually buy
-/// upgrades / cosmetics / streak freezes). Add new effects back here
-/// when their assets exist with clean keys.
-///
-/// All effects share one fixed-position container, sized to cover
-/// the entire viewport, with `z-index: 90` so the video paints
-/// behind the modal backdrop (z-index 200) and over page chrome
-/// (sidebar/topbar at z-index 80).
-///
-/// Reduced-motion fallback: the static dot-puff helper from the
-/// previous canvas-based pipeline still runs, so motion-sensitive
-/// users get a single bloom + fade that respects their preference.
+/// `CelebrationEffect` stays exported as `"coin-burst"` for type
+/// compatibility with the developer-pane tester (which is itself
+/// scheduled for removal alongside this lib's retirement).
 
-import { confettiBurst, type ConfettiPreset } from "./confetti";
+import type { ConfettiPreset } from "./confetti";
 import { fireHapticSequence } from "./haptics";
 
 export type CelebrationEffect = "coin-burst";
 
-/// Weights kept as a Record so the random-pick API stays in place
-/// for when more effects come back. With one entry, pickEffect()
-/// always returns `coin-burst`; future additions just need a row
-/// here + an asset + a label entry in DeveloperPane.
-const DEFAULT_WEIGHTS: Record<CelebrationEffect, number> = {
-  "coin-burst": 1,
-};
-
 export interface CelebrateOptions {
-  /// Force a specific effect — useful when a designer wants to
-  /// guarantee a particular cue (e.g. coin-burst for the "first
-  /// XP earned" toast). Skips the weighted random pick.
   effect?: CelebrationEffect;
-  /// Override the weight table (per-call). Effects with weight 0
-  /// are excluded from the pick. Anything missing keeps its default.
   weights?: Partial<Record<CelebrationEffect, number>>;
-  /// Optional override path. When set, plays this URL instead of
-  /// the standard `/celebrations/<id>.webm`. Used by tests + the
-  /// developer test panel.
   src?: string;
 }
 
-// ─── Reduced-motion detection ───────────────────────────────────
-
-function reducedMotion(): boolean {
-  if (typeof window === "undefined" || !window.matchMedia) return false;
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
-// ─── Reduced-motion fallback ────────────────────────────────────
-// Single static dot-puff — same vocabulary the canvas pipeline used.
-// Lives on its own canvas so it can coexist with any future inline
-// effect without z-index gymnastics.
-
-const CORAL = "#f37239";
-const AMBER = "#ffc857";
-
-function staticPuff(target?: { x: number; y: number } | HTMLElement): Promise<void> {
-  if (typeof document === "undefined") return Promise.resolve();
-  const origin = targetToOrigin(target);
-  const canvas = document.createElement("canvas");
-  canvas.style.position = "fixed";
-  canvas.style.inset = "0";
-  canvas.style.pointerEvents = "none";
-  canvas.style.zIndex = "9999";
-  canvas.setAttribute("aria-hidden", "true");
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = Math.floor(window.innerWidth * dpr);
-  canvas.height = Math.floor(window.innerHeight * dpr);
-  canvas.style.width = `${window.innerWidth}px`;
-  canvas.style.height = `${window.innerHeight}px`;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return Promise.resolve();
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  document.body.appendChild(canvas);
-  const ox = origin.x * window.innerWidth;
-  const oy = origin.y * window.innerHeight;
-  const start = performance.now();
-  const dur = 700;
-  return new Promise<void>((resolve) => {
-    const draw = (t: number) => {
-      const elapsed = t - start;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      if (elapsed >= dur) {
-        canvas.remove();
-        resolve();
-        return;
-      }
-      const f = elapsed / dur;
-      const alpha = f < 0.4 ? f / 0.4 : 1 - (f - 0.4) / 0.6;
-      ctx.globalAlpha = alpha;
-      for (let i = 0; i < 6; i++) {
-        const angle = (i / 6) * Math.PI * 2;
-        const r = 22 + (i % 2 ? 6 : 0);
-        ctx.fillStyle = i % 2 === 0 ? CORAL : AMBER;
-        ctx.beginPath();
-        ctx.arc(
-          ox + Math.cos(angle) * r * (0.6 + f),
-          oy + Math.sin(angle) * r * (0.6 + f),
-          4, 0, Math.PI * 2,
-        );
-        ctx.fill();
-      }
-      requestAnimationFrame(draw);
-    };
-    requestAnimationFrame(draw);
-  });
-}
-
-// ─── Video player ───────────────────────────────────────────────
-
-/// Mount a transparent video overlay covering the viewport, play it
-/// once, remove it, resolve. Centred + contain-fit so the video's
-/// composition fills the screen without distortion.
-///
-/// Format dispatch — the celebration assets exist in two flavours
-/// because no single transparent-video codec is universal:
-///
-///   .mov  (HEVC + alpha, hvc1 tag, AAC audio)
-///         Plays in Safari + WKWebView (Tauri desktop on macOS,
-///         iOS web). VP9/VP8 alpha decode is broken in WKWebView,
-///         so the desktop app needs HEVC.
-///
-///   .webm (VP8 + alpha, Opus audio)
-///         Plays in Chrome / Firefox / Edge. HEVC requires a
-///         license most browsers don't carry, so the academy web
-///         build needs WebM.
-///
-/// We render `<source>` elements for both inside one <video>; the
-/// browser picks the first one whose codec it can decode. Order
-/// matters — list the HEVC `.mov` first so Safari/WKWebView grabs
-/// it before falling back to WebM (it CAN decode WebM the rest of
-/// the way through but the alpha channel is dropped).
-///
-/// Audio: the baked-in coin chime plays at 40% volume so it lands as
-/// a quiet flourish rather than a notification klaxon. Achievement
-/// unlocks always follow a user gesture (lesson submit, level
-/// transition, etc.) which satisfies the browser's autoplay-with-
-/// audio policy — but if play() rejects anyway, we retry muted so
-/// the visual still fires; the user just loses the audio cue for
-/// that one unlock.
-/// Pick the right transparent-video URL for this browser. Safari /
-/// WKWebView (Tauri desktop on macOS) decodes HEVC + alpha .mov via
-/// VideoToolbox; Chrome / Firefox / Edge decode VP8/VP9 + alpha .webm.
-/// We feature-detect with `canPlayType` so the call site doesn't need
-/// to know which we're in. Falls back to .webm if neither is "probably"
-/// — the browser will at least try the load.
-function pickSrc(srcBase: string): string {
-  if (typeof document === "undefined") return `${srcBase}.webm`;
-  const probe = document.createElement("video");
-  // Safari returns "" or "maybe" for hvc1; both signal "may work".
-  // Explicitly prefer .mov when ANY non-empty answer comes back, so
-  // WKWebView gets the alpha-bearing format even when the support
-  // probe is conservative.
-  const movResult = probe.canPlayType('video/mp4; codecs="hvc1"');
-  if (movResult === "probably" || movResult === "maybe") {
-    return `${srcBase}.mov`;
-  }
-  return `${srcBase}.webm`;
-}
-
-/// Module-scope registry of every coin-shower video currently mounted
-/// in the DOM. The `accelerateActiveCelebrations` /
-/// `dismissActiveCelebrations` exports below iterate this set so an
-/// outside caller (e.g., AchievementModal's dismiss handler) can
-/// affect the in-flight overlay without holding a ref to it. Entries
-/// register themselves in `playVideo` and self-deregister via the
-/// same `finish` path that removes the element from the DOM.
-const activeVideos = new Set<HTMLVideoElement>();
-/// Per-element finishers so callers can force a teardown (the
-/// `finish` closure inside playVideo holds the resolve + cleanup;
-/// stashing it here lets dismissActiveCelebrations call it cleanly
-/// and idempotently — finish() guards against double-fire on its
-/// own via the resolved flag).
-const finishers = new WeakMap<HTMLVideoElement, (reason?: string) => void>();
-
-function playVideo(srcBase: string): Promise<void> {
-  if (typeof document === "undefined") return Promise.resolve();
-  return new Promise<void>((resolve) => {
-    const src = pickSrc(srcBase);
-    // Surface the play attempt in the dev console so a developer
-    // can confirm the right asset is being loaded. Cheap — a single
-    // log line per unlock celebration.
-    if (typeof console !== "undefined") {
-      console.log("[celebrate] play", src);
-    }
-
-    const video = document.createElement("video");
-    video.src = src;
-    // Play muted — the baked-in coin chime read as a notification
-    // klaxon, and now that achievements may fire several times per
-    // session the audio quickly turns into "wallet tipping over"
-    // ambient noise. Muting also removes the `play() rejected on
-    // unmuted autoplay` retry path entirely, so the visual always
-    // plays first-try.
-    video.muted = true;
-    video.playsInline = true;
-    video.autoplay = true;
-    video.controls = false;
-    video.preload = "auto";
-    // 2× baseline playback. The source coin-burst is ~7 s at 1×, which
-    // is long enough that the celebration starts feeling like padding
-    // rather than punctuation. 2× takes the shower to ~3.5 s — a
-    // crisper "ka-ching!" beat that still has enough frame budget for
-    // the gold to read. The dismiss-time `accelerateActiveCelebrations`
-    // helper layers on TOP of this (bumping to the higher
-    // CLOSE_ACCEL_RATE) so closing the modal flushes the remaining
-    // coins faster still.
-    video.playbackRate = 2;
-    video.setAttribute("aria-hidden", "true");
-    video.style.position = "fixed";
-    video.style.inset = "0";
-    video.style.width = "100vw";
-    video.style.height = "100vh";
-    // `cover` scales the video so its SHORTER axis fills the viewport,
-    // letting the longer axis bleed out under the edges. The source is
-    // 1280×720 (landscape); on a typical app window where the viewport
-    // is taller than 16:9, `contain` would letterbox the top + bottom
-    // and the coin shower would only fill the middle band — visually
-    // weak. `cover` instead scales until the height fills the screen
-    // and crops the LEFT + RIGHT off the source. The shower is
-    // centred-composed so the cropped sides are mostly empty
-    // background, and the coin action stays centred and floor-to-ceiling
-    // tall. Aspect of the coin source is preserved either way.
-    video.style.objectFit = "cover";
-    video.style.background = "transparent";
-    // Foreground layer — above everything else (modal backdrops
-    // 200, page chrome 80, etc.) so the celebration is the visual
-    // hero of the moment. pointer-events: none lets clicks pass
-    // through to whatever's behind.
-    video.style.zIndex = "9999";
-    video.style.pointerEvents = "none";
-
-    let resolved = false;
-    const finish = (reason?: string) => {
-      if (resolved) return;
-      resolved = true;
-      if (reason && typeof console !== "undefined") {
-        console.log("[celebrate] finish", reason, src);
-      }
-      activeVideos.delete(video);
-      finishers.delete(video);
-      video.remove();
-      resolve();
-    };
-    video.addEventListener("ended", () => finish("ended"), { once: true });
-    video.addEventListener("error", () => {
-      const err = video.error;
-      if (typeof console !== "undefined") {
-        console.warn("[celebrate] video error", {
-          src,
-          code: err?.code,
-          message: err?.message,
-        });
-      }
-      finish("error");
-    }, { once: true });
-    // Hard timeout in case `ended` never fires on a malformed asset.
-    // The longest video in the pool is ~8 s; 12 s gives generous
-    // headroom for a slow load before the cleanup kicks in.
-    window.setTimeout(() => finish("timeout"), 12_000);
-
-    activeVideos.add(video);
-    finishers.set(video, finish);
-    document.body.appendChild(video);
-    // Muted autoplay always succeeds across browser autoplay
-    // policies — no fallback retry needed now that we never try
-    // unmuted in the first place.
-    void video.play().catch((err) => {
-      if (typeof console !== "undefined") {
-        console.warn("[celebrate] play() rejected", err);
-      }
-      finish("play-rejected");
-    });
-  });
-}
-
-// ─── Public API ─────────────────────────────────────────────────
-
-function pickEffect(weights: Record<CelebrationEffect, number>): CelebrationEffect {
-  const entries = Object.entries(weights).filter(([, w]) => w > 0) as Array<[CelebrationEffect, number]>;
-  if (entries.length === 0) return "coin-burst";
-  const total = entries.reduce((s, [, w]) => s + w, 0);
-  let r = Math.random() * total;
-  for (const [eff, w] of entries) {
-    r -= w;
-    if (r <= 0) return eff;
-  }
-  return entries[entries.length - 1][0];
-}
-
-function targetToOrigin(target: { x: number; y: number } | HTMLElement | undefined): { x: number; y: number } {
-  if (!target) return { x: 0.5, y: 0.5 };
-  if (typeof window !== "undefined" && target instanceof HTMLElement) {
-    const rect = target.getBoundingClientRect();
-    return {
-      x: (rect.left + rect.width / 2) / window.innerWidth,
-      y: (rect.top + rect.height / 2) / window.innerHeight,
-    };
-  }
-  return target as { x: number; y: number };
-}
-
-function srcFor(effect: CelebrationEffect): string {
-  // Returns a base URL WITHOUT the `.mov` / `.webm` extension. The
-  // playVideo function appends the right extension after the
-  // canPlayType probe.
-  // The asset filenames carry the `unlock-` prefix
-  // (`public/celebrations/unlock-<effect>.{mov,webm}`) so the
-  // celebration set is grouped together when sorted alphabetically
-  // alongside any future non-unlock celebration assets we add.
-  // Vite's BASE_URL prefix handles the embedded /learn/ build path
-  // (/learn/celebrations/...) without any conditional logic at the
-  // call site.
-  const base =
-    typeof import.meta !== "undefined" && import.meta.env?.BASE_URL
-      ? import.meta.env.BASE_URL
-      : "/";
-  const trimmed = base.endsWith("/") ? base.slice(0, -1) : base;
-  return `${trimmed}/celebrations/unlock-${effect}`;
-}
-
-/// Fire a randomly-chosen unlock animation. Drop-in replacement for
-/// the legacy `confettiBurst` — same `(preset, target?, opts?)`
-/// signature, but the implementation now plays a transparent-WebM
-/// overlay instead of a canvas particle system.
-///
-/// `preset` is preserved for API compatibility but doesn't change
-/// the visual: each video is its own composition with a baked-in
-/// intensity, so the size/loudness knob doesn't really apply. The
-/// argument stays so callers don't have to change.
-///
-/// Returns a Promise that resolves when the video ends (or
-/// immediately under reduced motion + the static-puff fallback).
+/// Public API — see file header. Fires the three-beat haptic
+/// accompaniment (which is silent on devices without haptic
+/// hardware) and resolves immediately. The `_preset` / `_target` /
+/// `_opts` args are accepted only for source-compatibility with
+/// every existing call site; nothing inside this function reads
+/// them.
 export function celebrate(
   _preset: ConfettiPreset,
-  target?: { x: number; y: number } | HTMLElement,
-  opts: CelebrateOptions = {},
+  _target?: { x: number; y: number } | HTMLElement,
+  _opts: CelebrateOptions = {},
 ): Promise<void> {
-  // Haptic accompaniment timed to the coin-burst video keyframes:
-  //   t = 0ms     — medium impact as the coins erupt from centre
-  //   t = 320ms   — light impact as the cascade peaks
-  //   t = 720ms   — soft success pulse as the pile settles
-  // Three beats so the haptic "tells the story" of the visual,
-  // not a single buzz that fires before the eye catches up. Fire
-  // even under reduced motion (the static puff has its own
-  // shorter rhythm) since haptic-aware users still benefit from
-  // the feedback even when the visual is dimmed.
+  // Haptic-only signal. The visual coin shower was retired; the
+  // haptic stays because tactile feedback on unlock is a quiet,
+  // non-disruptive reward and survives the visual purge.
   fireHapticSequence([
     ["impact-medium", 0],
     ["impact-light", 320],
     ["notification-success", 720],
   ]);
-  if (reducedMotion()) return staticPuff(target);
-  if (opts.src) return playVideo(opts.src);
-  const weights: Record<CelebrationEffect, number> = {
-    ...DEFAULT_WEIGHTS,
-    ...(opts.weights ?? {}),
-  };
-  const effect = opts.effect ?? pickEffect(weights);
-  return playVideo(srcFor(effect));
+  return Promise.resolve();
 }
 
-/// Force a specific effect — useful for tests or onboarding flows
-/// where a designer wants to guarantee a particular cue.
+/// Force a specific effect — the implementation is the same no-op
+/// pass-through as `celebrate`. Kept for source compatibility with
+/// the (now-decommissioned) celebration tester pane.
 export function celebrateWith(
   effect: CelebrationEffect,
   preset: ConfettiPreset = "medium",
@@ -391,52 +66,26 @@ export function celebrateWith(
   return celebrate(preset, target, { effect });
 }
 
-/// Bump the playback rate of every coin shower currently mounted.
-/// Used by AchievementModal's dismiss path so closing the modal
-/// flushes the remaining coin frames at 2x — reads as "the
-/// celebration is wrapping up" rather than "the modal vanished
-/// mid-shower". No-op when no video is active. Setting the rate
-/// during playback is cheap (browsers adjust presentation cadence
-/// without re-decoding); audio adjusts pitch alongside, which on a
-/// 2x bump turns the chime into a brief upward chirp that reads as
-/// a clean "ending" cue.
-export function accelerateActiveCelebrations(rate: number): void {
-  for (const v of activeVideos) {
-    try {
-      v.playbackRate = rate;
-    } catch {
-      /* element gone / browser quirk — ignore, the next finish() will tidy */
-    }
-  }
+/// No-op — kept so AchievementModal's dismiss path can keep calling
+/// this without a conditional import. There are no live videos to
+/// accelerate.
+export function accelerateActiveCelebrations(_rate: number): void {
+  /* no-op — coin-burst retired */
 }
 
-/// Force every active coin shower to tear down NOW. Calls each
-/// video's finish() closure (idempotent — guarded by the resolved
-/// flag inside playVideo) which removes the element from the DOM,
-/// resolves the celebrate() promise, and drops the entry from the
-/// active set. Used by AchievementModal's dismiss path as the
-/// safety net behind `accelerateActiveCelebrations` — the speed-up
-/// gives the user a perceptible "ending" cue, the dismiss
-/// guarantees the overlay is actually gone before the next route /
-/// modal opens.
+/// No-op — kept so AchievementModal + SectionCompleteSummary's
+/// dismiss paths can keep calling this. There are no live videos
+/// to tear down.
 export function dismissActiveCelebrations(): void {
-  // Snapshot the set so we can mutate during iteration (finish()
-  // calls activeVideos.delete on its own row).
-  for (const v of [...activeVideos]) {
-    const finish = finishers.get(v);
-    if (finish) finish("dismissed");
-  }
+  /* no-op — coin-burst retired */
 }
 
-/// Abort any in-flight effects. Tests + route changes call this
-/// so a pending video doesn't trail across navigation.
+/// Sweep any leftover celebration overlay DOM. The previous build
+/// mounted video + canvas elements at z-index 9999 on the body root;
+/// if a user upgrades from an older version mid-celebration, this
+/// makes sure the orphan DOM gets cleaned up on the next clear call.
 export function clearCelebrations(): void {
   if (typeof document === "undefined") return;
-  // Remove every overlay video AND every fallback-puff canvas the
-  // module has appended to the body. The CSS selector matches our
-  // `aria-hidden="true"` + position:fixed, which is unique enough to
-  // not snag unrelated elements; in practice only this module mounts
-  // those exact attribute combos at the body root.
   for (const el of document.querySelectorAll(
     'video[aria-hidden="true"][style*="z-index: 9999"]',
   )) {
@@ -447,7 +96,4 @@ export function clearCelebrations(): void {
   )) {
     el.remove();
   }
-  // Also nudge the legacy confetti canvas in case anything still
-  // references it.
-  void confettiBurst; // keep import live (no-op reference)
 }

@@ -896,59 +896,104 @@ export default function CourseLibrary({
                         natural single anchor. */}
                     {secIdx === 0 && updateAllButton}
                   </header>
-                  <div className="libre-library-shelf">
-                    {sec.rows.map((e, idx) => (
-                      <BookCover
-                        key={e.course.id}
-                        // --libre-ripple-i drives the staggered mount
-                        // animation in CourseLibrary.css. Linear by
-                        // index so cards animate in across the shelf
-                        // in document order, capped at MAX_RIPPLE_I
-                        // via the CSS `min()` so giant shelves don't
-                        // produce a multi-second tail.
-                        style={{ "--libre-ripple-i": idx } as React.CSSProperties}
-                        course={e.course}
-                        progress={e.pct}
-                        loading={hydrating?.has(e.course.id)}
-                        onOpen={() => onOpen(e.course.id)}
-                        onContextMenu={
-                          // Placeholders have no installed-course
-                          // context menu (Export / Delete / Settings
-                          // need an installed copy on disk).
-                          !e.course.placeholder &&
-                          (onExport || onDelete || onSettings || onUpdateCourse)
-                            ? (ev) =>
-                                ctxMenu.show(e.course, ev, {
-                                  hasUpdate: !!updates[e.course.id],
-                                })
-                            : undefined
-                        }
-                        hasUpdate={
-                          !e.course.placeholder &&
-                          !!onUpdateCourse &&
-                          !!updates[e.course.id]
-                        }
-                        updating={updatingIds.has(e.course.id)}
-                        onUpdate={
-                          !e.course.placeholder && onUpdateCourse
-                            ? () => void handleUpdateClick(e.course.id)
-                            : undefined
-                        }
-                        placeholder={e.course.placeholder}
-                        installing={installingIds.has(e.course.id)}
-                        placeholderCoverUrl={
-                          e.course.placeholder
-                            ? coverHref(entryById.get(e.course.id)!)
-                            : undefined
-                        }
-                        onInstall={
-                          e.course.placeholder && onInstallCatalogEntry
-                            ? () => void handleInstallClick(e.course.id)
-                            : undefined
-                        }
-                      />
-                    ))}
-                  </div>
+                  {sec.key === "tracks" ? (
+                    // Tracks always use the dense CourseCard layout,
+                    // even in shelf view. Tracks have no cover art
+                    // (the language identity is carried by the
+                    // CourseCard's LanguageChip in the header), so a
+                    // shelf of large fallback tiles would feel sparse;
+                    // CourseCard's title + author + progress + lesson
+                    // count is the right info-density for a curriculum
+                    // tile and matches how an installed track surfaces
+                    // when opened.
+                    <div className="libre-library-grid">
+                      {sec.rows.map((e, idx) => (
+                        <CourseCard
+                          key={e.course.id}
+                          style={{ "--libre-ripple-i": idx } as React.CSSProperties}
+                          course={e.course}
+                          total={e.total}
+                          done={e.done}
+                          pct={e.pct}
+                          onOpen={() => onOpen(e.course.id)}
+                          onContextMenu={
+                            onExport || onDelete || onSettings || onUpdateCourse
+                              ? (ev) =>
+                                  ctxMenu.show(e.course, ev, {
+                                    hasUpdate: !!updates[e.course.id],
+                                  })
+                              : undefined
+                          }
+                          placeholder={e.course.placeholder}
+                          installing={installingIds.has(e.course.id)}
+                          onInstall={
+                            e.course.placeholder && onInstallCatalogEntry
+                              ? () => void handleInstallClick(e.course.id)
+                              : undefined
+                          }
+                          hasUpdate={
+                            !e.course.placeholder &&
+                            !!onUpdateCourse &&
+                            !!updates[e.course.id]
+                          }
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="libre-library-shelf">
+                      {sec.rows.map((e, idx) => (
+                        <BookCover
+                          key={e.course.id}
+                          // --libre-ripple-i drives the staggered mount
+                          // animation in CourseLibrary.css. Linear by
+                          // index so cards animate in across the shelf
+                          // in document order, capped at MAX_RIPPLE_I
+                          // via the CSS `min()` so giant shelves don't
+                          // produce a multi-second tail.
+                          style={{ "--libre-ripple-i": idx } as React.CSSProperties}
+                          course={e.course}
+                          progress={e.pct}
+                          loading={hydrating?.has(e.course.id)}
+                          onOpen={() => onOpen(e.course.id)}
+                          onContextMenu={
+                            // Placeholders have no installed-course
+                            // context menu (Export / Delete / Settings
+                            // need an installed copy on disk).
+                            !e.course.placeholder &&
+                            (onExport || onDelete || onSettings || onUpdateCourse)
+                              ? (ev) =>
+                                  ctxMenu.show(e.course, ev, {
+                                    hasUpdate: !!updates[e.course.id],
+                                  })
+                              : undefined
+                          }
+                          hasUpdate={
+                            !e.course.placeholder &&
+                            !!onUpdateCourse &&
+                            !!updates[e.course.id]
+                          }
+                          updating={updatingIds.has(e.course.id)}
+                          onUpdate={
+                            !e.course.placeholder && onUpdateCourse
+                              ? () => void handleUpdateClick(e.course.id)
+                              : undefined
+                          }
+                          placeholder={e.course.placeholder}
+                          installing={installingIds.has(e.course.id)}
+                          placeholderCoverUrl={
+                            e.course.placeholder
+                              ? coverHref(entryById.get(e.course.id)!)
+                              : undefined
+                          }
+                          onInstall={
+                            e.course.placeholder && onInstallCatalogEntry
+                              ? () => void handleInstallClick(e.course.id)
+                              : undefined
+                          }
+                        />
+                      ))}
+                    </div>
+                  )}
                 </section>
               ))}
             </div>
@@ -978,49 +1023,49 @@ export default function CourseLibrary({
                   </header>
                   <div className="libre-library-grid">
                     {sec.rows.map((e, idx) => (
-                      <CourseCard
-                        key={e.course.id}
-                        // See the matching --libre-ripple-i comment on
-                        // the shelf-mode map above. Same staggered
-                        // mount animation, same custom property.
-                        style={{ "--libre-ripple-i": idx } as React.CSSProperties}
-                        course={e.course}
-                        total={e.total}
-                        done={e.done}
-                        pct={e.pct}
-                        onOpen={() => onOpen(e.course.id)}
-                        onContextMenu={
-                          // Right-click surfaces the same context
-                          // menu the BookCover view uses — Reinstall /
-                          // Export / Settings / Reset / Delete. The
-                          // grid card no longer renders inline action
-                          // buttons; the menu is the single action
-                          // surface.
-                          onExport || onDelete || onSettings || onUpdateCourse
-                            ? (ev) =>
-                                ctxMenu.show(e.course, ev, {
-                                  hasUpdate: !!updates[e.course.id],
-                                })
-                            : undefined
-                        }
-                        // Discover-mode: install affordance per
-                        // tile. Mirrors the BookCover treatment in
-                        // book view so both view modes can install
-                        // a catalog entry without bouncing through
-                        // the modal.
-                        placeholder={e.course.placeholder}
-                        installing={installingIds.has(e.course.id)}
-                        onInstall={
-                          e.course.placeholder && onInstallCatalogEntry
-                            ? () => void handleInstallClick(e.course.id)
-                            : undefined
-                        }
-                        hasUpdate={
-                          !e.course.placeholder &&
-                          !!onUpdateCourse &&
-                          !!updates[e.course.id]
-                        }
-                      />
+                        <CourseCard
+                          key={e.course.id}
+                          // See the matching --libre-ripple-i comment on
+                          // the shelf-mode map above. Same staggered
+                          // mount animation, same custom property.
+                          style={{ "--libre-ripple-i": idx } as React.CSSProperties}
+                          course={e.course}
+                          total={e.total}
+                          done={e.done}
+                          pct={e.pct}
+                          onOpen={() => onOpen(e.course.id)}
+                          onContextMenu={
+                            // Right-click surfaces the same context
+                            // menu the BookCover view uses — Reinstall /
+                            // Export / Settings / Reset / Delete. The
+                            // grid card no longer renders inline action
+                            // buttons; the menu is the single action
+                            // surface.
+                            onExport || onDelete || onSettings || onUpdateCourse
+                              ? (ev) =>
+                                  ctxMenu.show(e.course, ev, {
+                                    hasUpdate: !!updates[e.course.id],
+                                  })
+                              : undefined
+                          }
+                          // Discover-mode: install affordance per
+                          // tile. Mirrors the BookCover treatment in
+                          // book view so both view modes can install
+                          // a catalog entry without bouncing through
+                          // the modal.
+                          placeholder={e.course.placeholder}
+                          installing={installingIds.has(e.course.id)}
+                          onInstall={
+                            e.course.placeholder && onInstallCatalogEntry
+                              ? () => void handleInstallClick(e.course.id)
+                              : undefined
+                          }
+                          hasUpdate={
+                            !e.course.placeholder &&
+                            !!onUpdateCourse &&
+                            !!updates[e.course.id]
+                          }
+                        />
                     ))}
                   </div>
                 </section>

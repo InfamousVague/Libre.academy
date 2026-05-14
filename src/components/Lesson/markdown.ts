@@ -176,6 +176,14 @@ export async function renderMarkdown(
   // for the consumer side.
   joined = annotateTtsBlocks(joined);
 
+  // Step 7 — annotate section headings (h2/h3) so LessonReader can
+  // flip a "completed" badge on each one once the learner has
+  // scrolled past it. Inlines an empty `<span class="libre-section-
+  // check">` slot containing a check glyph; CSS hides it until the
+  // hosting heading carries the `is-completed` class. See
+  // LessonReader's section-progress effect for the runtime side.
+  joined = annotateSectionHeadings(joined);
+
   return joined;
 }
 
@@ -218,6 +226,136 @@ function annotateTtsBlocks(html: string): string {
     // Defensive — never let the annotation step break the render.
     return html;
   }
+}
+
+// ---------- Section headings ----------------------------------------------
+
+/// Pre-built check glyph that sits in the heading badge slot. Inlined
+/// here (not hydrated from a React Icon component) for the same reason
+/// the callout glyphs are inlined above: the heading lives inside the
+/// `innerHTML`-injected article body, and any subsequent enrichment /
+/// progress re-render could clobber a placeholder element. Shipping
+/// the SVG in the initial markup removes that race entirely.
+///
+/// The class `icon icon--xs` lets it inherit the project's Base-kit
+/// icon sizing so the check matches the visual weight of other
+/// inline icons (callout glyphs, "ask Libre" badges, etc.).
+const SECTION_CHECK_SVG =
+  `<svg class="icon icon--xs" viewBox="0 0 24 24" fill="none" ` +
+  `stroke="currentColor" stroke-width="2.5" stroke-linecap="round" ` +
+  `stroke-linejoin="round" aria-hidden="true">` +
+  `<path d="M20 6 9 17l-5-5"/></svg>`;
+
+/// Walk the rendered HTML and decorate every `<h2>` / `<h3>` block in
+/// the lesson body with the machinery LessonReader needs to flip a
+/// "completed" badge on it:
+///
+///   1. Assign an `id` so the heading is anchor-linkable + has a
+///      stable handle for the IntersectionObserver. Uses a slug
+///      derived from the heading text, falling back to a sequential
+///      index when the slug is empty / collides with an earlier
+///      heading in the same lesson (e.g. two "## Example" headings).
+///   2. Tag with `data-libre-section` so the reader's scroll-progress
+///      effect can pick them up with a single `querySelectorAll`.
+///   3. Prepend an inert `<span class="libre-section-check">` slot
+///      containing the check glyph. CSS keeps it invisible until the
+///      hosting heading carries the `is-completed` class, which the
+///      reader sets once the heading has scrolled above the viewport
+///      top.
+///
+/// `<h1>` is deliberately NOT decorated — the lesson title is
+/// rendered as a dedicated `.libre-reader-title` above the body, and
+/// `stripLeadingTitleHeading` removes the duplicate `# Title` from
+/// the body before render. Any stray h1 left in a lesson body is
+/// almost certainly authorial slip-up; treating it as a section
+/// would surface a check next to it that the rest of the prose has
+/// no peer for, which would read as noise.
+///
+/// `<h4>+` is left alone too — they're typically nested-detail
+/// headings, not standalone sections. Adding checks to them would
+/// clutter the prose without adding navigational value.
+function annotateSectionHeadings(html: string): string {
+  if (typeof DOMParser === "undefined") return html;
+  try {
+    const doc = new DOMParser().parseFromString(
+      `<!doctype html><html><body><div id="__sec_root__">${html}</div></body></html>`,
+      "text/html",
+    );
+    const root = doc.getElementById("__sec_root__");
+    if (!root) return html;
+    // Section-level progress badges live on h2 ONLY. Earlier
+    // builds annotated both h2 and h3, but h3s in this app are
+    // "individual headings" (sub-points within a section) — they
+    // don't warrant their own completion stamp, and a per-h3
+    // check produced a noisy column of marks for what learners
+    // read as a single coherent section. h2 = section, h3 =
+    // heading-within-section.
+    const headings = root.querySelectorAll("h2");
+    const usedIds = new Set<string>();
+    let idx = 0;
+    for (const h of Array.from(headings)) {
+      // Build a stable, anchor-friendly id. We prefer a text slug so
+      // anchors like `#getting-started` work as the learner would
+      // expect; falling back to a sequential index keeps duplicates
+      // and empty-text headings addressable.
+      const baseSlug = slugifyHeading(h.textContent ?? "");
+      let id = baseSlug || `section-${idx}`;
+      // Disambiguate collisions deterministically — `feature-flags`,
+      // `feature-flags-2`, `feature-flags-3` rather than letting two
+      // headings share an id (which breaks fragment navigation).
+      if (usedIds.has(id)) {
+        let n = 2;
+        while (usedIds.has(`${id}-${n}`)) n++;
+        id = `${id}-${n}`;
+      }
+      usedIds.add(id);
+      h.setAttribute("id", id);
+      h.setAttribute("data-libre-section", String(idx));
+      // Append the badge slot AFTER the title text — the badge sits
+      // on the RIGHT-hand side of the heading row, opposite to the
+      // earlier left-leading layout. Visually the check then reads
+      // as a "section closed" stamp at the trailing edge rather
+      // than a leading bullet. Flex layout in the CSS still keeps
+      // the title text from being crowded.
+      const textSpan = doc.createElement("span");
+      textSpan.className = "libre-section-heading-text";
+      while (h.firstChild) textSpan.appendChild(h.firstChild);
+      h.appendChild(textSpan);
+      const checkSpan = doc.createElement("span");
+      checkSpan.className = "libre-section-check";
+      checkSpan.setAttribute("aria-hidden", "true");
+      checkSpan.innerHTML = SECTION_CHECK_SVG;
+      h.appendChild(checkSpan);
+      h.classList.add("libre-section-heading");
+      idx++;
+    }
+    return root.innerHTML;
+  } catch {
+    // Defensive — never let the annotation step break the render.
+    return html;
+  }
+}
+
+/// Slugify a heading's text for use as an anchor id. Mirrors the
+/// GitHub markdown algorithm at a high level — lowercase, strip
+/// punctuation, collapse whitespace to `-` — without pulling in a
+/// full slugify dependency.
+///
+/// Returns an empty string when the input boils down to nothing
+/// (purely punctuation / emoji headings); callers fall back to the
+/// sequential `section-N` form.
+function slugifyHeading(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFKD")
+    // Drop combining marks left over from NFKD decomposition.
+    .replace(/[̀-ͯ]/g, "")
+    // Keep letters, digits, whitespace, and hyphens; drop everything
+    // else (punctuation, emoji, symbols).
+    .replace(/[^a-z0-9\s-]/g, "")
+    // Collapse runs of whitespace + hyphens to a single hyphen.
+    .replace(/[\s-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 // ---------- Callouts -------------------------------------------------------

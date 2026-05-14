@@ -479,6 +479,98 @@
   color: var(--color-text-primary);
 }
 
+/* ── Section completion badge ─────────────────────────────────────────
+   Headings stamped by `annotateSectionHeadings` in markdown.ts carry
+   two new children: a `.libre-section-check` slot (the badge) and a
+   `.libre-section-heading-text` wrapper around the original title
+   content. Flex layout lets the badge sit to the LEFT of the title
+   text with consistent vertical centering across h2 / h3 sizes.
+
+   Default state: the badge slot is reserved (so the title doesn't
+   reflow when the badge appears) but its content is hidden via
+   opacity + slight inward offset. The reserved width matches the
+   icon size so the headings stay visually aligned with non-section
+   prose elements above / below them.
+
+   Completed state: LessonReader's IntersectionObserver flips
+   `.is-completed` on the heading once it scrolls above the viewport
+   top. The badge fades + slides into place with a quick spring
+   transition — long enough to feel intentional (the learner spots
+   the change in peripheral vision while scrolling), short enough
+   not to lag behind the scroll. */
+
+.libre-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* Push the check (DOM-trailing) to the RIGHT-hand edge of the
+     heading row by letting the text-span flex-grow into the
+     leftover space. Previously the check sat to the LEFT of the
+     title; the rightward layout reads as a "stamp" placed on
+     the section once it's done rather than a leading bullet. */
+  justify-content: space-between;
+}
+
+.libre-section-heading-text {
+  /* Allow the title text to wrap normally; the flex container
+     keeps the badge pinned to the row's trailing edge. */
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.libre-section-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  /* Reserve space proportional to the heading size — h2 is 20px,
+     h3 is 16px — so the title baselines stay aligned with non-
+     section prose. The flex parent's `gap` adds breathing room. */
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  /* Filled-disc treatment matches the visual weight of GitHub
+     task-list checks: bright accent fill + contrasting glyph. The
+     green here is the "success" green used by the tip callout
+     elsewhere in the prose, so a learner who has internalised
+     tip-callout green = "this is good / done" reads the badge
+     correctly without a legend. */
+  background: var(--color-success, #7cd97c);
+  color: var(--color-bg-primary, #0a0a0a);
+  opacity: 0;
+  transform: translateX(-4px) scale(0.85);
+  transition:
+    opacity 220ms ease-out,
+    transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Inherit the icon sizing from the inline svg's `icon icon--xs`
+     class but trim a bit so the glyph sits centered inside the
+     disc without crowding the edge. */
+  pointer-events: none;
+}
+
+.libre-section-check .icon {
+  width: 12px;
+  height: 12px;
+}
+
+.libre-section-heading.is-completed .libre-section-check {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+/* Reduced-motion learners get the same end state with no scale /
+   slide animation — just an opacity fade so the badge doesn't pop
+   in jarringly. */
+@media (prefers-reduced-motion: reduce) {
+  .libre-section-check {
+    transition: opacity 0ms;
+    transform: none;
+  }
+  .libre-section-heading.is-completed .libre-section-check {
+    transform: none;
+  }
+}
+
 .libre-reader-body p {
   font-size: 14px;
   line-height: 1.65;
@@ -900,15 +992,20 @@
    block's layout properties, so paragraphs, lists, blockquotes,
    and code blocks all share the same visual treatment without
    any of them shifting. */
+/* Single painted region for the read-along highlight. The
+   previous build painted the highlight as TWO disconnected
+   elements: a 2px yellow bar at `left: -14px` (outside the
+   block) and a soft amber gradient on the block's own
+   background. With a 14px gap between them they didn't read as
+   one thing — Notion issue #a5d6df63306626a7 ("yellow bar is
+   not connected to gradient on read along highlighting").
+   Merging both into a single `::before` pseudo-element that
+   spans from `-14px` (the bar's old x) to the block's right
+   edge with a stepped gradient — solid bar in the first 2px,
+   then the soft tint fading rightward — makes the bar read as
+   the leftmost color stop of the same gradient. */
 .libre-reader-body [data-tts-block].libre-tts-current {
   position: relative;
-  background: linear-gradient(
-    90deg,
-    rgba(214, 185, 105, 0.10) 0%,
-    rgba(214, 185, 105, 0.05) 60%,
-    transparent 100%
-  );
-  border-radius: 0 4px 4px 0;
   transition: background 350ms ease;
 }
 
@@ -918,15 +1015,51 @@
   left: -14px;
   top: 0;
   bottom: 0;
-  width: 2px;
-  background: rgba(214, 185, 105, 0.6);
-  border-radius: 1px;
-  transition: background 350ms ease;
+  right: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(214, 185, 105, 0.6) 0px,
+    rgba(214, 185, 105, 0.6) 2px,
+    rgba(214, 185, 105, 0.10) 14px,
+    rgba(214, 185, 105, 0.05) 60%,
+    transparent 100%
+  );
+  border-radius: 1px 4px 4px 1px;
+  transition: opacity 350ms ease;
   pointer-events: none;
+  z-index: -1;
+}
+
+/* Callouts and tables carry their OWN backgrounds (callout
+   semantic tint, table chrome) that paint over the soft
+   pseudo-element gradient used for normal prose. Notion issue
+   #8edbd4fd31f5fd1e — "Tables and tips are hard to read along,
+   they're not apparent" — flagged that the read-along
+   indicator effectively vanishes on these blocks. Apparent
+   alternative: replace the soft tint with a confident amber
+   ring (outline + glow via box-shadow) that paints ON TOP of
+   the element rather than under it, plus a thicker solid
+   left-bar pulled inboard so it doesn't fight the callout's
+   semantic border. Both visible regardless of what background
+   the underlying block carries. */
+.libre-reader-body .libre-callout[data-tts-block].libre-tts-current::before,
+.libre-reader-body table[data-tts-block].libre-tts-current::before {
+  background: none;
+  border-radius: inherit;
+  /* Outline ring (outer amber halo) + 3px solid left bar (no
+     gap to the gradient — the bar IS the ring's left edge).
+     `inset 3px 0 0 0` places the bar inside the block so it
+     never spills past the rounded corner radius. */
+  box-shadow:
+    0 0 0 1px rgba(214, 185, 105, 0.85),
+    0 0 0 4px rgba(214, 185, 105, 0.18),
+    inset 3px 0 0 0 rgba(214, 185, 105, 0.85);
+  left: 0;
+  right: 0;
+  z-index: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .libre-reader-body [data-tts-block].libre-tts-current,
   .libre-reader-body [data-tts-block].libre-tts-current::before {
     transition: none;
   }
