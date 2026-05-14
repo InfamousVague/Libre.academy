@@ -21,7 +21,11 @@ import type { ToolApproval, ToolCall, ToolDef, ToolResult } from "../lib/aiTools
 import { runAgentLoop } from "../lib/aiAgent/loop";
 import { createTauriTransport } from "../lib/aiAgent/transport";
 import { EMPTY_RUN_USAGE, type RunUsage, type TurnUsage } from "../lib/aiAgent/usage";
-import { loadSettings, type AiAgentSettings } from "../lib/aiAgent/settings";
+import {
+  loadSettings,
+  resolveEffortParams,
+  type AiAgentSettings,
+} from "../lib/aiAgent/settings";
 import type { AgentMessage as InternalAgentMessage } from "../lib/aiAgent/types";
 
 /// Re-export the message type at this module's path so the
@@ -256,6 +260,10 @@ export function useAiAgent(params: {
           augmented,
           transport,
           maxTurns: settingsRef.current.maxTurns,
+          // Forward the user's `effort` rung as concrete model
+          // params. `resolveEffortParams` maps fast/balanced/
+          // thorough → temperature + num_ctx + num_predict.
+          effortParams: resolveEffortParams(settingsRef.current.effort),
           hooks: {
             onTurnStart: (idx) => {
               // For turn 0 the placeholder was already added

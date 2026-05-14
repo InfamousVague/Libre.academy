@@ -22,6 +22,7 @@
 
 import {
   extractInlineToolCalls,
+  extractXmlToolCalls,
   findExistingProjectId,
   stripInlineToolCallJson,
   synthesizeFromFences,
@@ -121,6 +122,15 @@ export interface AgentLoopOptions {
   /// Cap on consecutive-same-call retries. Mirrors the existing
   /// `MAX_SAME_CALL_RETRIES` constant; defaults to 3 if omitted.
   maxSameCallRetries?: number;
+  /// Per-call model knobs forwarded to the transport on every
+  /// turn — driven by the user's `effort` setting via
+  /// `resolveEffortParams(settings.effort)`. Optional: when
+  /// omitted, the transport uses its own defaults.
+  effortParams?: {
+    temperature?: number;
+    num_ctx?: number;
+    num_predict?: number;
+  };
   /// Mark messages produced this run with a tag the UI can use
   /// to render "new in this run" indicators. Optional — defaults
   /// to undefined (no tagging).
@@ -148,6 +158,7 @@ export async function runAgentLoop(
     hooks,
     maxTurns,
     maxSameCallRetries = DEFAULT_MAX_SAME_CALL_RETRIES,
+    effortParams,
   } = options;
 
   const toolMap = new Map<string, ToolDef>();
@@ -195,6 +206,13 @@ export async function runAgentLoop(
           },
         })),
         onChunk: hooks.onChunk,
+        // Per-call model knobs from the user's "effort" setting —
+        // forwarded through unchanged. The Tauri transport reads
+        // these off the request body and stuffs them into the
+        // Ollama call's `options` block.
+        temperature: effortParams?.temperature,
+        num_ctx: effortParams?.num_ctx,
+        num_predict: effortParams?.num_predict,
       });
     } catch (err) {
       // Transport failure — surface to the host via a synthetic
@@ -223,14 +241,20 @@ export async function runAgentLoop(
     // models emit them as JSON instead of via the structured
     // channel) + the confidence tag.
     //
-    // Three layers of recovery, applied in priority order:
+    // Four layers of recovery, applied in priority order:
     //
     //   1. Structured `tool_calls` from the transport — preferred
     //      path, used by models that respect Ollama's tools API.
     //   2. Inline JSON in content (fenced or bare) — recovery for
     //      models that ignore the structured channel but at least
     //      emit a tool-call-shaped JSON object.
-    //   3. Fence-to-tool synthesis — last-resort recovery for
+    //   3. XML-tag wrapped tool calls — Hermes / Qwen / NousResearch
+    //      checkpoints sometimes emit `<function-name>X</function-name>
+    //      <arguments>{...}</arguments>` or `<tool_call>{...}</tool_call>`
+    //      instead of JSON or via the structured channel. Pure-text
+    //      XML survives all of the prior layers (no { at top level,
+    //      no fence-and-path) so we get a dedicated extractor.
+    //   4. Fence-to-tool synthesis — last-resort recovery for
     //      models that DUMP CODE in `\`\`\`lang:path` fences with
     //      no tool calls at all. We synthesise create / write
     //      calls so the build still lands in the sandbox. Without
@@ -245,12 +269,30 @@ export async function runAgentLoop(
     let toolCalls =
       response.toolCalls?.length ? response.toolCalls : inlineToolCalls;
 
-    // Strip inline JSON before considering fence synthesis so
-    // the fence walker doesn't double-count a fenced tool-call
-    // payload as a "file to write".
-    let stripped = inlineToolCalls?.length
-      ? stripInlineToolCallJson(rawContent)
-      : rawContent;
+    // ALWAYS strip inline tool-call JSON, regardless of whether
+    // the tool calls came from the structured channel, the
+    // inline-JSON extractor, or further down the recovery chain.
+    // Models that emit a structured tool call frequently ALSO
+    // echo the same `{"name": "X", "arguments": {…}}` payload
+    // inside a markdown fence in their prose ("Step 1: …
+    // ```json\n{...}\n```"). Without an unconditional strip the
+    // echoed copy stays in the bubble and the user reads it as
+    // "the AI is just dumping JSON at me" — exactly the failure
+    // mode the bug report describes.
+    let stripped = stripInlineToolCallJson(rawContent);
+
+    // Layer 3: XML-tag tool calls. Only fires when layers 1 and 2
+    // produced nothing. The extractor returns the calls AND the
+    // content with the XML spans removed so the chat bubble
+    // doesn't show the raw `<function-name>...</function-name>`
+    // mess after dispatch.
+    if (!toolCalls || toolCalls.length === 0) {
+      const xml = extractXmlToolCalls(stripped, tools);
+      if (xml && xml.toolCalls.length > 0) {
+        toolCalls = xml.toolCalls;
+        stripped = xml.cleaned;
+      }
+    }
 
     let fenceCleaned: string | null = null;
     if (!toolCalls || toolCalls.length === 0) {

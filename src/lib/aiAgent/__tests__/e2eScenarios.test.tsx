@@ -464,6 +464,11 @@ describe("Scenario A: tic-tac-toe (code dump → synthesiser)", () => {
           },
         ]);
 
+        // Explicitly disable auto-approve so this scenario still
+        // exercises the chip-click path. (Default settings now
+        // have auto-approve ON, so without this seed the chip
+        // never surfaces and waitFor would time out.)
+        seedSettings({ autoApprove: false });
         render(
           <Harness prompt="build me a tic-tac-toe game in JavaScript" />,
         );
@@ -472,7 +477,8 @@ describe("Scenario A: tic-tac-toe (code dump → synthesiser)", () => {
         });
 
         // The synthesiser produces a create_sandbox_project call that
-        // gates by default — we need to approve it.
+        // gates because we seeded autoApprove=false — we need to
+        // click the Allow chip.
         await waitFor(() => {
           expect(screen.queryByText(/^Allow$/)).not.toBeNull();
         });

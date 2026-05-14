@@ -266,10 +266,13 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
+  /* Modernized diagonal shine — neutral graphite band (was warm
+     amber gold `rgba(212, 176, 107, 0.4)`) so the highlight
+     reads correctly on the new white paper base. */
   background-image: linear-gradient(
     -70deg,
     transparent 42%,
-    rgba(212, 176, 107, 0.4) 50%,
+    rgba(0, 0, 0, 0.18) 50%,
     transparent 58%
   );
   background-size: 220% 220%;

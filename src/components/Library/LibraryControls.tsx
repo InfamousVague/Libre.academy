@@ -61,11 +61,11 @@ export interface LibraryControlsProps {
   categoryFilter: "all" | CourseCategory;
   chainFilter: "all" | CryptoChain;
   langFilter: "all" | LanguageId;
-  kindFilter: "all" | "books" | "tracks" | "challenges";
+  kindFilter: "all" | "books" | "tracks";
   onSetCategory: (c: "all" | CourseCategory) => void;
   onSetChain: (c: "all" | CryptoChain) => void;
   onSetLang: (l: "all" | LanguageId) => void;
-  onSetKind: (k: "all" | "books" | "tracks" | "challenges") => void;
+  onSetKind: (k: "all" | "books" | "tracks") => void;
   categoryCounts: CategoryCountsShape;
   chainCounts: ChainCountsShape;
   countByLang: Map<string, number>;
@@ -138,11 +138,7 @@ export default function LibraryControls(p: LibraryControlsProps): ReactElement {
     activeChips.push({
       key: "kind",
       label:
-        p.kindFilter === "books"
-          ? t("library.books")
-          : p.kindFilter === "tracks"
-            ? t("library.tracks")
-            : t("library.challenges"),
+        p.kindFilter === "books" ? t("library.books") : t("library.tracks"),
       clear: () => p.onSetKind("all"),
     });
   }
@@ -294,7 +290,7 @@ interface FilterPopoverProps {
   categoryFilter: "all" | CourseCategory;
   chainFilter: "all" | CryptoChain;
   langFilter: "all" | LanguageId;
-  kindFilter: "all" | "books" | "tracks" | "challenges";
+  kindFilter: "all" | "books" | "tracks";
   categoryCounts: CategoryCountsShape;
   chainCounts: ChainCountsShape;
   countByLang: Map<string, number>;
@@ -303,7 +299,7 @@ interface FilterPopoverProps {
   onSetCategory: (c: "all" | CourseCategory) => void;
   onSetChain: (c: "all" | CryptoChain) => void;
   onSetLang: (l: "all" | LanguageId) => void;
-  onSetKind: (k: "all" | "books" | "tracks" | "challenges") => void;
+  onSetKind: (k: "all" | "books" | "tracks") => void;
 }
 
 function FilterPopover(p: FilterPopoverProps): ReactElement {
@@ -419,20 +415,19 @@ function FilterPopover(p: FilterPopoverProps): ReactElement {
               onSelect={() => p.onSetKind("books")}
             />
           )}
-          {p.kindCounts.tracks > 0 && (
+          {/* Tracks button. Now folds in BOTH Exercism-style
+              tracks AND challenge packs — the dedicated
+              "Challenges" filter was retired per Notion issue
+              #8950f6efe915713b ("remove challenges from the
+              main library page and represent them as tracks").
+              Count = tracks + challenges so the badge still
+              advertises the full set under this filter. */}
+          {p.kindCounts.tracks + p.kindCounts.challenges > 0 && (
             <FilterOption
               label={t("library.tracks")}
-              count={p.kindCounts.tracks}
+              count={p.kindCounts.tracks + p.kindCounts.challenges}
               active={p.kindFilter === "tracks"}
               onSelect={() => p.onSetKind("tracks")}
-            />
-          )}
-          {p.kindCounts.challenges > 0 && (
-            <FilterOption
-              label={t("library.challenges")}
-              count={p.kindCounts.challenges}
-              active={p.kindFilter === "challenges"}
-              onSelect={() => p.onSetKind("challenges")}
             />
           )}
         </FilterSection>

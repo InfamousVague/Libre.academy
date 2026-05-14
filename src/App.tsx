@@ -89,6 +89,7 @@ import { useChainActivity } from "./hooks/useChainActivity";
 import { useLibreCloud } from "./hooks/useLibreCloud";
 import { useRealtimeSync } from "./hooks/useRealtimeSync";
 import FirstLaunchPrompt from "./components/dialogs/SignInDialog/FirstLaunchPrompt";
+import SetupWizard from "./components/dialogs/SetupWizard/SetupWizard";
 import SignInDialog from "./components/dialogs/SignInDialog/SignInDialog";
 import { useCourses } from "./hooks/useCourses";
 import { useRecentCourses } from "./hooks/useRecentCourses";
@@ -2740,8 +2741,13 @@ export default function App() {
 
       {/* OTA update toast — desktop-only. Self-gates on `isDesktop`
           + the result of a Tauri-updater check. Idle state renders
-          null so this is invisible when there's nothing to install. */}
-      <UpdateBanner />
+          null so this is invisible when there's nothing to install.
+          `onOpenSettings` lets the post-install "Restart" affordance
+          redirect into Settings instead of relaunching directly —
+          per Notion issue #a41bc772db92641f, the in-Settings
+          restart button is the canonical surface and the banner
+          should hand off there. */}
+      <UpdateBanner onOpenSettings={() => setSettingsOpen(true)} />
 
       {/* First-launch sign-in nudge. Self-gates on
           `cloud.user === false` (= no token, not signed in) and on
@@ -2756,6 +2762,14 @@ export default function App() {
           unchanged on web all along — the dialog just wasn't being
           rendered. */}
       <FirstLaunchPrompt cloud={cloud} />
+
+      {/* Local-AI dependency wizard. Probes for Homebrew + Ollama on
+          first launch and walks the user through installing whichever
+          is missing. Self-gates on `cloud.user` so it opens AFTER the
+          FirstLaunchPrompt above has resolved (signed-in or dismissed)
+          rather than stacking on top of it. Web build is a no-op (no
+          Tauri commands available). */}
+      <SetupWizard cloud={cloud} />
 
       {/* Re-openable sign-in modal. Driven by the "Sign in" button in
           the TopBar stats dropdown — separate from the first-launch

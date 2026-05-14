@@ -230,21 +230,11 @@ function annotateTtsBlocks(html: string): string {
 
 // ---------- Section headings ----------------------------------------------
 
-/// Pre-built check glyph that sits in the heading badge slot. Inlined
-/// here (not hydrated from a React Icon component) for the same reason
-/// the callout glyphs are inlined above: the heading lives inside the
-/// `innerHTML`-injected article body, and any subsequent enrichment /
-/// progress re-render could clobber a placeholder element. Shipping
-/// the SVG in the initial markup removes that race entirely.
-///
-/// The class `icon icon--xs` lets it inherit the project's Base-kit
-/// icon sizing so the check matches the visual weight of other
-/// inline icons (callout glyphs, "ask Libre" badges, etc.).
-const SECTION_CHECK_SVG =
-  `<svg class="icon icon--xs" viewBox="0 0 24 24" fill="none" ` +
-  `stroke="currentColor" stroke-width="2.5" stroke-linecap="round" ` +
-  `stroke-linejoin="round" aria-hidden="true">` +
-  `<path d="M20 6 9 17l-5-5"/></svg>`;
+// Section-check SVG was retired here when the per-heading badge
+// moved to the lesson title (Notion issue #a403f5d281ea4ca2);
+// the canonical inline SVG now lives next to its consumer in
+// `LessonReader.tsx`. Keeping a comment so the next dev who
+// greps for "section check" finds the new home.
 
 /// Walk the rendered HTML and decorate every `<h2>` / `<h3>` block in
 /// the lesson body with the machinery LessonReader needs to flip a
@@ -283,26 +273,28 @@ function annotateSectionHeadings(html: string): string {
     );
     const root = doc.getElementById("__sec_root__");
     if (!root) return html;
-    // Section-level progress badges live on h2 ONLY. Earlier
-    // builds annotated both h2 and h3, but h3s in this app are
-    // "individual headings" (sub-points within a section) — they
-    // don't warrant their own completion stamp, and a per-h3
-    // check produced a noisy column of marks for what learners
-    // read as a single coherent section. h2 = section, h3 =
-    // heading-within-section.
+    // Heading badges have been retired entirely on the body
+    // headings (Notion issue #a403f5d281ea4ca2 — "individual
+    // headings shouldn't get progress markers, instead the
+    // section title should have the check mark next to the
+    // right hand side when complete and when we've scrolled to
+    // the bottom of the page"). Earlier builds painted a check
+    // next to every h2; the canonical "section title" the
+    // issue refers to is the LESSON title at the top of the
+    // reader (`.libre-reader-title`), not body h2s. That
+    // single check is now wired in `LessonReader.tsx` instead.
+    //
+    // We still scan and tag h2s with stable anchor ids + the
+    // `data-libre-section` attribute so anchor-link navigation
+    // (`#getting-started` style fragments) keeps working and the
+    // table-of-contents popover can target them. No badge slot,
+    // no flex-layout class — just plain ids.
     const headings = root.querySelectorAll("h2");
     const usedIds = new Set<string>();
     let idx = 0;
     for (const h of Array.from(headings)) {
-      // Build a stable, anchor-friendly id. We prefer a text slug so
-      // anchors like `#getting-started` work as the learner would
-      // expect; falling back to a sequential index keeps duplicates
-      // and empty-text headings addressable.
       const baseSlug = slugifyHeading(h.textContent ?? "");
       let id = baseSlug || `section-${idx}`;
-      // Disambiguate collisions deterministically — `feature-flags`,
-      // `feature-flags-2`, `feature-flags-3` rather than letting two
-      // headings share an id (which breaks fragment navigation).
       if (usedIds.has(id)) {
         let n = 2;
         while (usedIds.has(`${id}-${n}`)) n++;
@@ -311,22 +303,6 @@ function annotateSectionHeadings(html: string): string {
       usedIds.add(id);
       h.setAttribute("id", id);
       h.setAttribute("data-libre-section", String(idx));
-      // Append the badge slot AFTER the title text — the badge sits
-      // on the RIGHT-hand side of the heading row, opposite to the
-      // earlier left-leading layout. Visually the check then reads
-      // as a "section closed" stamp at the trailing edge rather
-      // than a leading bullet. Flex layout in the CSS still keeps
-      // the title text from being crowded.
-      const textSpan = doc.createElement("span");
-      textSpan.className = "libre-section-heading-text";
-      while (h.firstChild) textSpan.appendChild(h.firstChild);
-      h.appendChild(textSpan);
-      const checkSpan = doc.createElement("span");
-      checkSpan.className = "libre-section-check";
-      checkSpan.setAttribute("aria-hidden", "true");
-      checkSpan.innerHTML = SECTION_CHECK_SVG;
-      h.appendChild(checkSpan);
-      h.classList.add("libre-section-heading");
       idx++;
     }
     return root.innerHTML;

@@ -195,7 +195,7 @@ export default function CourseLibrary({
   // increasing-difficulty exercises). The default is "all" so a fresh
   // visit shows everything; toggling restricts to one bucket.
   const [kindFilter, setKindFilter] = useState<
-    "all" | "books" | "tracks" | "challenges"
+    "all" | "books" | "tracks"
   >("all");
   const [sortBy, setSortBy] = useState<SortKey>("name");
   const [query, setQuery] = useState("");
@@ -372,6 +372,18 @@ export default function CourseLibrary({
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return enriched
+      // Tracks + challenge packs live EXCLUSIVELY in the dedicated
+      // Tracks page on the LIBRARY scope — per Notion issue
+      // #8950f6efe915713b follow-up. On the DISCOVER scope the
+      // strip is lifted: the catalogue surface needs to show every
+      // installable pack including tracks + challenges, otherwise
+      // a learner can't find / install them from there. So the
+      // strip is scoped to `library` only.
+      .filter(
+        (e) =>
+          derivedScope === "discover" ||
+          (!isExerciseTrack(e.course) && !isChallengePack(e.course)),
+      )
       // Belt + suspenders: the scope-aware `enriched` above already
       // partitions installed vs placeholder, but keeping the
       // explicit filter here means an accidental future change to
@@ -395,13 +407,14 @@ export default function CourseLibrary({
           cryptoChain(e.course) === chainFilter,
       )
       .filter((e) => langFilter === "all" || e.course.language === langFilter)
+      // No kind filter — the library is books-only after the
+      // track / challenge strip above. `kindFilter` is kept on the
+      // state shape for back-compat (existing callers + the
+      // filter-popover plumbing), but every non-"all" value would
+      // produce the same books-only result by construction.
       .filter((e) => {
         if (kindFilter === "all") return true;
-        if (kindFilter === "challenges") return isChallengePack(e.course);
-        if (kindFilter === "tracks") return isExerciseTrack(e.course);
-        // "books" — anything that's neither a challenge pack nor a
-        // language track (the default bucket for legacy/book-derived
-        // courses where packType is unset or "course").
+        if (kindFilter === "tracks") return false; // none survive the strip
         return !isChallengePack(e.course) && !isExerciseTrack(e.course);
       })
       .filter((e) =>
@@ -432,26 +445,41 @@ export default function CourseLibrary({
     query,
   ]);
 
-  // Group filtered courses by KIND into THREE lanes — "Books"
-  // (chapter-major prose with exercises) up top, "Tracks"
-  // (Exercism-style language curriculums) in the middle, and
-  // "Challenges" (flat lists of increasing-difficulty exercises)
-  // at the bottom. The split is visual + structural: a learner
-  // browsing the library sees courses-they-will-read first, the
-  // structured language tracks second, code-katas third. We
-  // dropped the earlier release-status bucketing (BETA / ALPHA
-  // / UNREVIEWED) here — that's editorial chrome, not
-  // reader-facing structure.
+  // Section layout depends on scope:
+  //   - library: books only (tracks + challenge packs are stripped
+  //     upstream by the `filtered` predicate so they live on the
+  //     dedicated Tracks page exclusively).
+  //   - discover: books AND tracks each in their own labelled
+  //     section so a learner browsing the catalog can find every
+  //     installable pack. Challenges fold into the Tracks lane
+  //     here (mirrors the Tracks-page bucketing).
   const sections = useMemo(() => {
+    if (filtered.length === 0) return [];
+    if (derivedScope !== "discover") {
+      return [
+        {
+          key: "books",
+          label: t("library.books"),
+          blurb: t("library.booksBlurb"),
+          rows: filtered,
+        },
+      ];
+    }
     const books: typeof filtered = [];
     const tracks: typeof filtered = [];
-    const challenges: typeof filtered = [];
     for (const e of filtered) {
-      if (isChallengePack(e.course)) challenges.push(e);
-      else if (isExerciseTrack(e.course)) tracks.push(e);
-      else books.push(e);
+      if (isExerciseTrack(e.course) || isChallengePack(e.course)) {
+        tracks.push(e);
+      } else {
+        books.push(e);
+      }
     }
-    const out: Array<{ key: string; label: string; blurb: string; rows: typeof filtered }> = [];
+    const out: Array<{
+      key: string;
+      label: string;
+      blurb: string;
+      rows: typeof filtered;
+    }> = [];
     if (books.length > 0) {
       out.push({
         key: "books",
@@ -468,16 +496,8 @@ export default function CourseLibrary({
         rows: tracks,
       });
     }
-    if (challenges.length > 0) {
-      out.push({
-        key: "challenges",
-        label: t("library.challenges"),
-        blurb: t("library.challengesBlurb"),
-        rows: challenges,
-      });
-    }
     return out;
-  }, [filtered, t]);
+  }, [filtered, derivedScope, t]);
 
   // Count courses per category so the top-level toggle can show
   // badges. Always uses the full enriched set — the badge needs to
@@ -536,14 +556,25 @@ export default function CourseLibrary({
   }, [enriched, categoryFilter, chainFilter]);
 
   // Count books / tracks / challenges so the kind toggle can show
-  // badges. Only counts within the current category + chain + language
-  // filters so the numbers track what's actually visible after upstream
-  // filters narrow the set.
+  // badges. Scope-aware: on the LIBRARY scope, tracks + challenge
+  // packs are forced to 0 (the kind-filter UI then collapses to a
+  // single "books" bucket and self-hides via LibraryControls'
+  // `kindBucketsPresent >= 2` check). On the DISCOVER scope all
+  // three lanes count, so the filter popover surfaces a real
+  // Books / Tracks toggle. Only counts within the current
+  // category + chain + language filters so the numbers track what's
+  // actually visible after upstream filters narrow the set.
   const kindCounts = useMemo(() => {
     let books = 0;
     let tracks = 0;
     let challenges = 0;
+    const isDiscover = derivedScope === "discover";
     for (const e of enriched) {
+      const challengeP = isChallengePack(e.course);
+      const trackP = isExerciseTrack(e.course);
+      // Library scope: skip non-book packs entirely so the kind
+      // counts agree with the books-only `filtered` stream.
+      if (!isDiscover && (challengeP || trackP)) continue;
       if (
         categoryFilter !== "all" &&
         categorizeCourse(e.course) !== categoryFilter
@@ -558,12 +589,12 @@ export default function CourseLibrary({
         continue;
       }
       if (langFilter !== "all" && e.course.language !== langFilter) continue;
-      if (isChallengePack(e.course)) challenges += 1;
-      else if (isExerciseTrack(e.course)) tracks += 1;
+      if (challengeP) challenges += 1;
+      else if (trackP) tracks += 1;
       else books += 1;
     }
     return { books, tracks, challenges, all: books + tracks + challenges };
-  }, [enriched, categoryFilter, chainFilter, langFilter]);
+  }, [enriched, derivedScope, categoryFilter, chainFilter, langFilter]);
 
   // "Update all" button — docks into the right edge of the first
   // section header (Books / count / blurb / [Update all]). Was

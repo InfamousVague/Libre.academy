@@ -389,6 +389,168 @@ export function looseJsonParse(s: string): unknown {
   return JSON.parse(cleaned);
 }
 
+/// XML-tag tool-call extractor. Yet another shape some open-weights
+/// checkpoints emit instead of the structured `tool_calls` channel:
+///
+///   <function-name>create_sandbox_project</function-name>
+///   <arguments>{"name":"Blackjack","language":"react"}</arguments>
+///
+/// We've also seen these variants in the wild:
+///
+///   <function_name>X</function_name>            (underscore)
+///   <name>X</name> <args>{}</args>              (short names)
+///   <tool_call>{"name":"X","arguments":{}}</tool_call>     (wrapper)
+///   <tool-call>{"name":"X","arguments":{}}</tool-call>     (hyphen)
+///
+/// This handler covers all of them. Returns `{ toolCalls, cleaned }`
+/// so the loop can both dispatch the calls AND scrub the raw XML
+/// from the visible chat content before rendering.
+export interface XmlToolCallExtraction {
+  toolCalls: ToolCall[];
+  /// Content with every successfully-extracted XML span removed,
+  /// trimmed.
+  cleaned: string;
+}
+
+export function extractXmlToolCalls(
+  content: string,
+  registry: readonly ToolDef[],
+): XmlToolCallExtraction | null {
+  if (!content) return null;
+  const knownNames = new Set(registry.map((t) => t.name));
+  const calls: ToolCall[] = [];
+  const removeSpans: Array<{ start: number; end: number }> = [];
+
+  // Pattern A: paired name + args tags.
+  // Matches `<function-name>X</function-name> [whitespace, prose,
+  // whatever] <arguments>{...}</arguments>`. The body of `arguments`
+  // can include nested braces (we use a lazy match for the close
+  // tag — XML tag boundaries are unambiguous, unlike bare JSON
+  // braces). Both tags accept hyphen OR underscore.
+  const pairedRe =
+    /<(function[-_]name|name)>\s*([^<\s][^<]*?)\s*<\/\1>\s*<(arguments|args)>\s*([\s\S]*?)\s*<\/\3>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = pairedRe.exec(content)) !== null) {
+    const name = m[2].trim();
+    if (!knownNames.has(name)) continue;
+    const argsStr = parseArgsLoose(m[4].trim());
+    if (argsStr === null) continue;
+    calls.push({
+      id: `xml_${Date.now()}_${calls.length}`,
+      name,
+      arguments: argsStr,
+    });
+    removeSpans.push({ start: m.index, end: m.index + m[0].length });
+  }
+
+  // Pattern B: single wrapper tag with embedded JSON.
+  // `<tool_call>{"name":"X","arguments":{...}}</tool_call>` —
+  // Hermes 3 / NousResearch checkpoints emit this shape.
+  const wrapperRe = /<(tool[_-]?call)>\s*([\s\S]*?)\s*<\/\1>/gi;
+  while ((m = wrapperRe.exec(content)) !== null) {
+    const body = m[2].trim();
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(body);
+    } catch {
+      try {
+        parsed = looseJsonParse(body);
+      } catch {
+        continue;
+      }
+    }
+    if (!parsed || typeof parsed !== "object") continue;
+    const obj = parsed as {
+      name?: unknown;
+      arguments?: unknown;
+      args?: unknown;
+    };
+    if (typeof obj.name !== "string") continue;
+    if (!knownNames.has(obj.name)) continue;
+    const args = obj.arguments ?? obj.args ?? {};
+    const argsStr = typeof args === "string" ? args : JSON.stringify(args);
+    calls.push({
+      id: `xmlwrap_${Date.now()}_${calls.length}`,
+      name: obj.name,
+      arguments: argsStr,
+    });
+    removeSpans.push({ start: m.index, end: m.index + m[0].length });
+  }
+
+  // Pattern C: bare <question>/<ask>/<clarification>/<user_input>
+  // tags. Models sometimes invent these when they want to ask the
+  // user something but didn't bother calling the
+  // `request_user_input` tool through the structured channel.
+  // We synthesise the tool call so the clarification sheet fires
+  // and the user sees a real input prompt instead of a wall of
+  // XML.
+  //
+  // Only fires when `request_user_input` is in the registry — host
+  // builds without the clarification tool (rare) won't synthesise.
+  if (knownNames.has("request_user_input")) {
+    const questionRe =
+      /<(question|ask|clarification|user_input|user[-_]question)(?:\s+[^>]*)?>\s*([\s\S]*?)\s*<\/\1>/gi;
+    while ((m = questionRe.exec(content)) !== null) {
+      const question = m[2].trim();
+      if (!question) continue;
+      // De-dupe: skip if a span we already extracted overlaps
+      // this one (defensive — the regexes are disjoint in
+      // practice, but the safety check is cheap).
+      const start = m.index;
+      const end = m.index + m[0].length;
+      const overlaps = removeSpans.some(
+        (s) => !(end <= s.start || start >= s.end),
+      );
+      if (overlaps) continue;
+      calls.push({
+        id: `xmlq_${Date.now()}_${calls.length}`,
+        name: "request_user_input",
+        arguments: JSON.stringify({ question }),
+      });
+      removeSpans.push({ start, end });
+    }
+  }
+
+  if (calls.length === 0) return null;
+
+  // Splice every matched span out of the content (from the back so
+  // earlier offsets stay valid).
+  removeSpans.sort((a, b) => a.start - b.start);
+  let cleaned = content;
+  for (let i = removeSpans.length - 1; i >= 0; i--) {
+    cleaned = cleaned.slice(0, removeSpans[i].start) + cleaned.slice(removeSpans[i].end);
+  }
+  return { toolCalls: calls, cleaned: cleaned.trim() };
+}
+
+/// Parse an args string from inside an `<arguments>` tag. Returns
+/// the canonical JSON string on success, or null when the args
+/// don't parse at all (caller should skip the candidate). Tries
+/// strict JSON first, then permissive loose-JSON (single quotes,
+/// trailing commas). When the body is a JSON OBJECT we
+/// re-stringify so trailing whitespace + cosmetic noise are
+/// dropped; when it's a JSON SCALAR or array we hand it back as
+/// the raw input string (the tool dispatcher will re-parse).
+function parseArgsLoose(raw: string): string | null {
+  if (!raw) return "{}"; // empty args = empty object
+  // Some models wrap args in ```json fences inside the tag. Strip
+  // a leading + trailing fence pair so the parser sees the body.
+  const fenceMatch = /^```[a-z]*\n?([\s\S]*?)\n?```$/i.exec(raw);
+  const body = fenceMatch ? fenceMatch[1] : raw;
+  try {
+    const parsed = JSON.parse(body);
+    return JSON.stringify(parsed);
+  } catch {
+    /* fall through */
+  }
+  try {
+    const parsed = looseJsonParse(body);
+    return JSON.stringify(parsed);
+  } catch {
+    return null;
+  }
+}
+
 /// Last-resort recovery — when the model dumps a build's contents
 /// directly into the chat as `\`\`\`lang:path` fences AND never
 /// calls a tool, we synthesise the calls ourselves so the build

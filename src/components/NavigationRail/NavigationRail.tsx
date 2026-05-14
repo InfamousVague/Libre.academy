@@ -265,6 +265,18 @@ export default function NavigationRail({
           onClick={onLibrary}
           active={activeView === "library"}
         />
+        {/* Tracks lifted directly under Library — the library is
+            books-only and tracks (Exercism + in-house challenges)
+            are the natural next category in the catalogue
+            hierarchy, so the two icons sit together visually. */}
+        {onTracks && (
+          <RailItem
+            icon={trainTrack}
+            label={t("nav.tracks")}
+            onClick={onTracks}
+            active={activeView === "tracks"}
+          />
+        )}
         {onSandbox && (
           <RailItem
             icon={terminalIcon}
@@ -303,14 +315,6 @@ export default function NavigationRail({
             label={t("nav.certificates")}
             onClick={onCertificates}
             active={activeView === "certificates"}
-          />
-        )}
-        {onTracks && (
-          <RailItem
-            icon={trainTrack}
-            label={t("nav.tracks")}
-            onClick={onTracks}
-            active={activeView === "tracks"}
           />
         )}
       </div>

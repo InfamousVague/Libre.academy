@@ -792,16 +792,22 @@
      corners instead of leaking past them. */
   position: relative;
   overflow: hidden;
-  /* Subtle "face the mouse" tilt. The custom properties are
-     written by AchievementsPage.tsx's page-level mousemove
-     tracker (rAF-throttled, distance-attenuated, capped at
-     ±4°) — every tile gets its own pair based on its own
-     centre-to-cursor vector, so the grid behaves like a field
-     of compasses pointing at the pointer. The transition
-     eases each tile back toward its at-rest tilt when the
-     mouse stops moving rather than snapping. */
+  /* "Face the mouse" tilt. The custom properties are written by
+     AchievementsPage.tsx's page-level mousemove tracker
+     (rAF-throttled, capped at ±10°). Every tile gets its own
+     pair based on its centre-to-cursor vector, so the grid
+     behaves like a field of compasses pointing at the pointer.
+     The transition eases each tile back toward its at-rest tilt
+     when the mouse stops moving rather than snapping.
+     `perspective(600px)` — tightened from the earlier 900px so
+     the 10° rotation actually reads as a visible 3D tilt
+     rather than a flat 2D shear. Smaller perspective = camera
+     closer to the element = more pronounced foreshortening per
+     degree of rotation. Notion issue #baf3f5d5c4961dd1 flagged
+     the tilt was barely visible on the first pass. */
   transform-style: preserve-3d;
-  transform: perspective(900px)
+  transform-origin: center;
+  transform: perspective(600px)
     rotateX(var(--libre-ach-rx, 0deg))
     rotateY(var(--libre-ach-ry, 0deg));
   transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);

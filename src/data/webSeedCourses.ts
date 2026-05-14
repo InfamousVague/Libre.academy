@@ -379,7 +379,21 @@ function starterUrl(path: string): string {
 /// across shelf and grid view modes. No content change, just a
 /// visual refresh; bump forces returning visitors to pick up the
 /// new bundle.
-const SEED_VERSION = 22;
+///
+/// V23 — Rustlings hints. Every one of the 94 Rustlings exercises
+/// now ships ≥2 progressive hints (was: 6 lessons with placeholder
+/// "No hints this time" strings, 88 with empty hint arrays). The
+/// first hint is a soft concept reminder pulled from the lesson
+/// body (or a chapter-keyed Rust-specific pointer when the body
+/// doesn't have a per-lesson concept paragraph), and subsequent
+/// hints are the upstream rust-lang/rustlings `info.toml` hints
+/// split into progressive steps where the original author already
+/// segmented them with "Hint 1:" / "Hint 2:" markers OR by
+/// paragraph break. Distribution: 33 lessons with 2 hints, 30 with
+/// 3, 17 with 4, and a long tail up to 10 (iterators2). Manifest
+/// bumped to v12 + rustlings.json sizeBytes updated; bump forces
+/// returning visitors to re-fetch the augmented course body.
+const SEED_VERSION = 23;
 
 /// Run the web seed if it hasn't run yet OR if the persisted
 /// `SEED_VERSION` is older than the current build's. Idempotent +

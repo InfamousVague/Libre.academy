@@ -42,15 +42,76 @@ export interface AiAgentSettings {
   /// default of 20 covers ~95% of real-world workflows. Power users
   /// can crank it up for complex multi-file refactors.
   maxTurns: number;
+  /// "Effort" knob — Notion issue #93e0c544cf11a200 ("add effort
+  /// settings to the LLM so we can choose to use slower but better
+  /// LLM cycles"). Three rungs:
+  ///   - "fast"     — speed-first. Lower context window, fewer
+  ///                  predict tokens, lower temperature so the model
+  ///                  goes for the obvious answer in one shot.
+  ///   - "balanced" — current default. The sweet spot the agent loop
+  ///                  was tuned against.
+  ///   - "thorough" — slow-and-good. Larger context, more predict
+  ///                  budget, slight temperature bump so the model
+  ///                  is willing to enumerate alternatives + write
+  ///                  longer plans.
+  /// Maps to Ollama `options.{temperature, num_ctx, num_predict}` at
+  /// call time via `resolveEffortParams()` below.
+  effort: "fast" | "balanced" | "thorough";
+}
+
+/// LLM call parameters resolved from the user's `effort` setting.
+/// Consumed by the agent loop + chat transport, fed into the
+/// model's request body. Kept as an explicit type so future
+/// dispatchers (a remote API client, say) can serialise it without
+/// re-walking the enum.
+export interface EffortParams {
+  temperature: number;
+  /// Approximate context window (tokens) the model should reserve
+  /// for the request. Ollama's `num_ctx` — passing higher than the
+  /// model's max gets silently clamped server-side.
+  num_ctx: number;
+  /// Max tokens the model may emit for the response. Ollama's
+  /// `num_predict` — `-1` means "model default", which is what we
+  /// want for the balanced rung. Hard caps for fast/thorough so
+  /// the response time has a predictable ceiling.
+  num_predict: number;
+}
+
+/// Resolve `effort` to concrete model params. The thorough preset
+/// is meant to feel slower-but-thinkier; fast is for "I'm just
+/// asking a quick question, don't grind". Numbers tuned against
+/// qwen2.5-coder:7b which is the default local model.
+export function resolveEffortParams(
+  effort: AiAgentSettings["effort"],
+): EffortParams {
+  switch (effort) {
+    case "fast":
+      return { temperature: 0.2, num_ctx: 4096, num_predict: 768 };
+    case "thorough":
+      return { temperature: 0.55, num_ctx: 16384, num_predict: 4096 };
+    case "balanced":
+    default:
+      return { temperature: 0.4, num_ctx: 8192, num_predict: -1 };
+  }
 }
 
 export const DEFAULT_SETTINGS: AiAgentSettings = {
-  autoApprove: false,
+  // Auto-approve is now ON by default. The user's bug report
+  // captured the cost of the prior default: clicking through six
+  // separate Allow chips for a single "build me a blackjack game"
+  // run made the agent feel adversarial. The low-confidence gate
+  // (`pauseOnLowConfidence`) is still on by default so destructive
+  // calls the model itself flagged as uncertain still surface a
+  // chip — that's the safety net for "the agent is auto-approving
+  // a guess." Power users who don't trust the agent yet can flip
+  // it off in the settings sheet.
+  autoApprove: true,
   pauseOnLowConfidence: true,
   showTokens: true,
   showConfidence: true,
   toolConcurrency: 1,
   maxTurns: 20,
+  effort: "balanced",
 };
 
 const STORAGE_KEY = "libre.aiAgent.settings";
@@ -101,7 +162,15 @@ export function mergeSettings(
       4,
     ),
     maxTurns: clampInt(partial.maxTurns ?? DEFAULT_SETTINGS.maxTurns, 1, 50),
+    effort: clampEffort(partial.effort),
   };
+}
+
+function clampEffort(
+  v: AiAgentSettings["effort"] | undefined,
+): AiAgentSettings["effort"] {
+  if (v === "fast" || v === "balanced" || v === "thorough") return v;
+  return DEFAULT_SETTINGS.effort;
 }
 
 function clampInt(n: number, lo: number, hi: number): number {

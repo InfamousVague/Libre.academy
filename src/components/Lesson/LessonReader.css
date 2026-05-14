@@ -1006,6 +1006,15 @@
    the leftmost color stop of the same gradient. */
 .libre-reader-body [data-tts-block].libre-tts-current {
   position: relative;
+  /* `isolation: isolate` creates a new local stacking context so
+     the `::before` below (with `z-index: -1`) sinks BEHIND the
+     block's own content but stays ABOVE any ancestor background.
+     Without this the pseudo's negative z-index dropped it past
+     the reader's body background and the gradient went
+     invisible — only the box-shadow ring on tables / callouts
+     was rendering, because that path doesn't rely on z-index
+     stacking. */
+  isolation: isolate;
   transition: background 350ms ease;
 }
 
@@ -1016,17 +1025,31 @@
   top: 0;
   bottom: 0;
   right: 0;
+  /* Solid 2px amber bar on the LEFT edge only, followed by a
+     soft amber tint that holds across the entire block.
+     `rgba(...0.6)` and `rgba(...0.14)` share the 2px stop so
+     the bar→tint transition is a HARD CUT (no 12px taper). The
+     trailing bar was retired — the soft tint extends all the
+     way to the right edge so the highlight reads as "starts
+     here, fades into the page" rather than a bracketed
+     region. */
   background: linear-gradient(
     90deg,
     rgba(214, 185, 105, 0.6) 0px,
     rgba(214, 185, 105, 0.6) 2px,
-    rgba(214, 185, 105, 0.10) 14px,
-    rgba(214, 185, 105, 0.05) 60%,
-    transparent 100%
+    rgba(214, 185, 105, 0.14) 2px,
+    rgba(214, 185, 105, 0.10) 50%,
+    rgba(214, 185, 105, 0.08) 100%
   );
   border-radius: 1px 4px 4px 1px;
   transition: opacity 350ms ease;
   pointer-events: none;
+  /* z-index: -1 within the parent's local stacking context
+     (established by the `isolation: isolate` above) sits behind
+     the parent's own text content but in front of every
+     ancestor background. Net effect: the gradient paints under
+     the prose and reads through any transparent siblings, but
+     never sinks past the article body's own bg. */
   z-index: -1;
 }
 

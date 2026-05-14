@@ -112,33 +112,46 @@ export default function AchievementsPage({
     return m;
   }, [query, categoryFilter, unlocked]);
 
-  // Page-level mouse tracker that subtly tilts each tile toward
-  // the cursor and slides the holographic foil's rainbow band as
-  // the mouse moves — just enough motion to animate the foil
-  // sweep without becoming distracting. Each tile computes its
-  // own tilt from its center-to-mouse vector, attenuated by
-  // distance so far-away tiles barely move. Caps the absolute
-  // tilt at ±4° and the foil drift at ±25% around the 50% rest
-  // position. Throttled to ~60fps via requestAnimationFrame and
-  // skipped entirely under `prefers-reduced-motion`.
+  // Page-level mouse tracker that tilts each tile toward the
+  // cursor and slides the holographic foil's rainbow band as the
+  // mouse moves. Each tile computes its own tilt from its
+  // centre-to-mouse vector. Throttled to ~60fps via
+  // requestAnimationFrame and skipped entirely under
+  // `prefers-reduced-motion`.
+  //
+  // Math (Notion issue #baf3f5d5c4961dd1 — the first version
+  // multiplied a normalized-distance term BY an attenuation
+  // term, whose product peaks at ~0.25 → max tilt of only 1° at
+  // the optimal cursor position; the tiles barely moved):
+  //
+  //   - Direct linear map: dx in pixels → ry in degrees via a
+  //     fixed per-pixel rate, capped at ±MAX_TILT_DEG.
+  //   - Rate tuned so MAX_TILT is hit when the cursor is
+  //     ~half-a-viewport away. Closer cursor = within the cap;
+  //     farther cursor = clamped to the cap (so even tiles in
+  //     the far corner of the grid still face the cursor at
+  //     full extent rather than barely moving).
+  //   - No distance attenuation — the user wants every tile
+  //     pointing at the cursor, not a localized "ripple" around
+  //     it.
   const pageRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const root = pageRef.current;
     if (!root) return;
+    const MAX_TILT_DEG = 10;
     let frameId: number | null = null;
     let last: { x: number; y: number } | null = null;
     const apply = () => {
       frameId = null;
       if (!last) return;
       const { x: mx, y: my } = last;
-      // Diagonal-of-viewport as the attenuation scale — beyond
-      // that distance, tiles read as "out of range" of the cursor
-      // and basically rest flat. 0.6 multiplier so even off-grid
-      // tiles still get a hint of lean.
-      const maxDist =
-        Math.max(window.innerWidth, window.innerHeight) * 0.6;
+      // Half-viewport as the "tilt saturates here" distance.
+      // Beyond it the tilt clamps at MAX_TILT_DEG so far tiles
+      // still present full face to the cursor.
+      const saturate =
+        Math.max(window.innerWidth, window.innerHeight) * 0.5;
       const tiles = root.querySelectorAll<HTMLElement>(
         ".libre-ach-page__tile",
       );
@@ -148,24 +161,27 @@ export default function AchievementsPage({
         const cy = rect.top + rect.height / 2;
         const dx = mx - cx;
         const dy = my - cy;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const attenuation = Math.max(0, 1 - dist / maxDist);
-        // ry (around vertical axis) gives left/right lean — sign
-        // chosen so the tile presents its face toward the cursor
-        // (cursor on the right → tile rotates so right edge
-        // recedes, left edge advances). rx (around horizontal
-        // axis) handles up/down lean.
-        const ry = (dx / maxDist) * 4 * attenuation;
-        const rx = (-dy / maxDist) * 4 * attenuation;
+        // Linear ramp to ±MAX_TILT_DEG. Clamp via Math.max/min
+        // rather than a smoothstep so the falloff feels
+        // mechanical — every tile face is genuinely tracking
+        // the cursor's position, not following a soft curve.
+        const ry = Math.max(
+          -MAX_TILT_DEG,
+          Math.min(MAX_TILT_DEG, (dx / saturate) * MAX_TILT_DEG),
+        );
+        const rx = Math.max(
+          -MAX_TILT_DEG,
+          Math.min(MAX_TILT_DEG, (-dy / saturate) * MAX_TILT_DEG),
+        );
         tile.style.setProperty("--libre-ach-rx", `${rx.toFixed(2)}deg`);
         tile.style.setProperty("--libre-ach-ry", `${ry.toFixed(2)}deg`);
         // Foil sweep position — mirrors the rainbow band along
-        // the cursor's horizontal vector. Clamps to 25-75% so the
+        // the cursor's horizontal vector. Clamps to 20-80% so the
         // band never disappears off-tile.
-        const fp = 50 + (dx / maxDist) * 25 * attenuation;
+        const fpRaw = 50 + (dx / saturate) * 30;
         tile.style.setProperty(
           "--libre-ach-foil",
-          `${Math.max(25, Math.min(75, fp)).toFixed(1)}%`,
+          `${Math.max(20, Math.min(80, fpRaw)).toFixed(1)}%`,
         );
       });
     };

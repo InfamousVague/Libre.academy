@@ -153,6 +153,18 @@ export default function LessonReader({
   const audio = useLessonAudio(lesson.id);
   const audioProgress = audio.available ? audio.progress : 0;
   const audioPlaying = audio.available ? audio.isPlaying : false;
+  // Section anchoring inputs for the read-cursor hook. Sourced from
+  // the audio manifest's per-section metadata (`blockStart` /
+  // `blockEnd` + per-section duration), surfaced through
+  // useLessonAudio. The cursor uses these to re-anchor the char-
+  // weighting math at every heading transition instead of trying to
+  // map cumulative cross-section progress onto a single weighted
+  // table — that earlier approach drifted noticeably on lessons
+  // with mixed pacing.
+  const sectionBlockStart = audio.available ? audio.sectionBlockStart : null;
+  const sectionBlockEnd = audio.available ? audio.sectionBlockEnd : null;
+  const sectionCurrentSec = audio.available ? audio.sectionCurrentSec : 0;
+  const sectionDurationSec = audio.available ? audio.sectionDurationSec : 0;
   // Article + scroll refs are state-backed so the cursor hook
   // reactively re-runs when the underlying DOM nodes mount /
   // remount. Plain `useRef` would capture `null` on first render
@@ -164,6 +176,10 @@ export default function LessonReader({
     article: articleEl,
     html,
     progress: audioProgress,
+    sectionBlockStart,
+    sectionBlockEnd,
+    sectionCurrentSec,
+    sectionDurationSec,
     isPlaying: audioPlaying,
   });
 
@@ -490,74 +506,47 @@ export default function LessonReader({
   // it would fall back to the document viewport, which here always
   // overlaps the entire article and reports every heading as
   // "visible" forever.
+  // Bottom-of-page completion (Notion issue #a403f5d281ea4ca2).
+  // Earlier builds painted a check badge on every h2 in the
+  // prose as it scrolled past the viewport top. The canonical
+  // ask is one badge — on the LESSON TITLE — that lights up
+  // when (a) the lesson is already marked complete OR (b) the
+  // user has scrolled to the bottom of the reader. Tracked
+  // here as a state flag the title can read; the badge itself
+  // mounts inside the `<h1 className="libre-reader-title">`
+  // below.
+  //
+  // The 24px slack accounts for sub-pixel rounding, scrollbar
+  // gutter, and the lesson nav footer overlay so a learner who
+  // scrolls *almost* to the bottom still trips the trigger.
+  const [scrolledToBottom, setScrolledToBottom] = useState(false);
   useEffect(() => {
-    if (!articleEl || !scrollEl) return;
-    const headings = articleEl.querySelectorAll<HTMLElement>(
-      "[data-libre-section]",
-    );
-    if (headings.length === 0) return;
-    // One-shot stamp pass: any heading that's ALREADY above the
-    // visible region on mount (e.g. the user returns to a partially-
-    // read lesson and we restore their scroll position) should show
-    // its badge immediately, without waiting for the next scroll
-    // event. The IO callback fires on observe()-time too, but it
-    // can race the layout — doing a synchronous pass first means the
-    // first paint after lesson entry has the correct state.
-    const containerTop = scrollEl.getBoundingClientRect().top;
-    for (const h of Array.from(headings)) {
-      if (h.getBoundingClientRect().bottom <= containerTop) {
-        h.classList.add("is-completed");
-      }
-    }
-    // IntersectionObserver does the rest. `rootMargin: "0px 0px
-    // -100% 0px"` collapses the intersect zone to a 1px-tall band
-    // sitting on top of the scroll container, so a heading
-    // "intersects" only while its top edge is at or just below the
-    // visible-region top. As soon as the heading scrolls past that
-    // band (i.e. its bottom passes the container top), the entry's
-    // intersection ratio drops to 0 and `boundingClientRect.bottom`
-    // becomes ≤ rootBounds.top — that's our cue to mark it
-    // completed.
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          const rootTop = entry.rootBounds?.top ?? 0;
-          if (entry.boundingClientRect.bottom <= rootTop) {
-            (entry.target as HTMLElement).classList.add("is-completed");
-          }
-        }
-      },
-      { root: scrollEl, threshold: 0, rootMargin: "0px 0px -100% 0px" },
-    );
-    for (const h of Array.from(headings)) observer.observe(h);
-    // Bottom-of-page completion: the LAST section heading never
-    // scrolls past the top of the viewport (there's no
-    // subsequent prose to push it up), so the IO above can't
-    // ever flip it complete. Wire a scroll listener that
-    // detects when the scroll container hits the bottom — that
-    // marks the final heading complete.
-    //
-    // The 24px slack accounts for sub-pixel rounding, scrollbar
-    // gutter, and the lesson nav footer overlay so a learner who
-    // scrolls *almost* to the bottom still triggers the badge.
-    const lastHeading = headings[headings.length - 1];
-    const onScroll = () => {
-      if (lastHeading.classList.contains("is-completed")) return;
+    if (!scrollEl) return;
+    const check = () => {
       const remaining =
         scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight;
-      if (remaining <= 24) {
-        lastHeading.classList.add("is-completed");
-      }
+      if (remaining <= 24) setScrolledToBottom(true);
     };
-    // Run once on mount in case the lesson is short enough that
-    // there's no scroll to begin with (page fits viewport).
-    onScroll();
-    scrollEl.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      observer.disconnect();
-      scrollEl.removeEventListener("scroll", onScroll);
-    };
-  }, [articleEl, scrollEl, html]);
+    check();
+    scrollEl.addEventListener("scroll", check, { passive: true });
+    return () => scrollEl.removeEventListener("scroll", check);
+  }, [scrollEl, html]);
+  // Reset the bottom-of-page flag whenever the rendered html
+  // changes — that's our signal that we've navigated to a fresh
+  // lesson and the old "you scrolled to the bottom" state
+  // shouldn't bleed into the new one.
+  useEffect(() => {
+    setScrolledToBottom(false);
+  }, [html]);
+  // The badge trigger is "scrolled to bottom of the lesson body".
+  // That doubles as the completion signal — short lessons that
+  // fit in the viewport flip the badge on mount (the check fires
+  // when `remaining <= 24px`), longer prose flips it once the
+  // learner has actually read to the end. Wiring an additional
+  // `isCompleted` prop would require LessonView → LessonReader
+  // threading; if a future PR adds it, OR it together with this
+  // flag here.
+  const titleComplete = scrolledToBottom;
 
   // Stop the singleton TTS player when the user navigates to a
   // different lesson or unmounts the reader entirely. Without this
@@ -640,8 +629,28 @@ export default function LessonReader({
           {/* Lesson title rendered above everything else so the learner
               always knows where they are — markdown bodies often repeat
               it as an h1 too, which we strip during render to avoid
-              duplication. */}
-          <h1 className="libre-reader-title">{lesson.title}</h1>
+              duplication. The `.libre-section-check` slot to the right
+              fades in once `titleComplete` flips (= the learner has
+              scrolled to the bottom of the lesson body) — Notion
+              issue #a403f5d281ea4ca2. The check uses the same
+              `.libre-section-check` class the body headings used to
+              wear; the existing CSS animates the fade + slide in. */}
+          <h1
+            className={
+              "libre-reader-title libre-section-heading" +
+              (titleComplete ? " is-completed" : "")
+            }
+          >
+            <span className="libre-section-heading-text">{lesson.title}</span>
+            <span
+              className="libre-section-check"
+              aria-hidden
+              dangerouslySetInnerHTML={{
+                __html:
+                  '<svg class="icon icon--xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>',
+              }}
+            />
+          </h1>
 
           {/* Top chip row: time-to-read + optional glossary toggle. Both
               live in the same row so the eye catches the meta info

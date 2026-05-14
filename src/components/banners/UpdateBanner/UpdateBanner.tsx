@@ -43,7 +43,20 @@ type State =
   | { kind: "ready"; version: string }
   | { kind: "error"; message: string };
 
-export function UpdateBanner(): React.ReactElement | null {
+interface UpdateBannerProps {
+  /// Open the Settings dialog. Wired from App.tsx so the
+  /// post-install "Restart now" affordance can redirect into the
+  /// Settings → General "Restart now" button instead of firing the
+  /// relaunch directly from a floating banner — per Notion issue
+  /// #a41bc772db92641f, the Settings surface is the canonical
+  /// restart path. Optional: when absent the banner falls back to
+  /// its previous direct-relaunch behaviour.
+  onOpenSettings?: () => void;
+}
+
+export function UpdateBanner({
+  onOpenSettings,
+}: UpdateBannerProps = {}): React.ReactElement | null {
   // Web build never has the updater plugin. Bail early so the
   // dynamic import below doesn't even run.
   if (!isDesktop) return null;
@@ -155,6 +168,18 @@ export function UpdateBanner(): React.ReactElement | null {
   }, [state]);
 
   const onRestart = useCallback(async () => {
+    // When the host provides an `onOpenSettings` hook, hand off to
+    // the Settings → General "Restart now" button instead of
+    // relaunching directly. This keeps the canonical restart
+    // affordance in one place (the Settings pane has more space
+    // for an "are you sure / what's about to happen" confirmation
+    // surface, plus it's where the user goes when something looks
+    // wrong with the update). Falls back to the direct relaunch
+    // when no host wiring is present (e.g. legacy callers).
+    if (onOpenSettings) {
+      onOpenSettings();
+      return;
+    }
     try {
       const { relaunch } = await import("@tauri-apps/plugin-process");
       await relaunch();
@@ -165,7 +190,7 @@ export function UpdateBanner(): React.ReactElement | null {
       // eslint-disable-next-line no-console
       console.error("[updater] relaunch failed:", e);
     }
-  }, []);
+  }, [onOpenSettings]);
 
   const onDismiss = useCallback(() => {
     if (state.kind !== "available") {

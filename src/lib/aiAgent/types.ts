@@ -109,6 +109,16 @@ export interface AgentTurnRequest {
   /// content so far. The final `AgentTurnResponse` still carries the
   /// full content for tools / debug.
   onChunk?: (chunk: string) => void;
+  /// Per-call model knobs derived from the user's `effort` setting
+  /// (Notion issue #93e0c544cf11a200). Optional — older transports
+  /// (mock, test) can ignore these and the production Ollama
+  /// transport falls back to its own defaults when the field is
+  /// absent. Defined as flat properties (rather than a nested
+  /// `options:` block) so the Tauri command can pick them up
+  /// without a schema migration.
+  temperature?: number;
+  num_ctx?: number;
+  num_predict?: number;
 }
 
 export interface AgentTurnResponse {

@@ -186,11 +186,11 @@
     "browseCatalogHint": "Search and install books from the Libre library"
   },
   "tracks": {
-    "title": "Challenges",
-    "blurbHyper": "Drill short coding problems pack by pack. Scroll the catalogue and pick a language — every card opens the next unsolved challenge in that pack.",
-    "blurbGrid": "Drill short coding problems pack by pack. Pick a language — every card opens the next unsolved challenge in that pack.",
-    "searchPlaceholder": "Search challenges…",
-    "ariaSearch": "Search challenges",
+    "title": "Tracks",
+    "blurbHyper": "Language tracks and challenge packs side by side. Scroll the catalogue and pick a language — Exercism-style curriculums drop you into a structured concept-by-concept path; challenge packs drop you straight into the next unsolved problem.",
+    "blurbGrid": "Language tracks and challenge packs side by side. Pick a language — Exercism-style curriculums drop you into a structured concept-by-concept path; challenge packs drop you straight into the next unsolved problem.",
+    "searchPlaceholder": "Search tracks…",
+    "ariaSearch": "Search tracks",
     "ariaClear": "Clear search"
   },
   "topBar": {
@@ -357,6 +357,7 @@
     "downloadedNoTotal": "{progress} MB downloaded",
     "updateInstalledTitle": "Update installed",
     "updateRestartHint": "Restart the app to switch to the new version.",
+    "restartNow": "Restart now",
     "updateError": "Couldn't check for updates: {message}",
     "soundsTitle": "Sounds",
     "soundsDescription": "Sound effects fire on lesson completions, achievement unlocks, streak milestones, and section/book wraps. Every cue is synthesised at runtime — no bundled audio, latency-free, scales smoothly with the volume slider below.",
@@ -509,6 +510,25 @@
     "firstLaunchHeadline": "Save your progress with a Libre account",
     "firstLaunchBlurb": "Optional. Sign in to sync streaks and lesson progress between devices, upload your imported books, and share courses with friends. Skip to keep using Libre entirely on this machine — everything still runs locally.",
     "dontShowAgain": "Don't show this again"
+  },
+  "setup": {
+    "title": "Set up local AI",
+    "blurb": "For the in-app AI tutor to run on your machine, we'll need Homebrew and Ollama. Both are optional — Libre still works without them, and you can plug in a cloud API key from Settings → AI instead.",
+    "brewTitle": "Install Homebrew",
+    "brewDescription": "Package manager we use to install Ollama. Opens brew.sh in your browser — paste the one-liner into Terminal, then come back and click \"Re-check\".",
+    "brewDescriptionDone": "Homebrew is installed and on your PATH.",
+    "brewInstallButton": "Open brew.sh",
+    "brewRecheck": "Re-check",
+    "ollamaTitle": "Install Ollama",
+    "ollamaDescription": "Runs small AI models locally so your chats and code suggestions stay on your machine. Runs `brew install ollama` (~30-60s), then starts the daemon.",
+    "ollamaDescriptionDone": "Ollama is installed. You can pick a model from Settings → AI.",
+    "ollamaDescriptionNeedsBrew": "Install Homebrew first — this button stays disabled until it's on your PATH.",
+    "ollamaInstallButton": "Install Ollama",
+    "installing": "Installing…",
+    "later": "I'll set this up later",
+    "done": "Done",
+    "dontShowAgain": "Don't ask again",
+    "close": "Close"
   },
   "tour": {
     "ariaLabel": "Guided tour",

@@ -475,6 +475,32 @@
   -webkit-user-select: auto;
 }
 
+/* One labelled chunk inside the grid wrap. The grid splits its
+   output into "In-house challenges" + "Exercism tracks" sections
+   so the two pack families read as distinct catalogues rather
+   than one undifferentiated wall of cards. Sections stack
+   vertically; the inner `.libre-tracks__grid` keeps the
+   3 / 2 / 1-column responsive layout per section. */
+.libre-tracks__grid-section {
+  margin-bottom: 36px;
+}
+
+.libre-tracks__grid-section:last-child {
+  margin-bottom: 0;
+}
+
+.libre-tracks__grid-section-title {
+  /* Tracked-uppercase eyebrow header — same visual vocabulary
+     as the library's per-section titles, scaled down for the
+     denser tracks page chrome. */
+  margin: 0 0 14px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary, rgba(244, 238, 221, 0.55));
+}
+
 .libre-tracks__grid {
   display: grid;
   /* Explicit 3-column layout to match the hyper carousel's
@@ -576,6 +602,53 @@
   position: relative;
   display: flex;
   flex-direction: column;
+}
+
+/* "Scroll to see all N" hint — fades in over the final third
+   of the hyper carousel via the same `--tracks-end-progress`
+   variable the grid overlay reads. Pinned to the bottom of
+   the hyper viewport, centred horizontally, with a soft
+   capsule background so the label reads regardless of which
+   card silhouettes are sliding behind it. Notion issue
+   #8950f6efe915713b ("render 'scroll to see all' overlayed
+   towards the end"). The early ramp threshold (0.45) is
+   intentionally lower than the grid overlay's (0.7) so the
+   hint appears BEFORE the grid takes over, giving the learner
+   advance notice that more tracks are coming. */
+.libre-tracks__scroll-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 36px;
+  transform: translateX(-50%);
+  padding: 14px 26px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-text-primary, #f5f5f7);
+  /* Stronger background so the capsule reads against any card
+     silhouette sliding past behind it. The previous translucent
+     background let card colours bleed through; bumping the
+     opacity makes the label legible end-to-end. */
+  background: rgba(15, 12, 22, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  pointer-events: none;
+  z-index: 8;
+  white-space: nowrap;
+  /* Linear ramp: 0% until progress hits 0.4, then climbs to 1
+     by progress = 0.8 (with a small flat tail so it stays fully
+     visible right up against the grid handoff). Threshold
+     dropped from 0.45 → 0.4 so the hint surfaces a touch
+     earlier — the learner sees it before they're committed to
+     scrolling further. */
+  opacity: max(
+    0,
+    min(1, calc((var(--tracks-end-progress, 0) - 0.4) / 0.4))
+  );
 }
 
 .libre-tracks__grid-overlay {

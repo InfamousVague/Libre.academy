@@ -35,7 +35,7 @@ import { trainTrack } from "@base/primitives/icon/icons/train-track";
 import { x as xIcon } from "@base/primitives/icon/icons/x";
 import "@base/primitives/icon/icon.css";
 import type { Course } from "../../data/types";
-import { isChallengePack } from "../../data/types";
+import { isChallengePack, isExerciseTrack } from "../../data/types";
 import { TREES } from "../../data/trees";
 import {
   trackProgressPercent,
@@ -82,21 +82,32 @@ function challengePackAsTrack(pack: Course): LearningTrack {
     (n, ch) => n + ch.lessons.length,
     0,
   );
+  // Differentiate copy by pack type. Exercism-style tracks
+  // (`packType: "track"`) get language-curriculum framing;
+  // challenge packs (`packType: "challenges"`) keep the
+  // drill-problems framing. Without this, an Exercism track
+  // rendered with "drill challenges" copy that didn't match
+  // its actual structure — Notion issue #b6fef5af1fa276d1.
+  const isTrack = isExerciseTrack(pack);
+  const lang = pack.language ?? "language";
   return {
     id: pack.id,
     title: pack.title,
     short: pack.language ? pack.language.toUpperCase() : "Pack",
     description:
-      pack.description ?? "A pack of short coding challenges to drill the language.",
+      pack.description ??
+      (isTrack
+        ? `An Exercism-style ${lang} track — concept lessons in order, plus practice exercises.`
+        : "A pack of short coding challenges to drill the language."),
     accent: accentForPack(pack.id),
-    // Challenge packs don't carry an explicit difficulty; default
+    // Neither variant carries an explicit difficulty; default
     // to "intermediate" so the carousel badge reads as a neutral
     // marker rather than implying "easy" or "advanced."
     difficulty: "intermediate",
     estimatedHours: Math.max(1, Math.round(totalLessons / 6)),
-    outcome: `Drill ${totalLessons} ${
-      pack.language ?? "language"
-    } challenges end-to-end.`,
+    outcome: isTrack
+      ? `Work through ${totalLessons} ${lang} lessons end-to-end.`
+      : `Drill ${totalLessons} ${lang} challenges end-to-end.`,
     // Synthetic empty step list — the carousel only reads
     // `steps.length` for the meta-line text; we override the
     // displayed step count via the card body's meta computation
@@ -323,13 +334,70 @@ export default function TracksView({
   // "track detail" landing page. Kept on a memo keyed by the
   // courses list so re-renders during scroll don't re-allocate
   // the synthetic track objects each frame.
-  const challengeTracks = useMemo<readonly LearningTrack[]>(
-    () =>
-      courses
-        .filter(isChallengePack)
-        .map((pack) => challengePackAsTrack(pack)),
-    [courses],
-  );
+  // Tracks rail surfaces BOTH `packType: "challenges"` (per-language
+  // exercise packs) AND `packType: "track"` (Exercism-style
+  // curriculums) — Notion issue #b6fef5af1fa276d1 flagged that the
+  // Exercism track was missing from this view. The `challengePackAsTrack`
+  // adapter is shape-agnostic (it only reads pack.id / title /
+  // chapters), so both pack types feed it cleanly.
+  const challengeTracks = useMemo<readonly LearningTrack[]>(() => {
+    // Featured languages for the In-house Challenges section
+    // (Notion follow-up: "rework the default challenges to
+    // support some for JS, Rust, Zig and Go in the default").
+    // These four sort to the head of the challenges bucket; the
+    // rest follow alphabetically. Exercism tracks sort
+    // alphabetically among themselves and follow the entire
+    // challenges block — the order is: featured challenges →
+    // non-featured challenges → Exercism tracks. Applying the
+    // sort once at the source keeps the hyper-view intro
+    // (first 8 cards) and the grid sections agreeing on order.
+    const FEATURED_LANGS = ["javascript", "rust", "zig", "go"] as const;
+    const featuredRank = (lang: string | undefined | null): number => {
+      const l = (lang ?? "").toLowerCase();
+      const idx = FEATURED_LANGS.indexOf(
+        l as (typeof FEATURED_LANGS)[number],
+      );
+      return idx >= 0 ? idx : FEATURED_LANGS.length;
+    };
+    const adapted = courses
+      .filter((c) => isChallengePack(c) || isExerciseTrack(c))
+      .map((pack) => ({
+        track: challengePackAsTrack(pack),
+        kind: (isChallengePack(pack) ? "challenges" : "track") as
+          | "challenges"
+          | "track",
+        language: pack.language ?? null,
+      }));
+    adapted.sort((a, b) => {
+      // Kind order: Exercism tracks lead the catalogue, in-house
+      // challenges follow. Re-ordered from the prior "challenges
+      // first" so the dedicated Tracks page opens on the curated
+      // language-curriculum content; the in-house drill packs are
+      // the secondary catalogue.
+      if (a.kind !== b.kind) return a.kind === "track" ? -1 : 1;
+      if (a.kind === "challenges") {
+        const ra = featuredRank(a.language);
+        const rb = featuredRank(b.language);
+        if (ra !== rb) return ra - rb;
+      }
+      return a.track.title.localeCompare(b.track.title);
+    });
+    return adapted.map((row) => row.track);
+  }, [courses]);
+  // Side-table from track id → pack kind so the grid renderer can
+  // split its output into two sections ("In-house challenges" vs
+  // "Exercism tracks") without having to drag the original Course
+  // object through every level. `LearningTrack` itself stays clean —
+  // the shape is shared with the curated `TRACKS` data and we don't
+  // want a kind discriminator leaking out there.
+  const trackKindById = useMemo(() => {
+    const map = new Map<string, "challenges" | "track">();
+    for (const c of courses) {
+      if (isChallengePack(c)) map.set(c.id, "challenges");
+      else if (isExerciseTrack(c)) map.set(c.id, "track");
+    }
+    return map;
+  }, [courses]);
 
   // Per-pack progress (0..1). Computed once per render and passed
   // into the card body via `progressOverride` so the card can
@@ -339,7 +407,9 @@ export default function TracksView({
   const packProgress = useMemo(() => {
     const map = new Map<string, number>();
     for (const pack of courses) {
-      if (!isChallengePack(pack)) continue;
+      // Mirror the filter in `challengeTracks` above — keep
+      // progress in sync across challenges + Exercism tracks.
+      if (!isChallengePack(pack) && !isExerciseTrack(pack)) continue;
       let total = 0;
       let done = 0;
       for (const ch of pack.chapters) {
@@ -406,6 +476,42 @@ export default function TracksView({
   // in at the moment the end fired.
   const rootRef = useRef<HTMLDivElement | null>(null);
 
+  // Curated card set for the hyper intro: interleaves Exercism
+  // tracks with in-house challenge packs so the fly-through
+  // alternates between the two catalogues instead of leading with
+  // an all-Exercism block. Cap at 7 cards (Notion follow-up
+  // "only show about 7 total challenges so we scroll through
+  // faster"). The grid mode underneath still receives the full
+  // `visibleTracks` list, so the cap only narrows the intro.
+  //
+  // Algorithm:
+  //   1. Split `visibleTracks` into exercism + in-house buckets,
+  //      preserving the source sort within each bucket (Exercism
+  //      alphabetical, challenges featured-langs-first).
+  //   2. Round-robin draw — exercism, challenge, exercism,
+  //      challenge — until either bucket runs out, then drain the
+  //      remainder of whichever still has rows.
+  //   3. Slice to HYPER_CAP.
+  const HYPER_CAP = 7;
+  const hyperTracks = useMemo<readonly LearningTrack[]>(() => {
+    const ex: LearningTrack[] = [];
+    const ch: LearningTrack[] = [];
+    for (const t of visibleTracks) {
+      const kind = trackKindById.get(t.id);
+      if (kind === "track") ex.push(t);
+      else if (kind === "challenges") ch.push(t);
+    }
+    const mixed: LearningTrack[] = [];
+    let ei = 0;
+    let ci = 0;
+    while (mixed.length < HYPER_CAP && (ei < ex.length || ci < ch.length)) {
+      if (ei < ex.length) mixed.push(ex[ei++]);
+      if (mixed.length >= HYPER_CAP) break;
+      if (ci < ch.length) mixed.push(ch[ci++]);
+    }
+    return mixed;
+  }, [visibleTracks, trackKindById]);
+
   return (
     <div ref={rootRef} className={`libre-tracks libre-tracks--${mode}`}>
       <TracksHeader query={query} onQueryChange={setQuery} mode={mode} />
@@ -421,13 +527,32 @@ export default function TracksView({
         {mode === "hyper" ? (
           <>
             <TracksHyperScroll
-              tracks={visibleTracks}
+              // Mixed + capped curated set — see the `hyperTracks`
+              // memo above. Interleaves Exercism with in-house
+              // challenges so the fly-through alternates instead
+              // of leading with one bucket, and caps at 7 so the
+              // intro scrolls past quickly.
+              tracks={hyperTracks}
               completed={completed}
               onOpenTrack={handleOpenPack}
               onReachedEnd={handleReachedEnd}
               progressTargetRef={rootRef}
               progressOverrides={packProgress}
             />
+            {/* "Keep scrolling" overlay — fades in over the tail
+                of the hyper carousel via the `--tracks-end-progress`
+                CSS variable the hyper-scroll writes on the rootRef
+                each frame. Sits above the cards but below the grid
+                overlay, pointer-events: none so it doesn't
+                intercept the scroll wheel that's driving its own
+                appearance. Only renders when the hyper view is
+                showing a subset of the full catalogue (the cap
+                kicked in). */}
+            {visibleTracks.length > hyperTracks.length && (
+              <div className="libre-tracks__scroll-hint" aria-hidden>
+                Keep scrolling →
+              </div>
+            )}
             {/* Grid overlay — rendered concurrently with the
                 hyper view during the final stretch of scroll so
                 the two layers can crossfade. Pointer-events are
@@ -449,6 +574,7 @@ export default function TracksView({
             completed={completed}
             onOpenTrack={handleOpenPack}
             progressOverrides={packProgress}
+            kindByTrackId={trackKindById}
           />
         )}
       </div>
@@ -849,7 +975,7 @@ function TracksHyperScroll({
   if (trackCount === 0) {
     return (
       <div className="libre-tracks__empty">
-        <p>No challenges match this search.</p>
+        <p>No tracks match this search.</p>
       </div>
     );
   }
@@ -1017,11 +1143,20 @@ function HyperCard({
 /// 3 columns on a wide window, 1 on a narrow sidebar-collapsed
 /// view. Each card animates in with a staggered fade so the
 /// transition from the hyper view doesn't feel abrupt.
+///
+/// The grid splits its cards into TWO labelled sections when
+/// `kindByTrackId` is provided:
+///   1. In-house challenges (`packType: "challenges"`)
+///   2. Exercism tracks (`packType: "track"`)
+///
+/// Without the map (e.g. legacy callers using the curated
+/// `TRACKS` data) the grid renders as one unsectioned flow.
 function TracksGrid({
   tracks,
   completed,
   onOpenTrack,
   progressOverrides,
+  kindByTrackId,
 }: {
   tracks: readonly LearningTrack[];
   completed: Set<string>;
@@ -1031,41 +1166,100 @@ function TracksGrid({
   /// challenge packs ride this rail because their synthetic
   /// LearningTrack has no `steps` for the tree-walker to count.
   progressOverrides?: ReadonlyMap<string, number>;
+  /// Optional pack-kind discriminator. When present, the grid
+  /// splits its output into two labelled sections (in-house
+  /// challenges vs. Exercism tracks). When absent / empty, the
+  /// grid renders one flat section.
+  kindByTrackId?: ReadonlyMap<string, "challenges" | "track">;
 }) {
   if (tracks.length === 0) {
     return (
       <div className="libre-tracks__empty">
-        <p>No challenges match this search.</p>
+        <p>No tracks match this search.</p>
       </div>
     );
   }
+  // Bucket the tracks. The incoming `tracks` array is already
+  // sorted at the source (`TracksView.challengeTracks`) — featured
+  // challenges first (JS / Rust / Zig / Go), then non-featured
+  // challenges alphabetically, then Exercism tracks alphabetically.
+  // We just split it into kind-buckets here without re-sorting.
+  // When `kindByTrackId` isn't supplied (curated TRACKS data, or a
+  // sparse search result), fall back to a single unlabelled bucket.
+  const challenges: LearningTrack[] = [];
+  const exercism: LearningTrack[] = [];
+  const unknown: LearningTrack[] = [];
+  for (const t of tracks) {
+    const kind = kindByTrackId?.get(t.id);
+    if (kind === "challenges") challenges.push(t);
+    else if (kind === "track") exercism.push(t);
+    else unknown.push(t);
+  }
+  const sections: Array<{ key: string; label: string | null; rows: LearningTrack[] }> = [];
+  // Section order: Exercism tracks first (the curated language
+  // curriculums lead the page), in-house challenges second. Mirrors
+  // the source-sort order in `TracksView.challengeTracks`.
+  if (exercism.length > 0) {
+    sections.push({
+      key: "exercism",
+      label: "Exercism tracks",
+      rows: exercism,
+    });
+  }
+  if (challenges.length > 0) {
+    sections.push({
+      key: "challenges",
+      label: "In-house challenges",
+      rows: challenges,
+    });
+  }
+  if (unknown.length > 0) {
+    // Legacy / curated tracks with no kind annotation. Render
+    // unlabelled at the end so they still surface but don't fight
+    // the two main sections for the title row.
+    sections.push({ key: "unknown", label: null, rows: unknown });
+  }
+  // Continuous stagger index across all sections so the
+  // "materialise in a wave" effect doesn't reset at each section
+  // boundary.
+  let staggerIdx = 0;
   return (
     <div className="libre-tracks__grid-wrap">
-      <div className="libre-tracks__grid">
-        {tracks.map((track, idx) => (
-          <div
-            key={track.id}
-            className="libre-tracks__grid-cell"
-            // Staggered mount delay so the grid materialises
-            // in a wave rather than all-at-once — softens the
-            // hand-off from the hyper view.
-            style={
-              {
-                animationDelay: `${Math.min(idx, 16) * 35}ms`,
-              } as CSSProperties
-            }
-          >
-            <TrackCardBody
-              track={track}
-              index={idx}
-              completed={completed}
-              onOpen={() => onOpenTrack(track.id)}
-              variant="grid"
-              progressOverride={progressOverrides?.get(track.id)}
-            />
+      {sections.map((sec) => (
+        <section key={sec.key} className="libre-tracks__grid-section">
+          {sec.label && (
+            <h2 className="libre-tracks__grid-section-title">{sec.label}</h2>
+          )}
+          <div className="libre-tracks__grid">
+            {sec.rows.map((track) => {
+              const cellIdx = staggerIdx++;
+              return (
+                <div
+                  key={track.id}
+                  className="libre-tracks__grid-cell"
+                  // Staggered mount delay so the grid materialises
+                  // in a wave rather than all-at-once — softens the
+                  // hand-off from the hyper view.
+                  style={
+                    {
+                      animationDelay: `${Math.min(cellIdx, 16) * 35}ms`,
+                    } as CSSProperties
+                  }
+                >
+                  <TrackCardBody
+                    track={track}
+                    index={cellIdx}
+                    completed={completed}
+                    onOpen={() => onOpenTrack(track.id)}
+                    variant="grid"
+                    progressOverride={progressOverrides?.get(track.id)}
+                  />
+                </div>
+              );
+            })}
           </div>
-        ))}
-      </div>
+        </section>
+      ))}
     </div>
   );
 }

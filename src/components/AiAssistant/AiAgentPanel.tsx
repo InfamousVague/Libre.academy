@@ -33,7 +33,7 @@ import type {
   PendingClarification,
   PendingToolCall,
 } from "../../hooks/useAiAgent";
-import type { ToolResult } from "../../lib/aiTools/types";
+import type { ToolCall, ToolResult } from "../../lib/aiTools/types";
 import type { AgentScope } from "../../lib/aiTools/scope";
 import {
   classifyConfidence,
@@ -561,7 +561,19 @@ export default function AiAgentPanel({
           />
         )}
         {messages.map((m, i) => (
-          <AgentRow key={i} message={m} timeline={timeline} />
+          <AgentRow
+            key={i}
+            message={m}
+            timeline={timeline}
+            // Suppress the inline "thinking…" breadcrumb on the
+            // last empty-assistant message — it now renders as a
+            // pinned bottom banner above the composer instead.
+            // Earlier message rows (mid-conversation empty
+            // assistants from a previous turn) still render their
+            // inline breadcrumb so the chat history retains its
+            // visual rhythm. Notion issue #a37bed6308faed33.
+            suppressEmptyThinking={i === messages.length - 1}
+          />
         ))}
         {/* Per-file streaming progress. Sits between the assistant
             message bubbles and the pending tool chips so the user
@@ -718,6 +730,21 @@ export default function AiAgentPanel({
         />
       )}
 
+      {/* Thinking banner — pinned to the bottom of the panel
+          (above the composer) whenever the agent is mid-turn.
+          Replaces the inline `libre-ai-agent-breadcrumb` that
+          used to sit at the tail of the message stream and
+          scroll out of view as the scrollback grew. Notion
+          issue #a37bed6308faed33 ("thinking dots should be
+          bottom justified, pinned to UI in a bottom banner not
+          a message inline"). The label is derived from the same
+          empty-assistant placeholder logic as before — if the
+          last message has tool calls the banner reads "running
+          <tool>…", otherwise plain "thinking". The dots and the
+          banner self-hide once streaming stops AND the last
+          message picks up content. */}
+      <ThinkingBanner streaming={streaming} messages={messages} />
+
       {/* ChatBar from base-ui: composes auto-resizing textarea +
           send button + sending-state spinner into one primitive
           we can drop in here. Replaces the hand-rolled `<textarea>
@@ -747,6 +774,51 @@ export default function AiAgentPanel({
   );
 }
 
+/// Pinned bottom banner that announces the agent's "thinking"
+/// state. Renders above the composer with the dots + label
+/// bottom-justified to the row. Self-hides when there's nothing
+/// to announce (no streaming AND the last message has visible
+/// content). Earlier behaviour was an inline breadcrumb in the
+/// message stream that scrolled off-screen as the conversation
+/// grew. Notion issue #a37bed6308faed33.
+function ThinkingBanner({
+  streaming,
+  messages,
+}: {
+  streaming: boolean;
+  messages: readonly AgentMessage[];
+}) {
+  // Find the most recent empty-assistant placeholder — same
+  // detection AgentRow uses, lifted into the banner so we can
+  // surface the right "running X / thinking" label.
+  const lastAssistant = [...messages]
+    .reverse()
+    .find((m) => m.role === "assistant");
+  const isEmpty =
+    lastAssistant !== undefined &&
+    (!lastAssistant.content || lastAssistant.content.trim().length === 0);
+  // Show banner when streaming is active, OR when the tail
+  // message is an empty assistant (which can persist briefly
+  // post-stream while content arrives).
+  if (!streaming && !isEmpty) return null;
+  const toolCalls = (lastAssistant?.toolCalls ?? []) as ToolCall[];
+  const label =
+    toolCalls.length > 0
+      ? `running ${toolCalls.length === 1 ? toolCalls[0].name : `${toolCalls.length} tools`}…`
+      : "thinking";
+  return (
+    <div className="libre-ai-thinking-banner" aria-live="polite">
+      <Icon icon={hammer} size="xs" color="currentColor" />
+      <span className="libre-ai-thinking-banner__label">{label}</span>
+      <span className="libre-ai-thinking-banner__dots" aria-hidden>
+        <span />
+        <span />
+        <span />
+      </span>
+    </div>
+  );
+}
+
 /// One row in the message stream — handles every AgentMessage
 /// variant: user prompts, assistant text, and `tool`-role results
 /// (rendered as compact result chips with the corresponding
@@ -754,9 +826,17 @@ export default function AiAgentPanel({
 function AgentRow({
   message,
   timeline,
+  suppressEmptyThinking = false,
 }: {
   message: AgentMessage;
   timeline: ToolResult[];
+  /// When true and `message` is an empty assistant placeholder
+  /// (no content yet, or a tool-call-only turn), return null so
+  /// the inline breadcrumb stays out of the message stream.
+  /// `AiAgentPanel` renders a pinned bottom banner for the
+  /// current thinking state instead — see Notion issue
+  /// #a37bed6308faed33.
+  suppressEmptyThinking?: boolean;
 }) {
   if (message.role === "system") return null;
   if (message.role === "user") {
@@ -784,13 +864,23 @@ function AgentRow({
     // request hasn't silently dropped on the floor.
     const isEmptyAssistant =
       !message.content || message.content.trim().length === 0;
-    if (isEmptyAssistant) {
+    // CRITICAL: when an assistant message has tool calls AND
+    // residual prose content, render ONLY the breadcrumb (drop
+    // the prose). Smaller models like to chat verbose "Step 1:
+    // create a project. Step 2: write files." preambles around
+    // their tool calls — we want the user to see the tool chip,
+    // not the textbook. The prose, if any, surfaces in the
+    // FINAL terminal turn (no more tool calls) where we show
+    // the bubble normally.
+    const hasToolCalls = !!message.toolCalls && message.toolCalls.length > 0;
+    if (isEmptyAssistant || hasToolCalls) {
+      if (suppressEmptyThinking) return null;
       return (
         <div className="libre-ai-agent-breadcrumb" aria-live="polite">
           <Icon icon={hammer} size="xs" color="currentColor" />
           <span>
-            {message.toolCalls && message.toolCalls.length > 0
-              ? `running ${message.toolCalls.length === 1 ? message.toolCalls[0].name : `${message.toolCalls.length} tools`}…`
+            {hasToolCalls
+              ? `running ${message.toolCalls!.length === 1 ? message.toolCalls![0].name : `${message.toolCalls!.length} tools`}…`
               : "thinking"}
           </span>
           <span className="libre-ai-agent-breadcrumb-dots" aria-hidden>
@@ -847,16 +937,41 @@ const COLLAPSE_CODE_AFTER_LINES = 8;
 /// the first non-empty line of the block. This is the "Claude
 /// dropdown" the user asked for — keeps the chat readable while
 /// still letting the user see the code if they want to.
+/// Debounce window for the markdown render. While content is
+/// rapidly changing (tokens streaming in every few ms) we hold off
+/// on the full markdown parse + the DOM-walker wrapping pass —
+/// running them on every chunk causes visible flicker because
+/// each tick rips out the prior `<pre>` blocks, re-creates them,
+/// re-wraps them in `<details>` elements. Holding the render until
+/// the content has been stable for the debounce window means a
+/// streaming reply paints raw text first (fast, no flicker), then
+/// "settles" into the rendered markdown once the model stops
+/// emitting tokens.
+const MARKDOWN_RENDER_DEBOUNCE_MS = 180;
+
 function AssistantMarkdownBubble({ content }: { content: string }) {
   const [html, setHtml] = useState("");
   const containerRef = useRef<HTMLDivElement | null>(null);
+  // Track whether the latest debounce window has elapsed. While
+  // false, the bubble renders raw text in a <pre>; once true the
+  // HTML state takes over.
+  const [settled, setSettled] = useState(false);
   useEffect(() => {
+    // Each content change resets the settled flag — we'll re-set
+    // it after the debounce window passes without further updates.
+    setSettled(false);
     let cancelled = false;
-    void renderMarkdown(content ?? "").then((rendered) => {
-      if (!cancelled) setHtml(rendered);
-    });
+    const timer = window.setTimeout(() => {
+      if (cancelled) return;
+      void renderMarkdown(content ?? "").then((rendered) => {
+        if (cancelled) return;
+        setHtml(rendered);
+        setSettled(true);
+      });
+    }, MARKDOWN_RENDER_DEBOUNCE_MS);
     return () => {
       cancelled = true;
+      window.clearTimeout(timer);
     };
   }, [content]);
   useEffect(() => {
@@ -892,9 +1007,12 @@ function AssistantMarkdownBubble({ content }: { content: string }) {
       pre.dataset.libreCollapsed = "true";
     });
   }, [html]);
-  if (!html) {
-    // First paint before the async render resolves — show the
-    // raw content so the bubble isn't blank for a frame.
+  // While streaming hasn't stabilised, render raw text. This
+  // avoids re-running markdown-it + the DOM wrapper on every
+  // chunk update (the source of the per-token flicker). Once
+  // `settled` flips true the rendered HTML takes over with the
+  // collapsible code blocks + syntax highlighting.
+  if (!settled || !html) {
     return <div className="libre-ai-bubble-stream">{content}</div>;
   }
   return (
@@ -915,16 +1033,47 @@ function ToolResultChip({
   ok: boolean;
   content: string;
 }) {
-  // Truncate the JSON result for the inline preview — full
-  // content is in the timeline / messages array if a debug
-  // panel ever wants to inspect it.
-  const preview = content.length > 120 ? `${content.slice(0, 120)}…` : content;
+  // Render the human-readable bit instead of the raw JSON
+  // envelope. Failed tool results follow the convention
+  // `{"error":true,"message":"...detail..."}` — surfacing the
+  // `message` is what tells the user (and the agent's
+  // next-turn context) what actually went wrong. Successful
+  // results show a compact JSON preview.
+  //
+  // Errors render as expandable cards: the chip preview shows
+  // a one-line summary, click to expand the full message + the
+  // raw JSON for debugging.
+  const errorMessage = ok ? null : extractErrorMessage(content);
+  const successPreview =
+    content.length > 120 ? `${content.slice(0, 120)}…` : content;
+  const [expanded, setExpanded] = useState(false);
+  const previewText =
+    errorMessage !== null
+      ? errorMessage.length > 200
+        ? `${errorMessage.slice(0, 200)}…`
+        : errorMessage
+      : successPreview;
   return (
     <div
       className={
         "libre-ai-tool-chip" +
-        (ok ? " libre-ai-tool-chip--ok" : " libre-ai-tool-chip--fail")
+        (ok ? " libre-ai-tool-chip--ok" : " libre-ai-tool-chip--fail") +
+        (expanded ? " libre-ai-tool-chip--expanded" : "")
       }
+      onClick={errorMessage !== null ? () => setExpanded((v) => !v) : undefined}
+      onKeyDown={
+        errorMessage !== null
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setExpanded((v) => !v);
+              }
+            }
+          : undefined
+      }
+      role={errorMessage !== null ? "button" : undefined}
+      tabIndex={errorMessage !== null ? 0 : undefined}
+      title={errorMessage !== null ? "Click to expand error" : undefined}
     >
       <span className="libre-ai-tool-chip-icon" aria-hidden>
         <Icon
@@ -935,9 +1084,36 @@ function ToolResultChip({
         />
       </span>
       <span className="libre-ai-tool-chip-name">{name}</span>
-      <span className="libre-ai-tool-chip-preview">{preview}</span>
+      <span className="libre-ai-tool-chip-preview">{previewText}</span>
+      {expanded && errorMessage !== null && (
+        <pre className="libre-ai-tool-chip-detail">{content}</pre>
+      )}
     </div>
   );
+}
+
+/// Pull a readable error string out of a tool-result JSON envelope.
+/// Returns null when the content doesn't look like an error
+/// result (either it's not JSON, or it's missing the `error` flag).
+/// We're permissive about the shape — some tools return
+/// `{ ok: false, error: "..." }` (a string) and others return
+/// `{ error: true, message: "..." }`. Both surface as readable
+/// text for the chip.
+function extractErrorMessage(content: string): string | null {
+  try {
+    const parsed = JSON.parse(content) as {
+      error?: unknown;
+      ok?: unknown;
+      message?: unknown;
+    };
+    if (parsed === null || typeof parsed !== "object") return null;
+    if (parsed.error !== true && parsed.ok !== false) return null;
+    if (typeof parsed.message === "string") return parsed.message;
+    if (typeof parsed.error === "string") return parsed.error;
+    return "Tool returned an error (no message provided).";
+  } catch {
+    return null;
+  }
 }
 
 /// Console output from the latest `run_sandbox_project` call.
@@ -1100,17 +1276,31 @@ function FileWriteChip({
     language: string;
   };
 }) {
+  // Three states:
+  //   - writing   — fence still open, content arriving
+  //   - empty     — fence closed but `bytes === 0`. Previously this
+  //                 flipped to "done" (green) and the user couldn't
+  //                 tell the file had no content (Notion issue
+  //                 #90f0f8a7043015b8 — "All incorrectly go green
+  //                 and no data was streamed to the sandbox").
+  //                 Now renders with the same "writing" tone so the
+  //                 visual is honest: no data, no green.
+  //   - done      — fence closed AND bytes > 0. Green check.
+  const variant = !file.closed
+    ? "writing"
+    : file.bytes === 0
+      ? "empty"
+      : "done";
   return (
     <div
-      className={
-        "libre-ai-file-chip " +
-        (file.closed ? "libre-ai-file-chip--done" : "libre-ai-file-chip--writing")
-      }
-      title={`${file.path} · ${file.bytes} bytes · ${file.language}`}
+      className={`libre-ai-file-chip libre-ai-file-chip--${variant}`}
+      title={`${file.path} · ${file.bytes} bytes · ${file.language}${
+        variant === "empty" ? " (no content streamed)" : ""
+      }`}
     >
       <span className="libre-ai-file-chip-icon" aria-hidden>
         <Icon
-          icon={file.closed ? check : fileEdit}
+          icon={variant === "done" ? check : fileEdit}
           size="xs"
           color="currentColor"
           weight="bold"
@@ -1488,6 +1678,24 @@ function SettingsSheet({
               if (Number.isFinite(n)) set("maxTurns", n);
             }}
           />
+        </SettingRow>
+        <SettingRow
+          label="Effort"
+          hint="Tunes the underlying model call. Fast = small context, terse responses, snappy. Balanced = the default. Thorough = larger context + longer responses, slower but produces richer plans + multi-file work."
+        >
+          <select
+            value={settings.effort}
+            onChange={(e) =>
+              set(
+                "effort",
+                e.target.value as AiAgentSettings["effort"],
+              )
+            }
+          >
+            <option value="fast">Fast</option>
+            <option value="balanced">Balanced</option>
+            <option value="thorough">Thorough</option>
+          </select>
         </SettingRow>
       </div>
     </div>

@@ -367,6 +367,24 @@ export type LessonAudioState =
       /// playback model — when it changes, the cursor / scroll-follow
       /// know a new section has started.
       sectionIndex: number;
+      /// Block range covered by the active section. Mirrors the
+      /// `blockStart` / `blockEnd` fields on the manifest's
+      /// `AudioSection` — surfaced here so the read-cursor hook can
+      /// anchor to the section's DOM block range instead of trying
+      /// to char-weight the entire lesson with one global progress
+      /// fraction. `null` when there's no active section yet.
+      sectionBlockStart: number | null;
+      sectionBlockEnd: number | null;
+      /// Position within the active section, in seconds. Combined
+      /// with `sectionDurationSec` this gives the cursor a per-
+      /// section progress (0..1) that's far more accurate than the
+      /// cumulative-cross-section progress — the section boundaries
+      /// re-anchor the math at every heading transition so drift
+      /// doesn't accumulate across the whole lesson.
+      sectionCurrentSec: number;
+      /// Duration of the active section, in seconds. May be 0 until
+      /// the section's audio metadata has loaded.
+      sectionDurationSec: number;
       /// Total duration in seconds across ALL sections of the active
       /// lesson. Resolves as each section's `loadedmetadata` fires;
       /// initially seeded from the manifest's per-section byte
@@ -478,11 +496,16 @@ export function useLessonAudio(lessonId: string | undefined): LessonAudioState {
     void a.play();
   };
 
+  const activeSection = sections[sectionIdx] ?? null;
   return {
     available: true,
-    url: sections[sectionIdx]?.url ?? "",
+    url: activeSection?.url ?? "",
     sectionCount: sections.length,
     sectionIndex: sectionIdx,
+    sectionBlockStart: activeSection?.blockStart ?? null,
+    sectionBlockEnd: activeSection?.blockEnd ?? null,
+    sectionCurrentSec: currentSecLocal,
+    sectionDurationSec: durations[sectionIdx] ?? 0,
     durationSec,
     isActive,
     isPlaying,

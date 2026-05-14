@@ -69,7 +69,31 @@ interface UseCursorOpts {
   html: string | null;
   /// Audio progress in [0..1]. When this is undefined / NaN / 0 the
   /// hook returns `currentBlock: null` (no cursor shown).
+  ///
+  /// Used as a FALLBACK when `sectionBlockStart` / `sectionBlockEnd`
+  /// aren't supplied — older callers or lessons whose manifest
+  /// predates the section-split rollout still char-weight against
+  /// this. New callers should also pass `sectionBlockStart`,
+  /// `sectionBlockEnd`, and the per-section progress fields so the
+  /// cursor anchors at section boundaries and drift stays
+  /// section-local instead of accumulating across the whole lesson.
   progress: number;
+  /// First DOM `data-tts-block` index covered by the currently-
+  /// playing section, or `null` when section anchoring isn't
+  /// available. Surfaced from the audio manifest via the
+  /// `sectionBlockStart` field on `useLessonAudio`'s state.
+  sectionBlockStart?: number | null;
+  /// Last DOM `data-tts-block` index covered by the currently-
+  /// playing section (inclusive), or `null` for the same fallback.
+  sectionBlockEnd?: number | null;
+  /// Position within the active section, in seconds. Combined with
+  /// `sectionDurationSec` this gives the cursor a per-section
+  /// progress fraction that re-anchors at every section boundary —
+  /// so drift in section N doesn't carry into section N+1.
+  sectionCurrentSec?: number;
+  /// Duration of the active section, in seconds. 0 / unset until the
+  /// section's audio metadata loads.
+  sectionDurationSec?: number;
   /// Whether audio is actively playing (drives auto-scroll). Pausing
   /// stops the scroll-follow but the cursor stays visible at the
   /// last position.
@@ -112,6 +136,10 @@ export function useLessonReadCursor(opts: UseCursorOpts): UseCursorResult {
     article,
     html,
     progress,
+    sectionBlockStart = null,
+    sectionBlockEnd = null,
+    sectionCurrentSec = 0,
+    sectionDurationSec = 0,
     isPlaying,
     pauseAfterUserScrollMs = DEFAULT_PAUSE,
   } = opts;
@@ -156,17 +184,80 @@ export function useLessonReadCursor(opts: UseCursorOpts): UseCursorResult {
   }, [article, html]);
 
   // ── Current block resolution ─────────────────────────────────────
+  //
+  // Two-path resolver:
+  //
+  //   1. Section-anchored path (preferred). When the caller supplies
+  //      `sectionBlockStart` / `sectionBlockEnd` + per-section
+  //      progress, we restrict the char-weighting to JUST the blocks
+  //      inside the active section's range and divide by the
+  //      section's own duration. This re-anchors at every section
+  //      boundary (= heading transition), so drift between TTS pacing
+  //      and char-weighting stays section-local instead of
+  //      accumulating across the lesson.
+  //
+  //   2. Cumulative-progress fallback. Older callers (or lessons
+  //      whose audio manifest predates the section-split rollout)
+  //      pass only the global `progress`. We walk the full boundary
+  //      table and pick the first block whose cumulative end-fraction
+  //      exceeds the progress — the original v1 behaviour.
   const currentBlock = useMemo(() => {
     if (!boundaries.length) return null;
+    // Path 1 — section-anchored.
+    const sectionAnchored =
+      sectionBlockStart !== null &&
+      sectionBlockEnd !== null &&
+      sectionDurationSec > 0;
+    if (sectionAnchored) {
+      const inRange = boundaries.filter(
+        (b) => b.index >= sectionBlockStart && b.index <= sectionBlockEnd,
+      );
+      if (inRange.length === 0) {
+        // Manifest claims this section covers no rendered blocks
+        // (rare — usually a heading-only section). Park the cursor
+        // on the section's nominal first block as a graceful
+        // fallback.
+        return sectionBlockStart;
+      }
+      const sectionFrac = Math.max(
+        0,
+        Math.min(1, sectionCurrentSec / sectionDurationSec),
+      );
+      // Re-normalize the in-range boundaries' cumulative end-fracs to
+      // [0..1] WITHIN the section so a section progress of 0.5 maps
+      // to the block at the halfway point of the section's char total.
+      const firstStart =
+        inRange[0].endFrac -
+        // The first block's start fraction = its endFrac minus its
+        // own contribution. We approximate by using the PREVIOUS
+        // boundary's endFrac when available, otherwise 0.
+        (boundaries.indexOf(inRange[0]) > 0
+          ? boundaries[boundaries.indexOf(inRange[0]) - 1].endFrac
+          : 0) -
+        0; // (keep symmetry — explicit so future tweaks are visible)
+      const lastEnd = inRange[inRange.length - 1].endFrac;
+      const span = Math.max(1e-9, lastEnd - firstStart);
+      for (const b of inRange) {
+        const localEnd = (b.endFrac - firstStart) / span;
+        if (sectionFrac < localEnd) return b.index;
+      }
+      return inRange[inRange.length - 1].index;
+    }
+    // Path 2 — cumulative-progress fallback.
     if (!Number.isFinite(progress) || progress <= 0) return null;
     const p = Math.min(1, progress);
-    // Linear scan — boundaries.length is small (typical lesson <30
-    // blocks), no need for binary search.
     for (let i = 0; i < boundaries.length; i++) {
       if (p < boundaries[i].endFrac) return boundaries[i].index;
     }
     return boundaries[boundaries.length - 1].index;
-  }, [boundaries, progress]);
+  }, [
+    boundaries,
+    progress,
+    sectionBlockStart,
+    sectionBlockEnd,
+    sectionCurrentSec,
+    sectionDurationSec,
+  ]);
 
   // ── User-scroll detection ────────────────────────────────────────
   // Pauses auto-scroll for `pauseAfterUserScrollMs` after any scroll

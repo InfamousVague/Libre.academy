@@ -147,16 +147,26 @@ describe("useAiAgent integration", () => {
     const { result } = renderHook(() =>
       useAiAgent({ systemPrompt: "", tools: [] }),
     );
+    // Default is now `true` (Notion bug report: approving every
+    // tool call by hand made the agent feel adversarial). Verify
+    // we can still flip it OFF + back ON.
+    expect(result.current.settings.autoApprove).toBe(true);
+    act(() => {
+      result.current.updateSettings({
+        ...result.current.settings,
+        autoApprove: false,
+        maxTurns: 30,
+      });
+    });
     expect(result.current.settings.autoApprove).toBe(false);
+    expect(result.current.settings.maxTurns).toBe(30);
     act(() => {
       result.current.updateSettings({
         ...result.current.settings,
         autoApprove: true,
-        maxTurns: 30,
       });
     });
     expect(result.current.settings.autoApprove).toBe(true);
-    expect(result.current.settings.maxTurns).toBe(30);
   });
 
   it("resets all run state via reset()", async () => {

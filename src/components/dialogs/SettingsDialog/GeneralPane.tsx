@@ -281,6 +281,32 @@ export default function GeneralPane() {
                 {t("settings.updateRestartHint")}
               </div>
             </div>
+            {/* Restart button — Notion issue #a41bc772db92641f.
+                The post-install state used to render only the
+                "update is staged" title + hint with no CTA, so a
+                learner who landed here from the UpdateBanner
+                redirect found themselves at a dead-end UI. The
+                button calls Tauri's plugin-process `relaunch()`
+                directly (same path the floating banner uses) so
+                the user can finish the update without having to
+                quit + reopen manually. */}
+            <button
+              className="libre-settings-primary"
+              onClick={async () => {
+                try {
+                  const { relaunch } = await import(
+                    "@tauri-apps/plugin-process"
+                  );
+                  await relaunch();
+                } catch (e) {
+                  // eslint-disable-next-line no-console
+                  console.error("[settings] relaunch failed:", e);
+                }
+              }}
+              autoFocus
+            >
+              {t("settings.restartNow")}
+            </button>
           </div>
         </div>
       )}

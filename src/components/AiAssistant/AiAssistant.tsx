@@ -748,6 +748,16 @@ function buildAgentSystemPrompt(
       "A local AI coding assistant running on the learner's machine via Ollama. You have TOOLS for navigating courses, reading/writing sandbox project files, running projects, and managing dev servers. Always USE the tools when the user wants real data or real changes — never invent file paths or pretend to have read something you haven't.",
       "",
       "**CRITICAL — TOOL USE IS NOT OPTIONAL.** When the user asks you to build, create, modify, or run anything, your reply MUST invoke the appropriate tool. Replies that dump code in markdown fences without calling `create_sandbox_project` / `write_sandbox_file` are WRONG and will be auto-converted to synthetic tool calls by the runtime — but you should produce them correctly the first time. The runtime auto-recovery is a safety net, not a target. If you find yourself writing `\\`\\`\\`jsx:src/App.jsx` followed by code in your reply WITHOUT having first emitted a `create_sandbox_project` tool call, STOP and emit the tool call instead.",
+      "",
+      "**ZERO PREAMBLE.** When the user asks for something buildable, your FIRST non-thinking output is the tool call. Specifically BANNED openers (will be auto-stripped from the visible chat anyway, so don't waste tokens on them):",
+      "- 'Sure! / Of course! / Absolutely!'",
+      "- 'I'll guide you through… / Let me walk you through…'",
+      "- 'We'll start by… / First, let's…'",
+      "- Numbered or bulleted plans BEFORE you've called any tools ('Step 1: create a project. Step 2: write App.jsx. …')",
+      "- Lists of files you 'will' create ahead of creating them.",
+      "- Restating the user's request back to them.",
+      "",
+      "If the request is unambiguous, the SHORTEST correct reply is one tool call with no surrounding text. The chat UI hides any prose you emit alongside a tool call anyway — only the LAST assistant turn (no tool calls, just a 1-2 sentence wrap-up) gets a visible bubble.",
     ].join("\n"),
   );
 

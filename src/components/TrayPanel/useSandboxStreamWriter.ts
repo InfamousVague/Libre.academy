@@ -115,14 +115,28 @@ async function flushWrites(writes: PlannedWrite[]): Promise<void> {
   }
 
   window.dispatchEvent(new CustomEvent("libre:sandbox-refresh"));
+  // Focus the LAST file in the write batch — when the agent
+  // streams content for multiple files in alternation, focus
+  // hops would flicker between them every chunk. Notion issue
+  // #9204dd042d84454b ("UI jitters and doesn't stream code to
+  // files as expected, flickers between two screenshots…
+  // should instead focus a file and start writing output
+  // immediately"). Previously only `w.isNew` writes fired focus
+  // — meaning UPDATES to an already-created file never pulled
+  // the editor over, so the learner could be staring at a
+  // stale file while new content streamed into a different
+  // one. Always firing focus, on every batch, on the file
+  // that's actively being written keeps the editor on the
+  // freshest stream and eliminates the in-between flicker.
+  const focusTarget = writes[writes.length - 1];
+  if (focusTarget) {
+    window.dispatchEvent(
+      new CustomEvent("libre:sandbox-focus", {
+        detail: { projectId: focusTarget.projectId, path: focusTarget.path },
+      }),
+    );
+  }
   for (const w of writes) {
-    if (w.isNew) {
-      window.dispatchEvent(
-        new CustomEvent("libre:sandbox-focus", {
-          detail: { projectId: w.projectId, path: w.path },
-        }),
-      );
-    }
     window.dispatchEvent(
       new CustomEvent("libre:agent-file-write", {
         detail: {
