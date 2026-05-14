@@ -618,6 +618,7 @@ export default function AiAssistant({
               onReset={agent.reset}
               onApprove={agent.approve}
               onDeny={agent.deny}
+              onStop={agent.stop}
               onAnswerClarification={agent.answerClarification}
               onCancelClarification={agent.cancelClarification}
               onUpdateSettings={agent.updateSettings}
@@ -769,7 +770,18 @@ function buildAgentSystemPrompt(
       "",
       "**ACT FIRST, EXPLAIN AFTER.** Your very first action MUST be a `create_sandbox_project` tool call. NO preamble like 'I'll build you a tic-tac-toe game with the following structure: …'. NO numbered lists describing what you're going to do. NO confirmation requests. Just call the tool. The approval chip the user clicks is your prose. If you find yourself typing 'first I'll create…', stop, delete it, and emit the tool call instead.",
       "",
-      "1. **`create_sandbox_project`** — pick a sensible `name` + `language` based on the user's wording. The tool returns a `projectId` you'll use in every subsequent call. PASS the `files` array NOW when the build is small (≤4 files) and you already know every file's contents — that creates the whole project in one approval. OMIT `files` when the build is large or you want the user to watch files appear via streaming. The returned `projectId` is what you pass to every subsequent file-write or run call.",
+      "1. **`create_sandbox_project`** — pick a sensible `name` + `language` based on the user's wording. The tool returns a `projectId` you'll use in every subsequent call. **STRONGLY PREFER** passing the FULL `files` array NOW with EVERY file the build needs — one tool call, one approval chip, the whole project lands atomically. Only omit `files` if the build genuinely needs > 6 files where streaming makes the UX better. The returned `projectId` is what you pass to every subsequent file-write or run call.",
+      "",
+      "   **THE NUMBER ONE MISTAKE TO AVOID**: creating the project with a single placeholder file (no `files` array) and then STOPPING. That's incomplete — the project has a `Loading…` div and nothing else. Every build needs at minimum the file layout listed under 'File organization' below. If you ran `create_sandbox_project` and your next instinct is to ask the user a question or write a summary instead of immediately writing the rest of the files, STOP and emit the next tool call instead.",
+      "",
+      "   **Concrete required file counts:**",
+      "   - **React**: at minimum `src/App.jsx` (the actual game/app, NOT a Loading placeholder) plus `src/style.css`. A real build also has `src/components/<Name>.jsx` per component and `src/lib/<name>.js` for pure logic. NEVER stop after writing a single `App.jsx` that just returns `<div>Loading…</div>` — that's the placeholder, not the finished build.",
+      "   - **Web (HTML+CSS+JS)**: `index.html`, `main.js`, `style.css` at minimum.",
+      "   - **Three.js**: `scene.js`, `style.css`, plus geometry/material files.",
+      "   - **Python**: `main.py` + the module files (e.g. `fizzbuzz.py`).",
+      "   - **Rust**: `main.rs` + the logic modules (e.g. `src/counter.rs`).",
+      "",
+      "   **The Libre sandbox does NOT need `package.json`** — React, ReactDOM, hooks, etc. are provided by the sandbox runtime via vendored bundles. Just `import { useState } from 'react'` and it works. Same for other languages: their runtimes are already wired up. Don't waste a tool call writing a package.json.",
       "",
       "2. **Stream EVERY file in ONE reply** (only when you omitted `files` in step 1). For each file, emit a markdown fenced code block whose info string carries BOTH the language AND the file path, separated by a colon:",
       "",

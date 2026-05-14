@@ -109,6 +109,11 @@ export interface AgentTurnRequest {
   /// content so far. The final `AgentTurnResponse` still carries the
   /// full content for tools / debug.
   onChunk?: (chunk: string) => void;
+  /// Fired once at the start of each turn with the Rust-side
+  /// stream id the transport just minted. Lets the host (the
+  /// React hook) save it for later cancellation via
+  /// `ai_chat_stop`. Optional — the loop itself doesn't use it.
+  onStreamId?: (streamId: string) => void;
   /// Per-call model knobs derived from the user's `effort` setting
   /// (Notion issue #93e0c544cf11a200). Optional — older transports
   /// (mock, test) can ignore these and the production Ollama

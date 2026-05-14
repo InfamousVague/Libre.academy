@@ -28,6 +28,7 @@ import {
   type AiAgentSettings,
 } from "../lib/aiAgent/settings";
 import {
+  deriveConfidenceFromTool,
   estimateTokens,
   parseStreamingConfidence,
 } from "../lib/aiAgent/confidence";
@@ -405,7 +406,16 @@ export function useAiAgent(params: {
                 }
                 return [...prev, assistant];
               });
-              if (assistant.confidence !== undefined) {
+              // Only update confidence when this turn actually
+              // emitted a tag. Setting it to null on every
+              // tag-less turn would clobber the conversation-
+              // wide running value the HUD bar shows — confidence
+              // is meant to be sticky across turns, not
+              // per-turn-zeroed.
+              if (
+                assistant.confidence !== undefined &&
+                assistant.confidence !== null
+              ) {
                 setConfidence(assistant.confidence);
               }
               if (assistant.usage) {
@@ -484,6 +494,17 @@ export function useAiAgent(params: {
                   content: result.content,
                 },
               ]);
+              // Heuristic confidence update. The model often
+              // skips the `<confidence>` tag so the HUD meter
+              // never moves unless we derive a value from
+              // observed tool outcomes. Each success nudges the
+              // bar up; each failure pulls it down. A
+              // self-reported tag (parsed in onChunk /
+              // onTurnEnd) will overwrite this heuristic value
+              // when it lands.
+              setConfidence((prev) =>
+                deriveConfidenceFromTool(prev, result.ok),
+              );
               window.setTimeout(() => {
                 setPending((prev) =>
                   prev.filter((p) => p.call.id !== result.toolCallId),

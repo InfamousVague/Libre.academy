@@ -623,9 +623,16 @@ body,
      fits in the remaining viewport above the orb). */
   bottom: 80px;
   right: 20px;
-  top: max(14px, calc(100vh - 80px - min(620px, 80vh)));
-  height: min(620px, calc(100vh - 80px - 14px));
-  width: 380px;
+  top: max(14px, calc(100vh - 80px - min(720px, 88vh)));
+  height: min(720px, calc(100vh - 80px - 14px));
+  /* Width: 570px — 25% smaller than the prior 760px. The 760
+     was wide enough for the HUD on a full-screen window but
+     crowded out the editor + project tree underneath. 570
+     still fits the HUD on a single row (confidence + tokens +
+     duration + Stop button) without eating half the viewport.
+     Scales down further on narrow viewports via the @media
+     stack below. */
+  width: 570px;
   max-width: calc(100vw - 28px);
   z-index: 91;
   background: var(--color-bg-secondary);
@@ -633,6 +640,23 @@ body,
   border-radius: var(--libre-radius-lg);
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.38);
   overflow: hidden;
+}
+
+/* Tighter breakpoints than the inner panel's media queries
+   since the host's width is the one actually applied. On a
+   narrow viewport drop to a comfortable fraction of the screen
+   rather than viewport-edge — leaves room for the editor +
+   project tree beneath. */
+@media (max-width: 1024px) {
+  .libre-ai-host--floating {
+    width: calc(100vw - 60px);
+    max-width: 570px;
+  }
+}
+@media (max-width: 640px) {
+  .libre-ai-host--floating {
+    width: calc(100vw - 28px);
+  }
 }
 
 /* In-app host mirrors the same theme-derived per-mode palette

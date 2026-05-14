@@ -27,7 +27,10 @@
 //! done/error. `stream_id` is a UUID minted on the frontend so
 //! concurrent chats (unlikely but cheap to support) don't crosstalk.
 
+use std::collections::HashMap;
 use std::process::Command;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, LazyLock, Mutex};
 use std::time::Instant;
 
 use futures_util::StreamExt;
@@ -35,6 +38,60 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter};
 
 const OLLAMA_URL: &str = "http://localhost:11434";
+
+/// Registry of in-flight stream cancellation flags. Keyed by the
+/// caller-provided `stream_id`. When a stream starts it registers
+/// an `AtomicBool::new(false)`; the stream loop checks the flag on
+/// every chunk arrival and bails when set. The `ai_chat_stop`
+/// command flips the flag for a given id — the corresponding
+/// stream notices on its next iteration (typically within ~50ms
+/// since Ollama emits a chunk every few tokens) and returns
+/// early.
+///
+/// The map is global rather than `tauri::State` because the
+/// streaming commands already use static helpers (`emit_chunk`,
+/// `classify_reqwest_error`); threading state through every
+/// function would balloon their signatures for no win. A
+/// `Mutex<HashMap>` is fine here — both insert and remove happen
+/// once per stream, never on the hot per-chunk path.
+static STREAM_FLAGS: LazyLock<Mutex<HashMap<String, Arc<AtomicBool>>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+
+/// Register a fresh cancel flag for `stream_id` and return a clone
+/// of the Arc. Caller holds onto the clone for hot-path checks;
+/// the map's copy lets `ai_chat_stop` flip the same atomic from
+/// a different command invocation.
+fn register_cancel_flag(stream_id: &str) -> Arc<AtomicBool> {
+    let flag = Arc::new(AtomicBool::new(false));
+    if let Ok(mut map) = STREAM_FLAGS.lock() {
+        map.insert(stream_id.to_string(), flag.clone());
+    }
+    flag
+}
+
+/// Drop the cancel flag for `stream_id` from the registry. Called
+/// when the stream completes (clean or errored) so the map doesn't
+/// leak entries across long sessions.
+fn unregister_cancel_flag(stream_id: &str) {
+    if let Ok(mut map) = STREAM_FLAGS.lock() {
+        map.remove(stream_id);
+    }
+}
+
+/// Stop an active stream. The frontend calls this when the user
+/// clicks the panel's "Stop" button. The corresponding stream's
+/// loop checks the flag on every chunk and bails — typical
+/// latency from click to actual stop is one Ollama chunk
+/// (≈50-150ms).
+#[tauri::command]
+pub async fn ai_chat_stop(stream_id: String) -> Result<(), String> {
+    if let Ok(map) = STREAM_FLAGS.lock() {
+        if let Some(flag) = map.get(&stream_id) {
+            flag.store(true, Ordering::Relaxed);
+        }
+    }
+    Ok(())
+}
 const DEFAULT_MODEL: &str = "qwen2.5-coder:7b";
 
 #[derive(Debug, Serialize)]
@@ -487,6 +544,7 @@ pub async fn ai_chat_agent_turn(
     // chunk event channel so the frontend's chat-stream listener
     // works verbatim.
     let stream_id = stream_id.unwrap();
+    let cancel_flag = register_cancel_flag(&stream_id);
     let started = Instant::now();
     let mut content_acc = String::new();
     let mut final_tool_calls: Option<Vec<ToolCallSpec>> = None;
@@ -496,6 +554,19 @@ pub async fn ai_chat_agent_turn(
     let mut byte_stream = response.bytes_stream();
     let mut buffer = Vec::new();
     while let Some(chunk_res) = byte_stream.next().await {
+        // User-requested cancel — checked on every chunk so the
+        // bail latency is at most one Ollama emit interval (a few
+        // tens of ms). We drop the stream by returning Err; the
+        // tauri command resolves on the frontend with the same
+        // error path it uses for transport errors, and the agent
+        // loop's hooks.shouldStop branch swallows it as a clean
+        // user-initiated stop rather than a real failure.
+        if cancel_flag.load(Ordering::Relaxed) {
+            unregister_cancel_flag(&stream_id);
+            let msg = "Stopped by user.".to_string();
+            emit_error(&app, &stream_id, &msg);
+            return Err(msg);
+        }
         let chunk = match chunk_res {
             Ok(c) => c,
             Err(e) => {
@@ -506,6 +577,7 @@ pub async fn ai_chat_agent_turn(
                 // so any UI listener can render an inline error
                 // rather than just hanging on a half-streamed
                 // response.
+                unregister_cancel_flag(&stream_id);
                 let msg = classify_reqwest_error(&e);
                 emit_error(&app, &stream_id, &msg);
                 return Err(msg);
@@ -562,6 +634,7 @@ pub async fn ai_chat_agent_turn(
                     completion_tokens.unwrap_or(0) as u32,
                     started.elapsed().as_millis() as u64,
                 );
+                unregister_cancel_flag(&stream_id);
                 return Ok(AgentTurnResponse {
                     content: content_acc,
                     tool_calls: final_tool_calls,
@@ -585,6 +658,7 @@ pub async fn ai_chat_agent_turn(
         completion_tokens.unwrap_or(0) as u32,
         started.elapsed().as_millis() as u64,
     );
+    unregister_cancel_flag(&stream_id);
     Ok(AgentTurnResponse {
         content: content_acc,
         tool_calls: final_tool_calls,

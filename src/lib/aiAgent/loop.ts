@@ -45,6 +45,13 @@ import type {
 /// awaits user input via a promise that resolves when the chip
 /// click fires.
 export interface AgentLoopHooks {
+  /// User-stop predicate. Polled by the loop between turns + tool
+  /// dispatches; when it returns true the loop returns early with
+  /// `endedBy: "stopped"`. The host's Stop button sets this flag
+  /// AND fires the Rust-side `ai_chat_stop` for the current
+  /// stream so an in-flight transport.send aborts immediately
+  /// rather than waiting for the model to finish the current turn.
+  shouldStop?: () => boolean;
   /// Called BEFORE the loop sends a turn. Useful for the UI to
   /// flip "streaming" state to true / clear the latest tool
   /// timeline.
@@ -58,6 +65,10 @@ export interface AgentLoopHooks {
   /// host typically appends each chunk to a placeholder assistant
   /// message in its message list.
   onChunk?: (chunk: string) => void;
+  /// Called at the start of each turn with the active stream id
+  /// the transport just minted. The hook saves the id so the
+  /// user's Stop button can fire `ai_chat_stop` against it.
+  onStreamId?: (streamId: string) => void;
   /// Approval gate for a gated tool. Returns "approved" or
   /// "denied" — denial appends a tool result the model can read
   /// to decide what to do next.
@@ -91,7 +102,17 @@ export interface RunSummary {
   /// Accumulated usage across every turn.
   usage: RunUsage;
   /// Why the loop ended.
-  endedBy: "terminal" | "maxTurns" | "error" | "stuckRetries";
+  endedBy:
+    | "terminal"
+    | "maxTurns"
+    | "error"
+    | "stuckRetries"
+    /// User clicked the Stop button. The active turn's
+    /// transport.send rejected (Rust-side cancel) or the loop
+    /// checked `hooks.shouldStop()` between turns and bailed.
+    /// Distinct from "error" so the UI doesn't paint a red
+    /// "something went wrong" banner for a user-initiated halt.
+    | "stopped";
   /// Confidence of the FINAL assistant message (the one the user
   /// will read). `null` when the model didn't emit a tag.
   finalConfidence: number | null;
@@ -191,6 +212,14 @@ export async function runAgentLoop(
   let finalConfidence: number | null = null;
 
   for (let turnIdx = 0; turnIdx < maxTurns; turnIdx++) {
+    // User-initiated stop checks. We poll the predicate at every
+    // natural pause point in the loop so a Stop click takes
+    // effect within one Ollama chunk (Rust-side cancel) or
+    // immediately between turns (loop-side check).
+    if (hooks.shouldStop?.()) {
+      endedBy = "stopped";
+      break;
+    }
     hooks.onTurnStart?.(turnIdx);
     let response;
     try {
@@ -206,6 +235,7 @@ export async function runAgentLoop(
           },
         })),
         onChunk: hooks.onChunk,
+        onStreamId: hooks.onStreamId,
         // Per-call model knobs from the user's "effort" setting —
         // forwarded through unchanged. The Tauri transport reads
         // these off the request body and stuffs them into the
@@ -215,9 +245,18 @@ export async function runAgentLoop(
         num_predict: effortParams?.num_predict,
       });
     } catch (err) {
-      // Transport failure — surface to the host via a synthetic
-      // assistant message + abort the loop. Mirrors the prior
-      // hook's catch behaviour.
+      // Transport failure. Two flavours:
+      //   1. User-initiated stop — Rust side returned
+      //      "Stopped by user." after the cancel flag flipped.
+      //      Detect via `hooks.shouldStop()` (host set the flag
+      //      before firing ai_chat_stop) and exit cleanly with
+      //      `endedBy: "stopped"`.
+      //   2. Real transport failure — surface as a synthetic
+      //      assistant message + endedBy: "error".
+      if (hooks.shouldStop?.()) {
+        endedBy = "stopped";
+        break;
+      }
       endedBy = "error";
       const errMsg =
         err instanceof Error ? err.message : String(err);

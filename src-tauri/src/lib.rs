@@ -331,6 +331,12 @@ pub fn run() {
             // `tools` parameter. The frontend `useAiAgent` hook
             // calls this once per tool-call iteration.
             ai_chat::ai_chat_agent_turn,
+            // Stop an in-flight stream by id. The streaming loops
+            // (chat + agent) check the per-stream cancel flag on
+            // every Ollama chunk and bail when set; the Stop
+            // button in the panel fires this with the active
+            // stream id.
+            ai_chat::ai_chat_stop,
             // Sandbox project filesystem + git operations. Desktop
             // build only — the web build's storage layer falls back
             // to localStorage when these commands aren't present.

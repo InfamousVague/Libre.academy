@@ -5,6 +5,7 @@
 import { describe, expect, it } from "vitest";
 import {
   classifyConfidence,
+  deriveConfidenceFromTool,
   isLowConfidence,
   parseConfidence,
 } from "../confidence";
@@ -83,5 +84,52 @@ describe("isLowConfidence", () => {
   it("triggers below 0.5", () => {
     expect(isLowConfidence(0.49)).toBe(true);
     expect(isLowConfidence(0.5)).toBe(false);
+  });
+});
+
+describe("deriveConfidenceFromTool (heuristic)", () => {
+  it("snaps to 0.85 on first successful tool", () => {
+    expect(deriveConfidenceFromTool(null, true)).toBe(0.85);
+  });
+  it("snaps to 0.30 on first failed tool", () => {
+    expect(deriveConfidenceFromTool(null, false)).toBe(0.3);
+  });
+  it("nudges up on success from a prior value", () => {
+    const next = deriveConfidenceFromTool(0.5, true);
+    expect(next).toBeGreaterThan(0.5);
+    expect(next).toBeLessThan(0.85);
+  });
+  it("nudges down on failure from a prior value", () => {
+    const next = deriveConfidenceFromTool(0.7, false);
+    expect(next).toBeLessThan(0.7);
+    expect(next).toBeGreaterThan(0.3);
+  });
+  it("converges toward 0.85 after several successes", () => {
+    let v: number | null = null;
+    for (let i = 0; i < 8; i++) {
+      v = deriveConfidenceFromTool(v, true);
+    }
+    expect(v).toBeGreaterThan(0.8);
+  });
+  it("converges toward 0.3 after several failures", () => {
+    let v: number | null = null;
+    for (let i = 0; i < 8; i++) {
+      v = deriveConfidenceFromTool(v, false);
+    }
+    expect(v).toBeLessThan(0.4);
+  });
+  it("recovers from low when a success lands", () => {
+    let v: number | null = deriveConfidenceFromTool(null, false); // 0.3
+    v = deriveConfidenceFromTool(v, true);
+    expect(v).toBeGreaterThan(0.3);
+  });
+  it("stays in [0, 1] under any sequence", () => {
+    let v: number | null = null;
+    const seq = [true, false, true, true, false, false, true];
+    for (const ok of seq) {
+      v = deriveConfidenceFromTool(v, ok);
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThanOrEqual(1);
+    }
   });
 });

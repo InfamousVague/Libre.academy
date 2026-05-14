@@ -30,6 +30,11 @@ export function createTauriTransport(): AgentTransport {
       const streamId = req.onChunk
         ? `agent-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
         : undefined;
+      // Hand the stream id back to the host so it can be used as
+      // the cancellation target. The hook saves this in a ref and
+      // fires `ai_chat_stop` with the same id when the user clicks
+      // Stop — Rust's STREAM_FLAGS registry keys on it.
+      if (streamId) req.onStreamId?.(streamId);
       let unlistenChunk: UnlistenFn | undefined;
       let unlistenDone: UnlistenFn | undefined;
       try {

@@ -895,6 +895,18 @@
   border: 1px solid var(--color-border-default);
   border-radius: 999px;
   align-self: flex-start;
+  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+/* Done state — all of this turn's tool calls have completed.
+   The dots are removed by the JSX (so no pulse animation
+   running for a finished step); colour shifts to the success
+   palette so the chip reads "✓ ran X" rather than "running X
+   …" indefinitely. */
+.libre-ai-agent-breadcrumb--done {
+  color: var(--color-text-primary);
+  background: rgba(86, 201, 138, 0.08);
+  border-color: rgba(86, 201, 138, 0.45);
 }
 
 .libre-ai-agent-breadcrumb-dots {

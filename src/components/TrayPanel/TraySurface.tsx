@@ -278,6 +278,7 @@ export default function TraySurface({
       onReset={agent.reset}
       onApprove={agent.approve}
       onDeny={agent.deny}
+      onStop={agent.stop}
       onAnswerClarification={agent.answerClarification}
       onCancelClarification={agent.cancelClarification}
       onUpdateSettings={agent.updateSettings}

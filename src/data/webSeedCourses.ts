@@ -393,7 +393,34 @@ function starterUrl(path: string): string {
 /// 3, 17 with 4, and a long tail up to 10 (iterators2). Manifest
 /// bumped to v12 + rustlings.json sizeBytes updated; bump forces
 /// returning visitors to re-fetch the augmented course body.
-const SEED_VERSION = 23;
+///
+/// V24 — TRPL `rand` API migration. The guessing-game chapter +
+/// "External Packages and Nested Paths" lesson taught the `rand`
+/// 0.8 surface (`use rand::Rng;` + `rand::thread_rng().gen_range(R)`).
+/// The Rust playground ships a recent enough toolchain that the
+/// 0.8 API errors out with `cannot find function thread_rng in
+/// crate rand` — 0.9 dropped both `thread_rng` and the `Rng::
+/// gen_range` method in favour of the free function `rand::random_
+/// range(R)`. Migrated all 9 affected lessons across bodies,
+/// starters, solutions, and tests; NOTE callouts rewritten to
+/// flag the historical form so learners reading other guides
+/// aren't confused. Verified the headline exercise compiles +
+/// tests pass on play.rust-lang.org. Bumping so returning visitors
+/// re-fetch the corrected lesson bodies.
+///
+/// V25 — TRPL playground-block wrap. 30 `rust playground` fences
+/// across 22 lessons opened with bare `let` / statement-level code
+/// at the top of the block (e.g. `let input = "not-a-number"; …`
+/// in "Handling Invalid Input with match on Result"). Reading
+/// rendered fine, but clicking Run forwarded the snippet to
+/// play.rust-lang.org as-is and Rust's grammar rejected it with
+/// "expected item, found keyword `let`" — the playground compiles
+/// at file scope, not function scope. Wrapped each broken block
+/// in `fn main() { … }` with 4-space indented body. Verified the
+/// headline example ("handling-invalid-input-gracefully") compiles
+/// + runs on the playground after the fix. Bumping so returning
+/// visitors re-fetch.
+const SEED_VERSION = 25;
 
 /// Run the web seed if it hasn't run yet OR if the persisted
 /// `SEED_VERSION` is older than the current build's. Idempotent +

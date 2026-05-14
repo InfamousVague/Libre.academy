@@ -94,6 +94,40 @@
   margin-left: 2px;
 }
 
+/* Stop button — only visible while `streaming` is true. Pushed
+   to the right edge of the HUD strip via margin-left:auto so
+   the confidence + token readouts on the left don't get cramped.
+   Uses a red accent (matches the failed-chip palette) so it
+   reads as a halt action, not a positive action. */
+.libre-ai-hud-stop {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ff7e6a;
+  background: rgba(220, 95, 95, 0.12);
+  border: 1px solid rgba(220, 95, 95, 0.45);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, transform 80ms ease;
+}
+.libre-ai-hud-stop:hover {
+  background: rgba(220, 95, 95, 0.22);
+  border-color: rgba(220, 95, 95, 0.65);
+}
+.libre-ai-hud-stop:active {
+  transform: scale(0.96);
+}
+.libre-ai-hud-stop-icon {
+  font-size: 8px;
+  line-height: 1;
+}
+
 /* ── Auto-approve badge in the header ─────────────────────── */
 
 .libre-ai-panel-auto-badge {

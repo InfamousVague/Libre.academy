@@ -78,6 +78,12 @@ interface Props {
   onReset: () => void;
   onApprove: (toolCallId: string) => void;
   onDeny: (toolCallId: string) => void;
+  /// Halt the in-flight agent run. Wired by the host to
+  /// `useAiAgent.stop()` — flips the loop's shouldStop flag AND
+  /// fires the Rust-side `ai_chat_stop` so the active Ollama
+  /// stream aborts on its next chunk. The HUD renders a Stop
+  /// button while `streaming` is true.
+  onStop?: () => void;
   onAnswerClarification?: (answer: string) => void;
   onCancelClarification?: () => void;
   onUpdateSettings?: (next: AiAgentSettings) => void;
@@ -104,6 +110,7 @@ export default function AiAgentPanel({
   onReset,
   onApprove,
   onDeny,
+  onStop,
   onAnswerClarification,
   onCancelClarification,
   onUpdateSettings,
@@ -541,6 +548,7 @@ export default function AiAgentPanel({
           showTokens={settings.showTokens}
           showConfidence={settings.showConfidence}
           streaming={streaming}
+          onStop={streaming ? onStop : undefined}
         />
       )}
 
@@ -873,21 +881,58 @@ function AgentRow({
     // FINAL terminal turn (no more tool calls) where we show
     // the bubble normally.
     const hasToolCalls = !!message.toolCalls && message.toolCalls.length > 0;
+    // Are ALL of this turn's tool calls done (have results in
+    // the timeline)? If so, render the breadcrumb in its DONE
+    // state — a check icon, no animated dots, past-tense label.
+    // The prior implementation kept the "..." dots animating
+    // forever for completed turns, which made it look like the
+    // agent was still working on a tool that had finished
+    // minutes ago. Notion-style "this step is complete" check
+    // mark is the right visual.
+    const allToolCallsDone =
+      hasToolCalls &&
+      message.toolCalls!.every((tc) =>
+        timeline.some((t) => t.toolCallId === tc.id),
+      );
     if (isEmptyAssistant || hasToolCalls) {
       if (suppressEmptyThinking) return null;
+      const label = hasToolCalls
+        ? message.toolCalls!.length === 1
+          ? message.toolCalls![0].name
+          : `${message.toolCalls!.length} tools`
+        : "thinking";
+      const verb = allToolCallsDone
+        ? hasToolCalls
+          ? "ran"
+          : label
+        : hasToolCalls
+          ? `running ${label}…`
+          : label;
       return (
-        <div className="libre-ai-agent-breadcrumb" aria-live="polite">
-          <Icon icon={hammer} size="xs" color="currentColor" />
+        <div
+          className={
+            "libre-ai-agent-breadcrumb" +
+            (allToolCallsDone ? " libre-ai-agent-breadcrumb--done" : "")
+          }
+          aria-live="polite"
+        >
+          <Icon
+            icon={allToolCallsDone ? check : hammer}
+            size="xs"
+            color="currentColor"
+          />
           <span>
-            {hasToolCalls
-              ? `running ${message.toolCalls!.length === 1 ? message.toolCalls![0].name : `${message.toolCalls!.length} tools`}…`
-              : "thinking"}
+            {allToolCallsDone && hasToolCalls
+              ? `ran ${label}`
+              : verb}
           </span>
-          <span className="libre-ai-agent-breadcrumb-dots" aria-hidden>
-            <span />
-            <span />
-            <span />
-          </span>
+          {!allToolCallsDone && (
+            <span className="libre-ai-agent-breadcrumb-dots" aria-hidden>
+              <span />
+              <span />
+              <span />
+            </span>
+          )}
         </div>
       );
     }
@@ -1502,31 +1547,65 @@ function prettyJson(s: string): string {
 }
 
 /// HUD strip beneath the header. Renders the confidence meter
-/// + token counter + run duration in one horizontal row. The
-/// individual readouts respect the settings.show* flags so the
-/// user can turn each off independently from the settings sheet.
+/// + token counter + run duration + (during streaming) a Stop
+/// button. The individual readouts respect the settings.show*
+/// flags so the user can turn each off independently from the
+/// settings sheet.
+///
+/// Live duration ticker: while streaming, an interval timer
+/// re-renders the duration field every 250ms by adding the
+/// elapsed wall time to the completed-turns baseline. The HUD
+/// reads "5.2s · 3 turns" and the seconds actually tick up
+/// instead of jumping by N at turn boundaries.
 function AgentHud({
   confidence,
   usage,
   showTokens,
   showConfidence,
   streaming,
+  onStop,
 }: {
   confidence: number | null;
   usage?: RunUsage;
   showTokens: boolean;
   showConfidence: boolean;
   streaming: boolean;
+  onStop?: () => void;
 }) {
-  // Both readouts hidden? Skip the strip entirely so it doesn't
-  // eat vertical space.
-  if (!showTokens && !showConfidence) return null;
+  // Both readouts hidden AND no Stop button? Skip the strip
+  // entirely so it doesn't eat vertical space.
+  if (!showTokens && !showConfidence && !onStop) return null;
+  // Live duration ticker. We capture the time the streaming
+  // STARTED (or rather, the time the HUD first saw streaming
+  // flip true) and recompute the elapsed window every 250ms
+  // until it flips false. The completed-turns baseline (from
+  // `usage.durationMs`) plus this elapsed window is what we
+  // display.
+  const streamStartedAt = useRef<number | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (streaming) {
+      if (streamStartedAt.current === null) {
+        streamStartedAt.current = Date.now();
+      }
+      setNow(Date.now());
+      const id = window.setInterval(() => setNow(Date.now()), 250);
+      return () => window.clearInterval(id);
+    } else {
+      streamStartedAt.current = null;
+      return undefined;
+    }
+  }, [streaming]);
+  const liveDurationMs =
+    streaming && streamStartedAt.current !== null
+      ? now - streamStartedAt.current
+      : 0;
+  const totalDurationMs = (usage?.durationMs ?? 0) + liveDurationMs;
   // Nothing to show YET (run just started, no usage / no
-  // confidence)? Render a slim placeholder so the layout doesn't
-  // jump when data arrives.
+  // confidence) AND not streaming? Render nothing.
   const empty =
-    (!usage || usage.turns === 0) && confidence === null;
-  if (empty && !streaming) return null;
+    (!usage || usage.turns === 0) && confidence === null && !streaming;
+  if (empty) return null;
   const bucket = classifyConfidence(confidence);
   return (
     <div
@@ -1572,9 +1651,9 @@ function AgentHud({
                 )} ↓`
               : "—"}
           </span>
-          {usage && usage.durationMs > 0 && (
+          {totalDurationMs > 0 && (
             <span className="libre-ai-hud-tokens-duration">
-              {formatDuration(usage.durationMs)}
+              {formatDuration(totalDurationMs)}
             </span>
           )}
           {usage && usage.turns > 0 && (
@@ -1583,6 +1662,20 @@ function AgentHud({
             </span>
           )}
         </div>
+      )}
+      {onStop && (
+        <button
+          type="button"
+          className="libre-ai-hud-stop"
+          onClick={onStop}
+          title="Stop the agent (⌘.)"
+          aria-label="Stop agent"
+        >
+          <span className="libre-ai-hud-stop-icon" aria-hidden>
+            ■
+          </span>
+          <span className="libre-ai-hud-stop-label">stop</span>
+        </button>
       )}
     </div>
   );
