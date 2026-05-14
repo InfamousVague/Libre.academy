@@ -17,15 +17,20 @@
 ///      refactor, so this is a drop-in replacement.
 
 import { useCallback, useMemo, useRef, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import type { ToolApproval, ToolCall, ToolDef, ToolResult } from "../lib/aiTools/types";
 import { runAgentLoop } from "../lib/aiAgent/loop";
 import { createTauriTransport } from "../lib/aiAgent/transport";
-import { EMPTY_RUN_USAGE, type RunUsage, type TurnUsage } from "../lib/aiAgent/usage";
+import { EMPTY_RUN_USAGE, type RunUsage } from "../lib/aiAgent/usage";
 import {
   loadSettings,
   resolveEffortParams,
   type AiAgentSettings,
 } from "../lib/aiAgent/settings";
+import {
+  estimateTokens,
+  parseStreamingConfidence,
+} from "../lib/aiAgent/confidence";
 import type { AgentMessage as InternalAgentMessage } from "../lib/aiAgent/types";
 
 /// Re-export the message type at this module's path so the
@@ -71,11 +76,16 @@ export interface UseAiAgent {
   /// agent run. Resets to zeros when the user starts a new
   /// conversation via `reset` or `loadMessages`. The token strip
   /// in the agent panel reads this for the HUD.
+  ///
+  /// Live during streaming: the `completionTokens` field grows
+  /// from a chars/4 estimate as content arrives, then snaps to
+  /// the exact `eval_count` from Ollama when the turn completes.
   usage: RunUsage;
-  /// The most-recent assistant turn's self-reported confidence
-  /// (0..1). null when the run hasn't emitted a tag yet (the
-  /// model didn't include one). The confidence meter in the UI
-  /// reads this.
+  /// The agent's self-reported confidence (0..1). Live: updated
+  /// in real time as the streaming content surfaces a
+  /// `<confidence>N</confidence>` tag (even before the close tag
+  /// arrives). null when no run has emitted a tag yet. The
+  /// confidence meter in the UI reads this.
   confidence: number | null;
   /// Current settings (auto-approve etc). Reads-through to
   /// localStorage on mount; in-memory only after that. Update
@@ -84,6 +94,15 @@ export interface UseAiAgent {
   send: (prompt: string, augmented?: string) => Promise<void>;
   approve: (toolCallId: string) => void;
   deny: (toolCallId: string) => void;
+  /// Halt the in-flight agent run. Two effects:
+  ///   1. Flips a per-run shouldStop ref the loop polls so future
+  ///      turns / tool dispatches abort cleanly.
+  ///   2. Fires `ai_chat_stop` against the active stream id so
+  ///      the Rust transport's read loop bails on its next chunk
+  ///      (typically within ~50-150ms — one Ollama emit
+  ///      interval).
+  /// No-op when no run is in flight.
+  stop: () => void;
   /// Submit the user's answer to an open clarification request.
   answerClarification: (answer: string) => void;
   /// Cancel an open clarification request — the loop reads the
@@ -134,6 +153,16 @@ export function useAiAgent(params: {
     reject: (err: Error) => void;
   } | null>(null);
 
+  // User-stop coordination. `stoppedRef` is read by the loop's
+  // `hooks.shouldStop()` predicate; flipping it makes the loop
+  // bail at its next pause point. `activeStreamIdRef` is the
+  // current Rust-side stream id — `stop()` fires `ai_chat_stop`
+  // with this id so an in-flight `bytes_stream().next().await`
+  // aborts on its next chunk. Both reset to default on every
+  // fresh send.
+  const stoppedRef = useRef(false);
+  const activeStreamIdRef = useRef<string | null>(null);
+
   // Singleton Tauri transport. Building one per render would
   // allocate fresh closures with no benefit; it's stateless
   // anyway.
@@ -146,6 +175,23 @@ export function useAiAgent(params: {
   const deny = useCallback((toolCallId: string) => {
     const fn = approvalResolversRef.current.get(toolCallId);
     if (fn) fn("denied");
+  }, []);
+
+  /// Halt the in-flight agent run. Sets the stop flag (the loop
+  /// polls this between turns) AND fires the Rust-side
+  /// `ai_chat_stop` so a mid-stream `bytes_stream().next()` bail
+  /// happens on the next Ollama chunk. No-op when no run is in
+  /// flight.
+  const stop = useCallback(() => {
+    stoppedRef.current = true;
+    const sid = activeStreamIdRef.current;
+    if (sid) {
+      // Fire-and-forget — the Rust side might return an error
+      // (e.g. if the stream already completed between our state
+      // check and the IPC roundtrip), and we don't care: the
+      // loop's `shouldStop` poll handles the close anyway.
+      void invoke("ai_chat_stop", { streamId: sid }).catch(() => {});
+    }
   }, []);
 
   const answerClarification = useCallback((answer: string) => {
@@ -173,6 +219,8 @@ export function useAiAgent(params: {
     setConfidence(null);
     approvalResolversRef.current.clear();
     clarificationResolverRef.current = null;
+    stoppedRef.current = false;
+    activeStreamIdRef.current = null;
   }, []);
 
   const loadMessages = useCallback((msgs: AgentMessage[]) => {
@@ -185,6 +233,8 @@ export function useAiAgent(params: {
     setConfidence(null);
     approvalResolversRef.current.clear();
     clarificationResolverRef.current = null;
+    stoppedRef.current = false;
+    activeStreamIdRef.current = null;
   }, []);
 
   const updateSettings = useCallback((next: AiAgentSettings) => {
@@ -205,7 +255,35 @@ export function useAiAgent(params: {
       setTimeline([]);
       setStreaming(true);
       setUsage(EMPTY_RUN_USAGE);
-      setConfidence(null);
+      // Don't reset confidence here — we want the conversation-wide
+      // confidence to persist across runs so the HUD bar doesn't
+      // flash empty at the start of every new prompt. The current
+      // value stays until a fresh `<confidence>N</confidence>` tag
+      // arrives in this run's streaming content. The hook's
+      // `reset()` / `loadMessages()` paths DO clear it (those are
+      // explicit "new conversation" actions).
+
+      // Fresh user-stop coordination for this run. The Rust-side
+      // stream id is set inside onChunk (the Tauri transport mints
+      // it before the first chunk fires). Without resetting these
+      // here a prior run's "stopped" state would leak into the new
+      // run and the loop would bail before doing anything.
+      stoppedRef.current = false;
+      activeStreamIdRef.current = null;
+
+      // Live-stream accumulator. We track the running content of
+      // the IN-FLIGHT turn so onChunk can derive a real-time
+      // confidence value + token estimate from the partial
+      // content. Resets between turns via onTurnStart.
+      let liveContent = "";
+      // Tokens reported on completed turns. Live tokens (estimated
+      // from the in-flight content) get ADDED to this baseline on
+      // every chunk so the HUD shows growing numbers without
+      // double-counting when the canonical usage lands.
+      let completedPromptTokens = 0;
+      let completedCompletionTokens = 0;
+      let completedDurationMs = 0;
+      let completedTurns = 0;
 
       // Synthesise the assistant placeholder ahead of the loop so
       // chunk events have something to land in. The loop's
@@ -227,11 +305,15 @@ export function useAiAgent(params: {
       ]);
 
       // Streaming chunk handler — append to the trailing
-      // placeholder. The loop builds the final canonical assistant
-      // message via onTurnEnd which OVERWRITES this — we only need
-      // the chunk handler so the user sees text appearing
-      // immediately rather than waiting for the full response.
+      // placeholder AND surface real-time HUD updates:
+      //   - Tokens: estimated from the cumulative live content
+      //     (chars/4) added to the prior-turn baseline.
+      //   - Confidence: parsed from any `<confidence>N` tag that
+      //     has streamed in so far (even unclosed).
+      //   - Duration: ticked by the panel's RunStatusBanner /
+      //     HUD interval, not here.
       const onChunk = (chunk: string) => {
+        liveContent += chunk;
         setMessages((prev) => {
           for (let i = prev.length - 1; i >= 0; i--) {
             if (prev[i].role === "assistant") {
@@ -247,6 +329,19 @@ export function useAiAgent(params: {
             }
           }
           return prev;
+        });
+        // Real-time confidence.
+        const liveConf = parseStreamingConfidence(liveContent);
+        if (liveConf !== null) setConfidence(liveConf);
+        // Real-time token estimate. We add the live estimate to
+        // the prior-turn completed baseline so multi-turn runs
+        // don't reset to zero between turns.
+        const liveTokens = estimateTokens(liveContent);
+        setUsage({
+          turns: completedTurns,
+          promptTokens: completedPromptTokens,
+          completionTokens: completedCompletionTokens + liveTokens,
+          durationMs: completedDurationMs,
         });
       };
 
@@ -265,7 +360,18 @@ export function useAiAgent(params: {
           // thorough → temperature + num_ctx + num_predict.
           effortParams: resolveEffortParams(settingsRef.current.effort),
           hooks: {
+            shouldStop: () => stoppedRef.current,
+            onStreamId: (sid) => {
+              // Save the Rust-side stream id so `stop()` can
+              // target the right `bytes_stream().next()` to bail.
+              activeStreamIdRef.current = sid;
+            },
             onTurnStart: (idx) => {
+              // Each new turn starts a fresh live-content window
+              // so the next chunk's token estimate counts the
+              // NEW turn's content (not turn N-1's text that's
+              // already finalised into completedCompletionTokens).
+              liveContent = "";
               // For turn 0 the placeholder was already added
               // before runAgentLoop started (we needed something
               // to render between "user clicked send" and the
@@ -303,7 +409,23 @@ export function useAiAgent(params: {
                 setConfidence(assistant.confidence);
               }
               if (assistant.usage) {
-                setUsage((prev) => mergeTurnUsage(prev, assistant.usage!));
+                // Promote this turn's live estimate to the
+                // canonical figures. We update both the closure-
+                // scope baseline (so future onChunk ticks count
+                // ON TOP of completed turns) AND the React state
+                // (so the HUD shows the exact eval_count, not
+                // the chars/4 estimate).
+                completedPromptTokens += assistant.usage.promptTokens ?? 0;
+                completedCompletionTokens +=
+                  assistant.usage.completionTokens ?? 0;
+                completedDurationMs += assistant.usage.durationMs ?? 0;
+                completedTurns += 1;
+                setUsage({
+                  turns: completedTurns,
+                  promptTokens: completedPromptTokens,
+                  completionTokens: completedCompletionTokens,
+                  durationMs: completedDurationMs,
+                });
               }
             },
             approveToolCall: async (call, tool) => {
@@ -394,6 +516,11 @@ export function useAiAgent(params: {
         setError(e instanceof Error ? e.message : String(e));
       } finally {
         setStreaming(false);
+        // Drop the cancellation refs so the next `stop()` (or a
+        // stray click after the run completes) doesn't target a
+        // dead stream id or a stale flag.
+        activeStreamIdRef.current = null;
+        stoppedRef.current = false;
       }
     },
     [systemPrompt, messages, streaming, model, tools, transport],
@@ -421,6 +548,7 @@ export function useAiAgent(params: {
     send,
     approve,
     deny,
+    stop,
     answerClarification,
     cancelClarification,
     reset,
@@ -429,14 +557,7 @@ export function useAiAgent(params: {
   };
 }
 
-/// Fold a single turn's usage into the running total. Same logic
-/// as `accumulateUsage` in lib/aiAgent/usage.ts but inlined here
-/// because the React setter takes the prev value directly.
-function mergeTurnUsage(prior: RunUsage, turn: TurnUsage): RunUsage {
-  return {
-    turns: prior.turns + 1,
-    promptTokens: prior.promptTokens + (turn.promptTokens ?? 0),
-    completionTokens: prior.completionTokens + (turn.completionTokens ?? 0),
-    durationMs: prior.durationMs + (turn.durationMs ?? 0),
-  };
-}
+// `mergeTurnUsage` (the inline fold of a single turn's usage into the
+// running total) was retired here in favour of `accumulateUsage` from
+// `lib/aiAgent/usage.ts`. Removed because the duplicate left a dead
+// function that tripped TS6133 on the prod web build.
