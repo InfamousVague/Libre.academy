@@ -209,6 +209,40 @@
   border-color: rgba(255, 255, 255, 0.4);
 }
 
+/* Wrong-state input visual — applied while the user's input STILL
+   matches the last submitted (wrong) value. Clears the moment they
+   start typing a fresh attempt (the JS toggles the class off), so
+   the red doesn't stick around during the retry-typing window. */
+.libre-quiz-short-input--wrong {
+  border-color: rgba(239, 111, 111, 0.6);
+  background: rgba(239, 111, 111, 0.08);
+}
+
+.libre-quiz-short-input--correct {
+  border-color: rgba(124, 217, 124, 0.6);
+  background: rgba(124, 217, 124, 0.08);
+}
+
+/* "Try again" pill — surfaces in the question header whenever a
+   question is in the wrong state, telling the learner explicitly
+   that the question is retry-able (MCQ + short-answer both allow
+   re-picking; without this affordance the wrong-state read as
+   final). Sits between the prompt and the AI-hint badge. */
+.libre-quiz-retry-pill {
+  flex-shrink: 0;
+  padding: 3px 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(239, 111, 111, 0.95);
+  background: rgba(239, 111, 111, 0.12);
+  border: 1px solid rgba(239, 111, 111, 0.4);
+  border-radius: 999px;
+  white-space: nowrap;
+  align-self: flex-start;
+}
+
 .libre-quiz-short-submit {
   padding: 0 14px;
   background: var(--color-text-primary, #ffffff);

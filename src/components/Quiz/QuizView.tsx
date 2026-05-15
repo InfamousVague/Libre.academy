@@ -167,6 +167,15 @@ function QuestionCard({
       <div className="libre-quiz-q-body">
         <div className="libre-quiz-prompt-row">
           <div className="libre-quiz-prompt">{question.prompt}</div>
+          {state.status === "wrong" && (
+            <span
+              className="libre-quiz-retry-pill"
+              role="status"
+              aria-live="polite"
+            >
+              Try again
+            </span>
+          )}
           <button
             type="button"
             className="libre-quiz-ask"
@@ -262,26 +271,39 @@ function ShortAnswer({
   onResult: (status: "correct" | "wrong") => void;
 }) {
   const [value, setValue] = useState("");
+  // Track the most recently SUBMITTED value so we can clear the
+  // red visual when the learner starts editing a fresh attempt.
+  // Without this the input + card stayed red while the user was
+  // mid-typing their next guess — visually telling them they were
+  // wrong even though they hadn't submitted yet.
+  const [lastSubmitted, setLastSubmitted] = useState<string | null>(null);
   const committed = state.status === "correct";
 
   function submit() {
     if (committed) return;
     const normalized = normalizeAnswer(value);
     const ok = question.accept.some((a) => normalizeAnswer(a) === normalized);
+    setLastSubmitted(value);
     onResult(ok ? "correct" : "wrong");
   }
 
-  // Retry path on the input: ShortAnswer's submit is gated on
-  // `committed` (= correct) so a wrong submission leaves both the
-  // input AND the check button live. The red visual persists until
-  // the next submit re-evaluates the new value — accurate, because
-  // the question really IS still in the wrong-state until proven
-  // otherwise.
+  // Visual "is this still a wrong-state value" check: only treat
+  // the input + card as wrong when the user hasn't edited their
+  // input since the last (wrong) submission. As soon as they type
+  // anything different, the wrong-visual clears and the
+  // submit button reads as a fresh attempt.
+  const isStaleWrong =
+    state.status === "wrong" && value === lastSubmitted;
+  const inputClasses = [
+    "libre-quiz-short-input",
+    isStaleWrong ? "libre-quiz-short-input--wrong" : "",
+    state.status === "correct" ? "libre-quiz-short-input--correct" : "",
+  ].join(" ");
 
   return (
     <div className="libre-quiz-short">
       <input
-        className="libre-quiz-short-input"
+        className={inputClasses}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => {
@@ -297,6 +319,8 @@ function ShortAnswer({
       >
         {committed ? (
           <Icon icon={check} size="xs" color="currentColor" />
+        ) : isStaleWrong ? (
+          "try again"
         ) : (
           "check"
         )}

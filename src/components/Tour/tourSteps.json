@@ -9,7 +9,7 @@
       "icon": "sparkles",
       "iconColor": "#a78bfa",
       "title": "Welcome to Libre",
-      "body": "Libre turns programming books into runnable lessons. The rail on the left is home base — Library, Discover, Trees, and Playground. Let's walk through the parts of the app that aren't obvious."
+      "body": "Libre turns programming books into runnable lessons. The rail on the left is home base — Library, Discover, Challenges, and Sandbox. Let's walk through the parts of the app that aren't obvious."
     },
     {
       "id": "library",
@@ -62,14 +62,14 @@
       "body": "If writing from scratch is too much friction, switch to Blocks. The lesson becomes a drag-and-drop puzzle. Pick the right pieces, and the same tests run against the assembled code."
     },
     {
-      "id": "tracks",
-      "page": "tracks",
-      "target": ".libre-tracks__viewport",
+      "id": "challenges",
+      "page": "challenges",
+      "target": ".libre-challenges__viewport",
       "placement": "bottom",
-      "icon": "train-track",
+      "icon": "swords",
       "iconColor": "#22c55e",
-      "title": "Tracks",
-      "body": "Don't know where to start? Tracks are curated linear paths — pick an outcome (e.g. Front-End Engineer, Smart-Contract Developer) and follow the sequence. Every step lands on a real lesson in one of your installed books. Scroll the catalogue to fly through your options."
+      "title": "Challenges",
+      "body": "Looking for exercise-driven practice? Challenges gathers Exercism language tracks, hand-built challenge packs, and classic koans into one shelf. Pick a language, pick a difficulty, and follow the sequence — every step is auto-graded so you know exactly when you're done."
     },
     {
       "id": "discover",
@@ -89,7 +89,7 @@
       "icon": "flame",
       "iconColor": "#f59e0b",
       "title": "You're set",
-      "body": "Daily reading and practice build a streak. The chip up here tracks it, plus XP earned today and shields you can spend to freeze a missed day. Pick a book, pick a tree, or browse Discover. Have fun."
+      "body": "Daily reading and practice build a streak. The chip up here tracks it, plus XP earned today and shields you can spend to freeze a missed day. Pick a book, tackle a challenge, or browse Discover. Have fun."
     }
   ]
 }

@@ -79,6 +79,10 @@ export function languageLabel(lang: LanguageId): string {
       return "Cairo";
     case "sway":
       return "Sway";
+    case "clojure":
+      return "Clojure";
+    case "fsharp":
+      return "F#";
   }
 }
 
@@ -194,5 +198,9 @@ export function carouselGlyph(lang: LanguageId): string {
       return "CR";
     case "sway":
       return "SW";
+    case "clojure":
+      return "CLJ";
+    case "fsharp":
+      return "F#";
   }
 }

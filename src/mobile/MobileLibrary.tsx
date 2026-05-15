@@ -22,7 +22,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Course, LanguageId } from "../data/types";
 import type { Completion } from "../hooks/useProgress";
-import { isChallengePack, isExerciseTrack } from "../data/types";
+import { isChallengePack, isExerciseTrack, isKoans, isLings } from "../data/types";
 import { prefetchCovers } from "../hooks/useCourseCover";
 import { useLocalStorageState } from "../hooks/useLocalStorageState";
 import { haptics } from "../lib/haptics";
@@ -214,7 +214,13 @@ export default function MobileLibrary({
     const tracks: Course[] = [];
     const challenges: Course[] = [];
     for (const c of filtered) {
-      if (isChallengePack(c)) challenges.push(c);
+      // Koans + *lings share the Challenges shelf with the in-house
+      // challenge packs — all are exercise-driven sequential
+      // practice and the dedicated Challenges page (formerly
+      // "Tracks") groups them together. Keeping the desktop + mobile
+      // bucketing aligned means a learner switching surfaces finds
+      // the same content in the same neighbourhood.
+      if (isChallengePack(c) || isKoans(c) || isLings(c)) challenges.push(c);
       else if (isExerciseTrack(c)) tracks.push(c);
       else books.push(c);
     }

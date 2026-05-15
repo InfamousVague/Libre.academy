@@ -3,7 +3,7 @@ import { Icon } from "@base/primitives/icon";
 import { libraryBig } from "@base/primitives/icon/icons/library-big";
 import "@base/primitives/icon/icon.css";
 import type { Course, LanguageId } from "../../data/types";
-import { isChallengePack, isExerciseTrack } from "../../data/types";
+import { isChallengePack, isExerciseTrack, isKoans, isLings } from "../../data/types";
 import { track } from "../../lib/track";
 import BookCover from "./BookCover";
 import LibreLoader from "../Shared/LibreLoader";
@@ -382,7 +382,10 @@ export default function CourseLibrary({
       .filter(
         (e) =>
           derivedScope === "discover" ||
-          (!isExerciseTrack(e.course) && !isChallengePack(e.course)),
+          (!isExerciseTrack(e.course) &&
+            !isChallengePack(e.course) &&
+            !isKoans(e.course) &&
+            !isLings(e.course)),
       )
       // Belt + suspenders: the scope-aware `enriched` above already
       // partitions installed vs placeholder, but keeping the
@@ -415,7 +418,12 @@ export default function CourseLibrary({
       .filter((e) => {
         if (kindFilter === "all") return true;
         if (kindFilter === "tracks") return false; // none survive the strip
-        return !isChallengePack(e.course) && !isExerciseTrack(e.course);
+        return (
+          !isChallengePack(e.course) &&
+          !isExerciseTrack(e.course) &&
+          !isKoans(e.course) &&
+          !isLings(e.course)
+        );
       })
       .filter((e) =>
         q === ""
@@ -468,7 +476,17 @@ export default function CourseLibrary({
     const books: typeof filtered = [];
     const tracks: typeof filtered = [];
     for (const e of filtered) {
-      if (isExerciseTrack(e.course) || isChallengePack(e.course)) {
+      // Koans + *lings share the Challenges-page lane with Exercism
+      // tracks + in-house challenge packs (see `ChallengesView`'s
+      // filter). In Discover scope we mirror that bucketing so the
+      // catalog mirrors the surface where the learner will
+      // eventually find each pack.
+      if (
+        isExerciseTrack(e.course) ||
+        isChallengePack(e.course) ||
+        isKoans(e.course) ||
+        isLings(e.course)
+      ) {
         tracks.push(e);
       } else {
         books.push(e);
@@ -572,9 +590,11 @@ export default function CourseLibrary({
     for (const e of enriched) {
       const challengeP = isChallengePack(e.course);
       const trackP = isExerciseTrack(e.course);
+      const koanP = isKoans(e.course);
+      const lingsP = isLings(e.course);
       // Library scope: skip non-book packs entirely so the kind
       // counts agree with the books-only `filtered` stream.
-      if (!isDiscover && (challengeP || trackP)) continue;
+      if (!isDiscover && (challengeP || trackP || koanP || lingsP)) continue;
       if (
         categoryFilter !== "all" &&
         categorizeCourse(e.course) !== categoryFilter
@@ -589,7 +609,11 @@ export default function CourseLibrary({
         continue;
       }
       if (langFilter !== "all" && e.course.language !== langFilter) continue;
-      if (challengeP) challenges += 1;
+      // Koans + *lings + in-house challenge packs all feed the
+      // "challenges" bucket — the dedicated Challenges page treats
+      // them as siblings, so the Library counter reflects the same
+      // grouping.
+      if (challengeP || koanP || lingsP) challenges += 1;
       else if (trackP) tracks += 1;
       else books += 1;
     }

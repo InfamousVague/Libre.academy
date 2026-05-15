@@ -58,7 +58,18 @@ export type LanguageId =
   // native toolchain on the host; web build upsells to desktop.
   | "move"
   | "cairo"
-  | "sway";
+  | "sway"
+  // Functional / JVM-adjacent languages added for the koans ingest.
+  // Clojure runs via `clojure -M` on hosts with the CLI tools; F#
+  // runs via `dotnet fsi`. Neither has a Libre runtime wired up yet
+  // — the dispatch in `runtimes/index.ts` falls through to the
+  // desktop-coming-soon banner so the koans lessons render as
+  // exercises with read-only Run. Monaco / Shiki handle the syntax
+  // highlighting natively (no custom grammar needed). Wire up
+  // native runners separately when adding `run_clojure` /
+  // `run_fsharp` Tauri commands.
+  | "clojure"
+  | "fsharp";
 
 /// Difficulty tier for challenge-pack exercises. Courses' exercises don't
 /// set this — it's specific to the kata-style challenge packs that group
@@ -111,6 +122,10 @@ export type FileLanguage =
   | "move"
   | "cairo"
   | "sway"
+  // Same story as the LanguageId additions above — koans-only
+  // additions, Monaco + Shiki have built-in syntax support.
+  | "clojure"
+  | "fsharp"
   | "html"
   | "css"
   | "json"
@@ -187,7 +202,23 @@ export interface Course {
   ///     exercises). Distinct library section between Books and
   ///     Challenges; card layout uses the language icon as the
   ///     visual anchor rather than a cover photo.
-  packType?: "course" | "challenges" | "track";
+  ///   - "koans" — fill-in-the-blanks koans-style courses
+  ///     (python_koans, kotlin-koans-edu, etc.). Distinct from
+  ///     "track" because the pedagogy is different (single-file
+  ///     edit-in-place vs Exercism's separate solution + test
+  ///     files) and from "challenges" because koans are sequenced
+  ///     learning paths, not difficulty-sorted kata grab-bags. The
+  ///     Challenges page (formerly "Tracks") groups them in their
+  ///     own row alongside Exercism tracks + challenge packs.
+  ///   - "lings" — rustlings-style "fix the broken code" courses
+  ///     (rustlings, ziglings, golings, swiftlings, haskellings,
+  ///     exlings, cplings). Same Challenges-page surface as koans
+  ///     but kept as a distinct packType so the page can give the
+  ///     famous *lings family its own labelled section + the
+  ///     Library can strip them the same way it strips tracks /
+  ///     challenges / koans (they're exercise-driven, not
+  ///     long-form books).
+  packType?: "course" | "challenges" | "track" | "koans" | "lings";
   /// Epoch-ms timestamp of the most recent cover-artwork extraction.
   /// When present, the Library + Sidebar render the PNG at
   /// `<courses_dir>/<id>/cover.png` via the `load_course_cover` Tauri
@@ -664,6 +695,25 @@ export function isChallengePack(course: Course): boolean {
 /// `categorize` partitioner) all agree on what counts.
 export function isExerciseTrack(course: Course): boolean {
   return course.packType === "track";
+}
+
+/// Koans-style ingest packs — fourth packType variant. Shares the
+/// Challenges page surface with tracks + challenge packs because
+/// the user-facing pedagogy ("solve exercises, see tests pass") is
+/// the same family. Kept distinct from `"track"` so the page can
+/// label / sort / future-filter the two groups independently.
+export function isKoans(course: Course): boolean {
+  return course.packType === "koans";
+}
+
+/// rustlings-style "fix the broken code" packs — fifth packType
+/// variant (rustlings / ziglings / golings / swiftlings /
+/// haskellings / exlings / cplings). Same Challenges-page surface
+/// as koans + tracks + challenges; distinct packType so the famous
+/// *lings family gets its own labelled section and the Library
+/// strips them like the other exercise-driven pack kinds.
+export function isLings(course: Course): boolean {
+  return course.packType === "lings";
 }
 
 /** Canonicalize a user or accepted-answer string for short-answer matching. */

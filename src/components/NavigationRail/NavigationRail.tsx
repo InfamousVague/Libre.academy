@@ -24,10 +24,11 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { Icon } from "@base/primitives/icon";
 import { libraryBig } from "@base/primitives/icon/icons/library-big";
 import { compass as compassIcon } from "@base/primitives/icon/icons/compass";
-import { trainTrack } from "@base/primitives/icon/icons/train-track";
+import { swords } from "@base/primitives/icon/icons/swords";
 import { dumbbell } from "@base/primitives/icon/icons/dumbbell";
 import { trophy } from "@base/primitives/icon/icons/trophy";
 import { award } from "@base/primitives/icon/icons/award";
+import { route } from "@base/primitives/icon/icons/route";
 import { terminal as terminalIcon } from "@base/primitives/icon/icons/terminal";
 import { settings as settingsIcon } from "@base/primitives/icon/icons/settings";
 import { circleHelp } from "@base/primitives/icon/icons/circle-help";
@@ -53,8 +54,9 @@ export interface NavigationRailProps {
     | "sandbox"
     | "library"
     | "discover"
-    | "tracks"
+    | "challenges"
     | "practice"
+    | "paths"
     | "achievements"
     | "certificates";
   onLibrary: () => void;
@@ -80,13 +82,21 @@ export interface NavigationRailProps {
   /// Tracks route — curated linear learning paths. (The Trees
   /// surface was retired in the 2026-05 redesign; Tracks is now
   /// the sole "outcome-driven sequence" affordance.)
-  onTracks?: () => void;
+  onChallenges?: () => void;
   /// Practice route — review-mode that resurfaces quizzes and
   /// blocks puzzles from courses the learner has already touched.
   /// The rest of the app is linear-by-lesson; Practice is the
   /// random-access "drill weak spots" surface that closes the
   /// learn → review loop.
   onPractice?: () => void;
+  /// Paths route — curated, goal-oriented sequences that thread
+  /// courses / Exercism tracks / koans / *-lings into a journey
+  /// ("entry-level developer", "mobile app developer", "systems
+  /// engineer", …). Sits just above Achievements: Paths is the
+  /// "here's the map" surface, Achievements/Certificates are the
+  /// "here's what you've collected" surfaces — map first, trophies
+  /// after. Optional; when omitted the chip just doesn't render.
+  onPaths?: () => void;
   /// Achievements route — browse-all surface for the unlock
   /// library. Optional; when omitted the chip just doesn't render.
   onAchievements?: () => void;
@@ -156,8 +166,9 @@ export default function NavigationRail({
   onResume,
   resumeLabel,
   onDiscover,
-  onTracks,
+  onChallenges,
   onPractice,
+  onPaths,
   onAchievements,
   onCertificates,
   onSandbox,
@@ -203,7 +214,7 @@ export default function NavigationRail({
     // and Trees becomes available) would shift the active button's
     // offset without re-running the effect, leaving the pill
     // misaligned.
-  }, [activeView, onDiscover, onTracks, onPractice, onAchievements, onCertificates, onSandbox]);
+  }, [activeView, onDiscover, onChallenges, onPractice, onPaths, onAchievements, onCertificates, onSandbox]);
 
   return (
     <nav className="libre-nav-rail" aria-label={t("nav.primaryNavigation")}>
@@ -265,16 +276,21 @@ export default function NavigationRail({
           onClick={onLibrary}
           active={activeView === "library"}
         />
-        {/* Tracks lifted directly under Library — the library is
-            books-only and tracks (Exercism + in-house challenges)
-            are the natural next category in the catalogue
-            hierarchy, so the two icons sit together visually. */}
-        {onTracks && (
+        {/* Challenges lifted directly under Library — the library is
+            books-only and exercise-driven content (Exercism tracks +
+            in-house challenge packs + koans) is the natural next
+            category in the catalogue hierarchy, so the two icons sit
+            together visually. The page was called "Tracks" until the
+            V27 koans ingest; "Tracks" is being held in reserve as a
+            slot for a future feature, so the user-facing label moved
+            to "Challenges" and the icon flipped from train-track to
+            crossed swords to match the gamified-challenge metaphor. */}
+        {onChallenges && (
           <RailItem
-            icon={trainTrack}
-            label={t("nav.tracks")}
-            onClick={onTracks}
-            active={activeView === "tracks"}
+            icon={swords}
+            label={t("nav.challenges")}
+            onClick={onChallenges}
+            active={activeView === "challenges"}
           />
         )}
         {onSandbox && (
@@ -299,6 +315,14 @@ export default function NavigationRail({
             label={t("nav.practice")}
             onClick={onPractice}
             active={activeView === "practice"}
+          />
+        )}
+        {onPaths && (
+          <RailItem
+            icon={route}
+            label={t("nav.paths")}
+            onClick={onPaths}
+            active={activeView === "paths"}
           />
         )}
         {onAchievements && (

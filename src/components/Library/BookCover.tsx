@@ -549,5 +549,9 @@ function langGlyph(lang: LanguageId): string {
       return "CR";
     case "sway":
       return "SW";
+    case "clojure":
+      return "CLJ";
+    case "fsharp":
+      return "F#";
   }
 }

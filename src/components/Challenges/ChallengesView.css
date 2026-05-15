@@ -16,7 +16,7 @@
    look exactly like the cards the learner has been clicking on
    in the Library + Discover surfaces. */
 
-.libre-tracks {
+.libre-challenges {
   position: relative;
   width: 100%;
   height: 100%;
@@ -40,7 +40,7 @@
 
 /* ─── Header strip ─────────────────────────────────────────── */
 
-.libre-tracks__header {
+.libre-challenges__header {
   position: relative;
   /* Sits ABOVE the grid-overlay (z 5) so the title strip + search
      stay visible during the hyper → grid crossfade at the end of
@@ -68,14 +68,14 @@
   );
 }
 
-.libre-tracks__header-text {
+.libre-challenges__header-text {
   display: flex;
   flex-direction: column;
   gap: 6px;
   max-width: 520px;
 }
 
-.libre-tracks__title {
+.libre-challenges__title {
   font-size: 28px;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -83,14 +83,14 @@
   color: var(--color-text-primary);
 }
 
-.libre-tracks__blurb {
+.libre-challenges__blurb {
   margin: 0;
   font-size: 13.5px;
   line-height: 1.55;
   color: var(--color-text-secondary);
 }
 
-.libre-tracks__search {
+.libre-challenges__search {
   position: relative;
   display: flex;
   align-items: center;
@@ -99,7 +99,7 @@
   max-width: 40vw;
 }
 
-.libre-tracks__search-input {
+.libre-challenges__search-input {
   width: 100%;
   padding: 9px 32px 9px 12px;
   background: var(--color-bg-secondary);
@@ -112,15 +112,15 @@
   transition: border-color var(--libre-motion-snappy);
 }
 
-.libre-tracks__search-input:focus {
+.libre-challenges__search-input:focus {
   border-color: var(--color-text-primary);
 }
 
-.libre-tracks__search-input::placeholder {
+.libre-challenges__search-input::placeholder {
   color: var(--color-text-tertiary);
 }
 
-.libre-tracks__search-clear {
+.libre-challenges__search-clear {
   position: absolute;
   right: 6px;
   top: 50%;
@@ -138,14 +138,14 @@
   transition: background var(--libre-motion-snappy);
 }
 
-.libre-tracks__search-clear:hover {
+.libre-challenges__search-clear:hover {
   background: var(--color-bg-tertiary);
   color: var(--color-text-primary);
 }
 
 /* ─── 3D viewport ──────────────────────────────────────────── */
 
-.libre-tracks__viewport {
+.libre-challenges__viewport {
   position: relative;
   flex: 1;
   /* Perspective is mutated by the rAF loop based on scroll
@@ -158,7 +158,7 @@
   cursor: ns-resize;
 }
 
-.libre-tracks__world {
+.libre-challenges__world {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -176,13 +176,13 @@
 
 /* ─── Card slot (the 3D-transformed wrapper) ──────────────── */
 
-.libre-tracks__card-slot {
+.libre-challenges__card-slot {
   position: absolute;
   top: 0;
   left: 0;
   /* Width is fixed so the per-frame transform doesn't have to
      account for content-driven sizing. Translating by -50% on
-     both axes inside the inner `.libre-tracks__card` rule
+     both axes inside the inner `.libre-challenges__card` rule
      centers the visual on the world's origin point.
      Narrower-than-tall portrait sizing — 266×360 gives a ~1:1.35
      aspect that reads as a "book cover" rather than a landscape
@@ -212,7 +212,7 @@
 
 /* ─── Card body ────────────────────────────────────────────── */
 
-.libre-tracks__card {
+.libre-challenges__card {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -245,7 +245,7 @@
     box-shadow 0.2s ease;
 }
 
-.libre-tracks__card:hover {
+.libre-challenges__card:hover {
   border-color: var(--track-accent, var(--color-text-primary));
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.08) inset,
@@ -258,12 +258,12 @@
    translate3d positions). Without this the card would render
    from the slot's top-left, which sits at the world origin,
    leaving the card offset by half its dimensions. */
-.libre-tracks__card--hyper {
+.libre-challenges__card--hyper {
   transform: translate(-50%, -50%);
 }
 
 /* Grid-mode card variant. Natural-flow positioning — the parent
-   `.libre-tracks__grid` lays out cards via CSS grid, so no
+   `.libre-challenges__grid` lays out cards via CSS grid, so no
    self-translate is needed. Hover lifts the card a few pixels
    instead, since there's no per-frame transform competing for
    the property.
@@ -275,7 +275,7 @@
    undoes the base value so the card sizes to its content. The
    body's `flex: 1` is also undone below so it doesn't fight the
    collapse. */
-.libre-tracks__card--grid {
+.libre-challenges__card--grid {
   width: 100%;
   min-height: 0;
   /* Tighter inner padding too — the card is shorter overall so
@@ -286,23 +286,23 @@
     box-shadow 0.2s ease,
     transform 0.2s ease;
 }
-.libre-tracks__card--grid .libre-tracks__card-body {
+.libre-challenges__card--grid .libre-challenges__card-body {
   /* Let the body collapse to its content rather than push the
      footer to the bottom of a 360px box. */
   flex: 0 0 auto;
 }
-.libre-tracks__card--grid:hover {
+.libre-challenges__card--grid:hover {
   transform: translateY(-3px);
 }
 
-.libre-tracks__card-head {
+.libre-challenges__card-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
 
-.libre-tracks__card-tag {
+.libre-challenges__card-tag {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -320,25 +320,25 @@
   text-transform: uppercase;
 }
 
-.libre-tracks__card-tag-icon {
+.libre-challenges__card-tag-icon {
   display: inline-flex;
 }
 
-.libre-tracks__card-index {
+.libre-challenges__card-index {
   font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
   font-size: 11px;
   color: var(--color-text-tertiary);
   letter-spacing: 0.08em;
 }
 
-.libre-tracks__card-body {
+.libre-challenges__card-body {
   display: flex;
   flex-direction: column;
   gap: 6px;
   flex: 1;
 }
 
-.libre-tracks__card-title {
+.libre-challenges__card-title {
   margin: 0;
   font-size: 18px;
   line-height: 1.18;
@@ -347,14 +347,14 @@
   color: var(--color-text-primary);
 }
 
-.libre-tracks__card-outcome {
+.libre-challenges__card-outcome {
   margin: 0;
   font-size: 13px;
   color: var(--color-text-secondary);
   line-height: 1.4;
 }
 
-.libre-tracks__card-desc {
+.libre-challenges__card-desc {
   margin: 0;
   font-size: 12.5px;
   line-height: 1.55;
@@ -369,7 +369,7 @@
   overflow: hidden;
 }
 
-.libre-tracks__card-foot {
+.libre-challenges__card-foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -377,13 +377,13 @@
   margin-top: 4px;
 }
 
-.libre-tracks__card-meta {
+.libre-challenges__card-meta {
   font-size: 11px;
   color: var(--color-text-tertiary);
   text-transform: capitalize;
 }
 
-.libre-tracks__card-pct {
+.libre-challenges__card-pct {
   font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
   font-size: 12px;
   font-weight: 600;
@@ -391,7 +391,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-.libre-tracks__card-progress {
+.libre-challenges__card-progress {
   position: relative;
   width: 100%;
   height: 3px;
@@ -400,7 +400,7 @@
   overflow: hidden;
 }
 
-.libre-tracks__card-progress-fill {
+.libre-challenges__card-progress-fill {
   display: block;
   height: 100%;
   background: var(--track-accent, var(--color-text-primary));
@@ -409,7 +409,7 @@
 
 /* ─── HUD ──────────────────────────────────────────────────── */
 
-.libre-tracks__hud {
+.libre-challenges__hud {
   position: absolute;
   left: 24px;
   bottom: 24px;
@@ -424,17 +424,17 @@
   pointer-events: none;
 }
 
-.libre-tracks__hud-row {
+.libre-challenges__hud-row {
   display: inline-flex;
   align-items: center;
   gap: 8px;
 }
 
-.libre-tracks__hud-key {
+.libre-challenges__hud-key {
   color: rgba(255, 255, 255, 0.35);
 }
 
-.libre-tracks__hud-val {
+.libre-challenges__hud-val {
   color: var(--color-text-primary);
   font-variant-numeric: tabular-nums;
   min-width: 4ch;
@@ -442,7 +442,7 @@
 
 /* ─── Empty state (no search results) ──────────────────────── */
 
-.libre-tracks__empty {
+.libre-challenges__empty {
   flex: 1;
   display: flex;
   align-items: center;
@@ -461,13 +461,13 @@
    desktop, 2 on a sidebar-collapsed view, 1 on phone-width.
    The wrapper handles its own overflow so the grid scrolls
    the page rather than the document. */
-.libre-tracks__grid-wrap {
+.libre-challenges__grid-wrap {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 8px 40px 40px;
   /* Re-enable selection inside the grid (the parent
-     `.libre-tracks` disables it for the hyper viewport, where
+     `.libre-challenges` disables it for the hyper viewport, where
      wheel-scroll across text was selecting random card body
      copy). The grid is a normal browsable surface — users can
      copy track titles / descriptions like any other page. */
@@ -479,17 +479,17 @@
    output into "In-house challenges" + "Exercism tracks" sections
    so the two pack families read as distinct catalogues rather
    than one undifferentiated wall of cards. Sections stack
-   vertically; the inner `.libre-tracks__grid` keeps the
+   vertically; the inner `.libre-challenges__grid` keeps the
    3 / 2 / 1-column responsive layout per section. */
-.libre-tracks__grid-section {
+.libre-challenges__grid-section {
   margin-bottom: 36px;
 }
 
-.libre-tracks__grid-section:last-child {
+.libre-challenges__grid-section:last-child {
   margin-bottom: 0;
 }
 
-.libre-tracks__grid-section-title {
+.libre-challenges__grid-section-title {
   /* Tracked-uppercase eyebrow header — same visual vocabulary
      as the library's per-section titles, scaled down for the
      denser tracks page chrome. */
@@ -501,7 +501,7 @@
   color: var(--color-text-tertiary, rgba(244, 238, 221, 0.55));
 }
 
-.libre-tracks__grid {
+.libre-challenges__grid {
   display: grid;
   /* Explicit 3-column layout to match the hyper carousel's
      3-up row. Scales down via the breakpoints below so
@@ -512,29 +512,29 @@
 }
 
 @media (max-width: 1300px) {
-  .libre-tracks__grid {
+  .libre-challenges__grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 900px) {
-  .libre-tracks__grid {
+  .libre-challenges__grid {
     grid-template-columns: 1fr;
   }
 }
 
-.libre-tracks__grid-cell {
+.libre-challenges__grid-cell {
   display: flex;
   /* Quiet fade-in for the hand-off from the hyper view. Each
      cell's `animation-delay` is set inline from the TSX
      (`Math.min(idx, 16) * 35ms`) so the grid materialises in a
      wave instead of all-at-once. Cap at index 16 to keep the
      last delay sane on large catalogues. */
-  animation: libre-tracks-grid-fade-in 360ms ease-out backwards;
+  animation: libre-challenges-grid-fade-in 360ms ease-out backwards;
   will-change: opacity, transform;
 }
 
-@keyframes libre-tracks-grid-fade-in {
+@keyframes libre-challenges-grid-fade-in {
   from {
     opacity: 0;
     transform: translateY(12px);
@@ -548,7 +548,7 @@
 /* Toggle the `cursor: ns-resize` baseline off when the page
    is in grid mode — the wheel no longer drives the 3D scroll,
    so the resize-cursor would mislead the user. */
-.libre-tracks--grid .libre-tracks__viewport {
+.libre-challenges--grid .libre-challenges__viewport {
   cursor: default;
 }
 
@@ -557,7 +557,7 @@
  * Sits on top of the hyper-scroll surface during the FINAL
  * stretch of scroll. Opacity is driven by `--tracks-end-progress`
  * — a 0..1 value the hyper-scroll's rAF loop writes onto the
- * `.libre-tracks` root every frame based on how far through
+ * `.libre-challenges` root every frame based on how far through
  * maxScroll the camera has flown.
  *
  * Below 70% progress: opacity 0 — overlay is invisible and the
@@ -577,7 +577,7 @@
  * anyway), so there's no in-between state where pointer-events
  * need to switch on. */
 
-.libre-tracks {
+.libre-challenges {
   /* Resting value — the rAF loop overwrites this per frame
      once the hyper-scroll mounts. Declaring it on the root
      ensures CSS reads a numeric (not "initial") value before
@@ -586,16 +586,16 @@
 }
 
 /* Content wrapper — sits BELOW the header in the flex column
-   layout of `.libre-tracks`. Hosts the hyper-scroll viewport
+   layout of `.libre-challenges`. Hosts the hyper-scroll viewport
    AND the grid overlay as positioned siblings. The wrapper
    reserves the post-header space (`flex: 1` claims the
    remaining height; `position: relative` provides the
    coordinate context for the overlay's `inset: 0`, so the
    overlay no longer covers the header). Inner children use
    the wrapper's `display: flex; flex-direction: column` so
-   each one's own `flex: 1` (e.g. `.libre-tracks__grid-wrap`'s)
+   each one's own `flex: 1` (e.g. `.libre-challenges__grid-wrap`'s)
    resolves against a flex parent. */
-.libre-tracks__content {
+.libre-challenges__content {
   flex: 1;
   min-height: 0;
   min-width: 0;
@@ -615,7 +615,7 @@
    intentionally lower than the grid overlay's (0.7) so the
    hint appears BEFORE the grid takes over, giving the learner
    advance notice that more tracks are coming. */
-.libre-tracks__scroll-hint {
+.libre-challenges__scroll-hint {
   position: absolute;
   left: 50%;
   bottom: 36px;
@@ -651,7 +651,7 @@
   );
 }
 
-.libre-tracks__grid-overlay {
+.libre-challenges__grid-overlay {
   position: absolute;
   inset: 0;
   /* Linear ramp: 0% until progress hits 0.7, then climbs to 1
@@ -664,7 +664,7 @@
      viewport itself doesn't set a z-index, so the overlay
      wins via stacking-context order. */
   z-index: 5;
-  /* Flex column so the inner `.libre-tracks__grid-wrap`'s
+  /* Flex column so the inner `.libre-challenges__grid-wrap`'s
      `flex: 1` resolves against the overlay (rather than
      falling back to its intrinsic content height, which made
      the grid look zoomed-in / clipped during the crossfade —
@@ -694,15 +694,15 @@
      loop entirely without breaking the scroll position; we
      CAN disable the per-frame visual flourishes by neutering
      the parent transforms with a high-specificity override. */
-  .libre-tracks__viewport {
+  .libre-challenges__viewport {
     perspective: 4000px !important;
   }
-  .libre-tracks__world {
+  .libre-challenges__world {
     transform: none !important;
   }
   /* Grid cells also drop their fade-in for motion-sensitive
      users — no slide, no stagger. They just appear. */
-  .libre-tracks__grid-cell {
+  .libre-challenges__grid-cell {
     animation: none;
   }
 }

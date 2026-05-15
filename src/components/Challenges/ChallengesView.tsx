@@ -31,11 +31,16 @@ import {
   type MutableRefObject,
 } from "react";
 import { Icon } from "@base/primitives/icon";
-import { trainTrack } from "@base/primitives/icon/icons/train-track";
+import { swords } from "@base/primitives/icon/icons/swords";
 import { x as xIcon } from "@base/primitives/icon/icons/x";
 import "@base/primitives/icon/icon.css";
 import type { Course } from "../../data/types";
-import { isChallengePack, isExerciseTrack } from "../../data/types";
+import {
+  isChallengePack,
+  isExerciseTrack,
+  isKoans,
+  isLings,
+} from "../../data/types";
 import { TREES } from "../../data/trees";
 import {
   trackProgressPercent,
@@ -43,7 +48,7 @@ import {
 } from "../../data/tracks";
 import { useSessionStorageState } from "../../hooks/useLocalStorageState";
 import { useT } from "../../i18n/i18n";
-import "./TracksView.css";
+import "./ChallengesView.css";
 
 /// Default accent (matches the cover-art palette used elsewhere)
 /// for challenge packs that don't ship a per-pack accent. Picked
@@ -89,6 +94,8 @@ function challengePackAsTrack(pack: Course): LearningTrack {
   // rendered with "drill challenges" copy that didn't match
   // its actual structure — Notion issue #b6fef5af1fa276d1.
   const isTrack = isExerciseTrack(pack);
+  const isKoansPack = isKoans(pack);
+  const isLingsPack = isLings(pack);
   const lang = pack.language ?? "language";
   return {
     id: pack.id,
@@ -96,7 +103,11 @@ function challengePackAsTrack(pack: Course): LearningTrack {
     short: pack.language ? pack.language.toUpperCase() : "Pack",
     description:
       pack.description ??
-      (isTrack
+      (isLingsPack
+        ? `A rustlings-style ${lang} course — fix the broken snippet in each exercise to make it compile + pass.`
+        : isKoansPack
+        ? `Classic ${lang} koans — fill-in-the-blanks exercises with inline tests.`
+        : isTrack
         ? `An Exercism-style ${lang} track — concept lessons in order, plus practice exercises.`
         : "A pack of short coding challenges to drill the language."),
     accent: accentForPack(pack.id),
@@ -105,7 +116,11 @@ function challengePackAsTrack(pack: Course): LearningTrack {
     // marker rather than implying "easy" or "advanced."
     difficulty: "intermediate",
     estimatedHours: Math.max(1, Math.round(totalLessons / 6)),
-    outcome: isTrack
+    outcome: isLingsPack
+      ? `Fix ${totalLessons} ${lang} exercises end-to-end.`
+      : isKoansPack
+      ? `Meditate through ${totalLessons} ${lang} koans end-to-end.`
+      : isTrack
       ? `Work through ${totalLessons} ${lang} lessons end-to-end.`
       : `Drill ${totalLessons} ${lang} challenges end-to-end.`,
     // Synthetic empty step list — the carousel only reads
@@ -202,7 +217,7 @@ function activeCardsPerRow(): number {
 }
 
 /// Horizontal centre-to-centre distance between adjacent cards
-/// within a row. Card width is 266px (see TracksView.css). 300
+/// within a row. Card width is 266px (see ChallengesView.css). 300
 /// leaves a ~34px gap between neighbours so adjacent cards don't
 /// feel glued together. Ignored when `activeCardsPerRow() === 1`
 /// (single-column layout puts every card on the world's X
@@ -288,7 +303,7 @@ const FADE_IN_NEAR = -1600;
 const FADE_OUT_NEAR = 80;
 const FADE_OUT_FAR = 320;
 
-export default function TracksView({
+export default function ChallengesView({
   courses,
   completed,
   onOpenLesson,
@@ -360,21 +375,38 @@ export default function TracksView({
       return idx >= 0 ? idx : FEATURED_LANGS.length;
     };
     const adapted = courses
-      .filter((c) => isChallengePack(c) || isExerciseTrack(c))
+      .filter(
+        (c) =>
+          isChallengePack(c) ||
+          isExerciseTrack(c) ||
+          isKoans(c) ||
+          isLings(c),
+      )
       .map((pack) => ({
         track: challengePackAsTrack(pack),
-        kind: (isChallengePack(pack) ? "challenges" : "track") as
-          | "challenges"
-          | "track",
+        kind: (isChallengePack(pack)
+          ? "challenges"
+          : isLings(pack)
+          ? "lings"
+          : isKoans(pack)
+          ? "koans"
+          : "track") as "challenges" | "track" | "koans" | "lings",
         language: pack.language ?? null,
       }));
+    // Four-bucket ordering: Exercism tracks first (curated, the
+    // historical headline of this page), then the famous *lings
+    // family, then koans (both sequential fix-it / fill-in exercise
+    // paths), then in-house challenge packs. Reordered from the
+    // prior three-bucket layout when the V28 *lings relocation
+    // landed.
+    const kindRank = {
+      track: 0,
+      lings: 1,
+      koans: 2,
+      challenges: 3,
+    } as const;
     adapted.sort((a, b) => {
-      // Kind order: Exercism tracks lead the catalogue, in-house
-      // challenges follow. Re-ordered from the prior "challenges
-      // first" so the dedicated Tracks page opens on the curated
-      // language-curriculum content; the in-house drill packs are
-      // the secondary catalogue.
-      if (a.kind !== b.kind) return a.kind === "track" ? -1 : 1;
+      if (a.kind !== b.kind) return kindRank[a.kind] - kindRank[b.kind];
       if (a.kind === "challenges") {
         const ra = featuredRank(a.language);
         const rb = featuredRank(b.language);
@@ -391,9 +423,11 @@ export default function TracksView({
   // the shape is shared with the curated `TRACKS` data and we don't
   // want a kind discriminator leaking out there.
   const trackKindById = useMemo(() => {
-    const map = new Map<string, "challenges" | "track">();
+    const map = new Map<string, "challenges" | "track" | "koans" | "lings">();
     for (const c of courses) {
       if (isChallengePack(c)) map.set(c.id, "challenges");
+      else if (isLings(c)) map.set(c.id, "lings");
+      else if (isKoans(c)) map.set(c.id, "koans");
       else if (isExerciseTrack(c)) map.set(c.id, "track");
     }
     return map;
@@ -408,8 +442,15 @@ export default function TracksView({
     const map = new Map<string, number>();
     for (const pack of courses) {
       // Mirror the filter in `challengeTracks` above — keep
-      // progress in sync across challenges + Exercism tracks.
-      if (!isChallengePack(pack) && !isExerciseTrack(pack)) continue;
+      // progress in sync across challenges, Exercism tracks,
+      // koans, and *lings.
+      if (
+        !isChallengePack(pack) &&
+        !isExerciseTrack(pack) &&
+        !isKoans(pack) &&
+        !isLings(pack)
+      )
+        continue;
       let total = 0;
       let done = 0;
       for (const ch of pack.chapters) {
@@ -477,35 +518,50 @@ export default function TracksView({
   const rootRef = useRef<HTMLDivElement | null>(null);
 
   // Curated card set for the hyper intro: interleaves Exercism
-  // tracks with in-house challenge packs so the fly-through
-  // alternates between the two catalogues instead of leading with
-  // an all-Exercism block. Cap at 7 cards (Notion follow-up
-  // "only show about 7 total challenges so we scroll through
-  // faster"). The grid mode underneath still receives the full
-  // `visibleTracks` list, so the cap only narrows the intro.
+  // tracks with *lings, koans, and in-house challenge packs so the
+  // fly-through alternates between the four catalogues instead of
+  // leading with an all-Exercism block. Cap at 7 cards (Notion
+  // follow-up "only show about 7 total challenges so we scroll
+  // through faster"). The grid mode underneath still receives the
+  // full `visibleTracks` list, so the cap only narrows the intro.
   //
   // Algorithm:
-  //   1. Split `visibleTracks` into exercism + in-house buckets,
-  //      preserving the source sort within each bucket (Exercism
-  //      alphabetical, challenges featured-langs-first).
-  //   2. Round-robin draw — exercism, challenge, exercism,
-  //      challenge — until either bucket runs out, then drain the
-  //      remainder of whichever still has rows.
+  //   1. Split `visibleTracks` into exercism / lings / koans /
+  //      in-house buckets, preserving the source sort within each.
+  //   2. Round-robin draw — track, ling, koan, challenge — until
+  //      any bucket runs out, then drain the remainders in the
+  //      same order.
   //   3. Slice to HYPER_CAP.
   const HYPER_CAP = 7;
   const hyperTracks = useMemo<readonly LearningTrack[]>(() => {
     const ex: LearningTrack[] = [];
+    const li: LearningTrack[] = [];
+    const ko: LearningTrack[] = [];
     const ch: LearningTrack[] = [];
     for (const t of visibleTracks) {
       const kind = trackKindById.get(t.id);
       if (kind === "track") ex.push(t);
+      else if (kind === "lings") li.push(t);
+      else if (kind === "koans") ko.push(t);
       else if (kind === "challenges") ch.push(t);
     }
     const mixed: LearningTrack[] = [];
     let ei = 0;
+    let li_i = 0;
+    let ki = 0;
     let ci = 0;
-    while (mixed.length < HYPER_CAP && (ei < ex.length || ci < ch.length)) {
+    while (
+      mixed.length < HYPER_CAP &&
+      (ei < ex.length ||
+        li_i < li.length ||
+        ki < ko.length ||
+        ci < ch.length)
+    ) {
       if (ei < ex.length) mixed.push(ex[ei++]);
+      if (mixed.length >= HYPER_CAP) break;
+      if (li_i < li.length) mixed.push(li[li_i++]);
+      if (mixed.length >= HYPER_CAP) break;
+      if (ki < ko.length) mixed.push(ko[ki++]);
       if (mixed.length >= HYPER_CAP) break;
       if (ci < ch.length) mixed.push(ch[ci++]);
     }
@@ -513,7 +569,7 @@ export default function TracksView({
   }, [visibleTracks, trackKindById]);
 
   return (
-    <div ref={rootRef} className={`libre-tracks libre-tracks--${mode}`}>
+    <div ref={rootRef} className={`libre-challenges libre-challenges--${mode}`}>
       <TracksHeader query={query} onQueryChange={setQuery} mode={mode} />
       {/* Content wrapper — flex: 1 + position: relative so the
           grid overlay can absolutely position over JUST the
@@ -523,7 +579,7 @@ export default function TracksView({
           header AND the grid-wrap had no flex context, so the
           grid stretched to its natural content height and
           appeared zoomed-in / clipped. */}
-      <div className="libre-tracks__content">
+      <div className="libre-challenges__content">
         {mode === "hyper" ? (
           <>
             <TracksHyperScroll
@@ -549,7 +605,7 @@ export default function TracksView({
                 showing a subset of the full catalogue (the cap
                 kicked in). */}
             {visibleTracks.length > hyperTracks.length && (
-              <div className="libre-tracks__scroll-hint" aria-hidden>
+              <div className="libre-challenges__scroll-hint" aria-hidden>
                 Keep scrolling →
               </div>
             )}
@@ -559,8 +615,8 @@ export default function TracksView({
                 gated by CSS so the overlay only accepts clicks
                 once it's fully opaque (mode flips to "grid" at
                 end-reached and the hyper view unmounts). */}
-            <div className="libre-tracks__grid-overlay" aria-hidden>
-              <TracksGrid
+            <div className="libre-challenges__grid-overlay" aria-hidden>
+              <ChallengesGrid
                 tracks={visibleTracks}
                 completed={completed}
                 onOpenTrack={handleOpenPack}
@@ -569,7 +625,7 @@ export default function TracksView({
             </div>
           </>
         ) : (
-          <TracksGrid
+          <ChallengesGrid
             tracks={visibleTracks}
             completed={completed}
             onOpenTrack={handleOpenPack}
@@ -600,28 +656,28 @@ function TracksHeader({
 }) {
   const t = useT();
   return (
-    <header className="libre-tracks__header">
-      <div className="libre-tracks__header-text">
-        <h1 className="libre-tracks__title">{t("tracks.title")}</h1>
-        <p className="libre-tracks__blurb">
-          {mode === "hyper" ? t("tracks.blurbHyper") : t("tracks.blurbGrid")}
+    <header className="libre-challenges__header">
+      <div className="libre-challenges__header-text">
+        <h1 className="libre-challenges__title">{t("challenges.title")}</h1>
+        <p className="libre-challenges__blurb">
+          {mode === "hyper" ? t("challenges.blurbHyper") : t("challenges.blurbGrid")}
         </p>
       </div>
-      <div className="libre-tracks__search">
+      <div className="libre-challenges__search">
         <input
           type="search"
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
-          placeholder={t("tracks.searchPlaceholder")}
-          aria-label={t("tracks.ariaSearch")}
-          className="libre-tracks__search-input"
+          placeholder={t("challenges.searchPlaceholder")}
+          aria-label={t("challenges.ariaSearch")}
+          className="libre-challenges__search-input"
         />
         {query && (
           <button
             type="button"
-            className="libre-tracks__search-clear"
+            className="libre-challenges__search-clear"
             onClick={() => onQueryChange("")}
-            aria-label={t("tracks.ariaClear")}
+            aria-label={t("challenges.ariaClear")}
           >
             <Icon icon={xIcon} size="xs" color="currentColor" />
           </button>
@@ -927,7 +983,7 @@ function TracksHyperScroll({
       //    has actually scrolled (targetScroll > 0 — guards
       //    the trivial "catalogue is one screen tall" case),
       //    fire `onReachedEnd` exactly once via the latch.
-      //    The TracksView parent flips mode → "grid" in
+      //    The ChallengesView parent flips mode → "grid" in
       //    response, which unmounts this surface entirely —
       //    so we don't need to worry about cleanup.
       if (
@@ -974,15 +1030,15 @@ function TracksHyperScroll({
 
   if (trackCount === 0) {
     return (
-      <div className="libre-tracks__empty">
+      <div className="libre-challenges__empty">
         <p>No tracks match this search.</p>
       </div>
     );
   }
 
   return (
-    <div ref={viewportRef} className="libre-tracks__viewport">
-      <div ref={worldRef} className="libre-tracks__world">
+    <div ref={viewportRef} className="libre-challenges__viewport">
+      <div ref={worldRef} className="libre-challenges__world">
         {tracks.map((track, idx) => (
           <HyperCard
             key={track.id}
@@ -1054,15 +1110,15 @@ function TrackCardBody({
   return (
     <button
       type="button"
-      className={`libre-tracks__card libre-tracks__card--${variant}`}
+      className={`libre-challenges__card libre-challenges__card--${variant}`}
       style={{ "--track-accent": track.accent } as CSSProperties}
       onClick={onOpen}
     >
-      <div className="libre-tracks__card-head">
-        <span className="libre-tracks__card-tag">
-          <span aria-hidden className="libre-tracks__card-tag-icon">
+      <div className="libre-challenges__card-head">
+        <span className="libre-challenges__card-tag">
+          <span aria-hidden className="libre-challenges__card-tag-icon">
             <Icon
-              icon={trainTrack}
+              icon={swords}
               size="xs"
               color="currentColor"
               weight="bold"
@@ -1070,22 +1126,22 @@ function TrackCardBody({
           </span>
           <span>{track.short}</span>
         </span>
-        <span className="libre-tracks__card-index">
+        <span className="libre-challenges__card-index">
           {String(index + 1).padStart(2, "0")}
         </span>
       </div>
-      <div className="libre-tracks__card-body">
-        <h2 className="libre-tracks__card-title">{track.title}</h2>
-        <p className="libre-tracks__card-outcome">{track.outcome}</p>
-        <p className="libre-tracks__card-desc">{track.description}</p>
+      <div className="libre-challenges__card-body">
+        <h2 className="libre-challenges__card-title">{track.title}</h2>
+        <p className="libre-challenges__card-outcome">{track.outcome}</p>
+        <p className="libre-challenges__card-desc">{track.description}</p>
       </div>
-      <div className="libre-tracks__card-foot">
-        <span className="libre-tracks__card-meta">{meta.join(" · ")}</span>
-        <span className="libre-tracks__card-pct">{pct}%</span>
+      <div className="libre-challenges__card-foot">
+        <span className="libre-challenges__card-meta">{meta.join(" · ")}</span>
+        <span className="libre-challenges__card-pct">{pct}%</span>
       </div>
-      <div className="libre-tracks__card-progress" aria-hidden>
+      <div className="libre-challenges__card-progress" aria-hidden>
         <span
-          className="libre-tracks__card-progress-fill"
+          className="libre-challenges__card-progress-fill"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -1118,7 +1174,7 @@ function HyperCard({
 }) {
   return (
     <div
-      className="libre-tracks__card-slot"
+      className="libre-challenges__card-slot"
       data-idx={index}
       ref={registerRef}
     >
@@ -1144,14 +1200,16 @@ function HyperCard({
 /// view. Each card animates in with a staggered fade so the
 /// transition from the hyper view doesn't feel abrupt.
 ///
-/// The grid splits its cards into TWO labelled sections when
+/// The grid splits its cards into FOUR labelled sections when
 /// `kindByTrackId` is provided:
-///   1. In-house challenges (`packType: "challenges"`)
-///   2. Exercism tracks (`packType: "track"`)
+///   1. Exercism tracks (`packType: "track"`)
+///   2. *lings (`packType: "lings"`)
+///   3. Koans (`packType: "koans"`)
+///   4. In-house challenges (`packType: "challenges"`)
 ///
 /// Without the map (e.g. legacy callers using the curated
 /// `TRACKS` data) the grid renders as one unsectioned flow.
-function TracksGrid({
+function ChallengesGrid({
   tracks,
   completed,
   onOpenTrack,
@@ -1167,43 +1225,64 @@ function TracksGrid({
   /// LearningTrack has no `steps` for the tree-walker to count.
   progressOverrides?: ReadonlyMap<string, number>;
   /// Optional pack-kind discriminator. When present, the grid
-  /// splits its output into two labelled sections (in-house
-  /// challenges vs. Exercism tracks). When absent / empty, the
-  /// grid renders one flat section.
-  kindByTrackId?: ReadonlyMap<string, "challenges" | "track">;
+  /// splits its output into four labelled sections (Exercism
+  /// tracks, *lings, koans, in-house challenges). When absent /
+  /// empty, the grid renders one flat section.
+  kindByTrackId?: ReadonlyMap<
+    string,
+    "challenges" | "track" | "koans" | "lings"
+  >;
 }) {
   if (tracks.length === 0) {
     return (
-      <div className="libre-tracks__empty">
-        <p>No tracks match this search.</p>
+      <div className="libre-challenges__empty">
+        <p>No challenges match this search.</p>
       </div>
     );
   }
   // Bucket the tracks. The incoming `tracks` array is already
-  // sorted at the source (`TracksView.challengeTracks`) — featured
-  // challenges first (JS / Rust / Zig / Go), then non-featured
-  // challenges alphabetically, then Exercism tracks alphabetically.
-  // We just split it into kind-buckets here without re-sorting.
+  // sorted at the source (`ChallengesView.challengeTracks`) — Exercism
+  // tracks alphabetically, koans alphabetically, then in-house
+  // challenges (featured langs first, rest alphabetical). We just
+  // split into kind-buckets here without re-sorting.
   // When `kindByTrackId` isn't supplied (curated TRACKS data, or a
   // sparse search result), fall back to a single unlabelled bucket.
   const challenges: LearningTrack[] = [];
   const exercism: LearningTrack[] = [];
+  const lings: LearningTrack[] = [];
+  const koans: LearningTrack[] = [];
   const unknown: LearningTrack[] = [];
   for (const t of tracks) {
     const kind = kindByTrackId?.get(t.id);
     if (kind === "challenges") challenges.push(t);
     else if (kind === "track") exercism.push(t);
+    else if (kind === "lings") lings.push(t);
+    else if (kind === "koans") koans.push(t);
     else unknown.push(t);
   }
   const sections: Array<{ key: string; label: string | null; rows: LearningTrack[] }> = [];
-  // Section order: Exercism tracks first (the curated language
-  // curriculums lead the page), in-house challenges second. Mirrors
-  // the source-sort order in `TracksView.challengeTracks`.
+  // Section order: Exercism tracks → *lings → Koans → in-house
+  // challenges. Mirrors the source-sort order in
+  // `ChallengesView.challengeTracks`.
   if (exercism.length > 0) {
     sections.push({
       key: "exercism",
       label: "Exercism tracks",
       rows: exercism,
+    });
+  }
+  if (lings.length > 0) {
+    sections.push({
+      key: "lings",
+      label: "*lings",
+      rows: lings,
+    });
+  }
+  if (koans.length > 0) {
+    sections.push({
+      key: "koans",
+      label: "Koans",
+      rows: koans,
     });
   }
   if (challenges.length > 0) {
@@ -1216,7 +1295,7 @@ function TracksGrid({
   if (unknown.length > 0) {
     // Legacy / curated tracks with no kind annotation. Render
     // unlabelled at the end so they still surface but don't fight
-    // the two main sections for the title row.
+    // the labelled sections for the title row.
     sections.push({ key: "unknown", label: null, rows: unknown });
   }
   // Continuous stagger index across all sections so the
@@ -1224,19 +1303,19 @@ function TracksGrid({
   // boundary.
   let staggerIdx = 0;
   return (
-    <div className="libre-tracks__grid-wrap">
+    <div className="libre-challenges__grid-wrap">
       {sections.map((sec) => (
-        <section key={sec.key} className="libre-tracks__grid-section">
+        <section key={sec.key} className="libre-challenges__grid-section">
           {sec.label && (
-            <h2 className="libre-tracks__grid-section-title">{sec.label}</h2>
+            <h2 className="libre-challenges__grid-section-title">{sec.label}</h2>
           )}
-          <div className="libre-tracks__grid">
+          <div className="libre-challenges__grid">
             {sec.rows.map((track) => {
               const cellIdx = staggerIdx++;
               return (
                 <div
                   key={track.id}
-                  className="libre-tracks__grid-cell"
+                  className="libre-challenges__grid-cell"
                   // Staggered mount delay so the grid materialises
                   // in a wave rather than all-at-once — softens the
                   // hand-off from the hyper view.
@@ -1283,16 +1362,16 @@ function TracksHud({
 }) {
   void smoothScroll;
   return (
-    <div className="libre-tracks__hud" aria-hidden>
-      <span className="libre-tracks__hud-row">
-        <span className="libre-tracks__hud-key">POS</span>
-        <span className="libre-tracks__hud-val">
+    <div className="libre-challenges__hud" aria-hidden>
+      <span className="libre-challenges__hud-row">
+        <span className="libre-challenges__hud-key">POS</span>
+        <span className="libre-challenges__hud-val">
           {positionPct.toString().padStart(3, "0")}%
         </span>
       </span>
-      <span className="libre-tracks__hud-row">
-        <span className="libre-tracks__hud-key">VEL</span>
-        <span className="libre-tracks__hud-val">
+      <span className="libre-challenges__hud-row">
+        <span className="libre-challenges__hud-key">VEL</span>
+        <span className="libre-challenges__hud-val">
           {velocity.toFixed(2)}
         </span>
       </span>

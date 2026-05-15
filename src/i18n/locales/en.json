@@ -24,9 +24,10 @@
     "sandbox": "Sandbox",
     "discover": "Discover",
     "practice": "Practice",
+    "paths": "Paths",
     "achievements": "Achievements",
     "certificates": "Certificates",
-    "tracks": "Tracks",
+    "challenges": "Challenges",
     "settings": "Settings",
     "takeTour": "Take the tour",
     "showSidebar": "Show sidebar",
@@ -185,12 +186,12 @@
     "browseCatalog": "Browse catalog…",
     "browseCatalogHint": "Search and install books from the Libre library"
   },
-  "tracks": {
-    "title": "Tracks",
-    "blurbHyper": "Language tracks and challenge packs side by side. Scroll the catalogue and pick a language — Exercism-style curriculums drop you into a structured concept-by-concept path; challenge packs drop you straight into the next unsolved problem.",
-    "blurbGrid": "Language tracks and challenge packs side by side. Pick a language — Exercism-style curriculums drop you into a structured concept-by-concept path; challenge packs drop you straight into the next unsolved problem.",
-    "searchPlaceholder": "Search tracks…",
-    "ariaSearch": "Search tracks",
+  "challenges": {
+    "title": "Challenges",
+    "blurbHyper": "Exercise-driven practice — Exercism language tracks, classic koans, and hand-built challenge packs in one place. Scroll the catalogue and pick a language; Exercism tracks drop you into a structured concept-by-concept path, koans take you through fill-in-the-blanks meditations, and challenge packs drop you straight into the next unsolved problem.",
+    "blurbGrid": "Exercise-driven practice — Exercism language tracks, classic koans, and hand-built challenge packs side by side. Pick a language and a flavour; every step is auto-graded so you always know when you're done.",
+    "searchPlaceholder": "Search challenges…",
+    "ariaSearch": "Search challenges",
     "ariaClear": "Clear search"
   },
   "topBar": {
@@ -529,6 +530,19 @@
     "done": "Done",
     "dontShowAgain": "Don't ask again",
     "close": "Close"
+  },
+  "paths": {
+    "title": "Paths",
+    "subtitle": "Goal-oriented routes through the catalogue. Each path threads courses, language tracks, koans, and drill packs into an order that takes you from zero to a role — entry-level developer, mobile, systems, and more.",
+    "percentComplete": "{pct} complete",
+    "coursesInstalled": "{installed} of {total} courses installed",
+    "ariaPath": "{title} path, {pct} complete. Opens the path map.",
+    "openCourse": "Open {title}",
+    "findInDiscover": "Find {title} in Discover to add it",
+    "back": "All paths",
+    "flowAria": "{title} path map — scroll horizontally to follow the route through its courses and forks",
+    "endGoal": "Goal reached 🎯",
+    "endDone": "Path complete ✓"
   },
   "tour": {
     "ariaLabel": "Guided tour",

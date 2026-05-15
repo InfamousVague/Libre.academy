@@ -22,16 +22,23 @@
 ///        ELEVEN_VOICE_NAME=Jessa            # or whatever lesson narrator uses
 ///        ELEVEN_MODEL=eleven_multilingual_v2
 ///   2. Run:
-///        node scripts/generate-tour-audio.mjs           # all steps
+///        node scripts/generate-tour-audio.mjs           # changed steps only
 ///        node scripts/generate-tour-audio.mjs --step welcome
 ///        node scripts/generate-tour-audio.mjs --dry-run # plan, no API calls
 ///        node scripts/generate-tour-audio.mjs --turbo   # use eleven_turbo_v2_5 (~half cost)
+///        node scripts/generate-tour-audio.mjs --force    # re-synth EVERY step, ignore cache
 ///
 /// COST: ~3-4 min of audio total. Cheap; entire tour costs less
 /// than a single long lesson.
 ///
 /// IDEMPOTENT: re-running with no body changes is a no-op (same
-/// textHash → cache hit → manifest written, no API calls).
+/// textHash + voice + model → cache hit → manifest re-written, no
+/// API calls, exits in well under a second). That fast no-op exit
+/// is the script working correctly, NOT a hang/crash — the summary
+/// block prints `synthesised: 0` + an explicit "nothing to do"
+/// line. Pass `--force` to re-voice the whole tour anyway (e.g.
+/// after switching ELEVEN_VOICE_NAME, or to refresh every clip in
+/// one consistent take).
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -64,6 +71,12 @@ const has = (n) => args.includes(n);
 const stepFilter = flag("--step");
 const DRY_RUN = has("--dry-run");
 const VERBOSE = has("--verbose") || has("-v");
+/// Bypass the content-hash cache and re-synthesize every step even
+/// when its text + voice + model are unchanged. Use after a voice
+/// swap, or when you want the whole tour in one fresh take. Costs
+/// the full character count — `--dry-run --force` shows the bill
+/// first.
+const FORCE = has("--force");
 
 if (has("--turbo")) {
   MODEL_ID = "eleven_turbo_v2_5";
@@ -198,6 +211,7 @@ async function main() {
 
     const prev = previousManifest.steps?.[step.id];
     const cacheHit =
+      !FORCE &&
       prev &&
       prev.textHash === textHash &&
       prev.voice === VOICE_NAME &&
@@ -260,6 +274,23 @@ async function main() {
   if (DRY_RUN) console.error(`(dry run — no API calls made)`);
   console.error(`manifest:     ${MANIFEST_PATH}`);
   console.error(`output dir:   ${OUT_DIR}`);
+
+  // Loud, unambiguous explanation when the run was a no-op so a
+  // fast exit doesn't read as "the script silently did nothing /
+  // crashed". This is the path the user hit: every step's text +
+  // voice + model already matched the cached manifest, so there
+  // was correctly nothing to bill ElevenLabs for.
+  if (!DRY_RUN && synthesised === 0 && skipped > 0) {
+    console.error(
+      `\n✓ Nothing to regenerate — all ${skipped} step(s) already match ` +
+        `the cached manifest (same text + voice "${VOICE_NAME}" + ` +
+        `model "${MODEL_ID}"). No ElevenLabs characters billed.\n` +
+        `  To re-voice the entire tour anyway (e.g. after a voice ` +
+        `change), re-run with --force:\n` +
+        `      node scripts/generate-tour-audio.mjs --dry-run --force   # preview the bill\n` +
+        `      node scripts/generate-tour-audio.mjs --force             # do it`,
+    );
+  }
 }
 
 main().catch((err) => {

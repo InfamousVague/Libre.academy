@@ -18,7 +18,7 @@ import { Tour } from "./components/Tour/Tour";
 import { TOUR_STEPS, type TourPage } from "./components/Tour/tourSteps";
 import { stopTourAudio } from "./components/Tour/useTourAudio";
 import { stopLessonAudio } from "./hooks/useLessonAudio";
-import TracksView from "./components/Tracks/TracksView";
+import ChallengesView from "./components/Challenges/ChallengesView";
 import PracticeView from "./components/Practice/PracticeView";
 import EvmDockBanner from "./components/ChainDock/EvmDockBanner";
 import BitcoinDockBanner from "./components/BitcoinChainDock/BitcoinDockBanner";
@@ -59,6 +59,7 @@ import AchievementOverlay from "./components/Achievements/AchievementOverlay";
 import AchievementsPage from "./components/Achievements/AchievementsPage";
 import SectionCompleteSummary from "./components/Achievements/SectionCompleteSummary";
 import CertificatesPage from "./components/Certificates/CertificatesPage";
+import PathsPage from "./components/Paths/PathsPage";
 import { mintCertificate } from "./data/certificates";
 import { notifyCertificatesChanged } from "./hooks/useCertificates";
 import { playSound, unlockAudioContext } from "./lib/sfx";
@@ -947,8 +948,9 @@ export default function App() {
     | "sandbox"
     | "library"
     | "discover"
-    | "tracks"
+    | "challenges"
     | "practice"
+    | "paths"
     | "achievements"
     | "certificates"
   >("library");
@@ -2184,8 +2186,9 @@ export default function App() {
           }
           resumeLabel={resumeTarget?.course.title}
           onDiscover={() => setView("discover")}
-          onTracks={() => setView("tracks")}
+          onChallenges={() => setView("challenges")}
           onPractice={() => setView("practice")}
+          onPaths={() => setView("paths")}
           onAchievements={() => setView("achievements")}
           onCertificates={() => setView("certificates")}
           onSandbox={() => setView("sandbox")}
@@ -2240,8 +2243,8 @@ export default function App() {
             />
           ) : view === "sandbox" ? (
             <SandboxView projects={sandboxProjects} />
-          ) : view === "tracks" ? (
-            <TracksView
+          ) : view === "challenges" ? (
+            <ChallengesView
               courses={courses}
               completed={completed}
               onOpenLesson={(courseId, lessonId) => {
@@ -2258,6 +2261,13 @@ export default function App() {
                 selectLesson(courseId, lessonId);
                 setView("courses");
               }}
+            />
+          ) : view === "paths" ? (
+            <PathsPage
+              courses={courses}
+              completed={completed}
+              onOpenCourse={openCourseFromLibrary}
+              onBrowseCatalog={() => setView("discover")}
             />
           ) : view === "achievements" ? (
             <AchievementsPage

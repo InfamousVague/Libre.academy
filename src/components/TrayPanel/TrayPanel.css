@@ -625,14 +625,12 @@ body,
   right: 20px;
   top: max(14px, calc(100vh - 80px - min(720px, 88vh)));
   height: min(720px, calc(100vh - 80px - 14px));
-  /* Width: 570px — 25% smaller than the prior 760px. The 760
-     was wide enough for the HUD on a full-screen window but
-     crowded out the editor + project tree underneath. 570
-     still fits the HUD on a single row (confidence + tokens +
-     duration + Stop button) without eating half the viewport.
-     Scales down further on narrow viewports via the @media
-     stack below. */
-  width: 570px;
+  /* Width: 485px — 15% smaller than the prior 570px. Keeps the
+     HUD row readable (confidence + tokens + duration + Stop)
+     while leaving more of the editor + project tree visible
+     underneath. Scales down further on narrow viewports via the
+     @media stack below. */
+  width: 485px;
   max-width: calc(100vw - 28px);
   z-index: 91;
   background: var(--color-bg-secondary);
@@ -650,7 +648,7 @@ body,
 @media (max-width: 1024px) {
   .libre-ai-host--floating {
     width: calc(100vw - 60px);
-    max-width: 570px;
+    max-width: 485px;
   }
 }
 @media (max-width: 640px) {

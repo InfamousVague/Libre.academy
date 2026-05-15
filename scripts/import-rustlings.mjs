@@ -380,6 +380,10 @@ const course = {
   id: "rustlings",
   title: "Rustlings",
   language: "rust",
+  // *lings family — renders on the dedicated Challenges page in
+  // the "*lings" section, stripped from the regular Library. See
+  // `isLings` in data/types.ts + `ChallengesView`.
+  packType: "lings",
   description:
     "The official Rustlings curriculum (https://github.com/rust-lang/rustlings) — small interactive exercises that walk through Rust's syntax, ownership model, error handling, traits, and more. Mirrored into Libre with each exercise's starter, solution, and hint preserved verbatim from the upstream repo.",
   /// Attribution chunk — Rustlings is MIT/Apache-2.0 dual licensed.

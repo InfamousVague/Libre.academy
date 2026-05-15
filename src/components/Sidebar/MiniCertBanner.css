@@ -250,12 +250,19 @@
   -webkit-mask-repeat: repeat;
 
   mix-blend-mode: multiply;
-  filter: brightness(0.95) contrast(0.85) saturate(0.55);
-  /* Resting opacity — enough that the foil is visible at all
-     times. The earlier 0.08 was so low the hologram looked
-     dormant; bumped to 0.32 (around the previous "completed"
-     state) so the cert reads as iridescent at rest. */
-  opacity: 0.32;
+  /* Saturate bumped from 0.55 → 1.15 to match the full cert's
+     foil — at the new lower opacity (0.15) the desaturated band
+     read flat / pastel; the cert's value of 1.15 reads as proper
+     iridescent pigment when the white paper shows through. */
+  filter: brightness(0.95) contrast(0.85) saturate(1.15);
+  /* Match the full cert ticket's resting foil opacity exactly
+     (0.15 — the `--o` value on `.libre-cert-ticket`). The
+     previous 0.32 made the foil dominate the body area, washing
+     the title/progress text in rainbow instead of letting the
+     white paper read through the middle. With this dropped to
+     0.15 the mini-cert reads as the same artefact family as the
+     full cert: white paper first, iridescent foil second. */
+  opacity: 0.15;
   /* Ambient drift — slow 14s loop; the rainbow position glides
      gently so the hologram visibly "breathes" without ever
      swinging hard enough to feel like an animation. */
@@ -511,8 +518,11 @@
 
 .libre-mini-cert--complete .libre-mini-cert__holo {
   /* Earned cert: foil opacity bumped so the hologram reads
-     prominently — the artefact is "yours" now. */
-  opacity: 0.5;
+     prominently — the artefact is "yours" now. Tuned down from
+     the previous 0.5 so it sits proportionally above the new
+     in-progress 0.15 baseline rather than spiking back into the
+     "rainbow washes the body" failure mode. */
+  opacity: 0.28;
 }
 
 /* ─── Reduced motion ─────────────────────────────────────────── */

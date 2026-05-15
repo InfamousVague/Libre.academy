@@ -13,6 +13,7 @@ import { arrowRight } from "@base/primitives/icon/icons/arrow-right";
 import { chevronDown } from "@base/primitives/icon/icons/chevron-down";
 import { rotateCcw } from "@base/primitives/icon/icons/rotate-ccw";
 import { eye } from "@base/primitives/icon/icons/eye";
+import { codeSquare } from "@base/primitives/icon/icons/code-square";
 import "@base/primitives/icon/icon.css";
 import { ShortcutHint } from "../ShortcutHint/ShortcutHint";
 import { useT } from "../../i18n/i18n";
@@ -176,6 +177,11 @@ const MONACO_LANGUAGES: Record<FileLanguage, string> = {
   move: "move",
   cairo: "cairo",
   sway: "sway",
+  // Koans-only additions. Monaco doesn't bundle a clojure grammar, so
+  // alias to scheme (close-enough s-expression colouring). F# has
+  // a bundled grammar.
+  clojure: "scheme",
+  fsharp: "fsharp",
   // Monaco's built-in markdown is fine for lesson-body fragments
   // (.md files in mixed-lesson file sets) — wire it up so the
   // editor doesn't fall through to plaintext on those.
@@ -453,7 +459,11 @@ export default function EditorPane({
                     aria-label={t("editor.ariaHelpOptions")}
                     title={t("editor.ariaHelpOptions")}
                   >
-                    <Icon icon={chevronDown} size="xs" color="currentColor" />
+                    {/* One scale up (xs→sm) — the toolbar icon row
+                        was reading too small / cramped against the
+                        editor pane. See sibling bumps on the
+                        pop-out + VSCode buttons. */}
+                    <Icon icon={chevronDown} size="sm" color="currentColor" />
                   </button>
                 )}
               </div>
@@ -527,7 +537,7 @@ export default function EditorPane({
           {onPopOut && (
             <button
               type="button"
-              className="libre-editor-button"
+              className="libre-editor-button libre-editor-button--glyph"
               onClick={onPopOut}
               title={t("editor.popOut")}
             >
@@ -542,39 +552,30 @@ export default function EditorPane({
               title={t("editor.openInVSCode")}
               aria-label={t("editor.openInVSCode")}
             >
-              {/* Inline SVG of the VSCode mark. Single-path,
-                  `fill="currentColor"` so it inherits text colour
-                  in both dark + light themes; `fill-rule="evenodd"`
-                  punches the inner triangle out of the chevron
-                  silhouette so the notch is a true hole.
-
-                  Previous geometry (Notion issue
-                  #bd02f45814de4be6 — "VSCode icon is broken in
-                  dark and light mode") had a 4-point flat-edged
-                  left wing — `L16 54 L8 60 L8 40 L16 46` —
-                  which rendered as an I-beam on the chevron's
-                  outer edge instead of a recognisable VSCode
-                  ribbon. Replaced with a clean
-                  slab-plus-pointed-chevron silhouette: slab on
-                  the right with parallelogram-tilt edges, a
-                  single-point chevron wing on the left, and an
-                  inner-triangle notch where the wing tip enters
-                  the slab. Reads correctly in both themes
-                  because the only colour used is currentColor. */}
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 100 100"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M75 6 L94 16 L94 84 L75 94 L12 50 L75 6 Z M75 30 L40 50 L75 70 Z"
-                  fill="currentColor"
-                />
-              </svg>
+              {/* Lucide `code-square` glyph (Notion issue
+                  #bd02f45814de4be6 — third pass). Earlier
+                  attempts: custom slab+chevron SVG (rendered
+                  only the right slab — notch geometry collapsed
+                  at 14×14) and `external-link` (still only
+                  rendered the right portion of the icon at this
+                  size). `code-square` is a clean `</>` glyph
+                  inside a rounded rectangle — reads
+                  unambiguously as "code in an editor", scales
+                  cleanly at any size because every stroke is
+                  inside the 24×24 viewBox with consistent
+                  stroke-width, and inherits `currentColor` for
+                  both themes. The button's tooltip + aria-label
+                  carry the "in VSCode" wording. */}
+              {/* One scale up (sm→base) — the VSCode glyph was the
+                  smallest thing in the toolbar and read as a dot at
+                  sm. base (15px) matches the bumped caret + pop-out
+                  glyph so the action row reads as one consistent
+                  size tier. */}
+              <Icon
+                icon={codeSquare}
+                size="base"
+                color="currentColor"
+              />
             </button>
           )}
           <button

@@ -38,7 +38,7 @@ APP_BUNDLE    := $(TAURI)/target/release/bundle/macos/Libre.app
 DMG           := $(TAURI)/target/release/bundle/dmg/Libre_$(VERSION)_$(ARCH_TAG).dmg
 INSTALL_PATH  := /Applications/Libre.app
 
-.PHONY: all build sign notarize staple install dev release local-release \
+.PHONY: all build pre-build sign notarize staple install dev release local-release \
         deploy deploy-site deploy-content clean help \
         audio-import audio-upload audio-deploy tour-audio \
         run run-split run-phone run-watch pick-phone pick-watch run-clean \
@@ -64,6 +64,56 @@ all: build sign notarize install
 	@echo ""
 	@echo "✓ Done — Libre.app installed and notarized"
 
+# --- Pre-build DMG cleanup --------------------------------------------------
+# Walks `hdiutil info -plist` for any leftover Libre DMG mounts (the
+# read-write images Tauri's bundle_dmg.sh leaves behind when a release
+# build crashes mid-bundle) and detaches them. Plist-based — the
+# human-readable `hdiutil info` output is too fragile to awk against;
+# we shipped broken cleanup patterns from it in v1.0.1 and v1.0.6.
+define PRE_BUILD_PY
+import json, subprocess, fnmatch, sys
+try:
+    plist = subprocess.check_output(["hdiutil", "info", "-plist"])
+    data = json.loads(subprocess.check_output(
+        ["plutil", "-convert", "json", "-o", "-", "-"], input=plist))
+except Exception as e:
+    print(f"  (could not read hdiutil info: {e})")
+    sys.exit(0)
+detached = 0
+for img in data.get("images", []):
+    path = img.get("image-path", "")
+    if not fnmatch.fnmatch(path, "*Libre*aarch64.dmg"):
+        continue
+    entities = img.get("system-entities") or []
+    if not entities:
+        continue
+    dev = entities[0].get("dev-entry")
+    if not dev:
+        continue
+    print(f"  detaching {dev}  (backing: {path})")
+    subprocess.run(["hdiutil", "detach", dev, "-force"], check=False)
+    detached += 1
+if detached == 0:
+    print("  no leftover Libre DMG mounts")
+endef
+export PRE_BUILD_PY
+
+## Clean up leftover Tauri DMG state from a previous crashed build so
+## bundle_dmg.sh doesn't fail with "rw image still mounted". `build`
+## depends on this — the old manual fix was `hdiutil detach /dev/diskN
+## -force` + `rm -f rw.*.dmg`, which we had to debug twice in production
+## (v1.0.1, v1.0.6). Idempotent.
+pre-build:
+	@echo "=== Pre-build: cleaning leftover Tauri DMG state ==="
+	@python3 -c "$$PRE_BUILD_PY"
+	@rm -f $(TAURI)/target/release/bundle/macos/rw.*.dmg
+	@for vol in /Volumes/dmg.*; do \
+		[ -e "$$vol" ] || continue; \
+		if mount | grep -qF " on $$vol "; then continue; fi; \
+		echo "  removing orphan mount-point: $$vol"; \
+		rmdir "$$vol" 2>/dev/null || true; \
+	done
+
 ## Build Tauri release.
 ##
 ## TAURI_SIGNING_* env vars trigger the updater plugin to also produce
@@ -72,7 +122,7 @@ all: build sign notarize install
 ## clients can't auto-update. Default key path is the maintainer's
 ## ~/.tauri/libre-updater.key; override TAURI_SIGNING_KEY_PATH if
 ## you've stored the key elsewhere.
-build:
+build: pre-build
 	@echo "=== Building Tauri release ==="
 	@if [ ! -f "$(TAURI_SIGNING_KEY_PATH)" ]; then \
 		echo "WARN: signing key not found at $(TAURI_SIGNING_KEY_PATH);"; \

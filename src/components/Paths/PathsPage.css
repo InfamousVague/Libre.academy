@@ -1,0 +1,526 @@
+/* Curated learning-paths surface — list (cards) + detail (tree).
+   Both top-level containers are direct children of the
+   overflow:hidden `.libre__main` flex column, so they MUST own
+   their own scroll (flex:1 / min-height:0 / overflow). The
+   original bug: `.libre-paths-page` set only padding/width, so it
+   collapsed and the cards clipped + became unclickable. */
+
+.libre-paths-page,
+.libre-path-detail {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.libre-paths-page {
+  overflow-y: auto;
+  padding: 48px 32px 80px;
+}
+
+.libre-paths-page__header,
+.libre-paths-page__grid {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.libre-paths-page__header {
+  margin-bottom: 28px;
+}
+
+.libre-paths-page__title {
+  margin: 0 0 8px;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary, #f5f5f7);
+}
+
+.libre-paths-page__subtitle {
+  margin: 0;
+  max-width: 640px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--color-text-secondary, rgba(245, 245, 247, 0.65));
+}
+
+.libre-paths-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
+  gap: 18px;
+}
+
+/* ─── Path card (list) ───────────────────────────────────────── */
+
+.libre-path-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: var(--color-bg-secondary, #241b2f);
+  border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.07));
+  border-radius: 14px;
+  /* It's a <button> now — strip the UA chrome + left-align. */
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.12s ease;
+}
+
+.libre-path-card:hover {
+  border-color: color-mix(
+    in srgb,
+    var(--color-border-default, rgba(255, 255, 255, 0.07)) 40%,
+    var(--color-accent, #d4c5a1) 60%
+  );
+  transform: translateY(-2px);
+}
+
+.libre-path-card:focus-visible {
+  outline: 2px solid var(--color-accent, #d4c5a1);
+  outline-offset: 2px;
+}
+
+.libre-path-card--complete {
+  background: color-mix(
+    in srgb,
+    var(--color-bg-secondary, #241b2f) 92%,
+    var(--color-accent, #d4c5a1) 8%
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--color-border-default, rgba(255, 255, 255, 0.07)) 60%,
+    var(--color-accent, #d4c5a1) 40%
+  );
+}
+
+.libre-path-card__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.libre-path-card__icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.07));
+  color: var(--color-text-primary, #f5f5f7);
+}
+
+.libre-path-card--complete .libre-path-card__icon {
+  background: var(--color-accent, #d4c5a1);
+  border-color: var(--color-accent, #d4c5a1);
+  color: var(--color-accent-fg, #111111);
+}
+
+.libre-path-card__head-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.libre-path-card__title {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary, #f5f5f7);
+}
+
+.libre-path-card__blurb {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--color-text-secondary, rgba(245, 245, 247, 0.65));
+}
+
+.libre-path-card__open {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--color-text-tertiary, rgba(245, 245, 247, 0.4));
+  transition: transform 0.14s ease, color 0.14s ease;
+}
+
+.libre-path-card:hover .libre-path-card__open {
+  color: var(--color-text-primary, #f5f5f7);
+  transform: translateX(3px);
+}
+
+/* ─── Progress bar (shared by card + detail header) ──────────── */
+
+.libre-path-card__bar,
+.libre-path-detail__bar {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+}
+
+[data-theme="light"] .libre-path-card__bar,
+[data-theme="light"] .libre-path-detail__bar {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.libre-path-card__bar-fill,
+.libre-path-detail__bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-success, #22c55e);
+  transition: width 0.5s ease;
+}
+
+.libre-path-card__progress-meta,
+.libre-path-detail__progress-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 7px;
+  font-size: 11px;
+  color: var(--color-text-tertiary, rgba(245, 245, 247, 0.5));
+}
+
+.libre-path-card__pct,
+.libre-path-detail__pct {
+  font-weight: 600;
+  color: var(--color-text-secondary, rgba(245, 245, 247, 0.65));
+}
+
+/* ─── Detail view ────────────────────────────────────────────── */
+
+.libre-path-detail__header {
+  flex-shrink: 0;
+  padding: 28px 32px 20px;
+  border-bottom: 1px solid
+    var(--color-border-default, rgba(255, 255, 255, 0.07));
+}
+
+.libre-path-detail__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px 6px 6px;
+  margin-bottom: 14px;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: var(--color-text-secondary, rgba(245, 245, 247, 0.65));
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.libre-path-detail__back:hover {
+  background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.05));
+  color: var(--color-text-primary, #f5f5f7);
+}
+
+.libre-path-detail__head-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.libre-path-detail__icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: var(--color-bg-tertiary, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.07));
+  color: var(--color-text-primary, #f5f5f7);
+}
+
+.libre-path-detail__title {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary, #f5f5f7);
+}
+
+.libre-path-detail__blurb {
+  margin: 0;
+  max-width: 720px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-secondary, rgba(245, 245, 247, 0.65));
+}
+
+.libre-path-detail__progress {
+  max-width: 420px;
+}
+
+/* Horizontal scroll lane. The page owns vertical scroll; this
+   element owns horizontal. `align-items: center` so a tall fork
+   stack stays vertically centered against short trunk nodes. */
+.libre-path-detail__flow {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 40px 32px;
+}
+
+.libre-path-detail__flow:focus-visible {
+  outline: 2px solid var(--color-accent, #d4c5a1);
+  outline-offset: -4px;
+}
+
+.libre-path-stage {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.libre-path-stage--fork {
+  align-items: stretch;
+}
+
+/* Chevron connector between sequential nodes / stages. */
+.libre-path-connector {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  color: var(--color-text-tertiary, rgba(245, 245, 247, 0.35));
+}
+
+/* The connector feeding a fork is taller + accent-tinted so the
+   split reads as a deliberate branch point, not just another
+   step gap. */
+.libre-path-connector--split {
+  color: var(--color-accent, #d4c5a1);
+}
+
+.libre-path-run {
+  display: flex;
+  align-items: center;
+}
+
+.libre-path-run__cell {
+  display: flex;
+  align-items: center;
+}
+
+/* ─── Node card ──────────────────────────────────────────────── */
+
+.libre-path-node {
+  width: 210px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  background: var(--color-bg-secondary, #241b2f);
+  border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.07));
+  border-radius: 12px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    border-color 0.14s ease,
+    transform 0.12s ease,
+    background 0.14s ease;
+}
+
+.libre-path-node:hover {
+  border-color: color-mix(
+    in srgb,
+    var(--color-border-default, rgba(255, 255, 255, 0.07)) 40%,
+    var(--color-accent, #d4c5a1) 60%
+  );
+  transform: translateY(-2px);
+}
+
+.libre-path-node:focus-visible {
+  outline: 2px solid var(--color-accent, #d4c5a1);
+  outline-offset: 2px;
+}
+
+.libre-path-node--complete {
+  background: color-mix(
+    in srgb,
+    var(--color-bg-secondary, #241b2f) 90%,
+    var(--color-success, #22c55e) 10%
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--color-border-default, rgba(255, 255, 255, 0.07)) 55%,
+    var(--color-success, #22c55e) 45%
+  );
+}
+
+.libre-path-node--not-installed {
+  border-style: dashed;
+  opacity: 0.78;
+}
+
+.libre-path-node__status {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-tertiary, rgba(245, 245, 247, 0.45));
+}
+
+.libre-path-node--complete .libre-path-node__status {
+  color: var(--color-success, #22c55e);
+}
+
+.libre-path-node--in-progress .libre-path-node__status {
+  color: var(--color-accent, #d4c5a1);
+}
+
+.libre-path-node__title {
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--color-text-primary, #f5f5f7);
+}
+
+.libre-path-node--not-installed .libre-path-node__title {
+  color: var(--color-text-secondary, rgba(245, 245, 247, 0.6));
+}
+
+.libre-path-node__count {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-tertiary, rgba(245, 245, 247, 0.5));
+}
+
+.libre-path-node__note {
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--color-text-tertiary, rgba(245, 245, 247, 0.5));
+}
+
+/* ─── Fork ───────────────────────────────────────────────────── */
+
+.libre-path-fork {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* Bracket: a left vertical rail that visually gathers the
+     stacked branch lanes into one split point. */
+  border-left: 2px solid
+    color-mix(
+      in srgb,
+      var(--color-accent, #d4c5a1) 55%,
+      transparent
+    );
+  border-radius: 3px;
+  padding: 6px 0 6px 16px;
+}
+
+.libre-path-fork__label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-accent, #d4c5a1);
+  padding-left: 2px;
+}
+
+.libre-path-fork__branches {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.libre-path-branch {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+
+/* Short horizontal stub from the fork rail into each lane head —
+   makes the "this lane comes off the split" relationship explicit. */
+.libre-path-branch::before {
+  content: "";
+  position: absolute;
+  left: -16px;
+  top: 13px;
+  width: 14px;
+  height: 2px;
+  background: color-mix(
+    in srgb,
+    var(--color-accent, #d4c5a1) 55%,
+    transparent
+  );
+}
+
+.libre-path-branch__head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.libre-path-branch__label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-primary, #f5f5f7);
+}
+
+.libre-path-branch__pct {
+  font-size: 10.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-tertiary, rgba(245, 245, 247, 0.5));
+}
+
+/* ─── Flow end cap ───────────────────────────────────────────── */
+
+.libre-path-flow__end {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.libre-path-flow__flag {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--color-accent, #d4c5a1);
+  color: var(--color-accent-fg, #111111);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* ─── Narrow pane ────────────────────────────────────────────── */
+
+@media (max-width: 720px) {
+  .libre-paths-page {
+    padding: 32px 18px 64px;
+  }
+  .libre-paths-page__grid {
+    grid-template-columns: 1fr;
+  }
+  .libre-path-detail__header {
+    padding: 20px 18px 16px;
+  }
+  .libre-path-detail__flow {
+    padding: 28px 18px;
+  }
+}

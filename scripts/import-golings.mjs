@@ -1350,6 +1350,10 @@ const course = {
   id: "golings",
   title: "Golings",
   language: "go",
+  // *lings family — renders on the dedicated Challenges page in
+  // the "*lings" section, stripped from the regular Library. See
+  // `isLings` in data/types.ts + `ChallengesView`.
+  packType: "lings",
   description:
     "The Golings curriculum (https://github.com/mauricioabreu/golings) — small interactive exercises that walk through Go's syntax, control flow, primitive types, slices, maps, structs, generics, and concurrency. Mirrored into Libre with hand-crafted reference solutions and KATA_TEST harnesses so each exercise reports a structured pass result.",
   attribution: {

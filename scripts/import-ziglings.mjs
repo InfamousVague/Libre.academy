@@ -480,6 +480,10 @@ const course = {
   id: "ziglings",
   title: "Ziglings",
   language: "zig",
+  // *lings family — renders on the dedicated Challenges page in
+  // the "*lings" section, stripped from the regular Library. See
+  // `isLings` in data/types.ts + `ChallengesView`.
+  packType: "lings",
   description:
     "The official Ziglings curriculum (https://codeberg.org/ziglings/exercises) — broken-program exercises that teach Zig by fixing small errors. Mirrored into Libre with each exercise's starter, patch-derived solution, and embedded task description preserved verbatim from upstream.",
   attribution: {

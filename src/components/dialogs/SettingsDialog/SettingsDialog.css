@@ -1454,7 +1454,14 @@
 }
 
 .libre-settings-switch--on {
-  background: var(--color-accent, #d4c5a1);
+  /* "On" state uses the shared success-green token (same one
+     MobileQuiz's correct-answer rows use). Was previously
+     `var(--color-accent)` which, on Libre's monochrome themes,
+     resolves to white — and combined with the white thumb the
+     entire toggle vanished into the background. Green is the
+     universally-understood "this is on / active" colour, and
+     gives the white thumb a high-contrast track to slide over. */
+  background: var(--color-success, #22c55e);
 }
 
 .libre-settings-switch--on::after {
@@ -1462,8 +1469,17 @@
 }
 
 .libre-settings-switch:focus-visible {
+  /* Focus ring tracks the toggle's active colour — green when
+     the switch is on, accent when off — so the visual story
+     stays consistent. The combined selector keeps a single rule
+     for the off-state focus ring; the on-state rule below
+     overrides it without re-declaring offset / width. */
   outline: 2px solid var(--color-accent, #d4c5a1);
   outline-offset: 3px;
+}
+
+.libre-settings-switch--on:focus-visible {
+  outline-color: var(--color-success, #22c55e);
 }
 
 .libre-settings-switch:disabled {

@@ -420,7 +420,57 @@ function starterUrl(path: string): string {
 /// headline example ("handling-invalid-input-gracefully") compiles
 /// + runs on the playground after the fix. Bumping so returning
 /// visitors re-fetch.
-const SEED_VERSION = 25;
+///
+/// V26 — Ten new open-source courses: 4 *lings (swiftlings,
+/// haskellings, exlings, cplings) and 6 koans (python-koans,
+/// kotlin-koans, clojure-koans, javascript-koans, java-koans,
+/// fsharp-koans). All under permissive licenses (MIT / Apache-2.0
+/// / BSD-3 / EPL-1.0 for clojure-koans). 393 new lessons across
+/// 10 new courses. Two new LanguageId entries (`clojure`,
+/// `fsharp`) added to support the new languages — Monaco aliases
+/// to scheme / native fsharp grammar; no Libre runtime yet, so
+/// Run buttons on those two courses fall through to the
+/// desktop-coming-soon banner the same way move / cairo / sway
+/// did pre-runtime. Bumping so returning visitors re-fetch the
+/// manifest + pick up the new entries.
+///
+/// V27 — Tracks → Challenges rename + Koans relocation.
+///   • The dedicated "Tracks" page (Exercism tracks + in-house
+///     challenge packs) is renamed to "Challenges" because the
+///     existing concept of "Tracks" is being held in reserve for
+///     a new feature that will land later. Visible label, nav-rail
+///     icon (train-track → crossed swords), page header, search
+///     placeholder, and tour-step copy all updated.
+///   • Internal state value `view === "tracks"` → `"challenges"`,
+///     callback prop `onTracks` → `onChallenges`, component +
+///     directory + CSS class names all renamed in lockstep so the
+///     `"tracks"` identifier is genuinely free for the new
+///     feature's later use.
+///   • The 6 koans courses (python/kotlin/clojure/javascript/java
+///     /fsharp) move from `packType: "course"` to a new `packType
+///     : "koans"`. The Challenges page picks them up via a new
+///     `isKoans` predicate and renders them in their own
+///     "Koans" grid section between Exercism tracks and in-house
+///     challenges; the Library strips them from the books shelf
+///     and the mobile library shows them under the existing
+///     Challenges shelf. Manifest re-fetch needed so returning
+///     visitors pick up the retagged packType + new page label.
+///
+/// V28 — *lings relocation. The seven rustlings-style courses
+/// (rustlings, ziglings, golings, swiftlings, haskellings,
+/// exlings, cplings) move from `packType: "course"` (regular
+/// Library book) to a new `packType: "lings"`. They now render
+/// on the dedicated Challenges page in their own "*lings"
+/// labelled grid section (between Exercism tracks and Koans) and
+/// are stripped from the Library + mobile-library book shelves
+/// the same way tracks / challenges / koans already are.
+/// `isLings` predicate added to data/types.ts; ChallengesView's
+/// filter, sort (kindRank track→lings→koans→challenges), hyper-
+/// carousel round-robin, and four-section grid all updated.
+/// Manifest re-fetch needed so returning visitors pick up the
+/// retagged packType + see the *lings on the Challenges page
+/// instead of the Library.
+const SEED_VERSION = 28;
 
 /// Run the web seed if it hasn't run yet OR if the persisted
 /// `SEED_VERSION` is older than the current build's. Idempotent +

@@ -45,15 +45,22 @@
 .libre-editor-mode {
   display: inline-flex;
   gap: 0;
-  padding: 2px;
+  /* Padding bumped 2px → 3px so the segmented pill matches the
+     action-cluster's enlarged 28px baseline ("one size bigger"
+     across every editor-header control). */
+  padding: 3px;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
   border-radius: var(--libre-radius-sm);
 }
 
 .libre-editor-mode-btn {
-  padding: 2px 10px;
-  font-size: 11px;
+  /* Vertical padding 4px → matches the bumped action-cluster
+     button height (each segment becomes ~24px tall, so the
+     outer pill including its 3px wrapper padding lands at 28px
+     — flush with `.libre-editor-button`'s min-height). */
+  padding: 4px 12px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--color-text-secondary);
   background: transparent;
@@ -86,23 +93,21 @@
   /* Shared toolbar control height — every button in the action
      cluster (Help split, Pop-out, Open-in-VSCode, Run) inherits
      this so the row reads as a single horizontal rail rather
-     than a stagger of slightly-mismatched boxes. Trimmed from
-     28px → 24px (Notion issue #80858f2c): Run/Help/Open-in-
-     VSCode were reading too tall for what's effectively a
-     single-line label + glyph. 24px still clears the 22px
-     ShortcutHint chip and stays comfortably above the 22-24px
-     touch-target floor we use elsewhere on the toolbar. */
-  --libre-editor-btn-h: 24px;
+     than a stagger of slightly-mismatched boxes. Bumped 24px →
+     28px ("one size bigger") so the buttons read more
+     prominently in the toolbar — the prior shrink left them
+     feeling cramped against the larger editor pane. */
+  --libre-editor-btn-h: 28px;
 }
 
 .libre-editor-button {
-  /* Vertical padding trimmed (5px → 1px) — height is driven by
-     `min-height` now so the icon buttons (Pop-out, Open-in-VSCode)
-     align flush with the Run button instead of out-pacing it.
-     Horizontal padding kept at 12px so the icon glyphs have
-     room without crowding the border. */
-  padding: 1px 12px;
-  min-height: var(--libre-editor-btn-h, 24px);
+  /* Vertical padding 3px — height is driven by `min-height` now
+     so the icon buttons (Pop-out, Open-in-VSCode) align flush
+     with the Run button instead of out-pacing it. Horizontal
+     padding 14px so the icon glyphs have room without crowding
+     the border. */
+  padding: 3px 14px;
+  min-height: var(--libre-editor-btn-h, 28px);
   background: transparent;
   border: 1px solid var(--color-border-default);
   border-radius: var(--libre-radius-xs);
@@ -115,6 +120,19 @@
   justify-content: center;
   gap: 6px;
   box-sizing: border-box;
+}
+
+/* Icon-only glyph buttons (pop-out `⇱`). The glyph is a text
+   character, not an <Icon>, so its size is driven by font-size
+   rather than a `size` prop. Bumped one scale up from the base
+   button's 12.5px → 17px so it visually matches the enlarged
+   caret (sm) + VSCode (base) Icons in the same toolbar row —
+   without this the glyph stays small while its neighbours grow.
+   Line-height 1 keeps the taller glyph vertically centered in
+   the shared 28px control height. */
+.libre-editor-button--glyph {
+  font-size: 17px;
+  line-height: 1;
 }
 
 .libre-editor-button:hover:not(:disabled) {
@@ -249,8 +267,8 @@
   /* Height-match the rest of the action cluster so the Help
      cluster reads on the same horizontal baseline as the
      Run button. Falls back to the shared `--libre-editor-btn-h`
-     (now 24px) when the variable isn't reachable. */
-  min-height: var(--libre-editor-btn-h, 24px);
+     (28px) when the variable isn't reachable. */
+  min-height: var(--libre-editor-btn-h, 28px);
   border: 1px solid var(--color-border-default);
   border-radius: var(--libre-radius-xs);
   overflow: hidden;

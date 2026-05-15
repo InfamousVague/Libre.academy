@@ -424,6 +424,15 @@ export const LANGUAGE_META: Record<LanguageId, LanguageMeta> = {
   cairo: { label: "Cairo", color: "#FA9056", Icon: CairoIcon },
   // Sway — Fuel's signature green from fuel.network.
   sway: { label: "Sway", color: "#00F58C", Icon: SwayIcon },
+  // Clojure — koans-only ingest. Brand colour is the "Clojure
+  // green" from clojure.org. Reuses the Haskell glyph as a
+  // functional-language placeholder; a dedicated parens-mark
+  // is a follow-up.
+  clojure: { label: "Clojure", color: "#5881D8", Icon: HaskellIcon },
+  // F# — koans-only ingest. "F# blue" from fsharp.org. Reuses the
+  // Scala glyph for the same reason as clojure above; a proper
+  // F# mark follows when the brand asset shows up.
+  fsharp: { label: "F#", color: "#378BBA", Icon: ScalaIcon },
 };
 
 /// Convenience accessor with a fallback. Lookup is constant-time —
