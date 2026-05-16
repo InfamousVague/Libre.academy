@@ -28,7 +28,7 @@
 /// Same resolution order the academy's deploy.mjs uses.
 
 import { execSync } from "node:child_process";
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -123,6 +123,110 @@ if (!DRY_RUN) {
   run(
     `sshpass -e ssh -o StrictHostKeyChecking=no -p ${VPS_PORT} ${remoteHost} 'mkdir -p ${VPS_TARGET_DIR}'`,
     { SSHPASS: pwd },
+  );
+}
+
+// ── Auto-merge + re-key against the LIVE manifest ───────────────
+// The generator rebuilds `dist/audio/manifest.json` from the LOCAL
+// (often empty/stale) copy, so it only contains the courses it just
+// synthesized. Uploading that as-is would overwrite the server
+// manifest and silence every previously-narrated course. This step
+// fetches the live manifest and merges so existing narration always
+// survives — no more manual merge, no more footgun.
+//
+// It also performs the one-time legacy re-key: pre-migration live
+// entries are keyed by bare `lessonId`; we move them to
+// `courseId/lessonId` (using each entry's own `.courseId`) so the
+// composite-key runtime resolves them. Finally it emits a bare-id
+// ALIAS for every globally-unique lesson id so already-shipped
+// (pre-migration) desktop builds — which still do a bare lookup —
+// keep working for all non-colliding content until they auto-update.
+// Colliding ids (e.g. the same Exercism slug in two tracks) stay
+// composite-only; old builds simply don't see the newer of the two,
+// which is correct (they never had it).
+//
+// `--no-merge` skips this (escape hatch for a deliberate from-scratch
+// manifest); default is always merge.
+if (!has("--no-merge")) {
+  const localManifestPath = join(DIST_AUDIO, "manifest.json");
+  const local = JSON.parse(readFileSync(localManifestPath, "utf8"));
+  const liveUrl = `${(local.cdnBase || "https://libre.academy/audio").replace(/\/+$/, "")}/manifest.json`;
+
+  let live = null;
+  try {
+    const r = await fetch(liveUrl, { cache: "no-store" });
+    const ct = (r.headers.get("content-type") || "").toLowerCase();
+    if (r.ok && ct.includes("json")) {
+      live = await r.json();
+    } else if (r.ok) {
+      console.error(
+        `[upload-audio] live manifest fetch returned non-JSON (${ct || "?"}) — treating as no existing manifest.`,
+      );
+    }
+  } catch (e) {
+    console.error(
+      `[upload-audio] couldn't fetch live manifest (${e.message}) — proceeding with LOCAL only. ` +
+        `If a manifest already exists on the server this could drop entries; abort if unsure.`,
+    );
+  }
+
+  const merged = {};
+  const reKey = (key, entry) => {
+    // Already composite (has a slash) → keep. Otherwise promote a
+    // legacy bare key to `courseId/lessonId` using the entry's own
+    // courseId. If a legacy entry somehow lacks courseId, keep its
+    // bare key (better than dropping it).
+    if (key.includes("/")) return key;
+    return entry && entry.courseId ? `${entry.courseId}/${key}` : key;
+  };
+  if (live && live.lessons) {
+    for (const [k, v] of Object.entries(live.lessons)) merged[reKey(k, v)] = v;
+  }
+  // Local wins on conflict (it's the fresh synthesis of that lesson).
+  for (const [k, v] of Object.entries(local.lessons || {})) {
+    merged[reKey(k, v)] = v;
+  }
+
+  // Bare-id aliases for back-compat with pre-migration builds —
+  // only when the bare id is globally unique among composite keys.
+  const composite = Object.keys(merged).filter((k) => k.includes("/"));
+  const bareCount = new Map();
+  for (const k of composite) {
+    const bare = k.slice(k.indexOf("/") + 1);
+    bareCount.set(bare, (bareCount.get(bare) || 0) + 1);
+  }
+  let aliased = 0;
+  for (const k of composite) {
+    const bare = k.slice(k.indexOf("/") + 1);
+    if (bareCount.get(bare) === 1 && !(bare in merged)) {
+      merged[bare] = merged[k];
+      aliased++;
+    }
+  }
+
+  const out = {
+    ...(live || {}),
+    ...local,
+    cdnBase: (live && live.cdnBase) || local.cdnBase,
+    voice: (live && live.voice) || local.voice,
+    voiceId: (live && live.voiceId) || local.voiceId,
+    model: (live && live.model) || local.model,
+    generatedAt: new Date().toISOString(),
+    lessons: merged,
+  };
+  writeFileSync(localManifestPath, JSON.stringify(out, null, 2));
+
+  const byCourse = {};
+  for (const k of composite) {
+    const cid = merged[k].courseId || "?";
+    byCourse[cid] = (byCourse[cid] || 0) + 1;
+  }
+  console.error(
+    `[upload-audio] merged manifest: ${composite.length} lessons across ` +
+      `${Object.keys(byCourse).length} course(s) ` +
+      `(${live ? Object.keys(live.lessons || {}).length : 0} live + ` +
+      `${Object.keys(local.lessons || {}).length} local), ` +
+      `${aliased} bare-id back-compat alias(es).`,
   );
 }
 

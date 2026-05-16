@@ -136,6 +136,7 @@ export default function MobileLesson({
         {lesson.kind === "reading" && (
           <MobileReader
             key={lesson.id}
+            courseId={course.id}
             lessonId={lesson.id}
             body={lesson.body}
             onContinue={onComplete}

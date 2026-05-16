@@ -13,7 +13,6 @@ import { arrowRight } from "@base/primitives/icon/icons/arrow-right";
 import { chevronDown } from "@base/primitives/icon/icons/chevron-down";
 import { rotateCcw } from "@base/primitives/icon/icons/rotate-ccw";
 import { eye } from "@base/primitives/icon/icons/eye";
-import { codeSquare } from "@base/primitives/icon/icons/code-square";
 import "@base/primitives/icon/icon.css";
 import { ShortcutHint } from "../ShortcutHint/ShortcutHint";
 import { useT } from "../../i18n/i18n";
@@ -552,29 +551,28 @@ export default function EditorPane({
               title={t("editor.openInVSCode")}
               aria-label={t("editor.openInVSCode")}
             >
-              {/* Lucide `code-square` glyph (Notion issue
-                  #bd02f45814de4be6 — third pass). Earlier
-                  attempts: custom slab+chevron SVG (rendered
-                  only the right slab — notch geometry collapsed
-                  at 14×14) and `external-link` (still only
-                  rendered the right portion of the icon at this
-                  size). `code-square` is a clean `</>` glyph
-                  inside a rounded rectangle — reads
-                  unambiguously as "code in an editor", scales
-                  cleanly at any size because every stroke is
-                  inside the 24×24 viewBox with consistent
-                  stroke-width, and inherits `currentColor` for
-                  both themes. The button's tooltip + aria-label
-                  carry the "in VSCode" wording. */}
-              {/* One scale up (sm→base) — the VSCode glyph was the
-                  smallest thing in the toolbar and read as a dot at
-                  sm. base (15px) matches the bumped caret + pop-out
-                  glyph so the action row reads as one consistent
-                  size tier. */}
-              <Icon
-                icon={codeSquare}
-                size="base"
-                color="currentColor"
+              {/* Official VSCode brand logo (Notion issue
+                  #b07aeebf23206a8d "Use new VSCode Icon" — links
+                  the canonical asset). Three prior glyph attempts
+                  (custom slab+chevron SVG, external-link,
+                  code-square) all read poorly or rendered
+                  partially at toolbar size. Now an <img> of the
+                  real full-colour VSCode mark, bundled at
+                  `public/vscode.png` (downscaled from the 1024²
+                  brand PNG to 64²). The colour variant is
+                  theme-safe — the saturated blue ribbon reads on
+                  both light and dark toolbar backgrounds, which
+                  is what the original "broken in dark and light
+                  mode" report needed. `import.meta.env.BASE_URL`
+                  prefix so the path resolves under the web
+                  build's `/learn/` sub-path too. */}
+              <img
+                src={`${import.meta.env.BASE_URL}vscode.png`}
+                alt=""
+                width={16}
+                height={16}
+                draggable={false}
+                style={{ display: "block" }}
               />
             </button>
           )}

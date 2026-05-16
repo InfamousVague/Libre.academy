@@ -363,7 +363,12 @@ button {
   position: relative;
   display: flex;
   flex-direction: column;
-  width: 48%;
+  /* First-paint fallback only — the Workbench writes an inline
+     `width: NN%` here in `widthControlsParent` mode (default
+     62%, see Workbench.tsx). Bumped 48% → 62% so the pre-JS
+     paint matches the new default and the editor pane doesn't
+     visibly jump narrower→wider on first render. */
+  width: 62%;
   min-width: 320px;
   max-width: 75%;
   margin-left: 10px;

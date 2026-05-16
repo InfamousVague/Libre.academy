@@ -470,7 +470,21 @@ function starterUrl(path: string): string {
 /// Manifest re-fetch needed so returning visitors pick up the
 /// retagged packType + see the *lings on the Challenges page
 /// instead of the Library.
-const SEED_VERSION = 28;
+///
+/// V29 — Select Star SQL ingest. New `sql` book course
+/// `select-star-sql` (29 lessons across 3 deathrow chapters +
+/// frontmatter; 21 auto-graded SQL exercises) ported from
+/// selectstarsql.com (prose CC-BY-SA 4.0 © Zi Chong Kao, dataset
+/// CC0). Each exercise inlines a compact 553-row `executions`
+/// seed (last_statement truncated to 60 chars) so it runs + grades
+/// live in the browser via the existing sql.js runtime, matching
+/// the challenges-sql-handwritten lesson shape. Expected outputs
+/// were captured against a canonical DB built from the exact
+/// shipped seed (verified 21/21 grading through real sql.js).
+/// `packType: "course"` → regular Library (it's a book, not a
+/// challenges/lings/koans pack). Bumping so returning visitors
+/// pick up the new course + cover.
+const SEED_VERSION = 29;
 
 /// Run the web seed if it hasn't run yet OR if the persisted
 /// `SEED_VERSION` is older than the current build's. Idempotent +

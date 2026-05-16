@@ -32,6 +32,11 @@ import { useLessonAudio } from "../../hooks/useLessonAudio";
 import "./TTSButton.css";
 
 interface Props {
+  /// Course this lesson belongs to. Required: the audio manifest is
+  /// keyed by `courseId/lessonId` so two courses sharing a bare
+  /// lesson id (every Exercism track reuses canonical slugs) resolve
+  /// to the right narration.
+  courseId: string;
   lessonId: string;
   /// Pre-audio fallback label, e.g. the lesson's word-count-derived
   /// "X min read" estimate. Shown when no audio is available, and
@@ -53,6 +58,7 @@ function fmtTime(sec: number | null): string {
 }
 
 export default function TTSButton({
+  courseId,
   lessonId,
   estimatedReadMinutes,
   className,
@@ -63,7 +69,7 @@ export default function TTSButton({
   // intentionally don't fall back to the Web Speech API, because the
   // platform voices (Siri on Apple, system voices elsewhere) read as
   // a regression next to the uploaded ElevenLabs voice.
-  const audio = useLessonAudio(lessonId);
+  const audio = useLessonAudio(courseId, lessonId);
 
   // No narration source available AND no reading-time hint — render
   // nothing. With reading-time, a static chip stands in so the meta

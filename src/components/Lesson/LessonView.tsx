@@ -736,7 +736,7 @@ export default function LessonView({
     return (
       <div className="libre__lesson libre__lesson--column">
         <div className="libre__lesson-scroll">
-          <LessonReader lesson={lesson} requiresDevice={courseRequiresDevice} />
+          <LessonReader courseId={courseId} lesson={lesson} requiresDevice={courseRequiresDevice} />
           <QuizView lesson={lesson} onComplete={onComplete} />
           <div className="libre__lesson-nav-wrap">{nav}</div>
         </div>
@@ -751,6 +751,7 @@ export default function LessonView({
       }`}
     >
       <LessonReader
+        courseId={courseId}
         lesson={lesson}
         footer={nav}
         onRetryLesson={onRetryLesson}
@@ -836,9 +837,11 @@ export default function LessonView({
               // don't see the column jump on first load. The drag
               // handle still lets them resize narrower or wider
               // within MIN_WORKBENCH_PCT / MAX_WORKBENCH_PCT.
-              // Regular reading lessons fall through to the
-              // Workbench's own 48% default — leaves more room for
-              // the prose column which carries the lesson body.
+              // Regular lessons fall through to the Workbench's own
+              // default (now 62% — bumped per Notion "Update editor
+              // default width" so the editor leads the split during
+              // exercises while the prose keeps a ~38% reference
+              // column).
               defaultWorkbenchPct={isChallenge ? 66 : undefined}
               editor={
                 <EditorPane

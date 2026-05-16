@@ -21,13 +21,16 @@ interface Props {
   /// height split under the old key.
   widthStorageKey?: string;
   /// Workbench width as a percentage of the lesson pane. Defaults to
-  /// 56 — bumped from the old 48 because the editor toolbar (mode
-  /// toggle + Hint split + pop-out + VSCode + Run) couldn't fit its
-  /// full button row at 48% on common window sizes; the row wrapped
-  /// or clipped. 56% gives the toolbar comfortable room while still
-  /// leaving the prose column the majority-minus on a wide window.
-  /// Users who've dragged the divider keep their persisted width
-  /// (this only sets the first-launch default).
+  /// 62 — bumped 48 → 56 → 62 (Notion "Update editor default
+  /// width"). This is a coding-learning app; during an exercise the
+  /// editor IS the focus, so it should clearly lead the split while
+  /// the prose keeps a usable ~38% reference column. The 56% bump
+  /// alone didn't visibly land because the persisted width key
+  /// (`libre:workbench-width-v1`) was overriding the default for
+  /// anyone who'd ever opened the app — see `widthStorageKey`,
+  /// which is now versioned to `-v2` so the new default actually
+  /// takes effect. Users who drag the divider AFTER the v2 cutover
+  /// keep their own width.
   defaultWorkbenchPct?: number;
   /// When true, the workbench stretches to fill its parent's full
   /// width, ignoring any persisted width and hiding the width-resize
@@ -68,8 +71,8 @@ export default function Workbench({
   output,
   defaultEditorPct = 75,
   storageKey = "libre:workbench-split-v3",
-  widthStorageKey = "libre:workbench-width-v1",
-  defaultWorkbenchPct = 56,
+  widthStorageKey = "libre:workbench-width-v2",
+  defaultWorkbenchPct = 62,
   fillWidth = false,
   widthControlsParent = false,
 }: Props) {

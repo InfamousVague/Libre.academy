@@ -7,13 +7,15 @@
    border/radius/shadow.
    Width is owned by an inline `style="width: ...%"` set by the component
    (see `workbenchPct`), so the user can drag the left edge to resize the
-   whole card. The 48% fallback below covers the first render before
-   state initializes. */
+   whole card. The 62% fallback below covers the first render before
+   state initializes — matches `defaultWorkbenchPct = 62` in
+   Workbench.tsx so there's no flash at the old narrower width before
+   the JS-driven inline width lands. */
 .libre-workbench {
   position: relative; /* anchor for the left-edge width handle */
   display: flex;
   flex-direction: column;
-  width: 48%;
+  width: 62%;
   /* Floor was 320px — too wide on narrow windows, prevented users from
      shrinking the editor when they wanted the reader prose to dominate.
      240px still fits Monaco's gutter + a few chars + the run-button row

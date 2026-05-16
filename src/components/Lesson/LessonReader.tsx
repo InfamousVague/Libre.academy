@@ -28,6 +28,10 @@ import LedgerStatusPill from "../Ledger/LedgerStatusPill";
 import "./LessonReader.css";
 
 interface Props {
+  /// Course this lesson belongs to — threaded into the audio hook so
+  /// narration resolves by `courseId/lessonId` (Exercism tracks all
+  /// reuse canonical lesson slugs, so the bare id is ambiguous).
+  courseId: string;
   lesson: Lesson;
   /// Rendered inside the reader's scroll column beneath the markdown body.
   /// Used to park the Prev/Next nav at the bottom of reading + exercise
@@ -61,6 +65,7 @@ const DEMOTED_REASON_RE =
 /// progress bar, objectives card, inline-sandbox hydration, popover
 /// overlays, and glossary side panel.
 export default function LessonReader({
+  courseId,
   lesson,
   footer,
   onRetryLesson,
@@ -150,7 +155,7 @@ export default function LessonReader({
   // put. Adding a Web Speech / Siri fallback is what gave the
   // listener Siri's voice when CDN audio didn't load; we want the
   // CDN voice or nothing.
-  const audio = useLessonAudio(lesson.id);
+  const audio = useLessonAudio(courseId, lesson.id);
   const audioProgress = audio.available ? audio.progress : 0;
   const audioPlaying = audio.available ? audio.isPlaying : false;
   // Section anchoring inputs for the read-cursor hook. Sourced from
@@ -668,6 +673,7 @@ export default function LessonReader({
                 See scripts/generate-lesson-audio.mjs for the pipeline
                 that fills the manifest. */}
             <TTSButton
+              courseId={courseId}
               lessonId={lesson.id}
               estimatedReadMinutes={
                 progress < 0.05

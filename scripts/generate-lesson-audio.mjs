@@ -24,10 +24,14 @@
 ///        ELEVEN_MODEL=eleven_multilingual_v2     # default
 ///        ELEVEN_MODEL=eleven_turbo_v2_5          # ~half the chars cost
 ///   3. Run:
-///        node scripts/generate-lesson-audio.mjs                # all
+///        node scripts/generate-lesson-audio.mjs                # all reading/mixed
 ///        node scripts/generate-lesson-audio.mjs --course mastering-bitcoin
+///        node scripts/generate-lesson-audio.mjs --courses rustlings,exercism-rust
 ///        node scripts/generate-lesson-audio.mjs --lesson ch01-reading
 ///        node scripts/generate-lesson-audio.mjs --dry-run      # report char count, no API calls
+///        node scripts/generate-lesson-audio.mjs --include-exercises --courses rustlings,exercism-rust,exercism-zig
+///                                                              # narrate exercise-kind courses too
+///                                                              # (*lings / Exercism — body is teaching prose)
 ///   4. Upload `dist/audio/` to the CDN (rsync / aws s3 sync /
 ///      cloudflare r2 — depends on your hosting).
 ///
@@ -80,10 +84,32 @@ const flag = (name) => {
 };
 const has = (name) => args.includes(name);
 
-const courseFilter = flag("--course");
+/// Both `--course` and `--courses` accept a comma-separated list and
+/// behave identically — the singular/plural distinction was a
+/// footgun (`--course rustlings,exercism-rust` silently matched a
+/// course literally named "rustlings,exercism-rust", i.e. nothing).
+/// If both flags are passed the sets union.
+const courseFilterRaw = flag("--course");
+const coursesFilterRaw = flag("--courses");
+const courseFilterSet = new Set(
+  [courseFilterRaw, coursesFilterRaw]
+    .filter(Boolean)
+    .flatMap((v) => v.split(",").map((s) => s.trim()).filter(Boolean)),
+);
 const lessonFilter = flag("--lesson");
 const DRY_RUN = has("--dry-run");
 const VERBOSE = has("--verbose") || has("-v");
+/// Opt-in: also narrate `exercise`-kind lessons. The default
+/// (reading + mixed only) is correct for prose books, but the
+/// *lings + Exercism courses are 100% exercise-kind and their
+/// `body` is genuine instructional prose (concept explanation +
+/// task description; the actual code lives in `starter`, not
+/// `body`, and the spoken-text preprocessor strips any fenced
+/// snippets from the body anyway). Without this flag those
+/// courses yield zero narratable lessons. Scope it with
+/// `--courses` so you don't accidentally narrate every challenge
+/// pack in the catalog.
+const INCLUDE_EXERCISES = has("--include-exercises");
 
 // `--turbo` swaps the model to `eleven_turbo_v2_5` regardless of env.
 // On Creator-tier billing this halves the per-char credit cost — same
@@ -162,12 +188,18 @@ function* readingLessons(course) {
   for (const ch of course.chapters || []) {
     for (const l of ch.lessons || []) {
       // Only narrate prose. "reading" is pure prose; "mixed" has
-      // prose + an exercise, narrate the prose part. Exercises and
-      // quizzes get nothing.
-      if (l.kind === "reading" || l.kind === "mixed") {
-        if (l.body && l.body.trim()) {
-          yield l;
-        }
+      // prose + an exercise, narrate the prose part. "exercise"
+      // is normally skipped (the body would be terse "fix this"
+      // instructions) — but the *lings + Exercism courses ARE
+      // all exercise-kind and ship a real teaching `body`, so
+      // `--include-exercises` opts them in. Quizzes never get
+      // narration (the body is the question list, not prose).
+      const narratable =
+        l.kind === "reading" ||
+        l.kind === "mixed" ||
+        (INCLUDE_EXERCISES && l.kind === "exercise");
+      if (narratable && l.body && l.body.trim()) {
+        yield l;
       }
     }
   }
@@ -317,11 +349,101 @@ async function main() {
   let lessonsTouched = 0;
   let sectionsSynth = 0;
   let sectionsSkipped = 0;
+  let sectionsDeduped = 0;
   let totalChars = 0;
   let billedChars = 0;
 
+  // Within-run dedup cache. *lings courses repeat the chapter
+  // intro verbatim in every sibling exercise's body (rustlings is
+  // ~41% duplicate spoken text — the same "Type conversions"
+  // section appears in conversions1..5). Without this, ElevenLabs
+  // would be billed once PER lesson for byte-identical narration.
+  // Key = voice|model|textHash; value = the synthesized result so
+  // a later identical section just re-writes the bytes to its own
+  // per-lesson path (manifest + runtime contract unchanged — every
+  // lesson still owns its files at the expected URL) WITHOUT a
+  // second paid API call. Scoped per-run (not persisted) — the
+  // cross-run cache is the existing per-section manifest check
+  // above; this only catches duplicates within a single
+  // invocation, which is exactly where the *lings redundancy lives.
+  const runSynthCache = new Map();
+
+  // ── Pre-flight: course-filter sanity ──────────────────────────
+  // The audio system is now COURSE-SCOPED: the manifest is keyed by
+  // `courseId/lessonId` and the runtime (`useLessonAudio`) resolves
+  // composite-first. Two courses that happen to share a bare lesson
+  // slug (every Exercism track reuses `hello-world`, `leap`, …) no
+  // longer collide — each gets its own `courseId/lessonId` entry.
+  // The old cross-course bare-id abort is therefore gone; the only
+  // genuine corruption case left is a duplicate lesson id WITHIN a
+  // single course (same composite key written twice), checked
+  // further below.
+  //
+  // Pre-flight: a course filter that matches NOTHING is almost
+  // always a typo or a singular/plural / id-vs-title mixup. Fail
+  // loudly with the valid ids rather than producing a confusing
+  // silent "lessons touched: 0".
+  if (courseFilterSet.size > 0) {
+    const allIds = new Set(courses.map((c) => c.id));
+    const unknown = [...courseFilterSet].filter((id) => !allIds.has(id));
+    if (unknown.length === courseFilterSet.size) {
+      console.error(
+        `\n✗ ABORT: none of the requested course id(s) exist.\n` +
+          `  requested: ${[...courseFilterSet].join(", ")}\n` +
+          `  (did you use --course with a comma list under the old\n` +
+          `   singular flag, or pass a title instead of an id?)\n\n` +
+          `  Available course ids:\n` +
+          courses
+            .map((c) => `    ${c.id}`)
+            .sort()
+            .join("\n"),
+      );
+      process.exit(4);
+    }
+    if (unknown.length > 0) {
+      console.error(
+        `⚠ warning: these requested ids don't exist and will be ` +
+          `ignored: ${unknown.join(", ")}`,
+      );
+    }
+  }
+
+  {
+    // Same-course duplicate-id check. With composite keys the only
+    // way to clobber an entry is two lessons in the SAME course
+    // sharing a lesson id (→ identical `courseId/lessonId` key).
+    // That's a malformed course, not a cross-course slug clash —
+    // rare, but worth a loud abort before spending on synthesis.
+    const selected = courses.filter(
+      (c) => courseFilterSet.size === 0 || courseFilterSet.has(c.id),
+    );
+    const dupes = [];
+    for (const c of selected) {
+      const seen = new Set();
+      for (const l of readingLessons(c)) {
+        if (seen.has(l.id)) dupes.push(`${c.id}/${l.id}`);
+        else seen.add(l.id);
+      }
+    }
+    if (dupes.length > 0) {
+      console.error(
+        `\n✗ ABORT: ${dupes.length} duplicate lesson id(s) within a ` +
+          `single course — these map to the same composite manifest\n` +
+          `  key and would overwrite each other. No characters billed.\n\n` +
+          dupes
+            .slice(0, 12)
+            .map((d) => `  • ${d}`)
+            .join("\n") +
+          (dupes.length > 12 ? `\n  …and ${dupes.length - 12} more` : "") +
+          `\n\n  Fix the course JSON so every lesson id is unique within ` +
+          `its course.`,
+      );
+      process.exit(3);
+    }
+  }
+
   for (const course of courses) {
-    if (courseFilter && course.id !== courseFilter) continue;
+    if (courseFilterSet.size > 0 && !courseFilterSet.has(course.id)) continue;
     const lessons = [...readingLessons(course)];
     if (lessons.length === 0) continue;
     if (VERBOSE) {
@@ -374,9 +496,14 @@ async function main() {
         // section index + textHash, AND the on-disk file still
         // exists. Refresh the URL field defensively (CDN base may
         // have moved) and move on.
-        const prevSection = previousManifest.lessons?.[lesson.id]?.sections?.[
-          sIdx
-        ];
+        // Composite-keyed lookup, with a bare-id fallback so a
+        // pre-migration local manifest still scores cache hits on
+        // the first composite run (otherwise every lesson would
+        // re-synthesize once, billing for byte-identical audio).
+        const prevEntry =
+          previousManifest.lessons?.[lessonRelDir] ??
+          previousManifest.lessons?.[lesson.id];
+        const prevSection = prevEntry?.sections?.[sIdx];
         const cacheHit =
           prevSection &&
           prevSection.textHash === textHash &&
@@ -396,6 +523,42 @@ async function main() {
           });
           if (VERBOSE)
             console.error(`  ↩ ${lesson.id} §${sIdx + 1} cache hit`);
+          continue;
+        }
+
+        // Within-run dedup: identical spoken text (same voice +
+        // model) was already synthesized earlier in THIS run for a
+        // sibling lesson. Reuse those bytes — write them to this
+        // lesson's own file path so the per-lesson manifest URL
+        // contract is unchanged — but DON'T pay ElevenLabs again.
+        const dedupKey = `${VOICE_NAME}|${MODEL_ID}|${textHash}`;
+        const dedup = runSynthCache.get(dedupKey);
+        if (dedup) {
+          sectionsDeduped += 1;
+          if (!DRY_RUN) {
+            // Re-materialize the identical clip at this lesson's
+            // path. Cheap local file copy; no API call.
+            mkdirSync(lessonAbsDir, { recursive: true });
+            writeFileSync(fileAbs, dedup.mp3);
+          }
+          sectionEntries.push({
+            url: cdnUrl,
+            sha256: dedup.sha256,
+            sizeBytes: dedup.sizeBytes,
+            durationSec: dedup.durationSec,
+            textHash,
+            voice: VOICE_NAME,
+            voiceId: dedup.voiceId,
+            model: MODEL_ID,
+            blockStart: section.blockStart,
+            blockEnd: section.blockEnd,
+            headingText: section.headingText,
+            headingLevel: section.headingLevel,
+          });
+          if (VERBOSE)
+            console.error(
+              `  = ${lesson.id} §${sIdx + 1} dedup (identical to an earlier section this run — $0)`,
+            );
           continue;
         }
 
@@ -419,6 +582,16 @@ async function main() {
             headingText: section.headingText,
             headingLevel: section.headingLevel,
           });
+          // Register the hash so a later identical section this run
+          // takes the dedup path → the projected `billedChars` in
+          // the dry-run summary matches what a real run would bill.
+          runSynthCache.set(dedupKey, {
+            mp3: null,
+            sha256: undefined,
+            sizeBytes: undefined,
+            durationSec: undefined,
+            voiceId: undefined,
+          });
           sectionsSynth += 1;
           continue;
         }
@@ -432,11 +605,13 @@ async function main() {
         const mp3 = await synthesizeLesson(voiceId, spoken);
         mkdirSync(lessonAbsDir, { recursive: true });
         writeFileSync(fileAbs, mp3);
+        const mp3Sha = sha256(mp3);
+        const mp3Dur = estimateDurationFromBytes(mp3.length);
         sectionEntries.push({
           url: cdnUrl,
-          sha256: sha256(mp3),
+          sha256: mp3Sha,
           sizeBytes: mp3.length,
-          durationSec: estimateDurationFromBytes(mp3.length),
+          durationSec: mp3Dur,
           textHash,
           voice: VOICE_NAME,
           voiceId,
@@ -446,13 +621,29 @@ async function main() {
           headingText: section.headingText,
           headingLevel: section.headingLevel,
         });
+        // Cache the synthesized clip so a later identical section
+        // this run (sibling *lings exercise repeating the chapter
+        // intro) reuses these bytes for free instead of paying
+        // ElevenLabs a second time.
+        runSynthCache.set(dedupKey, {
+          mp3,
+          sha256: mp3Sha,
+          sizeBytes: mp3.length,
+          durationSec: mp3Dur,
+          voiceId,
+        });
         sectionsSynth += 1;
         lessonAnySynth = true;
       }
 
       if (sectionEntries.length === 0) continue;
 
-      manifest.lessons[lesson.id] = {
+      // Composite key (`courseId/lessonId`) — same shape as
+      // `lessonRelDir` + the on-disk audio path. Two courses that
+      // share a bare lesson slug no longer collide. The runtime
+      // resolves this composite-first (with a bare fallback for
+      // legacy manifests).
+      manifest.lessons[lessonRelDir] = {
         courseId: course.id,
         voice: VOICE_NAME,
         model: MODEL_ID,
@@ -477,14 +668,54 @@ async function main() {
   console.error("\n──────────────────────────────────────");
   console.error(`lessons touched: ${lessonsTouched}`);
   console.error(`sections synth:  ${sectionsSynth}`);
-  console.error(`sections cached: ${sectionsSkipped}`);
+  console.error(`sections cached: ${sectionsSkipped} (prior-run manifest)`);
+  console.error(
+    `sections dedup:  ${sectionsDeduped} (identical text reused this run — $0)`,
+  );
   console.error(`total chars:     ${totalChars.toLocaleString()}`);
-  console.error(`billed chars:    ${billedChars.toLocaleString()}`);
+  console.error(
+    `billed chars:    ${billedChars.toLocaleString()} (what ElevenLabs actually charges)`,
+  );
   if (DRY_RUN) {
     console.error(`(dry run — no API calls made)`);
   }
   console.error(`manifest:        ${MANIFEST_PATH}`);
   console.error(`upload root:     ${OUT_DIR}`);
+
+  // "lessons touched: 0" is almost never what the user wanted —
+  // explain the likely cause instead of exiting silently. By here
+  // the pre-flight has already proven the filter matched ≥1 real
+  // course, so the usual culprit is exercise-kind courses without
+  // --include-exercises.
+  if (lessonsTouched === 0) {
+    const selected = courses.filter(
+      (c) => courseFilterSet.size === 0 || courseFilterSet.has(c.id),
+    );
+    const kindsOf = (c) =>
+      new Set((c.chapters || []).flatMap((ch) => (ch.lessons || []).map((l) => l.kind)));
+    const exerciseOnly = selected.filter((c) => {
+      const k = kindsOf(c);
+      return k.size > 0 && ![...k].some((x) => x === "reading" || x === "mixed");
+    });
+    console.error("\n──────────────────────────────────────");
+    if (!INCLUDE_EXERCISES && exerciseOnly.length > 0) {
+      console.error(
+        `✗ 0 lessons narrated. ${exerciseOnly.length} of the selected ` +
+          `course(s) are exercise-only and were skipped because\n` +
+          `  --include-exercises was not passed:\n` +
+          exerciseOnly.map((c) => `    ${c.id}`).join("\n") +
+          `\n\n  Re-run with --include-exercises, e.g.:\n` +
+          `    node scripts/generate-lesson-audio.mjs --include-exercises ` +
+          `--courses ${selected.map((c) => c.id).join(",")} --dry-run`,
+      );
+    } else {
+      console.error(
+        `✗ 0 lessons narrated — the selected course(s) had no ` +
+          `reading/mixed${INCLUDE_EXERCISES ? "/exercise" : ""} lessons ` +
+          `with a non-empty body. Nothing was billed.`,
+      );
+    }
+  }
 }
 
 main().catch((err) => {

@@ -14,6 +14,10 @@ import "./MobileReader.css";
 
 interface Props {
   body: string;
+  /// Course this lesson belongs to — drives the audio manifest
+  /// lookup keyed by `courseId/lessonId` (Exercism tracks reuse
+  /// canonical lesson slugs, so the bare id is ambiguous).
+  courseId?: string;
   /// Lesson id — drives the TTS button's audio lookup against the
   /// pre-generated manifest. When the manifest doesn't have a
   /// matching entry the button silently doesn't render, so it's
@@ -26,7 +30,7 @@ interface Props {
   onContinue?: () => void;
 }
 
-export default function MobileReader({ body, lessonId }: Props) {
+export default function MobileReader({ body, courseId, lessonId }: Props) {
   const [html, setHtml] = useState<string | null>(null);
   // Reuse the desktop reader's word-count heuristic so the meta-pill
   // shows a consistent "X min read" estimate across surfaces.
@@ -46,7 +50,7 @@ export default function MobileReader({ body, lessonId }: Props) {
   // / Siri fallback that filled the gap, but it produced the
   // platform's stock voice instead of the uploaded ElevenLabs
   // voice, which read as a regression.)
-  const audio = useLessonAudio(lessonId);
+  const audio = useLessonAudio(courseId, lessonId);
   const audioProgress = audio.available ? audio.progress : 0;
   const audioPlaying = audio.available ? audio.isPlaying : false;
   useLessonReadCursor({
@@ -124,6 +128,7 @@ export default function MobileReader({ body, lessonId }: Props) {
       {lessonId && (
         <div className="m-reader__tts">
           <TTSButton
+            courseId={courseId ?? ""}
             lessonId={lessonId}
             estimatedReadMinutes={readingMinutes}
           />

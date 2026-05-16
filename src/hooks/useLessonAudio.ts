@@ -416,13 +416,33 @@ export type LessonAudioState =
       setSpeed: (rate: number) => void;
     };
 
-/// Per-lesson hook. Pass the lesson id; receive state + controls.
-/// Re-renders on every `timeupdate` (~4Hz) while this lesson is
-/// active, idle when it isn't.
-export function useLessonAudio(lessonId: string | undefined): LessonAudioState {
+/// Per-lesson hook. Pass the course id + lesson id; receive state +
+/// controls. Re-renders on every `timeupdate` (~4Hz) while this
+/// lesson is active, idle when it isn't.
+///
+/// `courseId` is REQUIRED for correct resolution: the manifest is
+/// keyed by `courseId/lessonId` so two courses that share a bare
+/// lesson id (every Exercism track reuses canonical slugs like
+/// `hello-world`) resolve to the right course's narration. For
+/// resilience during the migration window — a CDN-cached legacy
+/// manifest still keyed by bare id, or a caller that genuinely
+/// can't supply a courseId — we fall back to a bare-id lookup.
+/// `courseId` is optional in the signature only so the fallback
+/// path stays expressible; always pass it when you have it (all
+/// three real call sites do).
+export function useLessonAudio(
+  courseId: string | undefined,
+  lessonId: string | undefined,
+): LessonAudioState {
   const m = useLessonAudioManifest();
   const [, setTick] = useState(0);
   const tickRef = useRef(0);
+
+  // Composite identity used for BOTH manifest lookup and the
+  // singleton's active-session token, so playback state can't bleed
+  // between two courses that share a bare lesson id.
+  const audioKey =
+    courseId && lessonId ? `${courseId}/${lessonId}` : lessonId;
 
   // Subscribe to the singleton's notifications. We only re-render
   // when something actually changes for THIS lesson — the listener
@@ -438,13 +458,18 @@ export function useLessonAudio(lessonId: string | undefined): LessonAudioState {
     };
   }, []);
 
-  if (!m || !lessonId) return { available: false };
-  const entry = m.lessons[lessonId];
+  if (!m || !lessonId || !audioKey) return { available: false };
+  // Composite-first, bare-fallback. New manifests key by
+  // `courseId/lessonId`; a legacy/CDN-cached manifest still keyed
+  // by bare id resolves via the fallback so narration doesn't
+  // black out during the transition.
+  const entry =
+    m.lessons[audioKey] ?? (lessonId ? m.lessons[lessonId] : undefined);
   if (!entry) return { available: false };
   const sections = sectionsFor(entry);
   if (!sections) return { available: false };
 
-  const isActive = activeLessonId === lessonId && audioEl != null;
+  const isActive = activeLessonId === audioKey && audioEl != null;
   const el = audioEl;
 
   // Read the per-section duration list. When this lesson is the
@@ -484,7 +509,7 @@ export function useLessonAudio(lessonId: string | undefined): LessonAudioState {
 
   const startSection = (idx: number): void => {
     const a = ensureAudioEl();
-    activeLessonId = lessonId;
+    activeLessonId = audioKey;
     activeSections = sections;
     activeSectionIndex = idx;
     // Seed the duration cache from manifest estimates. Each entry's
@@ -514,7 +539,7 @@ export function useLessonAudio(lessonId: string | undefined): LessonAudioState {
     progress,
     remainingSec,
     play: () => {
-      if (activeLessonId !== lessonId) {
+      if (activeLessonId !== audioKey) {
         startSection(0);
         return;
       }
@@ -522,10 +547,10 @@ export function useLessonAudio(lessonId: string | undefined): LessonAudioState {
       if (audioEl) void audioEl.play();
     },
     pause: () => {
-      if (audioEl && activeLessonId === lessonId) audioEl.pause();
+      if (audioEl && activeLessonId === audioKey) audioEl.pause();
     },
     toggle: () => {
-      if (activeLessonId !== lessonId) {
+      if (activeLessonId !== audioKey) {
         startSection(0);
         return;
       }
@@ -534,7 +559,7 @@ export function useLessonAudio(lessonId: string | undefined): LessonAudioState {
       else audioEl.pause();
     },
     seek: (sec) => {
-      if (audioEl && activeLessonId === lessonId) audioEl.currentTime = sec;
+      if (audioEl && activeLessonId === audioKey) audioEl.currentTime = sec;
     },
     setSpeed: (rate) => {
       if (audioEl) audioEl.playbackRate = rate;
