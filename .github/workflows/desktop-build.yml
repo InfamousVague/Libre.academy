@@ -154,8 +154,17 @@ jobs:
             libgtk-3-dev \
             libayatana-appindicator3-dev \
             librsvg2-dev \
+            libudev-dev \
             patchelf \
             imagemagick
+          # libudev-dev: the `hidapi` crate (pulled in transitively
+          # for HID/USB hardware support) has a build.rs that
+          # pkg-config-probes for `libudev` and panics hard if
+          # `libudev.pc` is absent. Ubuntu runners don't ship the
+          # -dev package by default, so without this the Linux
+          # Tauri build dies before bundling. macOS/Windows use a
+          # different hidapi backend (no libudev), so this is
+          # Linux-only.
 
       # ImageMagick is what extract-starter-courses.mjs uses to
       # resize cover art; the build's smoke checks expect covers
