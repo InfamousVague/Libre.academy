@@ -85,7 +85,19 @@ jobs:
             rust-targets: 'aarch64-apple-darwin,x86_64-apple-darwin'
           - os: ubuntu-22.04
             label: Linux (x64)
-            tauri-args: ''
+            # Linux ships as .deb + .rpm only. The .AppImage target
+            # (linuxdeploy) fails opaquely on GitHub runners even
+            # with APPIMAGE_EXTRACT_AND_RUN — tauri-action swallows
+            # linuxdeploy's stderr so it's undebuggable from CI, and
+            # it cost ~4 × 25-min cycles chasing it. .deb/.rpm bundle
+            # via dpkg/rpmbuild (no linuxdeploy) and cover the vast
+            # majority of Linux installs. Trade-off: the Tauri OTA
+            # updater consumes the .AppImage.tar.gz format, so Linux
+            # users update via their package manager / manual
+            # re-download rather than in-app OTA. macOS (primary OTA
+            # platform) + Windows are unaffected. Revisit AppImage as
+            # a follow-up if Linux in-app OTA becomes a requirement.
+            tauri-args: '--bundles deb,rpm'
             rust-targets: ''
           - os: windows-latest
             label: Windows (x64)
