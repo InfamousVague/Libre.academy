@@ -241,6 +241,18 @@ jobs:
           # `tauri signer generate`.
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # AppImage bundling on GitHub runners: `linuxdeploy` and
+          # its appimage plugin are THEMSELVES AppImages, which
+          # normally FUSE-mount to run. ubuntu-22.04 runners don't
+          # ship libfuse2, so the mount fails and Tauri reports the
+          # opaque `failed to run linuxdeploy`. Setting
+          # APPIMAGE_EXTRACT_AND_RUN makes every AppImage extract
+          # its squashfs and exec directly instead of FUSE-mounting
+          # — the standard CI workaround. NO_STRIP avoids a separate
+          # linuxdeploy strip failure on the bundled ELF. Both are
+          # harmless no-ops on the macOS / Windows runners.
+          APPIMAGE_EXTRACT_AND_RUN: 1
+          NO_STRIP: true
         with:
           tagName: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
           releaseName: ${{ github.ref_type == 'tag' && format('Libre {0}', github.ref_name) || '' }}
